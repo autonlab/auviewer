@@ -1,0 +1,60 @@
+<link rel='stylesheet' href='css/dygraph.css' />
+<style>
+
+  .graph {
+    width: 95%;
+    height: 180px;
+  }
+
+</style>
+<div id="graph1" style="width: 100%; height: 160px;"></div>
+<div id="graph2" style="width: 100%; height: 160px;"></div>
+
+<script src="js/dygraph.js"></script>
+<script src="js/synchronizer.js"></script>
+<script type="text/javascript">
+  var a = new Dygraph(
+
+    // containing div
+    document.getElementById("graph1"),
+
+    // CSV or path to a CSV file.
+    "Date,Temperature\n" +
+    "2008-05-07,75\n" +
+    "2008-05-08,70\n" +
+    "2008-05-09,80\n" +
+    "2008-05-10,75\n" +
+    "2008-05-11,70\n" +
+    "2008-05-12,80\n" +
+    "2008-05-13,75\n" +
+    "2008-05-14,70\n" +
+    "2008-05-15,80\n"
+
+  );
+
+  var b = new Dygraph(
+
+    // containing div
+    document.getElementById("graph2"),
+
+    // CSV or path to a CSV file.
+    "Date,Temperature\n" +
+    "2008-05-10,65\n" +
+    "2008-05-11,60\n" +
+    "2008-05-12,70\n" +
+    "2008-05-13,65\n" +
+    "2008-05-14,60\n" +
+    "2008-05-15,70\n" +
+    "2008-05-16,65\n" +
+    "2008-05-17,60\n" +
+    "2008-05-18,70\n"
+
+  );
+
+  // Synchronize all of the graphs
+  var sync = Dygraph.synchronize(a, b/*, {
+    range: false,
+    selection: true,
+    zoom: true
+  }*/);
+</script>
