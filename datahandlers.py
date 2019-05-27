@@ -1,5 +1,5 @@
 import datetime as dt
-import downsample as ds
+import downsample
 import h5py
 
 # Simplejson package is required in order to "ignore" NaN values and implicitly convert them into null values.
@@ -9,6 +9,9 @@ import h5py
 # Find "ignore_nan" here: https://simplejson.readthedocs.io/en/latest/
 import simplejson as json
 
+def getDSS():
+    return TEMPDSS
+
 def assembleOutput():
 
     # Open the HDF5 file
@@ -17,7 +20,13 @@ def assembleOutput():
     obj = {}
 
     for i in f['numeric'].keys():
-        obj[i] = assembleTimeSeriesDataset(f, 'numeric', i)
+        #obj[i] = assembleTimeSeriesDataset(f, 'numeric', i)
+        res = assembleTimeSeriesDataset(f, 'numeric', i)
+        j = 0
+        arrlen = len(res)
+        while j < arrlen:
+            obj[i+str(j)] = res[j]
+            j = j + 1
         break
 
     return json.dumps(
@@ -27,10 +36,10 @@ def assembleOutput():
 
 def assembleTimeSeriesDataset(f, outerContainerName, seriesName):
 
-    # The datetime values are offsets, in seconds, from a baseline datetime.
+    # The datetime values are offsets, in seconds, from a basetime datetime.
     # This is set as a global variable for now but should be changed later.
-    global baseline
-    baseline = dt.datetime.strptime(f[outerContainerName][seriesName]['data']['datetime'].attrs['time_reference'], '%Y-%m-%d %H:%M:%S.%f %z')
+    global basetime
+    basetime = dt.datetime.strptime(f[outerContainerName][seriesName]['data']['datetime'].attrs['time_reference'], '%Y-%m-%d %H:%M:%S.%f %z').replace(tzinfo=None)
 
     ### Limited number of data points
     #return {
@@ -46,14 +55,39 @@ def assembleTimeSeriesDataset(f, outerContainerName, seriesName):
     #}
 
     ### Downsampled
-    data = []
-    intervals = ds.downsample(f[outerContainerName][seriesName]['data'])
-    for i in intervals:
-        data.append([i.time.isoformat(), i.min, i.max])
-    return {
-        "labels": ['Date/Offset', seriesName+' Min', seriesName+' Max'],
-        "data": data
-    }
+    #data = []
+    #dss = downsample.DownsampleSet()
+    #dss.build(f[outerContainerName][seriesName]['data'])
+    #for i in dss.downsamples[0].intervals:
+    #    data.append([i.time.isoformat(), i.min, i.max])
+    #return {
+    #    "labels": ['Date/Offset', seriesName+' Min', seriesName+' Max'],
+    #    "data": data
+    #}
+
+    # Downsampled x 3
+
+    ret = []
+    dss = downsample.DownsampleSet()
+    global TEMPDSS
+    TEMPDSS=dss
+    dss.build(f[outerContainerName][seriesName]['data'])
+    i = 0
+    while i < len(dss.downsamples):
+
+        data = []
+
+        for j in dss.downsamples[i].intervals:
+            data.append([j.time.isoformat(), j.min, j.max])
+
+        ret.append({
+            "labels": ['Date/Offset', seriesName + ' Min', seriesName + ' Max'],
+            "data": data
+        })
+
+        i = i + 1
+
+    return ret
 
 def addSecondsToBaseline(additionalSeconds):
-    return (baseline + dt.timedelta(0,additionalSeconds)).isoformat()
+    return (basetime + dt.timedelta(0,additionalSeconds)).isoformat()

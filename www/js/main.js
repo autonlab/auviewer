@@ -40,34 +40,52 @@ function addGraph(backendData, series) {
       'mousedown': handleMouseDown,
       'mousemove': handleMouseMove,
       'mouseup': handleMouseUp,
-      'dblclick': handleDoubleClick/*,
-      'mousewheel': handleMouseWheel*/
+      'dblclick': handleDoubleClick,
+      'mousewheel': handleMouseWheel
     },
     labels: backendData[series].labels,
-    plotter: downsamplePlotter,
+    series: {
+      'Min': { plotter: downsamplePlotter },
+      'Max': { plotter: downsamplePlotter }
+    },
     title: series
   });
 
+  // Attach the original dataset to the graph for later use
+  dygraphInstances[series].originalDataset = backendData[series].data
+
 }
 
-// Convert all x values in a series to javascript Date objects, and also update
-// the global x-axis extremes.
-function convertToDateObjsAndUpdateExtremes(backendData, series) {
+// Converts all x values in a data array to javascript Date objects.
+function convertToDateObjs(data) {
 
   // Go through all values in the series.
-  for(var i = 0; i < backendData[series]['data'].length; i++) {
+  for(var i = 0; i < data.length; i++) {
 
     // Convert the ISO8601-format string into a Date object.
-    backendData[series]['data'][i][0] = new Date(backendData[series]['data'][i][0]);
+    data[i][0] = new Date(data[i][0]);
+
+  }
+}
+
+// Converts all x values in a data array to javascript Date objects, and also
+// updates the global x-axis extremes.
+function convertToDateObjsAndUpdateExtremes(data) {
+
+  // Go through all values in the series.
+  for(var i = 0; i < data.length; i++) {
+
+    // Convert the ISO8601-format string into a Date object.
+    data[i][0] = new Date(data[i][0]);
 
     // Update global x-minimum if warranted
-    if(globalXExtremes[0] == null || backendData[series]['data'][i][0] < globalXExtremes[0]) {
-      globalXExtremes[0] = backendData[series]['data'][i][0]
+    if(globalXExtremes[0] == null || data[i][0] < globalXExtremes[0]) {
+      globalXExtremes[0] = data[i][0]
     }
 
     // Update global x-maximum if warranted
-    if(globalXExtremes[1] == null || backendData[series]['data'][i][0] > globalXExtremes[1]) {
-      globalXExtremes[1] = backendData[series]['data'][i][0]
+    if(globalXExtremes[1] == null || data[i][0] > globalXExtremes[1]) {
+      globalXExtremes[1] = data[i][0]
     }
 
   }
@@ -79,13 +97,12 @@ function convertToDateObjsAndUpdateExtremes(backendData, series) {
 // and its source code.
 function downsamplePlotter(e) {
 
-  // This is the official dygraphs way to plot all the series at once, per
-  // source code of dygraphs.com/tests/plotters.html.
-  if (e.seriesIndex !== 0) return;
+  // We only want to run the plotter for the first series.
+  if (e.seriesIndex !== 1) return;
 
   // We require two series for min & max.
-  if (e.seriesCount != 2) {
-    throw "Downsampled plots require two values per point, min & max.";
+  if (e.seriesCount != 3) {
+    throw "The medview plotter expects three y-values per series for downsample min, downsample max, and real value.";
   }
 
   // This is a reference to a proxy for the canvas element of the graph
@@ -97,31 +114,76 @@ function downsamplePlotter(e) {
 
   // Line properties
   cnv.strokeStyle = '#5253FF';
-  cnv.lineWidth = 0.6;
+  cnv.fillStyle = '#5253FF';
+  cnv.lineWidth = 1;
 
   // Plot all data points
   for (var i = 0; i < e.allSeriesPoints[0].length; i++) {
 
-    // Begin a path (this instantiates a path object but does not draw it
-    cnv.beginPath();
+    // There may be intervals wherein min==max, and to handle these, we must use a different drawing method.
+    if (e.allSeriesPoints[0][i].y == e.allSeriesPoints[1][i].y) {
 
-    // Start stroke at the min value
-    cnv.moveTo(e.allSeriesPoints[0][i].x * area.w + area.x, e.allSeriesPoints[0][i].y * area.h + area.y);
+      cnv.fillRect(e.allSeriesPoints[0][i].x * area.w + area.x, e.allSeriesPoints[0][i].y * area.h + area.y, 1, 1)
 
-    // End stroke at the max value
-    cnv.lineTo(e.allSeriesPoints[1][i].x * area.w + area.x, e.allSeriesPoints[1][i].y * area.h + area.y);
+    } else {
 
-    // Draw the line on the canvas
-    cnv.stroke();
+      // Begin a path (this instantiates a path object but does not draw it
+      cnv.beginPath();
+
+      // Start stroke at the min value
+      cnv.moveTo(e.allSeriesPoints[0][i].x * area.w + area.x, e.allSeriesPoints[0][i].y * area.h + area.y);
+
+      // End stroke at the max value
+      cnv.lineTo(e.allSeriesPoints[1][i].x * area.w + area.x, e.allSeriesPoints[1][i].y * area.h + area.y);
+
+      // Draw the line on the canvas
+      cnv.stroke();
+
+    }
 
   }
+
+}
+
+// Produces a meshed dataset consisting of the outerDataset and innerDataset,
+// with  innerDataset replacing its time range of data points in outerDataset.
+function getDownsampleMesh(outerDataset, innerDataset) {
+  
+  // We expect non-empty arrays
+  if (outerDataset.length < 1 || innerDataset.length < 1) {
+    return;
+  }
+
+  // Will hold the relevant places to slice the outerDataset.
+  var sliceIndexFirstSegment = 0;
+  var sliceIndexSecondSegment = 0;
+
+  // Determine outerDataset index of the data point just after innerDataset
+  // starts. We will find the index just *after* the last data point before
+  // innerDataset starts. However, that's okay, because sliceIndexFirstSegment
+  // will be the second parameter in a slice call, which indicates an element
+  // that will not be included in the resulting array.
+  while (sliceIndexFirstSegment < outerDataset.length && outerDataset[sliceIndexFirstSegment][0].getTime() < innerDataset[0][0].getTime()) {
+    sliceIndexFirstSegment++;
+  }
+
+  // Determine outerDataset index of the data point just after innerDataset ends.
+  sliceIndexSecondSegment = sliceIndexFirstSegment;
+  while (sliceIndexSecondSegment < outerDataset.length && outerDataset[sliceIndexSecondSegment][0].getTime() <= innerDataset[innerDataset.length-1][0].getTime()) {
+    sliceIndexSecondSegment++;
+  }
+
+  // Return the joined dataset with the innerDataset replacing the relevant
+  // section of outerDataset.
+  return outerDataset.slice(0, sliceIndexFirstSegment).concat(innerDataset, outerDataset.slice(sliceIndexSecondSegment));
 
 }
 
 // Handle double-click for restoring the original zoom.
 function handleDoubleClick(event, g, context) {
   g.updateOptions({
-    dateWindow: globalXExtremes
+    dateWindow: globalXExtremes,
+    file: g.originalDataset
   });
 }
 
@@ -131,6 +193,7 @@ function handleMouseDown(event, g, context) {
   if (event.altKey || event.shiftKey) {
     Dygraph.startZoom(event, g, context);
   } else {
+    context.medViewPanningMouseMoved = false;
     Dygraph.startPan(event, g, context);
   }
 }
@@ -138,6 +201,7 @@ function handleMouseDown(event, g, context) {
 // Handle mouse-move for pan & zoom.
 function handleMouseMove(event, g, context) {
   if (context.isPanning) {
+    context.medViewPanningMouseMoved = true;
     Dygraph.movePan(event, g, context);
   } else if (context.isZooming) {
     Dygraph.moveZoom(event, g, context);
@@ -147,16 +211,22 @@ function handleMouseMove(event, g, context) {
 // Handle mouse-up for pan & zoom.
 function handleMouseUp(event, g, context) {
   if (context.isPanning) {
+    if (context.medViewPanningMouseMoved) {
+      updateCurrentViewData(g);
+      context.medViewPanningMouseMoved = false;
+    }
     Dygraph.endPan(event, g, context);
   } else if (context.isZooming) {
     Dygraph.endZoom(event, g, context);
+    updateCurrentViewData(g);
   }
 }
 
 // Handle shift+scroll or alt+scroll for zoom.
-/*function handleMouseWheel(event, g, context) {
+function handleMouseWheel(event, g, context) {
 
-  if (event.altKey || event.shiftKey) {
+  // The event.ctrlKey is true when the user is using pinch-to-zoom gesture.
+  if (event.ctrlKey || event.altKey || event.shiftKey) {
 
     var normal = event.detail ? event.detail * -1 : event.wheelDelta / 40;
     // For me the normalized value shows 0.075 for one click. If I took
@@ -170,11 +240,27 @@ function handleMouseUp(event, g, context) {
     var xPct = offsetToPercentage(g, event.offsetX);
 
     zoom(g, percentage, xPct);
+
+    // If the ctrlKey is set, we are pinch-zooming. In this case, set a timeout
+    // to update the current view's data. This is to prevent repeated,
+    // overlapping calls in the midst of pinch-zooming. Otherwise, simply call
+    // for the data update immediately.
+    if (event.ctrlKey) {
+      if (g.updateDataTimer != null) {
+        clearTimeout(g.updateDataTimer);
+      }
+      g.updateDataTimer = setTimeout(function(){ g.updateDataTimer = null; updateCurrentViewData(g); }, 200);
+    } else {
+      updateCurrentViewData(g);
+    }
+
+
+    //updateCurrentViewData(g);
     event.preventDefault();
 
   }
 
-}*/
+}
 
 // Take the offset of a mouse event on the dygraph canvas and
 // convert it to a percentages from the left.
@@ -197,6 +283,57 @@ function offsetToPercentage(g, offsetX) {
   return xPct;
 }
 
+// Will request and update the current view of the graph with new data that is
+// appropriately downsampled (or not).
+function updateCurrentViewData(graph) {
+
+  // Get the x-axis range
+  var xRange = graph.xAxisRange();
+
+  console.log("Requesting data for view.");
+
+  // Setup our async http call.
+  var x = new XMLHttpRequest();
+
+  // Setup our callback handler.
+  x.onreadystatechange = function() {
+
+    if (this.readyState == 4 && this.status == 200) {
+
+      console.log("Applying data to view.");
+
+      // Parse the backend JSON response into a JS object
+      var backendData = JSON.parse(x.responseText);
+
+      console.log(backendData);
+
+      // Process the new data for each series.
+      for(series in backendData) {
+
+        // Convert date strings to Date objects in all datasets.
+        convertToDateObjs(backendData[series]['data']);
+
+        var meshedData = getDownsampleMesh(dygraphInstances[series].originalDataset, backendData[series]['data']);
+
+        console.log(meshedData);
+
+        // Update the graph data, and redraw
+        dygraphInstances[series].updateOptions({
+          file: meshedData
+        });
+
+      }
+
+    }
+
+  }
+
+  // Send the async request
+  x.open("GET", "http://localhost:8003?start="+xRange[0]+"&stop="+xRange[1], true);
+  x.send();
+
+}
+
 // Adjusts x inward by zoomInPercentage%
 // Split it so the left axis gets xBias of that change and
 // right gets (1-xBias) of that change.
@@ -217,10 +354,12 @@ function zoom(g, zoomInPercentage, xBias) {
 }
 
 xhttp.onreadystatechange = function() {
+
   if (this.readyState == 4 && this.status == 200) {
 
     // Parse the backend JSON response into a JS object
     var backendData = JSON.parse(xhttp.responseText);
+
     console.log(backendData);
 
     // Convert date strings to Date objects in all datasets and produce global
@@ -230,7 +369,7 @@ xhttp.onreadystatechange = function() {
     // default zoom can be set. There won't be that many graphs, so redundant
     // for loops are not costly.
     for(series in backendData) {
-      convertToDateObjsAndUpdateExtremes(backendData, series);
+      convertToDateObjsAndUpdateExtremes(backendData[series]['data']);
     }
 
     // When the x-axis extremes have been calculated (as dates), convert them
@@ -244,14 +383,17 @@ xhttp.onreadystatechange = function() {
       addGraph(backendData, series);
     }
 
-    // Synchronize all of the graphs
-    /*var sync = Dygraph.synchronize(Object.values(dygraphInstances), {
-      range: false,
-      selection: true,
-      zoom: true
-    });*/
+    // Synchronize all of the graphs, if there are more than one.
+    if (Object.keys(dygraphInstances).length > 1) {
+      var sync = Dygraph.synchronize(Object.values(dygraphInstances), {
+        range: false,
+        selection: true,
+        zoom: true
+      });
+    }
 
   }
+
 };
 
 xhttp.open("GET", "http://localhost:8003", true);

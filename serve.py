@@ -1,10 +1,22 @@
-
 from http.server import HTTPServer
 from http.server import BaseHTTPRequestHandler
-import datahandlers as dh
+from urllib.parse import urlparse, parse_qs
+import datetime
+import medfile
 
 # Assemble a sample output for the file
-output = dh.assembleOutput()
+#output = dh.assembleOutput()
+print("Unpickling output.h5")
+mf = medfile.File.unpickle('output.h5')
+if not mf:
+    print("Unpickling failed.")
+    mf = medfile.File('output.h5')
+    #mf.prepareAllNumericSeries()
+    mf.prepareSeries('numeric', 'ECG.I')
+    mf.prepareSeries('numeric', 'HR')
+    mf.prepareSeries('numeric', 'RR')
+else:
+    print("Unpickled successfully.")
 
 HOST = 'localhost'
 PORT_NUMBER = 8003
@@ -14,27 +26,43 @@ class Server(BaseHTTPRequestHandler):
         return
 
     def do_GET(self):
-        self.respond()
+
+        query_components = parse_qs(urlparse(self.path).query)
+
+        if len(query_components) == 2:
+
+            # Parse the start & stop times
+            start = datetime.datetime.fromtimestamp(float(query_components['start'][0])/1000)
+            stop = datetime.datetime.fromtimestamp(float(query_components['stop'][0])/1000)
+
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
+            self.wfile.write(bytes(mf.getRangedOutput(start, stop), "UTF-8"))
+
+        else:
+
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
+            self.wfile.write(bytes(mf.getFullOutput(), "UTF-8"))
 
     def do_POST(self):
         return
 
-    def handle_http(self, status, content_type):
-        self.send_response(status)
-        self.send_header('Content-type', content_type)
-        self.end_headers()
-        # return bytes("Hello World", "UTF-8")
-        return bytes(output, "UTF-8")
-
-    def respond(self):
-        content = self.handle_http(200, 'text/html')
-        self.wfile.write(content)
-
 httpd = HTTPServer((HOST, PORT_NUMBER), Server)
+
 try:
-        print("Starting HTTP server on "+str(HOST)+":"+str(PORT_NUMBER)+".")
-        httpd.serve_forever()
+
+    print("Starting HTTP server on "+str(HOST)+":"+str(PORT_NUMBER)+".")
+    httpd.serve_forever()
+
 except KeyboardInterrupt:
-    print("HTTP server failed.")
+
+    print("HTTP server stopped.")
+    print("Pickling.")
+    mf.pickle()
+    print("Done pickling.")
     pass
+
 httpd.server_close()
