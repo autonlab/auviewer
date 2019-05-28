@@ -1,8 +1,15 @@
+// Backend address & port
+var serverAddress = 'localhost';
+var serverPort = '8009';
+
 // Holds the dom elements of instantiated graphs, keyed by series name
 var graphDomElements = {};
 
 // Holds the instantiated dygraphs, keyed by series name
 var dygraphInstances = {};
+
+// Holds the reference to the graph synchronization object
+var sync = null;
 
 /*
 This will be a 2-dimensional array that holds the min ([0]) and max ([1])
@@ -20,22 +27,43 @@ var xhttp = new XMLHttpRequest();
 // Creates a dygraph and adds it to the DOM
 function addGraph(backendData, series) {
 
-  // Create the dom element
-  el = document.createElement("DIV");
+  // Create the legend dom element
+  var legendDiv = document.createElement('DIV');
+
+  // Set element to legend css class
+  legendDiv.className = 'legend';
+
+  // Attach legend to the graph div on the DOM
+  document.getElementById('graphs').appendChild(legendDiv);
+
+  // Create the graph dom element
+  var graphDiv = document.createElement('DIV');
 
   // Add the dom element to the global collection for later reference
-  graphDomElements[series] = el;
+  graphDomElements[series] = graphDiv;
 
   // Set element to graph css class
-  el.className = "graph";
+  graphDiv.className = 'graph';
 
   // Attach new graph div to the DOM
-  document.getElementById('graphs').appendChild(el);
+  document.getElementById('graphs').appendChild(graphDiv);
 
   // Create the dygraph
-  dygraphInstances[series] = new Dygraph(el, backendData[series].data, {
-    colors: ['#5253FF'],
+  dygraphInstances[series] = new Dygraph(graphDiv, backendData[series].data, {
+    axes: {
+      x: {
+        pixelsPerLabel: 70,
+        independentTicks: true
+      },
+      y: {
+        pixelsPerLabel: 14,
+        independentTicks: true
+      }
+    },
+    colors: ['#171717'],//'#5253FF'],
     dateWindow: globalXExtremes,
+    drawPoints: true,
+    gridLineColor: 'rgb(232,122,128)',
     interactionModel: {
       'mousedown': handleMouseDown,
       'mousemove': handleMouseMove,
@@ -44,6 +72,7 @@ function addGraph(backendData, series) {
       'mousewheel': handleMouseWheel
     },
     labels: backendData[series].labels,
+    labelsDiv: legendDiv,
     series: {
       'Min': { plotter: downsamplePlotter },
       'Max': { plotter: downsamplePlotter }
@@ -66,6 +95,7 @@ function convertToDateObjs(data) {
     data[i][0] = new Date(data[i][0]);
 
   }
+
 }
 
 // Converts all x values in a data array to javascript Date objects, and also
@@ -89,6 +119,7 @@ function convertToDateObjsAndUpdateExtremes(data) {
     }
 
   }
+
 }
 
 // This function is a plotter that plugs into dygraphs in order to plot a down-
@@ -113,8 +144,8 @@ function downsamplePlotter(e) {
   var area = e.plotArea;
 
   // Line properties
-  cnv.strokeStyle = '#5253FF';
-  cnv.fillStyle = '#5253FF';
+  cnv.strokeStyle = '#171717';//'#5253FF';
+  cnv.fillStyle = '#171717';//'#5253FF';
   cnv.lineWidth = 1;
 
   // Plot all data points
@@ -148,7 +179,7 @@ function downsamplePlotter(e) {
 // Produces a meshed dataset consisting of the outerDataset and innerDataset,
 // with  innerDataset replacing its time range of data points in outerDataset.
 function getDownsampleMesh(outerDataset, innerDataset) {
-  
+
   // We expect non-empty arrays
   if (outerDataset.length < 1 || innerDataset.length < 1) {
     return;
@@ -189,37 +220,55 @@ function handleDoubleClick(event, g, context) {
 
 // Handle mouse-down for pan & zoom
 function handleMouseDown(event, g, context) {
+
   context.initializeMouseDown(event, g, context);
-  if (event.altKey || event.shiftKey) {
+
+  if (event.altKey) {
+    startAnnotation(event, g, context);
+  }
+  else if (event.shiftKey) {
     Dygraph.startZoom(event, g, context);
   } else {
     context.medViewPanningMouseMoved = false;
     Dygraph.startPan(event, g, context);
   }
+
 }
 
 // Handle mouse-move for pan & zoom.
 function handleMouseMove(event, g, context) {
-  if (context.isPanning) {
-    context.medViewPanningMouseMoved = true;
-    Dygraph.movePan(event, g, context);
-  } else if (context.isZooming) {
+
+  if (context.mvIsAnnotating) {
+    moveAnnotation(event, g, context);
+  }
+  else if (context.isZooming) {
     Dygraph.moveZoom(event, g, context);
   }
+  else if (context.isPanning) {
+    context.medViewPanningMouseMoved = true;
+    Dygraph.movePan(event, g, context);
+  }
+
 }
 
 // Handle mouse-up for pan & zoom.
 function handleMouseUp(event, g, context) {
-  if (context.isPanning) {
+
+  if (context.mvIsAnnotating) {
+    endAnnotation(event, g, context);
+  }
+  else if (context.isZooming) {
+    Dygraph.endZoom(event, g, context);
+    updateCurrentViewData(g);
+  }
+  else if (context.isPanning) {
     if (context.medViewPanningMouseMoved) {
       updateCurrentViewData(g);
       context.medViewPanningMouseMoved = false;
     }
     Dygraph.endPan(event, g, context);
-  } else if (context.isZooming) {
-    Dygraph.endZoom(event, g, context);
-    updateCurrentViewData(g);
   }
+
 }
 
 // Handle shift+scroll or alt+scroll for zoom.
@@ -283,6 +332,28 @@ function offsetToPercentage(g, offsetX) {
   return xPct;
 }
 
+// Synchronizes the graphs for zoom and selection.
+function synchronizeGraphs() {
+
+  // Synchronize all of the graphs, if there are more than one.
+  if (Object.keys(dygraphInstances).length > 1 && sync == null) {
+    sync = Dygraph.synchronize(Object.values(dygraphInstances), {
+      range: false,
+      selection: true,
+      zoom: true
+    });
+  }
+
+}
+
+// Unsynchronizes the graphs.
+function unsynchronizeGraphs() {
+  if (sync != null) {
+    sync.detach();
+    sync = null;
+  }
+}
+
 // Will request and update the current view of the graph with new data that is
 // appropriately downsampled (or not).
 function updateCurrentViewData(graph) {
@@ -300,14 +371,15 @@ function updateCurrentViewData(graph) {
 
     if (this.readyState == 4 && this.status == 200) {
 
+      //t2 = performance.now();
+
       console.log("Applying data to view.");
 
       // Parse the backend JSON response into a JS object
       var backendData = JSON.parse(x.responseText);
 
-      console.log(backendData);
-
       // Process the new data for each series.
+      unsynchronizeGraphs();
       for(series in backendData) {
 
         // Convert date strings to Date objects in all datasets.
@@ -315,21 +387,30 @@ function updateCurrentViewData(graph) {
 
         var meshedData = getDownsampleMesh(dygraphInstances[series].originalDataset, backendData[series]['data']);
 
-        console.log(meshedData);
-
         // Update the graph data, and redraw
         dygraphInstances[series].updateOptions({
           file: meshedData
         });
 
       }
+      synchronizeGraphs();
+
+      // for (series in backendData) {
+      //   dygraphInstances[series].updateOptions({}, false);
+      //   break;
+      // }
+
+      // t3 = performance.now();
+      // console.log("It took "+(t2-xt1)+"ms for the data to arrive from the backend.");
+      // console.log("It took "+(t3-t2)+"ms for all client-side processing to happen.");
 
     }
 
   }
 
   // Send the async request
-  x.open("GET", "http://localhost:8003?start="+xRange[0]+"&stop="+xRange[1], true);
+  //xt1 = performance.now();
+  x.open("GET", "http://"+serverAddress+":"+serverPort+"?start="+xRange[0]+"&stop="+xRange[1], true);
   x.send();
 
 }
@@ -357,10 +438,10 @@ xhttp.onreadystatechange = function() {
 
   if (this.readyState == 4 && this.status == 200) {
 
+    //t2 = performance.now();
+
     // Parse the backend JSON response into a JS object
     var backendData = JSON.parse(xhttp.responseText);
-
-    console.log(backendData);
 
     // Convert date strings to Date objects in all datasets and produce global
     // x-axis extremes. It is an obvious potential optimization to combine this
@@ -383,18 +464,82 @@ xhttp.onreadystatechange = function() {
       addGraph(backendData, series);
     }
 
-    // Synchronize all of the graphs, if there are more than one.
-    if (Object.keys(dygraphInstances).length > 1) {
-      var sync = Dygraph.synchronize(Object.values(dygraphInstances), {
-        range: false,
-        selection: true,
-        zoom: true
-      });
-    }
+    // Synchronize the graphs
+    synchronizeGraphs();
+
+    // t3 = performance.now();
+    // console.log("It took "+(t2-xhttpt1)+"ms for the data to arrive from the backend.");
+    // console.log("It took "+(t3-t2)+"ms for all client-side processing to happen.");
 
   }
 
 };
-
-xhttp.open("GET", "http://localhost:8003", true);
+//xhttpt1 = performance.now();
+xhttp.open("GET", "http://"+serverAddress+":"+serverPort, true);
 xhttp.send();
+
+
+
+
+
+
+
+
+function startAnnotation (event, g, context) {
+  context.mvIsAnnotating = true;
+  context.mvAnnotatingMoved = false;
+};
+
+function moveAnnotation (event, g, context) {
+  context.mvAnnotatingMoved = true;
+  // context.dragEndX = utils.dragGetX_(event, context);
+  // context.dragEndY = utils.dragGetY_(event, context);
+  context.dragEndX = Dygraph.pageX(event) - context.px;
+  context.dragEndY = Dygraph.pageY(event) - context.py;
+
+  var xDelta = Math.abs(context.dragStartX - context.dragEndX);
+  var yDelta = Math.abs(context.dragStartY - context.dragEndY);
+
+  // drag direction threshold for y axis is twice as large as x axis
+  //context.dragDirection = xDelta < yDelta / 2 ? utils.VERTICAL : utils.HORIZONTAL;
+  context.dragDirection = xDelta < yDelta / 2 ? 2 : 1;
+
+  g.drawZoomRect_(context.dragDirection, context.dragStartX, context.dragEndX, context.dragStartY, context.dragEndY, context.prevDragDirection, context.prevEndX, context.prevEndY);
+
+  context.prevEndX = context.dragEndX;
+  context.prevEndY = context.dragEndY;
+  context.prevDragDirection = context.dragDirection;
+};
+
+function endAnnotation (event, g, context) {
+  g.clearZoomRect_();
+  context.mvIsAnnotating = false;
+  context.mvAnnotatingMoved = false;
+  //DygraphInteraction.maybeTreatMouseOpAsClick(event, g, context);
+
+  // The zoom rectangle is visibly clipped to the plot area, so its behavior
+  // should be as well.
+  // See http://code.google.com/p/dygraphs/issues/detail?id=280
+  // var plotArea = g.getArea();
+  // if (context.regionWidth >= 10 && context.dragDirection == utils.HORIZONTAL) {
+  //   var left = Math.min(context.dragStartX, context.dragEndX),
+  //       right = Math.max(context.dragStartX, context.dragEndX);
+  //   left = Math.max(left, plotArea.x);
+  //   right = Math.min(right, plotArea.x + plotArea.w);
+  //   if (left < right) {
+  //     g.doZoomX_(left, right);
+  //   }
+  //   context.cancelNextDblclick = true;
+  // } else if (context.regionHeight >= 10 && context.dragDirection == utils.VERTICAL) {
+  //   var top = Math.min(context.dragStartY, context.dragEndY),
+  //       bottom = Math.max(context.dragStartY, context.dragEndY);
+  //   top = Math.max(top, plotArea.y);
+  //   bottom = Math.min(bottom, plotArea.y + plotArea.h);
+  //   if (top < bottom) {
+  //     g.doZoomY_(top, bottom);
+  //   }
+  //   context.cancelNextDblclick = true;
+  // }
+  context.dragStartX = null;
+  context.dragStartY = null;
+};

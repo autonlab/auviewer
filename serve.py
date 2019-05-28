@@ -11,12 +11,16 @@ mf = medfile.File.unpickle('output.h5')
 if not mf:
     print("Unpickling failed.")
     mf = medfile.File('output.h5')
-    #mf.prepareAllNumericSeries()
-    mf.prepareSeries('numeric', 'ECG.I')
-    mf.prepareSeries('numeric', 'HR')
-    mf.prepareSeries('numeric', 'RR')
+    mf.prepareAllNumericSeries()
+    # mf.prepareSeries('numeric', 'ECG.I')
+    # mf.prepareSeries('numeric', 'HR')
+    # mf.prepareSeries('numeric', 'RR')
+
 else:
     print("Unpickled successfully.")
+    # mf.numericSeries[0].downsampleSet.build(None)
+    # mf.numericSeries[1].downsampleSet.build(None)
+    # mf.numericSeries[2].downsampleSet.build(None)
 
 HOST = 'localhost'
 PORT_NUMBER = 8003
@@ -57,12 +61,11 @@ try:
     print("Starting HTTP server on "+str(HOST)+":"+str(PORT_NUMBER)+".")
     httpd.serve_forever()
 
-except KeyboardInterrupt:
+except:# KeyboardInterrupt:
 
     print("HTTP server stopped.")
     print("Pickling.")
     mf.pickle()
     print("Done pickling.")
-    pass
 
 httpd.server_close()

@@ -2,7 +2,7 @@ import datetime as dt
 from collections import deque
 
 # Max number of data points to transmit for a given view
-M = 5000
+M = 3000
 
 class DownsampleSet:
 
@@ -17,11 +17,11 @@ class DownsampleSet:
         # Set the series parent
         self.seriesparent = seriesparent
 
-    def build(self, datagroup):
+    def build(self):
 
         # Tracks the next number of intervals for which to create a downsample
         numIntervals = M
-        i=0
+        #i=0
         while True:
 
             print("Creating " + str(numIntervals) + " intervals.")
@@ -42,9 +42,9 @@ class DownsampleSet:
             # Increment the number of intervals for next round by 100%
             numIntervals = numIntervals * 2
 
-            if i > 1:
-                break
-            i = i + 1
+            # if i > 1:
+            #     break
+            # i = i + 1
 
         print("Broke out of downsample creation loop.")
 
@@ -84,10 +84,6 @@ class DownsampleSet:
 
 class Downsample:
 
-    # Expected member variables:
-    #   basetime: the datetime values are offsets, in seconds, from a basetime datetime
-    #   intervals: array of the intervals that make up the downsampling
-    #   timePerInterval: amount of time per interval, as a datetime.timedelta object
 
     def __init__(self, dssparent):
 
@@ -112,12 +108,9 @@ class Downsample:
         if len(self.dssparent.seriesparent.rawDates) != len(self.dssparent.seriesparent.rawValues):
             return
 
-        # Parse the basetime datetime, with timezone removed
-        self.basetime = dt.datetime.strptime(self.dssparent.seriesparent.rawDates.attrs['time_reference'], '%Y-%m-%d %H:%M:%S.%f %z').replace(tzinfo=None)
-
         # Grab the first and last timestamps as datetime types
-        starttime = self.basetime + dt.timedelta(0, self.dssparent.seriesparent.rawDates[0])
-        stoptime = self.basetime + dt.timedelta(0, self.dssparent.seriesparent.rawDates[len(self.dssparent.seriesparent.rawDates) - 1])
+        starttime = self.dssparent.seriesparent.basetime + dt.timedelta(0, self.dssparent.seriesparent.rawDates[0])
+        stoptime = self.dssparent.seriesparent.basetime + dt.timedelta(0, self.dssparent.seriesparent.rawDates[len(self.dssparent.seriesparent.rawDates) - 1])
 
         # Calculate the timespan of the data set
         timespan = stoptime - starttime
@@ -142,18 +135,18 @@ class Downsample:
         #
         # For cases 1 & 2, we must add 1 microsecond to the timePerInterval in order to achieve the goal of numIntervals
         # intervals including all data points in the plot. For case 3, no action is needed.
-        if self.basetime + (self.timePerInterval * numIntervals) <= stoptime:
+        if self.dssparent.seriesparent.basetime + (self.timePerInterval * numIntervals) <= stoptime:
 
             # Add 1 microsecond. This covers cases 1 & 2.
             self.timePerInterval = self.timePerInterval + dt.timedelta(0, 0, 1)
 
             # We expect the above action to achieve the "encompass all points" goal. If it does not, raise an exception
             # as this is an unexpected condition.
-            if self.basetime + (self.timePerInterval * numIntervals) <= stoptime:
+            if self.dssparent.seriesparent.basetime + (self.timePerInterval * numIntervals) <= stoptime:
                 raise RuntimeError('Algorithm for setting timespan to encompass all points failed unexpectedly.')
 
         # Establish our initial boundaries for the first interval
-        leftboundary = self.basetime + dt.timedelta(0, self.dssparent.seriesparent.rawDates[0])
+        leftboundary = self.dssparent.seriesparent.basetime + dt.timedelta(0, self.dssparent.seriesparent.rawDates[0])
         rightboundary = leftboundary + self.timePerInterval
 
         # Holds the index of the current data point we're working on
@@ -172,7 +165,7 @@ class Downsample:
 
             # While the next data point does not belong to the current interval,
             # progress to the next interval.
-            while (self.basetime + dt.timedelta(0, self.dssparent.seriesparent.rawDates[i])) >= rightboundary:
+            while (self.dssparent.seriesparent.basetime + dt.timedelta(0, self.dssparent.seriesparent.rawDates[i])) >= rightboundary:
                 # Update left & right boundaries to the next interval
                 leftboundary = rightboundary
                 rightboundary = leftboundary + self.timePerInterval
@@ -186,7 +179,7 @@ class Downsample:
 
             # While the next data point occurs within the current interval, add
             # it to the interval's statistics.
-            while i < len(self.dssparent.seriesparent.rawDates) and (self.basetime + dt.timedelta(0, self.dssparent.seriesparent.rawDates[i])) < rightboundary:
+            while i < len(self.dssparent.seriesparent.rawDates) and (self.dssparent.seriesparent.basetime + dt.timedelta(0, self.dssparent.seriesparent.rawDates[i])) < rightboundary:
                 # Add the data point to the interval
                 self.intervals[len(self.intervals) - 1].addDataPoint(self.dssparent.seriesparent.rawValues[i])
 
@@ -224,12 +217,9 @@ class Downsample:
         if len(datagroup['datetime']) != len(datagroup['value']):
             return
 
-        # Parse the basetime datetime, with timezone removed
-        self.basetime = dt.datetime.strptime(datagroup['datetime'].attrs['time_reference'], '%Y-%m-%d %H:%M:%S.%f %z').replace(tzinfo=None)
-
         # Grab the first and last timestamps as datetime types
-        starttime = self.basetime + dt.timedelta(0, datagroup['datetime'][0])
-        stoptime = self.basetime + dt.timedelta(0, datagroup['datetime'][len(datagroup['datetime']) - 1])
+        starttime = self.dssparent.seriesparent.basetime + dt.timedelta(0, datagroup['datetime'][0])
+        stoptime = self.dssparent.seriesparent.basetime + dt.timedelta(0, datagroup['datetime'][len(datagroup['datetime']) - 1])
 
         # Calculate the timespan of the data set
         timespan = stoptime - starttime
@@ -254,18 +244,18 @@ class Downsample:
         #
         # For cases 1 & 2, we must add 1 microsecond to the timePerInterval in order to achieve the goal of numIntervals
         # intervals including all data points in the plot. For case 3, no action is needed.
-        if self.basetime + (self.timePerInterval * numIntervals) <= stoptime:
+        if self.dssparent.seriesparent.basetime + (self.timePerInterval * numIntervals) <= stoptime:
 
             # Add 1 microsecond. This covers cases 1 & 2.
             self.timePerInterval = self.timePerInterval + dt.timedelta(0, 0, 1)
 
             # We expect the above action to achieve the "encompass all points" goal. If it does not, raise an exception
             # as this is an unexpected condition.
-            if self.basetime + (self.timePerInterval * numIntervals) <= stoptime:
+            if self.dssparent.seriesparent.basetime + (self.timePerInterval * numIntervals) <= stoptime:
                 raise RuntimeError('Algorithm for setting timespan to encompass all points failed unexpectedly.')
 
         # Establish our initial boundaries for the first interval
-        leftboundary = self.basetime + dt.timedelta(0, datagroup['datetime'][0])
+        leftboundary = self.dssparent.seriesparent.basetime + dt.timedelta(0, datagroup['datetime'][0])
         rightboundary = leftboundary + self.timePerInterval
 
         # Holds the index of the current data point we're working on
@@ -284,7 +274,7 @@ class Downsample:
 
             # While the next data point does not belong to the current interval,
             # progress to the next interval.
-            while (self.basetime + dt.timedelta(0, datagroup['datetime'][i])) >= rightboundary:
+            while (self.dssparent.seriesparent.basetime + dt.timedelta(0, datagroup['datetime'][i])) >= rightboundary:
 
                 # Update left & right boundaries to the next interval
                 leftboundary = rightboundary
@@ -299,7 +289,7 @@ class Downsample:
 
             # While the next data point occurs within the current interval, add
             # it to the interval's statistics.
-            while i < len(datagroup['datetime']) and (self.basetime + dt.timedelta(0, datagroup['datetime'][i])) < rightboundary:
+            while i < len(datagroup['datetime']) and (self.dssparent.seriesparent.basetime + dt.timedelta(0, datagroup['datetime'][i])) < rightboundary:
 
                 # Add the data point to the interval
                 self.intervals[len(self.intervals) - 1].addDataPoint(datagroup['value'][i])

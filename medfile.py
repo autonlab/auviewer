@@ -1,3 +1,4 @@
+import bisect
 import datetime as dt
 import downsample
 import h5py
@@ -75,6 +76,18 @@ class File:
 
         print('Preparing series ' + name + '.')
 
+        # Check if the series already exists
+        if type == 'numeric':
+            for s in self.numericSeries:
+                if s.name == name:
+                    print('Aborting series preparation because series already exists.')
+                    return
+        elif type == 'waveform':
+            for s in self.waveformSeries:
+                if s.name == name:
+                    print('Aborting series preparation because series already exists.')
+                    return
+
         # We expect type to be one of two values
         if type != 'numeric' and type != 'waveform':
             raise RuntimeError('Invalid type was provided to File.prepareSeries(): ' + str(type))
@@ -90,8 +103,17 @@ class File:
 
     def prepareAllNumericSeries(self):
 
+        print("Preparing all numeric series for file.")
+
         for s in self.f['numeric']:
             self.prepareSeries('numeric', s)
+
+    def prepareAllWaveformSeries(self):
+
+        print("Preparing all waveform series for file.")
+
+        for s in self.f['waveform']:
+            self.prepareSeries('waveform', s)
 
     # Attempts to unpickle the pickle file for filename, and returns the
     # unpickled object if successful.
@@ -131,14 +153,17 @@ class Series:
         # Holds a reference to the file parent which contains the series
         self.fileparent = fileparent
 
+        # Parse the basetime datetime, with timezone removed
+        self.basetime = dt.datetime.strptime(self.getData()['datetime'].attrs['time_reference'], '%Y-%m-%d %H:%M:%S.%f %z').replace(tzinfo=None)
+
         # Holds the downsample set
         self.downsampleSet = downsample.DownsampleSet(self)
 
-        # Build the downsample set
-        #self.downsampleSet.build(self.getData())
-
         # Pull raw data into memory
         self.pullRawData()
+
+        # Build the downsample set
+        self.downsampleSet.build()
 
     # Returns this series' dataset.
     def getData(self):
@@ -151,7 +176,9 @@ class Series:
         ds = self.downsampleSet.getDownsample(starttime, stoptime)
 
         if ds:
-            print("1")
+
+            print("Assembling downsampled data for " + self.name + ".")
+
             # Get the intervals within this time range
             intervals = ds.getIntervals(starttime, stoptime)
 
@@ -168,43 +195,61 @@ class Series:
             }
 
         else:
-            print("2")
-            # Get the data raw data
-            raw = self.getData()
-            print(raw)
-            # Parse the basetime datetime, with timezone removed
-            basetime = dt.datetime.strptime(raw['datetime'].attrs['time_reference'], '%Y-%m-%d %H:%M:%S.%f %z').replace(tzinfo=None)
-            print(basetime)
+
+            print("Assembling raw data for " + self.name + ".")
+
             # Determine the index of the first point to transmit for the view.
             # To do this, find the first point which occurs after the starttime
             # and take the index prior to that as the starting data point.
             startPointIndex = 0
-            i = 0
-            while i < len(raw['datetime']) and (basetime + dt.timedelta(0, raw['datetime'][i])) <= starttime:
-                i = i + 1
-            startPointIndex = i - 1
+            # i = 0
+            # while i < len(self.rawDates) and (self.basetime + dt.timedelta(0, self.rawDates[i])) <= starttime:
+            #     i = i + 1
+            # startPointIndex = i - 1
+            # if startPointIndex < 0:
+            #     startPointIndex = 0
+            # print("Old method start: " + str(startPointIndex))
+
+            # Convert the start time into seconds offset from basetime
+            startoffset = (starttime - self.basetime).total_seconds()
+
+            startPointIndex = bisect.bisect(self.rawDates, startoffset) - 1
             if startPointIndex < 0:
                 startPointIndex = 0
-            print(str(startPointIndex))
+
+            print("Calculated start index at: " + str(startPointIndex))
+
             # Determine the index of the last point to transmit for the view. To
             # do this, find the first point which occurs after the stoptime and
             # take the index prior to that as the starting interval.
-            i = startPointIndex
-            while i < len(raw['datetime']) and (basetime + dt.timedelta(0, raw['datetime'][i])) <= stoptime:
-                i = i + 1
-            stopPointIndex = i - 1
+            # i = startPointIndex
+            # while i < len(self.rawDates) and (self.basetime + dt.timedelta(0, self.rawDates[i])) <= stoptime:
+            #     i = i + 1
+            # stopPointIndex = i - 1
+            # if stopPointIndex < 0:
+            #     stopPointIndex = 0
+            # print("Old method stop: "+str(stopPointIndex))
+
+            # Convert the stop time into seconds offset from basetime
+            stopoffset = (stoptime - self.basetime).total_seconds()
+
+            stopPointIndex = bisect.bisect(self.rawDates, stopoffset) - 1
             if stopPointIndex < 0:
                 stopPointIndex = 0
-            print(str(stopPointIndex))
+
+            print("Calculated start index at: " + str(stopPointIndex))
+
             # Will hold the data points ready for output
             data = []
 
             # Assemble the data points
             i = startPointIndex
             while i <= stopPointIndex:
-                data.append([(basetime + dt.timedelta(0, raw['datetime'][i])).isoformat(), None, None, raw['value'][i]])
+                data.append([(self.basetime + dt.timedelta(0, self.rawDates[i])).isoformat(), None, None, self.rawValues[i]])
                 i = i + 1
-            print(data)
+
+            print("Assembly complete for " + self.name + ".")
+
             return {
                 "labels": ['Date/Offset', 'Min', 'Max', self.name],
                 "data": data
@@ -243,5 +288,10 @@ class Series:
         while i < len(data['datetime']):
             self.rawDates.append(data['datetime'][i])
             self.rawValues.append(data['value'][i])
+
+            if i%50000==0:
+                print(str(i))
+
+            i = i + 1
 
         print("Finished reading raw series data into memory.")
