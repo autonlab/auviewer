@@ -4,6 +4,7 @@ from collections import deque
 # Max number of data points to transmit for a given view
 M = 3000
 
+# Represents a set of downsamples for a series of data.
 class DownsampleSet:
 
     # Expected member variables:
@@ -17,11 +18,12 @@ class DownsampleSet:
         # Set the series parent
         self.seriesparent = seriesparent
 
+    # Builds all necessary downsamples for the series.
     def build(self):
 
-        # Tracks the next number of intervals for which to create a downsample
+        # Tracks the next number of intervals for which to create a downsample.
         numIntervals = M
-        #i=0
+
         while True:
 
             print("Creating " + str(numIntervals) + " intervals.")
@@ -31,8 +33,7 @@ class DownsampleSet:
 
             # Build the downsample. If the downsample proves necessary, add it
             # to the downsamples list. If not, break out of the loop.
-            #if ds.build(datagroup, numIntervals):
-            if ds.buildAlt(numIntervals):
+            if ds.build(numIntervals):
                 self.downsamples.append(ds)
             else:
                 break
@@ -42,12 +43,9 @@ class DownsampleSet:
             # Increment the number of intervals for next round by 100%
             numIntervals = numIntervals * 2
 
-            # if i > 1:
-            #     break
-            # i = i + 1
-
         print("Broke out of downsample creation loop.")
 
+    # Returns a reference to the appropriate downsample for the given time range.
     # Expects starttime & stoptime to be datetime objects.
     def getDownsample(self, starttime, stoptime):
 
@@ -82,6 +80,7 @@ class DownsampleSet:
 
         return self.downsamples[chosenDownsampleIndex]
 
+# Downsample represents a single downsample for a series at a specific interval size.
 class Downsample:
 
 
@@ -98,7 +97,7 @@ class Downsample:
     # downsample has been reached. It will return True if the downsample is
     # necessary, and it will return False if the downsample is not necessary.
     # In either case, the downsample will be built.
-    def buildAlt(self, numIntervals):
+    def build(self, numIntervals):
 
         # We assume datagroup has two non-empty datasets, "datetime" and "value".
         if len(self.dssparent.seriesparent.rawDates) < 1 or len(self.dssparent.seriesparent.rawValues) < 1:
@@ -160,12 +159,16 @@ class Downsample:
         # to the first interval, the first inner while loop would be skipped).
         trailingSummary.addInterval()
 
+        # Grab data points length so we don't have to look it up every time.
+        dataPointsLength = len(self.dssparent.seriesparent.rawDates)
+
         # For all data points
-        while i < len(self.dssparent.seriesparent.rawDates):
+        while i < dataPointsLength:
 
             # While the next data point does not belong to the current interval,
             # progress to the next interval.
             while (self.dssparent.seriesparent.basetime + dt.timedelta(0, self.dssparent.seriesparent.rawDates[i])) >= rightboundary:
+
                 # Update left & right boundaries to the next interval
                 leftboundary = rightboundary
                 rightboundary = leftboundary + self.timePerInterval
@@ -180,6 +183,7 @@ class Downsample:
             # While the next data point occurs within the current interval, add
             # it to the interval's statistics.
             while i < len(self.dssparent.seriesparent.rawDates) and (self.dssparent.seriesparent.basetime + dt.timedelta(0, self.dssparent.seriesparent.rawDates[i])) < rightboundary:
+
                 # Add the data point to the interval
                 self.intervals[len(self.intervals) - 1].addDataPoint(self.dssparent.seriesparent.rawValues[i])
 
@@ -201,118 +205,8 @@ class Downsample:
             # Return false to indicate the build is unnecessary
             print("Threshold not reached at " + str(numIntervals))
             return False
-    
-    # Build builds a downsampled set of datagroup with numIntervals number of
-    # points. Build will determine if the threshold of necessity for this
-    # downsample has been reached. It will return True if the downsample is
-    # necessary, and it will return False if the downsample is not necessary.
-    # In either case, the downsample will be built.
-    def build(self, datagroup, numIntervals):
 
-        # We assume datagroup has two non-empty datasets, "datetime" and "value".
-        if len(datagroup['datetime']) < 1 or len(datagroup['value']) < 1:
-            return
-
-        # We assume the two datasets are of equal length
-        if len(datagroup['datetime']) != len(datagroup['value']):
-            return
-
-        # Grab the first and last timestamps as datetime types
-        starttime = self.dssparent.seriesparent.basetime + dt.timedelta(0, datagroup['datetime'][0])
-        stoptime = self.dssparent.seriesparent.basetime + dt.timedelta(0, datagroup['datetime'][len(datagroup['datetime']) - 1])
-
-        # Calculate the timespan of the data set
-        timespan = stoptime - starttime
-
-        # Calculate the interval size
-        self.timePerInterval = timespan / numIntervals
-
-        # Our goal is to ensure that numIntervals intervals of timePerInterval time encompass the data set, including
-        # the last point. Our intervals are defined to be inclusive at the left boundary and non-inclusive at the right
-        # boundary. In other words, an interval that starts at time 1:00.000000 and ends at 2:00.000000 will include a
-        # point at 1:00.000000 but will not include a point at 2:00.000000.
-        #
-        # Furthermore, there is the possibility of rounding in the division to calculate timePerInterval.
-        #
-        # For the both reasons above, we must evaluate whether to add 1 microsecond to the timePerInterval.
-        #
-        # There are three cases to account for:
-        # 1. Timespan was evenly divided into numIntervals intervals (timespan % numIntervals == 0).
-        # 2. Timespan was not evenly divided (timespan % numIntervals != 0), and timePerInterval was rounded down.
-        # 3. Timespan was not evenly divided (timespan % numIntervals != 0), and timePerInterval was rounded up.
-        # ( Side note: Python 3 uses round-half-to-even rounding. )
-        #
-        # For cases 1 & 2, we must add 1 microsecond to the timePerInterval in order to achieve the goal of numIntervals
-        # intervals including all data points in the plot. For case 3, no action is needed.
-        if self.dssparent.seriesparent.basetime + (self.timePerInterval * numIntervals) <= stoptime:
-
-            # Add 1 microsecond. This covers cases 1 & 2.
-            self.timePerInterval = self.timePerInterval + dt.timedelta(0, 0, 1)
-
-            # We expect the above action to achieve the "encompass all points" goal. If it does not, raise an exception
-            # as this is an unexpected condition.
-            if self.dssparent.seriesparent.basetime + (self.timePerInterval * numIntervals) <= stoptime:
-                raise RuntimeError('Algorithm for setting timespan to encompass all points failed unexpectedly.')
-
-        # Establish our initial boundaries for the first interval
-        leftboundary = self.dssparent.seriesparent.basetime + dt.timedelta(0, datagroup['datetime'][0])
-        rightboundary = leftboundary + self.timePerInterval
-
-        # Holds the index of the current data point we're working on
-        i = 0
-
-        # Tracks the trailing data point counts of up to the last M intervals
-        trailingSummary = TrailingSummary()
-
-        # Prime the trailing summary with an initial interval since we're
-        # starting from the first interval (e.g. if the first data point belongs
-        # to the first interval, the first inner while loop would be skipped).
-        trailingSummary.addInterval()
-
-        # For all data points
-        while i < len(datagroup['datetime']):
-
-            # While the next data point does not belong to the current interval,
-            # progress to the next interval.
-            while (self.dssparent.seriesparent.basetime + dt.timedelta(0, datagroup['datetime'][i])) >= rightboundary:
-
-                # Update left & right boundaries to the next interval
-                leftboundary = rightboundary
-                rightboundary = leftboundary + self.timePerInterval
-
-                # Add an interval to the trailing summary
-                trailingSummary.addInterval()
-
-            # Having reached this point, we have reached a new interval to which
-            # the next data point belongs, so we should create a new interval.
-            self.intervals.append(Interval(datagroup['value'][i], leftboundary + (self.timePerInterval / 2)))
-
-            # While the next data point occurs within the current interval, add
-            # it to the interval's statistics.
-            while i < len(datagroup['datetime']) and (self.dssparent.seriesparent.basetime + dt.timedelta(0, datagroup['datetime'][i])) < rightboundary:
-
-                # Add the data point to the interval
-                self.intervals[len(self.intervals) - 1].addDataPoint(datagroup['value'][i])
-
-                # Increment i to process the next data point
-                i = i + 1
-
-            # Finalize the interval count in the trailing summary
-            trailingSummary.finalizeInterval(self.intervals[len(self.intervals) - 1])
-
-        # Determine whether the downsample was necessary, and return accordingly.
-        if trailingSummary.thresholdReached:
-
-            # Return true to indicate the build is necessary
-            print("Threshold reached at " + str(numIntervals))
-            return True
-
-        else:
-
-            # Return false to indicate the build is unnecessary
-            print("Threshold not reached at " + str(numIntervals))
-            return False
-
+    # Returns a list of the intervals in the range of starttime to stoptime.
     def getIntervals(self, starttime, stoptime):
 
         # Determine the index of the first interval to transmit for the view. To
@@ -384,7 +278,7 @@ class TrailingSummary:
     def __init__(self):
 
         # Holds the queue of the last M intervals, where each queue element
-        # is the count of data points in the interval.
+        # is the integer count of data points in the interval.
         self.lastMIntervals = deque()
 
         # This is a boolean that tracks whether we've reached the threshold

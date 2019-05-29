@@ -11,6 +11,7 @@ import pickle
 # Find "ignore_nan" here: https://simplejson.readthedocs.io/en/latest/
 import simplejson as json
 
+# File represents a single patient data file.
 class File:
 
     # Version is used to make upgrades to pickled class instances when necessary.
@@ -31,17 +32,7 @@ class File:
         # Load the file
         self.loadFile()
 
-    def getRangedOutput(self, start, stop):
-
-        outputObject = {}
-
-        for s in self.numericSeries:
-
-            outputObject[s.name] = s.getRangedOutput(start, stop)
-
-        return json.dumps(outputObject, ignore_nan = True)
-
-    # Returns full JSON output for all series in the file.
+    # Produces JSON output for all series in the file at the maximum time range.
     def getFullOutput(self):
 
         outputObject = {}
@@ -52,7 +43,18 @@ class File:
 
         return json.dumps(outputObject, ignore_nan = True)
 
-    # Loads the HDF5 file
+    # Produces JSON output for all series in the file at a specified time range.
+    def getRangedOutput(self, start, stop):
+
+        outputObject = {}
+
+        for s in self.numericSeries:
+
+            outputObject[s.name] = s.getRangedOutput(start, stop)
+
+        return json.dumps(outputObject, ignore_nan = True)
+
+    # Opens the HDF5 file.
     def loadFile(self):
 
         # Open the HDF5 file
@@ -70,7 +72,8 @@ class File:
         with open(self.filename+'.pkl', 'wb') as f:
             pickle.dump(self, f)
 
-    # Reads a series into memory and processes downsampling. Type is either
+    # Prepare a specific series by both pulling the raw data into memory and
+    # producing & storing in memory all necessary downsamples. Type is either
     # 'numeric' or 'waveform'.
     def prepareSeries(self, type, name):
 
@@ -101,6 +104,8 @@ class File:
         elif type == 'waveform':
             self.waveformSeries.append(series)
 
+    # Prepare all numeric series by both pulling the raw data into memory and
+    # producing & storing in memory all necessary downsamples.
     def prepareAllNumericSeries(self):
 
         print("Preparing all numeric series for file.")
@@ -108,6 +113,8 @@ class File:
         for s in self.f['numeric']:
             self.prepareSeries('numeric', s)
 
+    # Prepare all waveform series by both pulling the raw data into memory and
+    # producing & storing in memory all necessary downsamples.
     def prepareAllWaveformSeries(self):
 
         print("Preparing all waveform series for file.")
@@ -136,7 +143,7 @@ class File:
 
             return
 
-
+# Represents a single time series of data.
 class Series:
 
     # Reads a series into memory and builds the downsampling. Type is either
@@ -165,11 +172,27 @@ class Series:
         # Build the downsample set
         self.downsampleSet.build()
 
-    # Returns this series' dataset.
+    # Returns a reference to the series' h5py dataset object.
     def getData(self):
 
         return self.fileparent.f[self.type][self.name]['data']
 
+    # Produces JSON output for the series at the maximum time range.
+    def getFullOutput(self):
+
+        # Will hold the data points ready for output
+        data = []
+
+        # Assemble the data points
+        for i in self.downsampleSet.downsamples[0].intervals:
+            data.append([i.time.isoformat(), i.min, i.max, None])
+
+        return {
+            "labels": ['Date/Offset', 'Min', 'Max', self.name],
+            "data": data
+        }
+
+    # Produces JSON output for the series over a specified time range.
     def getRangedOutput(self, starttime, stoptime):
 
         # Get the appropriate downsample for this time range
@@ -198,18 +221,6 @@ class Series:
 
             print("Assembling raw data for " + self.name + ".")
 
-            # Determine the index of the first point to transmit for the view.
-            # To do this, find the first point which occurs after the starttime
-            # and take the index prior to that as the starting data point.
-            startPointIndex = 0
-            # i = 0
-            # while i < len(self.rawDates) and (self.basetime + dt.timedelta(0, self.rawDates[i])) <= starttime:
-            #     i = i + 1
-            # startPointIndex = i - 1
-            # if startPointIndex < 0:
-            #     startPointIndex = 0
-            # print("Old method start: " + str(startPointIndex))
-
             # Convert the start time into seconds offset from basetime
             startoffset = (starttime - self.basetime).total_seconds()
 
@@ -218,17 +229,6 @@ class Series:
                 startPointIndex = 0
 
             print("Calculated start index at: " + str(startPointIndex))
-
-            # Determine the index of the last point to transmit for the view. To
-            # do this, find the first point which occurs after the stoptime and
-            # take the index prior to that as the starting interval.
-            # i = startPointIndex
-            # while i < len(self.rawDates) and (self.basetime + dt.timedelta(0, self.rawDates[i])) <= stoptime:
-            #     i = i + 1
-            # stopPointIndex = i - 1
-            # if stopPointIndex < 0:
-            #     stopPointIndex = 0
-            # print("Old method stop: "+str(stopPointIndex))
 
             # Convert the stop time into seconds offset from basetime
             stopoffset = (stoptime - self.basetime).total_seconds()
@@ -255,43 +255,16 @@ class Series:
                 "data": data
             }
 
-    def getFullOutput(self):
-
-        # Will hold the data points ready for output
-        data = []
-
-        # Assemble the data points
-        for i in self.downsampleSet.downsamples[0].intervals:
-            data.append([i.time.isoformat(), i.min, i.max, None])
-
-        return {
-            "labels": ['Date/Offset', 'Min', 'Max', self.name],
-            "data": data
-        }
-
+    # Pulls the raw data for the series from the file into memory (self.rawDates
+    # and self.rawValues).
     def pullRawData(self):
 
-        print("Reading raw series data into memory.")
-
-        # Will hold the raw date values
-        self.rawDates = []
-
-        # Will hold the raw values
-        self.rawValues = []
+        print("Reading raw series data into memory for " + self.name + ".")
 
         # Get reference to the series datastream from the HDF5 file
         data = self.getData()
 
-        # Iterate through the dates & values from the file, and copy them into
-        # the object attributes.
-        i = 0
-        while i < len(data['datetime']):
-            self.rawDates.append(data['datetime'][i])
-            self.rawValues.append(data['value'][i])
+        self.rawDates = data['datetime'][()]
+        self.rawValues = data['value'][()]
 
-            if i%50000==0:
-                print(str(i))
-
-            i = i + 1
-
-        print("Finished reading raw series data into memory.")
+        print("Finished reading raw series data into memory for " + self.name + ".")

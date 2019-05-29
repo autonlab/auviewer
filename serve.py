@@ -4,23 +4,20 @@ from urllib.parse import urlparse, parse_qs
 import datetime
 import medfile
 
-# Assemble a sample output for the file
-#output = dh.assembleOutput()
+# NOTE: This is a non-production grade dummy http server. It will be most likely
+# be replaced before going live, unless we decide it's good enough since we'll
+# be inaccesible behind a firewall. Apologies for the lack of comments, but this
+# file is just toy code for now.
+
 print("Unpickling output.h5")
 mf = medfile.File.unpickle('output.h5')
 if not mf:
     print("Unpickling failed.")
     mf = medfile.File('output.h5')
-    mf.prepareAllNumericSeries()
-    # mf.prepareSeries('numeric', 'ECG.I')
-    # mf.prepareSeries('numeric', 'HR')
-    # mf.prepareSeries('numeric', 'RR')
+    mf.prepareAllWaveformSeries()
 
 else:
     print("Unpickled successfully.")
-    # mf.numericSeries[0].downsampleSet.build(None)
-    # mf.numericSeries[1].downsampleSet.build(None)
-    # mf.numericSeries[2].downsampleSet.build(None)
 
 HOST = 'localhost'
 PORT_NUMBER = 8003
