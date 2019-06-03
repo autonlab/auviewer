@@ -1,3 +1,4 @@
+import bisect
 import datetime as dt
 from collections import deque
 
@@ -212,21 +213,29 @@ class Downsample:
         # Determine the index of the first interval to transmit for the view. To
         # do this, find the first interval which occurs after the starttime and
         # take the index prior to that as the starting interval.
-        startIntervalIndex = 0
-        i = 0
-        while i < len(self.intervals) and self.intervals[i].time <= starttime:
-            i = i + 1
-        startIntervalIndex = i - 1
+        # startIntervalIndex = 0
+        # i = 0
+        # while i < len(self.intervals) and self.intervals[i].time <= starttime:
+        #     i = i + 1
+        # startIntervalIndex = i - 1
+        # if startIntervalIndex < 0:
+        #     startIntervalIndex = 0
+
+        startIntervalIndex = bisect.bisect(self.intervals, starttime) - 1
         if startIntervalIndex < 0:
             startIntervalIndex = 0
 
         # Determine the index of the last interval to transmit for the view. To
         # do this, find the first interval which occurs after the stoptime and
         # take the index prior to that as the starting interval.
-        i = startIntervalIndex
-        while i < len(self.intervals) and self.intervals[i].time <= stoptime:
-            i = i + 1
-        stopIntervalIndex = i - 1
+        # i = startIntervalIndex
+        # while i < len(self.intervals) and self.intervals[i].time <= stoptime:
+        #     i = i + 1
+        # stopIntervalIndex = i - 1
+        # if stopIntervalIndex < 0:
+        #     stopIntervalIndex = 0
+
+        stopIntervalIndex = bisect.bisect(self.intervals, stoptime) - 1
         if stopIntervalIndex < 0:
             stopIntervalIndex = 0
 
@@ -255,6 +264,24 @@ class Interval:
         # We've primted the interval with the first data point, so the count
         # starts at 1
         self.count = 1
+
+    def __eq__(self, other):
+        return self.time == other.time if isinstance(other, Interval) else self.time == other
+
+    def __ne__(self, other):
+        return self.time != other.time if isinstance(other, Interval) else self.time != other
+
+    def __lt__(self, other):
+        return self.time < other.time if isinstance(other, Interval) else self.time < other
+
+    def __le__(self, other):
+        return self.time <= other.time if isinstance(other, Interval) else self.time <= other
+
+    def __gt__(self, other):
+        return self.time > other.time if isinstance(other, Interval) else self.time > other
+
+    def __ge__(self, other):
+        return self.time >= other.time if isinstance(other, Interval) else self.time >= other
 
     # Adds the provided data point value to the interval
     def addDataPoint(self, dp):

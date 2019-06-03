@@ -20,7 +20,7 @@ else:
     print("Unpickled successfully.")
 
 HOST = 'localhost'
-PORT_NUMBER = 8003
+PORT_NUMBER = 8001
 
 class Server(BaseHTTPRequestHandler):
     def do_HEAD(self):
@@ -61,8 +61,8 @@ try:
 except:# KeyboardInterrupt:
 
     print("HTTP server stopped.")
-    print("Pickling.")
-    mf.pickle()
-    print("Done pickling.")
+    #print("Pickling.")
+    #mf.pickle()
+    #print("Done pickling.")
 
 httpd.server_close()
