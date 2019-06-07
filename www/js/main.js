@@ -1,6 +1,6 @@
 // Backend address & port
 var serverAddress = 'localhost';
-var serverPort = '8001';
+var serverPort = '8002';
 
 // Series to display by default
 defaultSeries = ['HR', 'RR', 'BP', 'SpO2', 'CVP', 'ArtWave'];
@@ -281,106 +281,6 @@ function getDownsampleMesh(outerDataset, innerDataset) {
 
 }
 
-// Handle double-click for restoring the original zoom.
-function handleDoubleClick(event, g, context) {
-	g.updateOptions({
-		dateWindow: globalXExtremes
-	});
-}
-
-// Handle mouse-down for pan & zoom
-function handleMouseDown(event, g, context) {
-
-	context.initializeMouseDown(event, g, context);
-
-	if (event.altKey) {
-		startAnnotation(event, g, context);
-	}
-	else if (event.shiftKey) {
-		Dygraph.startZoom(event, g, context);
-	} else {
-		context.medViewPanningMouseMoved = false;
-		Dygraph.startPan(event, g, context);
-	}
-
-}
-
-// Handle mouse-move for pan & zoom.
-function handleMouseMove(event, g, context) {
-
-	if (context.mvIsAnnotating) {
-		moveAnnotation(event, g, context);
-	}
-	else if (context.isZooming) {
-		Dygraph.moveZoom(event, g, context);
-	}
-	else if (context.isPanning) {
-		context.medViewPanningMouseMoved = true;
-		Dygraph.movePan(event, g, context);
-	}
-
-}
-
-// Handle mouse-up for pan & zoom.
-function handleMouseUp(event, g, context) {
-
-	if (context.mvIsAnnotating) {
-		endAnnotation(event, g, context);
-	}
-	else if (context.isZooming) {
-		Dygraph.endZoom(event, g, context);
-		updateCurrentViewData(g);
-	}
-	else if (context.isPanning) {
-		if (context.medViewPanningMouseMoved) {
-			updateCurrentViewData(g);
-			context.medViewPanningMouseMoved = false;
-		}
-		Dygraph.endPan(event, g, context);
-	}
-
-}
-
-// Handle shift+scroll or alt+scroll for zoom.
-function handleMouseWheel(event, g, context) {
-
-	// The event.ctrlKey is true when the user is using pinch-to-zoom gesture.
-	if (event.ctrlKey || event.altKey || event.shiftKey) {
-
-		var normal = event.detail ? event.detail * -1 : event.wheelDelta / 40;
-		// For me the normalized value shows 0.075 for one click. If I took
-		// that verbatim, it would be a 7.5%.
-		var percentage = normal / 50;
-
-		if (!(event.offsetX)){
-			event.offsetX = event.layerX - event.target.offsetLeft;
-		}
-
-		var xPct = offsetToPercentage(g, event.offsetX);
-
-		zoom(g, percentage, xPct);
-
-		// If the ctrlKey is set, we are pinch-zooming. In this case, set a timeout
-		// to update the current view's data. This is to prevent repeated,
-		// overlapping calls in the midst of pinch-zooming. Otherwise, simply call
-		// for the data update immediately.
-		if (event.ctrlKey) {
-			if (g.updateDataTimer != null) {
-				clearTimeout(g.updateDataTimer);
-			}
-			g.updateDataTimer = setTimeout(function(){ g.updateDataTimer = null; updateCurrentViewData(g); }, 200);
-		} else {
-			updateCurrentViewData(g);
-		}
-
-
-		//updateCurrentViewData(g);
-		event.preventDefault();
-
-	}
-
-}
-
 // Hide the graph & legend divs for the named series
 function hideGraphDivs(series) {
 	graphDomElements[series].style.display = 'none';
@@ -420,7 +320,8 @@ function instantiateDygraph(series, dataset) {
 		  'Min': { plotter: downsamplePlotter },
 		  'Max': { plotter: downsamplePlotter }
 		},*/
-		title: series
+		title: series,
+		underlayCallback: underlayCallbackHandler
 	});
 
 	// Attach the original dataset to the graph for later use
@@ -647,71 +548,4 @@ xhttp.onreadystatechange = function() {
 
 };
 //xhttpt1 = performance.now();
-xhttp.open("GET", "http://"+serverAddress+":"+serverPort, true);
-xhttp.send();
 
-
-
-
-
-
-
-
-function startAnnotation (event, g, context) {
-	context.mvIsAnnotating = true;
-	context.mvAnnotatingMoved = false;
-};
-
-function moveAnnotation (event, g, context) {
-	context.mvAnnotatingMoved = true;
-	// context.dragEndX = utils.dragGetX_(event, context);
-	// context.dragEndY = utils.dragGetY_(event, context);
-	context.dragEndX = Dygraph.pageX(event) - context.px;
-	context.dragEndY = Dygraph.pageY(event) - context.py;
-
-	var xDelta = Math.abs(context.dragStartX - context.dragEndX);
-	var yDelta = Math.abs(context.dragStartY - context.dragEndY);
-
-	// drag direction threshold for y axis is twice as large as x axis
-	//context.dragDirection = xDelta < yDelta / 2 ? utils.VERTICAL : utils.HORIZONTAL;
-	context.dragDirection = xDelta < yDelta / 2 ? 2 : 1;
-
-	g.drawZoomRect_(context.dragDirection, context.dragStartX, context.dragEndX, context.dragStartY, context.dragEndY, context.prevDragDirection, context.prevEndX, context.prevEndY);
-
-	context.prevEndX = context.dragEndX;
-	context.prevEndY = context.dragEndY;
-	context.prevDragDirection = context.dragDirection;
-};
-
-function endAnnotation (event, g, context) {
-	g.clearZoomRect_();
-	context.mvIsAnnotating = false;
-	context.mvAnnotatingMoved = false;
-	//DygraphInteraction.maybeTreatMouseOpAsClick(event, g, context);
-
-	// The zoom rectangle is visibly clipped to the plot area, so its behavior
-	// should be as well.
-	// See http://code.google.com/p/dygraphs/issues/detail?id=280
-	// var plotArea = g.getArea();
-	// if (context.regionWidth >= 10 && context.dragDirection == utils.HORIZONTAL) {
-	//   var left = Math.min(context.dragStartX, context.dragEndX),
-	//       right = Math.max(context.dragStartX, context.dragEndX);
-	//   left = Math.max(left, plotArea.x);
-	//   right = Math.min(right, plotArea.x + plotArea.w);
-	//   if (left < right) {
-	//     g.doZoomX_(left, right);
-	//   }
-	//   context.cancelNextDblclick = true;
-	// } else if (context.regionHeight >= 10 && context.dragDirection == utils.VERTICAL) {
-	//   var top = Math.min(context.dragStartY, context.dragEndY),
-	//       bottom = Math.max(context.dragStartY, context.dragEndY);
-	//   top = Math.max(top, plotArea.y);
-	//   bottom = Math.min(bottom, plotArea.y + plotArea.h);
-	//   if (top < bottom) {
-	//     g.doZoomY_(top, bottom);
-	//   }
-	//   context.cancelNextDblclick = true;
-	// }
-	context.dragStartX = null;
-	context.dragStartY = null;
-};

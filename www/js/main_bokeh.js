@@ -3,7 +3,7 @@ var serverAddress = 'localhost';
 var serverPort = '8001';
 
 // Series to display by default
-defaultSeries = ['HR', 'RR', 'BP', 'SpO2', 'CVP', 'ArtWave'];
+defaultSeries = ['HR.BeatToBeat', 'RR', 'BP', 'SpO2', 'CVP', 'ArtWave'];
 
 // TODO(gus): Convert these redundant tracking objects into one a unified object.
 
