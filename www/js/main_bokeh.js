@@ -512,7 +512,7 @@ function resetZoom() {
 	if (d.length > 0) {
 		dygraphInstances[d[0]].updateOptions({
 			dateWindow: globalXExtremes
-		})
+		});
 	}
 }
 
@@ -535,6 +535,14 @@ function synchronizeGraphs() {
 		});
 	}
 
+}
+
+// Trigger the dygraphs to redraw
+function triggerRedraw() {
+	d = Object.keys(dygraphInstances);
+	if (d.length > 0) {
+		dygraphInstances[d[0]].updateOptions({});
+	}
 }
 
 // Unsynchronizes the graphs.

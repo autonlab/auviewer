@@ -11,6 +11,9 @@ import pickle
 # Find "ignore_nan" here: https://simplejson.readthedocs.io/en/latest/
 import simplejson as json
 
+# This is the directory in which application data will be stored & retrieved.
+dataDir = '../data/'
+
 # File represents a single patient data file.
 class File:
 
@@ -58,7 +61,7 @@ class File:
     def loadFile(self):
 
         # Open the HDF5 file
-        self.f = h5py.File(self.filename, 'r')
+        self.f = h5py.File(dataDir+self.filename, 'r')
 
     # Pickles the class instance to a file named [filename].pkl. To pickle
     # itself, an instance will remove its self.f file reference because the
@@ -69,7 +72,7 @@ class File:
         self.f = None
 
         # Pickle this object
-        with open(self.filename+'.pkl', 'wb') as f:
+        with open(dataDir+self.filename+'.pkl', 'wb') as f:
             pickle.dump(self, f)
 
     # Prepare a specific series by both pulling the raw data into memory and
@@ -130,7 +133,7 @@ class File:
         try:
 
             # Unpickle this object
-            with open(filename+'.pkl', 'rb') as f:
+            with open(dataDir+filename+'.pkl', 'rb') as f:
                 obj = pickle.load(f)
 
             # Reopen the HDF5 file

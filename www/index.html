@@ -3,7 +3,11 @@
 <head>
 	<title>Med Viewer &amp; Annotator</title>
 
-	<link rel='stylesheet' href='css/dygraph.css' />
+	<link rel='stylesheet' href='css/dygraph.css'/>
+
+	<link rel="stylesheet" href="https://cdn.webix.com/site/webix.css">
+	<!--<link rel="stylesheet" href="https://cdn.materialdesignicons.com/2.8.94/css/materialdesignicons.css" type="text/css" charset="utf-8">-->
+
 	<style>
 
 		#controls {
@@ -39,24 +43,33 @@
 			/*text-align: right !important;*/
 		}
 
+		.webix_message_area {
+			display: none !important;
+		}
+
 	</style>
 </head>
 <body>
 
-	<div id="controls">
-		<span style="font-style: italic;">Data Series</span><br>
-	</div>
-	<div id="graphs"></div>
+<div id="controls">
+	<span style="font-style: italic;">Data Series</span><br>
+</div>
+<div id="graphs"></div>
 
-	<script src="js/dygraph.js"></script>
-	<script src="js/synchronizer.js"></script>
-	<script src="js/main.js"></script>
-	<script src="js/graph_event_handlers.js"></script>
-	<script src="js/annotate.js"></script>
-	<script type="application/javascript">
-		xhttp.open("GET", "http://"+serverAddress+":"+serverPort, true);
-		xhttp.send();
-	</script>
+<script src="js/dygraph.js"></script>
+<script src="js/synchronizer.js"></script>
+
+<!-- Webix Library (PRO) -->
+<script type="text/javascript" src="https://cdn.webix.com/site/webix.js"></script>
+
+<script src="js/annotation.js"></script>
+<script src="js/annotation_event_handlers.js"></script>
+<script src="js/graph_event_handlers.js"></script>
+<script src="js/main.js"></script>
+<script type="application/javascript">
+    xhttp.open("GET", allDataAllSeriesURL, true);
+    xhttp.send();
+</script>
 
 </body>
 </html>

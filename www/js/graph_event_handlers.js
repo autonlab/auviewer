@@ -61,7 +61,9 @@ function handleMouseUp(event, g, context) {
 // Handle shift+scroll or alt+scroll for zoom.
 function handleMouseWheel(event, g, context) {
 
-	// The event.ctrlKey is true when the user is using pinch-to-zoom gesture.
+	// We allow the user to use either alt or shift plus the mousewheel to zoom.
+	// We also allow the user to use pinch-to-zoom; the event.ctrlKey is true
+	// when the user is using pinch-to-zoom gesture.
 	if (event.ctrlKey || event.altKey || event.shiftKey) {
 
 		var normal = event.detail ? event.detail * -1 : event.wheelDelta / 40;
@@ -77,18 +79,13 @@ function handleMouseWheel(event, g, context) {
 
 		zoom(g, percentage, xPct);
 
-		// If the ctrlKey is set, we are pinch-zooming. In this case, set a timeout
-		// to update the current view's data. This is to prevent repeated,
-		// overlapping calls in the midst of pinch-zooming. Otherwise, simply call
-		// for the data update immediately.
-		if (event.ctrlKey) {
-			if (g.updateDataTimer != null) {
-				clearTimeout(g.updateDataTimer);
-			}
-			g.updateDataTimer = setTimeout(function(){ g.updateDataTimer = null; updateCurrentViewData(g); }, 200);
-		} else {
-			updateCurrentViewData(g);
+		// If we're zooming with the mouse-wheel or with pinch-to-zoom, we want
+		// to set a timeout to update the current view's data. This is to prevent
+		// repeated, overlapping calls in the midst of zooming.
+		if (g.updateDataTimer != null) {
+			clearTimeout(g.updateDataTimer);
 		}
+		g.updateDataTimer = setTimeout(function(){ g.updateDataTimer = null; updateCurrentViewData(g); }, 200);
 
 
 		//updateCurrentViewData(g);

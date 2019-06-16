@@ -1,6 +1,8 @@
 // Backend address & port
 var serverAddress = 'localhost';
-var serverPort = '8002';
+var serverPort = '8001';
+var allDataAllSeriesURL = "http://" + serverAddress + ":" + serverPort + "/all_data_all_series";
+var dataWindowAllSeriesURL = "http://" + serverAddress + ":" + serverPort + "/data_window_single_series";
 
 // Series to display by default
 defaultSeries = ['HR', 'RR', 'BP', 'SpO2', 'CVP', 'ArtWave'];
@@ -412,6 +414,16 @@ function synchronizeGraphs() {
 
 }
 
+// Trigger the dygraphs to redraw. This function relies on the fact that the
+// dygraphs are synchronized, and therefore triggering one to redraw will
+// trigger them all to do so.
+function triggerRedraw() {
+	d = Object.keys(dygraphInstances);
+	if (d.length > 0) {
+		dygraphInstances[d[0]].updateOptions({});
+	}
+}
+
 // Unsynchronizes the graphs.
 function unsynchronizeGraphs() {
 	if (sync != null) {
@@ -483,7 +495,7 @@ function updateCurrentViewData(graph) {
 
 	// Send the async request
 	//xt1 = performance.now();
-	x.open("GET", "http://"+serverAddress+":"+serverPort+"?start="+xRange[0]+"&stop="+xRange[1], true);
+	x.open("GET", dataWindowAllSeriesURL+"?start="+xRange[0]+"&stop="+xRange[1], true);
 	x.send();
 
 }
