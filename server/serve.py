@@ -1,13 +1,17 @@
 from datetime import datetime as dt
 from flask import Flask, Blueprint, send_from_directory, request
-import medfile
+from file import File
 
 print("Unpickling output.h5")
-mf = medfile.File.unpickle('output.h5')
+mf = File.unpickle('output.h5')
 if not mf:
     print("Unpickling failed.")
-    mf = medfile.File('output.h5')
-    mf.prepareAllWaveformSeries()
+    mf = File('output.h5')
+    #mf.prepareAllWaveformSeries()
+    mf.prepareAllNumericSeries()
+    print("Pickling output.h5 for later use.")
+    mf.pickle()
+    print("Done pickling.")
 
 else:
     print("Unpickled successfully.")
