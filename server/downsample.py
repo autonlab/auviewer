@@ -1,52 +1,56 @@
 import bisect
 import config
-import datetime as dt
+# import datetime as dt
 from collections import deque
 
-# Downsample represents a single downsample for a series at a specific interval size.
+# Downsample represents a single downsample level for a series at a specific
+# interval size.
 class Downsample:
-
-    def __init__(self, dssparent):
-
-        # Holds the downsampled intervals
-        self.intervals = []
-
-        # Set the downsample series parent
-        self.dssparent = dssparent
 
     # Build builds a downsampled set of datagroup with numIntervals number of
     # points. Build will determine if the threshold of necessity for this
     # downsample has been reached. It will return True if the downsample is
     # necessary, and it will return False if the downsample is not necessary.
     # In either case, the downsample will be built.
-    def build(self, numIntervals):
+    def __init__(self, dssparent, numIntervals):
+
+        # Set the downsample series parent
+        self.dssparent = dssparent
+
+        # Will hold the downsample intervals
+        self.intervals = []
 
         # We assume datagroup has two non-empty datasets, "datetime" and "value".
-        if len(self.dssparent.seriesparent.rawDates) < 1 or len(self.dssparent.seriesparent.rawValues) < 1:
+        if len(self.dssparent.seriesparent.rawTimeOffsets) < 1 or len(self.dssparent.seriesparent.rawValues) < 1:
             return
 
         # We assume the two datasets are of equal length
-        if len(self.dssparent.seriesparent.rawDates) != len(self.dssparent.seriesparent.rawValues):
+        if len(self.dssparent.seriesparent.rawTimeOffsets) != len(self.dssparent.seriesparent.rawValues):
             return
 
-        # Grab the first and last timestamps as datetime types
-        starttime = self.dssparent.seriesparent.basetime + dt.timedelta(0, self.dssparent.seriesparent.rawDates[0])
-        stoptime = self.dssparent.seriesparent.basetime + dt.timedelta(0, self.dssparent.seriesparent.rawDates[len(self.dssparent.seriesparent.rawDates) - 1])
+        # Grab the first & last time offsets for this series
+        firsttime = self.dssparent.seriesparent.rawTimeOffsets[0]
+        lasttime = self.dssparent.seriesparent.rawTimeOffsets[len(self.dssparent.seriesparent.rawTimeOffsets) - 1]
 
-        # Calculate the timespan of the data set
-        timespan = stoptime - starttime
+        # Get the timespan, in seconds, as the difference between the first
+        # and last data point offsets.
+        timespan = lasttime - firsttime
 
-        # Calculate the interval size
+        # Calculate the interval size in seconds
         self.timePerInterval = timespan / numIntervals
 
-        # Our goal is to ensure that numIntervals intervals of timePerInterval time encompass the data set, including
-        # the last point. Our intervals are defined to be inclusive at the left boundary and non-inclusive at the right
-        # boundary. In other words, an interval that starts at time 1:00.000000 and ends at 2:00.000000 will include a
-        # point at 1:00.000000 but will not include a point at 2:00.000000.
+        # Our goal is to ensure that numIntervals intervals of timePerInterval
+        # time encompass the data set, including the last point. Our intervals
+        # are defined to be inclusive at the left boundary and non-inclusive at
+        # the right boundary. In other words, an interval that starts at time
+        # 1:00.000000 and ends at 2:00.000000 will include a point at
+        # 1:00.000000 but will not include a point at 2:00.000000.
         #
-        # Furthermore, there is the possibility of rounding in the division to calculate timePerInterval.
+        # Furthermore, there is the possibility of rounding in the division to
+        # calculate timePerInterval.
         #
-        # For the both reasons above, we must evaluate whether to add 1 microsecond to the timePerInterval.
+        # For both reasons above, we must evaluate whether to add 1 microsecond
+        # to the timePerInterval.
         #
         # There are three cases to account for:
         # 1. Timespan was evenly divided into numIntervals intervals (timespan % numIntervals == 0).
@@ -54,24 +58,26 @@ class Downsample:
         # 3. Timespan was not evenly divided (timespan % numIntervals != 0), and timePerInterval was rounded up.
         # ( Side note: Python 3 uses round-half-to-even rounding. )
         #
-        # For cases 1 & 2, we must add 1 microsecond to the timePerInterval in order to achieve the goal of numIntervals
-        # intervals including all data points in the plot. For case 3, no action is needed.
-        if self.dssparent.seriesparent.basetime + (self.timePerInterval * numIntervals) <= stoptime:
+        # For cases 1 & 2, we must add 1 microsecond to the timePerInterval in
+        # order to achieve the goal of numIntervals intervals including all data
+        # points in the plot. For case 3, no action is needed.
+        #
+        # NOTE: We add firsttime here because we will start the interval windows
+        # at firsttime.
+        if firsttime + self.timePerInterval * numIntervals <= lasttime:
 
             # Add 1 microsecond. This covers cases 1 & 2.
-            self.timePerInterval = self.timePerInterval + dt.timedelta(0, 0, 1)
+            self.timePerInterval += .001
 
-            # We expect the above action to achieve the "encompass all points" goal. If it does not, raise an exception
+            # We expect the above action to achieve the "encompass all points"
+            # goal. If it does not, raise an exception
             # as this is an unexpected condition.
-            if self.dssparent.seriesparent.basetime + (self.timePerInterval * numIntervals) <= stoptime:
+            if firsttime + self.timePerInterval * numIntervals <= lasttime:
                 raise RuntimeError('Algorithm for setting timespan to encompass all points failed unexpectedly.')
 
         # Establish our initial boundaries for the first interval
-        leftboundary = self.dssparent.seriesparent.basetime + dt.timedelta(0, self.dssparent.seriesparent.rawDates[0])
+        leftboundary = firsttime
         rightboundary = leftboundary + self.timePerInterval
-
-        # Holds the index of the current data point we're working on
-        i = 0
 
         # Tracks the trailing data point counts of up to the last M intervals
         trailingSummary = TrailingSummary()
@@ -82,14 +88,20 @@ class Downsample:
         trailingSummary.addInterval()
 
         # Grab data points length so we don't have to look it up every time.
-        dataPointsLength = len(self.dssparent.seriesparent.rawDates)
+        dataPointsLength = len(self.dssparent.seriesparent.rawTimeOffsets)
+
+        # Holds the index of the current data point we're working on
+        i = 0
 
         # For all data points
         while i < dataPointsLength:
 
+            print(type(self.dssparent.seriesparent.rawTimeOffsets))
+            quit()
+
             # While the next data point does not belong to the current interval,
             # progress to the next interval.
-            while (self.dssparent.seriesparent.basetime + dt.timedelta(0, self.dssparent.seriesparent.rawDates[i])) >= rightboundary:
+            while self.dssparent.seriesparent.rawTimeOffsets[i] >= rightboundary:
 
                 # Update left & right boundaries to the next interval
                 leftboundary = rightboundary
@@ -98,35 +110,30 @@ class Downsample:
                 # Add an interval to the trailing summary
                 trailingSummary.addInterval()
 
-            # Having reached this point, we have reached a new interval to which
-            # the next data point belongs, so we should create a new interval.
+            # Having escaped the while loop, we have reached a new interval to
+            # which the next data point belongs, so we create a new interval.
             self.intervals.append(Interval(self.dssparent.seriesparent.rawValues[i], leftboundary + (self.timePerInterval / 2)))
 
             # While the next data point occurs within the current interval, add
             # it to the interval's statistics.
-            while i < len(self.dssparent.seriesparent.rawDates) and (self.dssparent.seriesparent.basetime + dt.timedelta(0, self.dssparent.seriesparent.rawDates[i])) < rightboundary:
+            while i < dataPointsLength and self.dssparent.seriesparent.rawTimeOffsets[i] < rightboundary:
 
                 # Add the data point to the interval
                 self.intervals[len(self.intervals) - 1].addDataPoint(self.dssparent.seriesparent.rawValues[i])
 
-                # Increment i to process the next data point
+                # Increment i to progress to the next data point
                 i = i + 1
 
             # Finalize the interval count in the trailing summary
             trailingSummary.finalizeInterval(self.intervals[len(self.intervals) - 1])
 
-        # Determine whether the downsample was necessary, and return accordingly.
-        if trailingSummary.thresholdReached:
+        # Attach a flag of whether the threshold was reached to this downsample.
+        self.thresholdReached = trailingSummary.thresholdReached
 
-            # Return true to indicate the build is necessary
+        if self.thresholdReached:
             print("Threshold reached at " + str(numIntervals))
-            return True
-
         else:
-
-            # Return false to indicate the build is unnecessary
             print("Threshold not reached at " + str(numIntervals))
-            return False
 
     # Returns a list of the intervals in the range of starttime to stoptime.
     def getIntervals(self, starttime, stoptime):
@@ -134,14 +141,6 @@ class Downsample:
         # Determine the index of the first interval to transmit for the view. To
         # do this, find the first interval which occurs after the starttime and
         # take the index prior to that as the starting interval.
-        # startIntervalIndex = 0
-        # i = 0
-        # while i < len(self.intervals) and self.intervals[i].time <= starttime:
-        #     i = i + 1
-        # startIntervalIndex = i - 1
-        # if startIntervalIndex < 0:
-        #     startIntervalIndex = 0
-
         startIntervalIndex = bisect.bisect(self.intervals, starttime) - 1
         if startIntervalIndex < 0:
             startIntervalIndex = 0
@@ -149,13 +148,6 @@ class Downsample:
         # Determine the index of the last interval to transmit for the view. To
         # do this, find the first interval which occurs after the stoptime and
         # take the index prior to that as the starting interval.
-        # i = startIntervalIndex
-        # while i < len(self.intervals) and self.intervals[i].time <= stoptime:
-        #     i = i + 1
-        # stopIntervalIndex = i - 1
-        # if stopIntervalIndex < 0:
-        #     stopIntervalIndex = 0
-
         stopIntervalIndex = bisect.bisect(self.intervals, stoptime) - 1
         if stopIntervalIndex < 0:
             stopIntervalIndex = 0
@@ -182,7 +174,7 @@ class Interval:
         # Set time
         self.time = time
 
-        # We've primted the interval with the first data point, so the count
+        # We've primed the interval with the first data point, so the count
         # starts at 1
         self.count = 1
 

@@ -2,19 +2,16 @@ from datetime import datetime as dt
 from flask import Flask, Blueprint, send_from_directory, request
 from file import File
 
-print("Unpickling output.h5")
-mf = File.unpickle('output.h5')
+#mf = File.unpickle('output.h5')
 if not mf:
-    print("Unpickling failed.")
     mf = File('output.h5')
-    #mf.prepareAllWaveformSeries()
-    mf.prepareAllNumericSeries()
-    print("Pickling output.h5 for later use.")
+    mf.prepareAllWaveformSeries()
+    #mf.prepareAllNumericSeries()
     mf.pickle()
-    print("Done pickling.")
 
 else:
-    print("Unpickled successfully.")
+    mf.prepareAllWaveformSeries()
+    #mf.pickle()
 
 # Instantiate the Flask web application class
 app = Flask(__name__)
@@ -33,18 +30,30 @@ def all_data_all_series():
 
     # Return the full (zoomed-out but downsampled if appropriate) datasets for
     # all data series.
-    return mf.getFullOutput()
+    return mf.getFullOutputAllSeries()
 
-@app.route('/data_window_single_series', methods=['GET'])
-def data_window_single_series():
+@app.route('/data_window_all_series', methods=['GET'])
+def data_window_all_series():
 
     if request.method == 'GET' and len(request.args.get('start', default='')) > 0 and len(request.args.get('stop', default='')) > 0:
 
         # Parse the start & stop times
-        start = dt.fromtimestamp(request.args.get('start', type=float) / 1000)
-        stop = dt.fromtimestamp(request.args.get('stop', type=float) / 1000)
+        start = request.args.get('start', type=float)
+        stop = request.args.get('stop', type=float)
 
-        return mf.getRangedOutput(start, stop)
+        return mf.getRangedOutputAllSeries(start, stop)
 
     else:
         return "Invalid request."
+
+@app.route('/data_window_single_series', methods=['GET'])
+def data_window_single_series():
+
+    if request.method == 'GET' and len(request.args.get('start', default='')) > 0 and len(request.args.get('start', default='')) > 0 and len(request.args.get('stop', default='')) > 0:
+
+        # Parse the series name and start & stop times
+        series = request.args.get('series', type=string)
+        start = request.args.get('start', type=float)
+        stop = request.args.get('stop', type=float)
+
+        return mf.getRangedOutputSingleSeries(series, start, stop)

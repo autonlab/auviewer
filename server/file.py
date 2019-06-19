@@ -3,11 +3,13 @@ import pickle
 import config
 from series import Series
 
-# Simplejson package is required in order to "ignore" NaN values and implicitly convert them into null values.
-# RFC JSON spec left out NaN values, even though ES5 supports them (https://www.ecma-international.org/ecma-262/5.1/#sec-4.3.23).
-# By default, Python "json" module will allow & json-encode NaN values, but the Chrome JS engine will throw an error when trying to parse them.
-# Simplejson package, with ignore_nan=True, will implicitly convert NaN values into null values.
-# Find "ignore_nan" here: https://simplejson.readthedocs.io/en/latest/
+# Simplejson package is required in order to "ignore" NaN values and implicitly
+# convert them into null values. RFC JSON spec left out NaN values, even though
+# ES5 supports them (https://www.ecma-international.org/ecma-262/5.1/#sec-4.3.23).
+# By default, Python "json" module will allow & json-encode NaN values, but the
+# Chrome JS engine will throw an error when trying to parse them. Simplejson
+# package, with ignore_nan=True, will implicitly convert NaN values into null
+# values. Find "ignore_nan" here: https://simplejson.readthedocs.io/en/latest/
 import simplejson as json
 
 # File represents a single patient data file.
@@ -32,24 +34,38 @@ class File:
         self.loadFile()
 
     # Produces JSON output for all series in the file at the maximum time range.
-    def getFullOutput(self):
+    def getFullOutputAllSeries(self):
 
         outputObject = {}
 
         for s in self.numericSeries:
 
-            outputObject[s.name] = s.getFullOutput()
+            outputObject[s.name] = s.getFullOutputAllSeries()
 
         return json.dumps(outputObject, ignore_nan = True)
 
     # Produces JSON output for all series in the file at a specified time range.
-    def getRangedOutput(self, start, stop):
+    def getRangedOutputAllSeries(self, start, stop):
 
         outputObject = {}
 
         for s in self.numericSeries:
 
             outputObject[s.name] = s.getRangedOutput(start, stop)
+
+        return json.dumps(outputObject, ignore_nan = True)
+
+    # Produces JSON output for a given series in the file at a specified
+    # time range.
+    def getRangedOutputSingleSeries(selfself, series, start, stop):
+
+        outputObject = {}
+
+        for s in self.numericSeries:
+
+            if s.name == series:
+
+                outputObject[s.name] = s.getRangedOutput(start, stop)
 
         return json.dumps(outputObject, ignore_nan = True)
 
@@ -64,12 +80,16 @@ class File:
     # the h5py file objects cannot be pickled/unpickled.
     def pickle(self):
 
+        print("Pickling " + self.filename + " for later use.")
+
         # Remove the file reference
         self.f = None
 
         # Pickle this object
-        with open(config.scratchFilesDir+self.filename+'.pkl', 'wb') as f:
+        with open(config.scratchFilesDir+self.filename+'.alt.new.pkl', 'wb') as f:
             pickle.dump(self, f)
+
+        print("Done pickling.")
 
     # Prepare a specific series by both pulling the raw data into memory and
     # producing & storing in memory all necessary downsamples. Type is either
@@ -112,6 +132,8 @@ class File:
         for s in self.f['numeric']:
             self.prepareSeries('numeric', s)
 
+        print("Completed preparing all numeric series for file.")
+
     # Prepare all waveform series by both pulling the raw data into memory and
     # producing & storing in memory all necessary downsamples.
     def prepareAllWaveformSeries(self):
@@ -121,6 +143,8 @@ class File:
         for s in self.f['waveform']:
             self.prepareSeries('waveform', s)
 
+        print("Completed preparing all waveform series for file.")
+
     # Attempts to unpickle the pickle file for filename, and returns the
     # unpickled object if successful.
     @staticmethod
@@ -129,7 +153,7 @@ class File:
         try:
 
             # Unpickle this object
-            print(config.scratchFilesDir+filename+'.pkl')
+            print("Unpickling " + config.scratchFilesDir+filename+'.pkl')
             with open(config.scratchFilesDir+filename+'.pkl', 'rb') as f:
                 obj = pickle.load(f)
 
@@ -137,8 +161,10 @@ class File:
             obj.loadFile()
 
             # Return the object
+            print("Unpickling successful.")
             return obj
 
         except:
 
+            print("Unpickling failed.")
             return

@@ -1,5 +1,5 @@
 import bisect
-import datetime as dt
+# import datetime as dt
 from downsampleset import DownsampleSet
 
 # Simplejson package is required in order to "ignore" NaN values and implicitly convert them into null values.
@@ -27,7 +27,7 @@ class Series:
         self.fileparent = fileparent
 
         # Parse the basetime datetime, with timezone removed
-        self.basetime = dt.datetime.strptime(self.getData()['datetime'].attrs['time_reference'], '%Y-%m-%d %H:%M:%S.%f %z').replace(tzinfo=None)
+        # self.basetime = dt.datetime.strptime(self.getData()['datetime'].attrs['time_reference'], '%Y-%m-%d %H:%M:%S.%f %z').replace(tzinfo=None)
 
         # Holds the downsample set
         self.downsampleSet = DownsampleSet(self)
@@ -44,21 +44,25 @@ class Series:
         return self.fileparent.f[self.type][self.name]['data']
 
     # Produces JSON output for the series at the maximum time range.
-    def getFullOutput(self):
+    def getFullOutputAllSeries(self):
 
-        # Will hold the data points ready for output
-        data = []
+        # # Will hold the data points ready for output
+        # data = []
+        #
+        # # Assemble the data points
+        # for i in self.downsampleSet.downsamples[0].intervals:
+        #     data.append([i.time.isoformat(), i.min, i.max, None])
 
-        # Assemble the data points
-        for i in self.downsampleSet.downsamples[0].intervals:
-            data.append([i.time.isoformat(), i.min, i.max, None])
+        # Assemble the output data
+        data = [[i.time, i.min, i.max, None] for i in self.downsampleSet.downsamples[0].intervals]
 
         return {
             "labels": ['Date/Offset', 'Min', 'Max', self.name],
             "data": data
         }
 
-    # Produces JSON output for the series over a specified time range.
+    # Produces JSON output for the series over a specified time range, with
+    # starttime and stoptime being time offset floats in seconds.
     def getRangedOutput(self, starttime, stoptime):
 
         # Get the appropriate downsample for this time range
@@ -71,12 +75,15 @@ class Series:
             # Get the intervals within this time range
             intervals = ds.getIntervals(starttime, stoptime)
 
-            # Will hold the data points ready for output
-            data = []
+            # # Will hold the data points ready for output
+            # data = []
+            #
+            # # Assemble the data points
+            # for i in intervals:
+            #     data.append([i.time.isoformat(), i.min, i.max, None])
 
-            # Assemble the data points
-            for i in intervals:
-                data.append([i.time.isoformat(), i.min, i.max, None])
+            # Assemble the output data
+            data = [[i.time, i.min, i.max, None] for i in intervals]
 
             return {
                 "labels": ['Date/Offset', 'Min', 'Max', self.name],
@@ -87,32 +94,38 @@ class Series:
 
             print("Assembling raw data for " + self.name + ".")
 
-            # Convert the start time into seconds offset from basetime
-            startoffset = (starttime - self.basetime).total_seconds()
-
-            startPointIndex = bisect.bisect(self.rawDates, startoffset) - 1
+            # Determine the index of the first point to transmit for the view.
+            # To do this, find the first point which occurs after the starttime
+            # and take the index prior to that as the starting data point.
+            startPointIndex = bisect.bisect(self.rawTimeOffsets, starttime) - 1
             if startPointIndex < 0:
                 startPointIndex = 0
 
             print("Calculated start index at: " + str(startPointIndex))
 
-            # Convert the stop time into seconds offset from basetime
-            stopoffset = (stoptime - self.basetime).total_seconds()
-
-            stopPointIndex = bisect.bisect(self.rawDates, stopoffset) - 1
+            # Determine the index of the last point to transmit for the view. To
+            # To do this, find the first interval which occurs after the stoptime
+            # and take the index prior to that as the starting data point.
+            stopPointIndex = bisect.bisect(self.rawTimeOffsets, stoptime) - 1
             if stopPointIndex < 0:
                 stopPointIndex = 0
 
             print("Calculated start index at: " + str(stopPointIndex))
 
             # Will hold the data points ready for output
-            data = []
+            # data = []
 
             # Assemble the data points
-            i = startPointIndex
-            while i <= stopPointIndex:
-                data.append([(self.basetime + dt.timedelta(0, self.rawDates[i])).isoformat(), None, None, self.rawValues[i]])
-                i = i + 1
+            # i = startPointIndex
+            # while i <= stopPointIndex:
+            #     data.append([self.rawTimeOffsets[i], None, None, self.rawValues[i]])
+            #     i = i + 1
+
+            # Assemble the output data
+            # TODO(gus): Try to get this from the file instead of relying on it being in memory.
+            nones = [None]*(stopPointIndex-startPointIndex)
+            tuples = zip(self.rawTimeOffsets[startPointIndex:(stopPointIndex+1)], nones, nones, self.rawValues[startPointIndex:(stopPointIndex+1)])
+            data = [list(i) for i in tuples]
 
             print("Assembly complete for " + self.name + ".")
 
@@ -121,7 +134,7 @@ class Series:
                 "data": data
             }
 
-    # Pulls the raw data for the series from the file into memory (self.rawDates
+    # Pulls the raw data for the series from the file into memory (self.rawTimeOffsets
     # and self.rawValues).
     def pullRawData(self):
 
@@ -130,7 +143,7 @@ class Series:
         # Get reference to the series datastream from the HDF5 file
         data = self.getData()
 
-        self.rawDates = data['datetime'][()]
+        self.rawTimeOffsets = data['datetime'][()]
         self.rawValues = data['value'][()]
 
         print("Finished reading raw series data into memory for " + self.name + ".")

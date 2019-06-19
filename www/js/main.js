@@ -2,7 +2,7 @@
 var serverAddress = 'localhost';
 var serverPort = '8001';
 var allDataAllSeriesURL = "http://" + serverAddress + ":" + serverPort + "/all_data_all_series";
-var dataWindowAllSeriesURL = "http://" + serverAddress + ":" + serverPort + "/data_window_single_series";
+var dataWindowAllSeriesURL = "http://" + serverAddress + ":" + serverPort + "/data_window_all_series";
 
 // Series to display by default
 defaultSeries = ['HR', 'RR', 'BP', 'SpO2', 'CVP', 'ArtWave'];
@@ -140,17 +140,17 @@ function addSeriesControlToInterface(series) {
 }
 
 // Converts all x values in a data array to javascript Date objects.
-function convertToDateObjs(data) {
-
-	// Go through all values in the series.
-	for(var i = 0; i < data.length; i++) {
-
-		// Convert the ISO8601-format string into a Date object.
-		data[i][0] = new Date(data[i][0]);
-
-	}
-
-}
+// function convertToDateObjs(data) {
+//
+// 	// Go through all values in the series.
+// 	for(var i = 0; i < data.length; i++) {
+//
+// 		// Convert the ISO8601-format string into a Date object.
+// 		data[i][0] = new Date(data[i][0]);
+//
+// 	}
+//
+// }
 
 // Converts all x values in a data array to javascript Date objects, and also
 // updates the global x-axis extremes.
@@ -160,7 +160,7 @@ function convertToDateObjsAndUpdateExtremes(data) {
 	for(var i = 0; i < data.length; i++) {
 
 		// Convert the ISO8601-format string into a Date object.
-		data[i][0] = new Date(data[i][0]);
+		//data[i][0] = new Date(data[i][0]);
 
 		// Update global x-minimum if warranted
 		if(globalXExtremes[0] == null || data[i][0] < globalXExtremes[0]) {
@@ -267,15 +267,21 @@ function getDownsampleMesh(outerDataset, innerDataset) {
 	// innerDataset starts. However, that's okay, because sliceIndexFirstSegment
 	// will be the second parameter in a slice call, which indicates an element
 	// that will not be included in the resulting array.
-	while (sliceIndexFirstSegment < outerDataset.length && outerDataset[sliceIndexFirstSegment][0].getTime() < innerDataset[0][0].getTime()) {
+	while (sliceIndexFirstSegment < outerDataset.length && outerDataset[sliceIndexFirstSegment][0] < innerDataset[0][0]) {
 		sliceIndexFirstSegment++;
 	}
+	// while (sliceIndexFirstSegment < outerDataset.length && outerDataset[sliceIndexFirstSegment][0].getTime() < innerDataset[0][0].getTime()) {
+	// 	sliceIndexFirstSegment++;
+	// }
 
 	// Determine outerDataset index of the data point just after innerDataset ends.
 	sliceIndexSecondSegment = sliceIndexFirstSegment;
-	while (sliceIndexSecondSegment < outerDataset.length && outerDataset[sliceIndexSecondSegment][0].getTime() <= innerDataset[innerDataset.length-1][0].getTime()) {
+	while (sliceIndexSecondSegment < outerDataset.length && outerDataset[sliceIndexSecondSegment][0] <= innerDataset[innerDataset.length-1][0]) {
 		sliceIndexSecondSegment++;
 	}
+	// while (sliceIndexSecondSegment < outerDataset.length && outerDataset[sliceIndexSecondSegment][0].getTime() <= innerDataset[innerDataset.length-1][0].getTime()) {
+	// 	sliceIndexSecondSegment++;
+	// }
 
 	// Return the joined dataset with the innerDataset replacing the relevant
 	// section of outerDataset.
@@ -459,6 +465,8 @@ function updateCurrentViewData(graph) {
 			// Parse the backend JSON response into a JS object
 			var backendData = JSON.parse(x.responseText);
 
+			console.log(backendData);
+
 			// Process the new data for each series.
 			unsynchronizeGraphs();
 			for(series in backendData) {
@@ -466,7 +474,7 @@ function updateCurrentViewData(graph) {
 				if (isGraphShowing(series)) {
 
 					// Convert date strings to Date objects in all datasets.
-					convertToDateObjs(backendData[series]['data']);
+					// convertToDateObjs(backendData[series]['data']);
 
 					var meshedData = getDownsampleMesh(dygraphInstances[series].originalDataset, backendData[series]['data']);
 
@@ -527,6 +535,8 @@ xhttp.onreadystatechange = function() {
 
 		// Parse the backend JSON response into a JS object
 		var backendData = JSON.parse(xhttp.responseText);
+
+		console.log(backendData);
 
 		// Convert date strings to Date objects in all datasets and produce global
 		// x-axis extremes. It is an obvious potential optimization to combine this
