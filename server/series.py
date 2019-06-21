@@ -26,14 +26,11 @@ class Series:
         # Holds a reference to the file parent which contains the series
         self.fileparent = fileparent
 
-        # Parse the basetime datetime, with timezone removed
-        # self.basetime = dt.datetime.strptime(self.getData()['datetime'].attrs['time_reference'], '%Y-%m-%d %H:%M:%S.%f %z').replace(tzinfo=None)
+        # Pull raw data into memory
+        self.pullRawData()
 
         # Holds the downsample set
         self.downsampleSet = DownsampleSet(self)
-
-        # Pull raw data into memory
-        self.pullRawData()
 
         # Build the downsample set
         self.downsampleSet.build()
@@ -146,4 +143,4 @@ class Series:
         self.rawTimeOffsets = data['datetime'][()]
         self.rawValues = data['value'][()]
 
-        print("Finished reading raw series data into memory for " + self.name + ".")
+        print("Finished reading raw series data into memory for " + self.name + " (" + str(self.rawTimeOffsets.shape[0]) + " points).")

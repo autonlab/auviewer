@@ -1,17 +1,20 @@
-from datetime import datetime as dt
 from flask import Flask, Blueprint, send_from_directory, request
 from file import File
 
-#mf = File.unpickle('output.h5')
-if not mf:
-    mf = File('output.h5')
-    mf.prepareAllWaveformSeries()
-    #mf.prepareAllNumericSeries()
-    mf.pickle()
+mf = File('output.h5')
+mf.prepareAllWaveformSeries()
+mf.pickle()
 
-else:
-    mf.prepareAllWaveformSeries()
-    #mf.pickle()
+# mf = File.unpickle('output.h5')
+# if not mf:
+#     mf = File('output.h5')
+#     mf.prepareAllWaveformSeries()
+#     #mf.prepareAllNumericSeries()
+#     mf.pickle()
+#
+# else:
+#     mf.prepareAllWaveformSeries()
+#     #mf.pickle()
 
 # Instantiate the Flask web application class
 app = Flask(__name__)

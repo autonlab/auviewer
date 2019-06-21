@@ -1,5 +1,6 @@
 import config
 from downsample import Downsample
+import time
 
 # Represents a set of downsamples for a series of data.
 class DownsampleSet:
@@ -17,7 +18,7 @@ class DownsampleSet:
 
     # Builds all necessary downsamples for the series.
     def build(self):
-
+        start = time.time()
         # Tracks the next number of intervals for which to create a downsample.
         numIntervals = config.M
 
@@ -35,12 +36,13 @@ class DownsampleSet:
             else:
                 break
 
-            print("Created " + str(numIntervals) + " intervals.")
+            print("Done. Yielded " + str(ds.intervals.shape[0]) + " intervals.")
 
             # Increment the number of intervals for next round by 100%
             numIntervals = numIntervals * 2
 
-        print("Broke out of downsample creation loop.")
+        end = time.time()
+        print("Downsample Set: "+str(round(end-start, 2))+"s.")
 
     # Returns a reference to the appropriate downsample for the given time range.
     # Expects starttime & stoptime to be time offsets floats in seconds.

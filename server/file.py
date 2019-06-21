@@ -2,6 +2,7 @@ import h5py
 import pickle
 import config
 from series import Series
+import time
 
 # Simplejson package is required in order to "ignore" NaN values and implicitly
 # convert them into null values. RFC JSON spec left out NaN values, even though
@@ -123,27 +124,35 @@ class File:
         elif type == 'waveform':
             self.waveformSeries.append(series)
 
+        print("Finished preparing series " + name + ".")
+
     # Prepare all numeric series by both pulling the raw data into memory and
     # producing & storing in memory all necessary downsamples.
     def prepareAllNumericSeries(self):
+
+        start = time.time()
 
         print("Preparing all numeric series for file.")
 
         for s in self.f['numeric']:
             self.prepareSeries('numeric', s)
 
-        print("Completed preparing all numeric series for file.")
+        end = time.time()
+        print("Completed preparing all numeric series for file (took " + str(round((end-start)/60), 3) + " minutes).")
 
     # Prepare all waveform series by both pulling the raw data into memory and
     # producing & storing in memory all necessary downsamples.
     def prepareAllWaveformSeries(self):
+
+        start = time.time()
 
         print("Preparing all waveform series for file.")
 
         for s in self.f['waveform']:
             self.prepareSeries('waveform', s)
 
-        print("Completed preparing all waveform series for file.")
+        end = time.time()
+        print("Completed preparing all waveform series for file (took " + str(round((end-start)/60), 3) + " minutes).")
 
     # Attempts to unpickle the pickle file for filename, and returns the
     # unpickled object if successful.

@@ -2,6 +2,8 @@ import bisect
 import config
 # import datetime as dt
 from collections import deque
+from cylib import buildDownsample, wasThresholdReached, whatDownsamplesToBuild
+import time
 
 # Downsample represents a single downsample level for a series at a specific
 # interval size.
@@ -17,9 +19,6 @@ class Downsample:
         # Set the downsample series parent
         self.dssparent = dssparent
 
-        # Will hold the downsample intervals
-        self.intervals = []
-
         # We assume datagroup has two non-empty datasets, "datetime" and "value".
         if len(self.dssparent.seriesparent.rawTimeOffsets) < 1 or len(self.dssparent.seriesparent.rawValues) < 1:
             return
@@ -28,9 +27,30 @@ class Downsample:
         if len(self.dssparent.seriesparent.rawTimeOffsets) != len(self.dssparent.seriesparent.rawValues):
             return
 
+        start = time.time()
+        downsamplesToBuild = whatDownsamplesToBuild(self.dssparent.seriesparent.rawTimeOffsets, config.M)
+        end = time.time()
+        print("Took "+str(end-start)+"s.")
+        print(downsamplesToBuild)
+
+        quit()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         # Grab the first & last time offsets for this series
         firsttime = self.dssparent.seriesparent.rawTimeOffsets[0]
-        lasttime = self.dssparent.seriesparent.rawTimeOffsets[len(self.dssparent.seriesparent.rawTimeOffsets) - 1]
+        lasttime = self.dssparent.seriesparent.rawTimeOffsets[-1]
 
         # Get the timespan, in seconds, as the difference between the first
         # and last data point offsets.
@@ -75,65 +95,34 @@ class Downsample:
             if firsttime + self.timePerInterval * numIntervals <= lasttime:
                 raise RuntimeError('Algorithm for setting timespan to encompass all points failed unexpectedly.')
 
-        # Establish our initial boundaries for the first interval
-        leftboundary = firsttime
-        rightboundary = leftboundary + self.timePerInterval
+        # Build the downsampled intervals, and attach them to the class instance.
+        start = time.time()
+        self.intervals = buildDownsample(self.dssparent.seriesparent.rawTimeOffsets, self.dssparent.seriesparent.rawValues, self.timePerInterval)
+        end = time.time()
+        print("Downsample: "+str(round(end-start, 5))+"s.")
+        # print("First 10:")
+        # i = 0
+        # while i < 10:
+        #     print(self.intervals[i])
+        #     i = i + 1
+        #
+        # print("Last 10:")
+        # i = 1
+        # while i < 11:
+        #     print(self.intervals[-i])
+        #     i = i + 1
 
-        # Tracks the trailing data point counts of up to the last M intervals
-        trailingSummary = TrailingSummary()
+        # Check whether threshold was reached, and set flag accordingly
+        start = time.time()
+        self.thresholdReached = wasThresholdReached(self.intervals, self.timePerInterval, self.dssparent.seriesparent.rawTimeOffsets.shape[0], config.M)
+        end = time.time()
+        print("Threshold: "+str(round(end-start, 5))+"s.")
 
-        # Prime the trailing summary with an initial interval since we're
-        # starting from the first interval (e.g. if the first data point belongs
-        # to the first interval, the first inner while loop would be skipped).
-        trailingSummary.addInterval()
-
-        # Grab data points length so we don't have to look it up every time.
-        dataPointsLength = len(self.dssparent.seriesparent.rawTimeOffsets)
-
-        # Holds the index of the current data point we're working on
-        i = 0
-
-        # For all data points
-        while i < dataPointsLength:
-
-            print(type(self.dssparent.seriesparent.rawTimeOffsets))
-            quit()
-
-            # While the next data point does not belong to the current interval,
-            # progress to the next interval.
-            while self.dssparent.seriesparent.rawTimeOffsets[i] >= rightboundary:
-
-                # Update left & right boundaries to the next interval
-                leftboundary = rightboundary
-                rightboundary = leftboundary + self.timePerInterval
-
-                # Add an interval to the trailing summary
-                trailingSummary.addInterval()
-
-            # Having escaped the while loop, we have reached a new interval to
-            # which the next data point belongs, so we create a new interval.
-            self.intervals.append(Interval(self.dssparent.seriesparent.rawValues[i], leftboundary + (self.timePerInterval / 2)))
-
-            # While the next data point occurs within the current interval, add
-            # it to the interval's statistics.
-            while i < dataPointsLength and self.dssparent.seriesparent.rawTimeOffsets[i] < rightboundary:
-
-                # Add the data point to the interval
-                self.intervals[len(self.intervals) - 1].addDataPoint(self.dssparent.seriesparent.rawValues[i])
-
-                # Increment i to progress to the next data point
-                i = i + 1
-
-            # Finalize the interval count in the trailing summary
-            trailingSummary.finalizeInterval(self.intervals[len(self.intervals) - 1])
-
-        # Attach a flag of whether the threshold was reached to this downsample.
-        self.thresholdReached = trailingSummary.thresholdReached
-
-        if self.thresholdReached:
-            print("Threshold reached at " + str(numIntervals))
-        else:
-            print("Threshold not reached at " + str(numIntervals))
+        # print(len(self.intervals))
+        #
+        # print("FINISHED")
+        #
+        # quit()
 
     # Returns a list of the intervals in the range of starttime to stoptime.
     def getIntervals(self, starttime, stoptime):
@@ -153,116 +142,3 @@ class Downsample:
             stopIntervalIndex = 0
 
         return self.intervals[startIntervalIndex:(stopIntervalIndex+1)]
-
-# Interval defines a data summary interval for downsampling
-class Interval:
-
-    # Expected member variables:
-    #   min: minimum value for the interval
-    #   max: maximum value for the interval
-    #   count: number of data points the interval represents
-    #   time: datetime of the middle of the interval
-
-    # Constructor accepts one parameter, firstvalue, which should be the value
-    # from the first data point and will be assigned to min & max initially.
-    def __init__(self, firstvalue, time):
-
-        # Prime min & max with the first data point value
-        self.min = firstvalue
-        self.max = firstvalue
-
-        # Set time
-        self.time = time
-
-        # We've primed the interval with the first data point, so the count
-        # starts at 1
-        self.count = 1
-
-    def __eq__(self, other):
-        return self.time == other.time if isinstance(other, Interval) else self.time == other
-
-    def __ne__(self, other):
-        return self.time != other.time if isinstance(other, Interval) else self.time != other
-
-    def __lt__(self, other):
-        return self.time < other.time if isinstance(other, Interval) else self.time < other
-
-    def __le__(self, other):
-        return self.time <= other.time if isinstance(other, Interval) else self.time <= other
-
-    def __gt__(self, other):
-        return self.time > other.time if isinstance(other, Interval) else self.time > other
-
-    def __ge__(self, other):
-        return self.time >= other.time if isinstance(other, Interval) else self.time >= other
-
-    # Adds the provided data point value to the interval
-    def addDataPoint(self, dp):
-
-        # Update max
-        if dp > self.max:
-            self.max = dp
-
-        # Update min
-        if dp < self.min:
-            self.min = dp
-
-        # Update count
-        self.count = self.count + 1
-
-# TrailingSummary maintains a trailing summary of counts for the last M
-# intervals and determines whether the threshold is reached for the downsample
-# being necessary.
-class TrailingSummary:
-
-    def __init__(self):
-
-        # Holds the queue of the last M intervals, where each queue element
-        # is the integer count of data points in the interval.
-        self.lastMIntervals = deque()
-
-        # This is a boolean that tracks whether we've reached the threshold
-        # where some sequence of M intervals contains > M*2 points.
-        self.thresholdReached = False
-        
-        # Holds the current summary of data point counts for all intervals
-        # currently in the queue.
-        self.currentTrailingSummary = 0
-
-    # Adds an interval (initially with 0 count) to the queue of last M intervals.
-    # A finalizeInterval call may happen after addInterval, but it is not
-    # necessary (in this case, the count for the interval would remain at 0).
-    def addInterval(self):
-
-        # Add a count representation for the interval to the queue
-        self.lastMIntervals.append(0)
-
-        # Pop out from lastMIntervals if we've reached M intervals. At any given
-        # time, we want to have no more than M intervals.
-        if len(self.lastMIntervals) > config.M:
-            
-            # Pop out the oldest interval in the queue
-            poppedInterval = self.lastMIntervals.popleft()
-            
-            # Update the current summary to reflect removal of the popped interval
-            self.currentTrailingSummary = self.currentTrailingSummary - poppedInterval
-            
-    # Updates the final count for the interval. Should be called after an
-    # addInterval call, once interval has been finalized.
-    def finalizeInterval(self, interval):
-
-        # Verify that we have at least one element in the queue
-        if len(self.lastMIntervals) < 1:
-            return
-
-        # Set the final interval count in the trailing summary representation
-        self.lastMIntervals[len(self.lastMIntervals)-1] = interval.count
-        
-        # Update the current trailing summary
-        self.currentTrailingSummary = self.currentTrailingSummary + interval.count
-
-        # Check if the threshold has been reached. The M*2 threshold is used
-        # because, for min/max, 2 "y" values are transmitted, whereas only 1 is
-        # transmitted for raw data points.
-        if self.currentTrailingSummary > config.M * 2:
-            self.thresholdReached = True
