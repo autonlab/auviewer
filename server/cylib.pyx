@@ -5,17 +5,97 @@
 import numpy as np
 cimport numpy as np
 
+def buildNextDownsampleUp(np.ndarray[np.float64_t, ndim=2] intervals, int stepMultiplier):
+
+    # Get the number of intervals in the original downsample.
+    cdef int numIntervalsOriginal = intervals.shape[0]
+
+    # Do a sanity check
+    if numIntervalsOriginal < 2:
+        return
+
+    # The new downsample will hold original/stepMultiplier number of intervals
+    # (we're building the next level up, so we're consolidating intervals).
+    # NOTE: We can assume even divisibility.
+    cdef int numIntervalsNew = numIntervalsOriginal/stepMultiplier
+
+    # Will hold our new downsample. We allocate the worst-case number of
+    # intervals needed for the new downsample, which would be equal to the
+    # original downsample (for example, if each interval of the original
+    # downsample were separated from the other by at least
+    # timePerIntervalOriginal * stepMultiplier.
+    cdef np.ndarray[np.float64_t, ndim=2] intervalsNew = np.zeros((numIntervalsNew, 3))
+
+    # Determine the original time-per-interval
+    cdef double timePerIntervalOriginal = intervals[1][0] - intervals[0][0]
+
+    # Hold the half time-per-interval so we can save some computation in the loop.
+    cdef double halfTimePerIntervalOriginal = timePerIntervalOriginal / 2
+
+    # Will track the stepwise left & right boundary of the new intervals
+    cdef double leftboundaryNew = intervals[0][0]-halfTimePerIntervalOriginal
+    cdef double rightboundaryNew = leftboundary + timePerIntervalOriginal*stepMultiplier
+    
+    # These index pointers will track our position along the original & new
+    # interval sets.
+    cdef int cio = 0
+    cdef int cin = 0
+    
+    # Temporary-use iterator to be used below
+    cdef int i
+
+    # Build the new downsample intervals
+    while cin < numIntervalsNew:
+        
+        # Prime the min & max of the new interval to the first original interval
+        intervalsNew[cin][1] = intervals[cio][1]
+        intervalsNew[cin][2] = intervals[cio][2]
+
+        # Go through the next stepMultiplier intervals of the original, and
+        # consolidate the statistics for the new set.
+        i = 0
+        while i < stepMultiplier and cio < numIntervalsOriginal:
+
+            # Update min & max
+            if intervals[cio][1] < intervalsNew[cin][1]:
+                intervalsNew[cin][1] = intervals[cio][1]
+            if intervals[cio][2] > intervalsNew[cin][2]:
+                intervalsNew[cin][2] = intervals[cio][2]
+
+            # Add the time offset (it will be divided by stepMultiplier at the
+            # end to yield the average time offset for the new interval
+            intervalsNew[cin][0] = intervalsNew[cin][0] + intervals[cio][0]
+
+            # Increment to proceed to the next original interval
+            cio = cio + 1
+
+            # Increment our counter
+            i = i + 1
+
+        # Divide the time offset for the new interval by stepMultiplier to
+        # yield the average time offset of the original intervals represented.
+        intervalsNew[cin][0] = intervalsNew[cin][0] / stepMultiplier
+
+        # Increment to proceed to the next new interval
+        cin = cin + 1
+
+    # Return the new downsample intervals
+    return intervalsNew
+
 # Given a series of raw values and a time-per-interval parameter, produces and
 # returns a two-dimension NumPy array of downsample intervals
-def buildDownsample(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarray[np.float64_t, ndim=1] rawValues, double timePerInterval):
+def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarray[np.float64_t, ndim=1] rawValues, int numIntervals):
 
-    # Calculate the maximum number of intervals needed
-    cdef int numIntervals = <int>((rawOffsets[rawOffsets.shape[0]-1] - rawOffsets[0]) / timePerInterval + 2)
+    # Calculate the timespan of the entire dataset
+    cdef double timespan = rawOffsets[rawOffsets.shape[0]-1] - rawOffsets[0]
+
+    # Calculate the interval size in seconds
+    cdef double timePerInterval = timespan / numIntervals
 
     # Allocate the maximum number of intervals needed (excess will be sliced off
     # at the end). The two-dimensional array will have 3 columns and numIntervals
     # rows. The columns, in order, will be: Time Offset, Min, Max, # Points.
-    cdef np.ndarray[np.float64_t, ndim=2] intervals = np.zeros((numIntervals, 4))
+    cdef np.ndarray[np.float64_t, ndim=2] intervals = np.zeros((numIntervals, 3))
 
     # Establish our initial boundaries for the first interval
     cdef double leftboundary = rawOffsets[0]
@@ -73,9 +153,6 @@ def buildDownsample(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarray[np.f
             if intervals[cii][2] < rawOffsets[cdpi]:
                 intervals[cii][2] = rawOffsets[cdpi]
 
-            # Add 1 to the number of data points represented by this interval.
-            intervals[cii][3] = intervals[cii][3] + 1
-
             # Increment cdpi to progress to the next data point
             cdpi = cdpi + 1
 
@@ -85,99 +162,7 @@ def buildDownsample(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarray[np.f
     # Return the downsampled intervals
     return intervals
 
-# Determines whether a downsample has reached the threshold where it should be
-# kept, or, more specifically, where any window of M consecutive intervals in
-# the downsample represents at least 2*M data points.
-def wasThresholdReached(np.ndarray[np.float64_t, ndim=2] intervals, double timePerInterval, int N, int M):
-
-    # We begin with heuristic that will let us avoid the expensive computation
-    # of a full threshold check for the earlier downsamples. The heuristic is
-    # follows.
-    #
-    # Terms:
-    #
-    # M =        Max number of data points we wish to transmit. For downsamples,
-    #            each interval counts as two data points since min & max are
-    #            transmitted.
-    # N =        Number of raw values in the data set.
-    # I =        Number of intervals kept in the downsample, or, in other words,
-    #            the number of non-empty intervals in a downsample.
-    # DDW =      Densest data window, or the densest number of data points
-    #            represented in any window of M intervals within an entire
-    #            downsample.
-    # DDW(min) = The minimum value of DDW for a given downsample, computed by
-    #            our heuristic.
-    #
-    # Assertion: DDW(min) = N/I*M
-    #
-    # Heuristic: If DDW(min) >= 2M, then we do not need to perform the full
-    #            trailing summary threshold test because we have already proven
-    #            the threshold has been met (DDW >= 2M).
-    #
-    # Reasoning: The reason the assertion is valid is the following. We know
-    #            that each interval represents some number of raw data points,
-    #            and we know that an entire set of downsample intervals I will
-    #            represent all N data points. So, for a given downsample, the
-    #            minimum DDW would be in the case that the data points are
-    #            represnted evenly across the set of intervals (or, in other
-    #            words, where each interval represents N/I data points). This
-    #            leads us to establish our assertion that DDW(min) = N/I*M.
-    #
-    # Credit:    Credit to Jim Leonard for first suggesting the heuristic.
-
-    # Calculate DDW(min) for our heuristic
-    cdef int ddwMin = N/intervals.shape[0]*M
-
-    # Check if the heuristic shows DDW(min) >= 2M, and if so we can return now.
-    if ddwMin >= 2*M:
-        return True
-
-    # If the heuristic did not prove true, we must calculate the maximum
-    # trailing summary of M * timePerInterval seconds.
-
-    # Let's begin by calculating our sliding time window
-    cdef double timeWindow = M * timePerInterval
-
-    # Let's establish two index pointers, one to the first element and one to
-    # last element in the sliding window. We start both pointers at index 0.
-    cdef int firstIntervalInWindow = 0
-    cdef int lastIntervalInWindow = 0
-
-    # Grab the size of the intervals array
-    cdef int numIntervals = intervals.shape[0]
-
-    # Will hold the number of data points represented by a given sliding window
-    cdef int numPointsRepresented = 0
-
-    # Calculate twice M so we don't need to calculate each time within the loop.
-    cdef int twoM = 2*M
-
-    # Here begins our sliding window test, where each iteration tests one window.
-    while lastIntervalInWindow < numIntervals:
-
-        # First, see if we need to move up the first interval in the window
-        while intervals[lastIntervalInWindow][0] - intervals[firstIntervalInWindow][0] > timeWindow:
-
-            # Remove the interval's points represented
-            numPointsRepresented = numPointsRepresented - intervals[firstIntervalInWindow][3]
-
-            # Increment the first interval index
-            firstIntervalInWindow = firstIntervalInWindow + 1
-
-        # Add the data points represented by the new interval
-        numPointsRepresented = numPointsRepresented + intervals[lastIntervalInWindow][3]
-
-        # If we reach the threshold, return true
-        if numPointsRepresented >= twoM:
-            return True
-
-        # Increment the last interval index pointer to proceed to the next window.
-        lastIntervalInWindow = lastIntervalInWindow + 1
-
-    # Having reached this point, we did not reach the threshold, so return false.
-    return False
-
-def whatDownsamplesToBuild(np.ndarray[np.float64_t, ndim=1] rawOffsets, int M):
+def numDownsamplesToBuild(np.ndarray[np.float64_t, ndim=1] rawOffsets, int M, int stepMultiplier):
 
     # Grab the rawOffsets length
     cdef int numDataPoints = rawOffsets.shape[0]
@@ -185,14 +170,10 @@ def whatDownsamplesToBuild(np.ndarray[np.float64_t, ndim=1] rawOffsets, int M):
     # Calculate the timespan of the entire dataset
     cdef double timespan = rawOffsets[rawOffsets.shape[0]-1] - rawOffsets[0]
 
-    # Will hold the return array of downsample levels to build (each element
-    # is the number of intervals which the timespan should be divided into).
-    cdef np.ndarray[np.int64_t, ndim=1] downsampleLevelsToBuild = np.empty((0), dtype=np.int64)
-
-    # If we have fewer than 2M data points, no downsamples need to be built and
-    # we can return immediately.
-    if numDataPoints < 2*M:
-        return downsampleLevelsToBuild
+    # If we have fewer than or equal to 2M data points, no downsamples need to
+    # be built and we can return immediately.
+    if numDataPoints <= 2*M:
+        return 0
 
     # The first & last variables track the sliding window of 2M data points.
     cdef int first = 0
@@ -205,6 +186,7 @@ def whatDownsamplesToBuild(np.ndarray[np.float64_t, ndim=1] rawOffsets, int M):
     cdef double currentTimeWindow
     cdef double smallestTimeWindow = rawOffsets[last] - rawOffsets[first]
 
+    # Determine the smallest time window of 2M data points
     while last < numDataPoints:
 
         # Calculate the time window of the current window of 2M data points
@@ -224,16 +206,18 @@ def whatDownsamplesToBuild(np.ndarray[np.float64_t, ndim=1] rawOffsets, int M):
     # not actually reach it).
     cdef double floorTimePerInterval = smallestTimeWindow / M
 
+    # Holds our return value, the number of downsamples to build
+    cdef int numDownsamplesToBuild = 0
+
     # Starting with the outermost zoom level at M points, iterate through and
-    # build the array of downsample levels that should be built. The
+    # add to the number downsample levels that should be built. The
     # timespan/currentNumDownsamples represents the time-per-interval for the
     # current number of downsamples, so we stop once that reaches at or below
     # floorTimePerInterval.
     cdef int currentNumDownsamples = M
-    cdef double currentTimePerInterval
     while timespan/currentNumDownsamples > floorTimePerInterval:
-        downsampleLevelsToBuild = np.append(downsampleLevelsToBuild, currentNumDownsamples)
-        currentNumDownsamples = currentNumDownsamples * 2
+        numDownsamplesToBuild = numDownsamplesToBuild + 1
+        currentNumDownsamples = currentNumDownsamples * stepMultiplier
 
     # Return the downsample levels to build.
-    return downsampleLevelsToBuild
+    return numDownsamplesToBuild

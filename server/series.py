@@ -1,6 +1,6 @@
 import bisect
 # import datetime as dt
-from downsampleset import DownsampleSet
+from downsamples import Downsamples
 
 # Simplejson package is required in order to "ignore" NaN values and implicitly convert them into null values.
 # RFC JSON spec left out NaN values, even though ES5 supports them (https://www.ecma-international.org/ecma-262/5.1/#sec-4.3.23).
@@ -30,10 +30,8 @@ class Series:
         self.pullRawData()
 
         # Holds the downsample set
-        self.downsampleSet = DownsampleSet(self)
-
-        # Build the downsample set
-        self.downsampleSet.build()
+        self.downsamples = Downsamples(self)
+        quit()
 
     # Returns a reference to the series' h5py dataset object.
     def getData(self):
