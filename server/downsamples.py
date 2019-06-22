@@ -13,10 +13,6 @@ class Downsamples:
 
         outerStart = time.time()
 
-        # Holds the downsample sets (each element is a NumPy array which holds
-        # the intervals for that downsample level
-        self.downsamples = []
-
         # Set the series parent
         self.seriesparent = seriesparent
 
@@ -32,10 +28,15 @@ class Downsamples:
         # is a number of intervals to divide the data set into).
         numDownsamples = numDownsamplesToBuild(self.seriesparent.rawTimeOffsets, config.M, config.stepMultiplier)
 
+        # Holds the downsample sets (each element is a NumPy array which holds
+        # the intervals for that downsample level
+        self.downsamples = [None] * numDownsamples
+
+        # If we do not need to build any downsamples, return now.
         if numDownsamples < 1:
             return
 
-        # Begin by building the last downsample from the raw data.
+        # Begin by building the last downsample from the raw data first.
         # NOTE: We will build the self.downsamples list in reverse order
         # initially and then reverse its order at the end so that we end
         # up with the downsamples in order from smallest number of
@@ -43,87 +44,45 @@ class Downsamples:
         lastDownsampleNumIntervals = config.M*(config.stepMultiplier**(numDownsamples-1))
         print("Creating " + str(lastDownsampleNumIntervals) + " intervals.")
         start = time.time()
-        self.downsamples.append(buildDownsampleFromRaw(self.seriesparent.rawTimeOffsets, self.seriesparent.rawValues, lastDownsampleNumIntervals))
+        self.downsamples[-1] = buildDownsampleFromRaw(self.seriesparent.rawTimeOffsets, self.seriesparent.rawValues, lastDownsampleNumIntervals)
         end = time.time()
-        print("Done. Yielded " + str(self.downsamples[0].shape[0]) + " intervals. Took " + str(round(end - start, 5)) + "s.")
-
+        print("Done. Yielded " + str(self.downsamples[-1].shape[0]) + " intervals. Took " + str(round(end - start, 5)) + "s.")
+        quit()
         # Build the next numDownsamples-1 downsamples (because we've already
         # built the first one).
-        for i in range(numDownsamples-1):
-            print("Creating " + str(lastDownsampleNumIntervals/(config.stepMultiplier**i)) + " intervals.")
+        for i in range(-2, -numDownsamples-1, -1):
+            print("Creating " + str(self.getNumIntervalsByIndex(i)) + " intervals.")
             start = time.time()
-            self.downsamples.append(buildNextDownsampleUp(self.downsamples[i], config.stepMultiplier))
+            self.downsamples[i] = buildNextDownsampleUp(self.downsamples[i+1], self.getTimePerIntervalByIndex(i+1), config.stepMultiplier)
             end = time.time()
-            print("Done. Yielded " + str(self.downsamples[i+1].shape[0]) + " intervals. Took " + str(round(end - start, 5)) + "s.")
+            print("Done. Yielded " + str(self.downsamples[i].shape[0]) + " intervals. Took " + str(round(end - start, 5)) + "s.")
 
         print("Completed build of all downsamples for this series.")
-
-        # Reverse the downsamples list so that we have the downsamples in order
-        # from smallest number of intervals to largest.
-        self.downsamples.reverse()
 
         outerEnd = time.time()
         print("Downsample Set: " + str(round(outerEnd - outerStart, 5)) + "s")
 
-        # Print out samples of each downsample.
-        for i in range(len(self.downsamples)):
-            print("Downsample #"+str(i+1)+" - Length "+str(self.downsamples[i].shape[0]))
-            print("First 5:")
-            j = 0
-            while j < 5:
-                print(self.downsamples[i][j])
-                j = j + 1
+        print(self)
 
-            print("Last 5:")
-            j = 1
-            while j < 6:
-                print(self.intervals[i][-j])
-                j = j + 1
+    ################ FROM DOWNSAMPLE -- NEEDS ADAPTATION
+    # Returns a list of the intervals in the range of starttime to stoptime.
+    def getIntervals(self, starttime, stoptime):
 
+        # Determine the index of the first interval to transmit for the view. To
+        # do this, find the first interval which occurs after the starttime and
+        # take the index prior to that as the starting interval.
+        startIntervalIndex = bisect.bisect(self.intervals, starttime) - 1
+        if startIntervalIndex < 0:
+            startIntervalIndex = 0
 
+        # Determine the index of the last interval to transmit for the view. To
+        # do this, find the first interval which occurs after the stoptime and
+        # take the index prior to that as the starting interval.
+        stopIntervalIndex = bisect.bisect(self.intervals, stoptime) - 1
+        if stopIntervalIndex < 0:
+            stopIntervalIndex = 0
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        return self.intervals[startIntervalIndex:(stopIntervalIndex + 1)]
 
     # Returns a reference to the appropriate downsample for the given time range.
     # Expects starttime & stoptime to be time offsets floats in seconds.
@@ -158,3 +117,47 @@ class Downsamples:
             return
 
         return self.downsamples[chosenDownsampleIndex]
+
+    # Returns the number of intervals for the downsample at index i.
+    def getNumIntervalsByIndex(self, i):
+
+        # Handle negative index
+        if i < 0:
+            i = len(self.downsamples) + i
+
+        return config.M * (config.stepMultiplier ** i)
+
+    # Returns the time-per-interval for the downsample at index i.
+    def getTimePerIntervalByIndex(self, i):
+
+        # Handle negative index
+        if i < 0:
+            i = len(self.downsamples) + i
+
+        return self.getTimespan() / self.getNumIntervalsByIndex(i)
+
+    # Returns the timespan of the data series.
+    def getTimespan(self):
+        return self.seriesparent.rawTimeOffsets[-1] - self.seriesparent.rawTimeOffsets[0]
+
+    def __str__(self):
+        s = ""
+        for i in range(len(self.downsamples)):
+
+            s = s + "Downsample #" + str(i + 1) + " - Official Intervals " + str(self.getNumIntervalsByIndex(i)) + " - Actual Intervals " + str(self.downsamples[i].shape[0]) + " - Time Per Interval " + str(self.getTimePerIntervalByIndex(i)) + "s" + "\n"
+
+            s = s + "First 5:" + "\n"
+            j = 0
+            while j < 5:
+                s = s + str(self.downsamples[i][j]) + "\n"
+                j = j + 1
+
+            s = s + "Last 5:" + "\n"
+            j = 6
+            while j > 0:
+                s = s + str(self.downsamples[i][-j]) + "\n"
+                j = j - 1
+
+            s = s + "\n"
+
+        return s

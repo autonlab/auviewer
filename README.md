@@ -65,3 +65,7 @@ The *start* & *stop* parameters are time offset floating-point values, and the s
 #### Response
 
 See *Standard Data Response Format* above. The requested data series in the given time window will be transmitted.
+
+## Assumptions (TO BE FINALIZED)
+
+* There is enough system memory to hold one entire series and one downsample level in memory with margin leftover for normal application overhead.

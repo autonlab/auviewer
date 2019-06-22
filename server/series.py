@@ -31,7 +31,6 @@ class Series:
 
         # Holds the downsample set
         self.downsamples = Downsamples(self)
-        quit()
 
     # Returns a reference to the series' h5py dataset object.
     def getData(self):

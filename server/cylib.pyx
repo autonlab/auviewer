@@ -1,83 +1,151 @@
 #!python
 #cython: boundscheck=False
 #cython: wraparound=False
+#cython: cdivision=True
 
 import numpy as np
 cimport numpy as np
+from libc.math cimport floor
 
-def buildNextDownsampleUp(np.ndarray[np.float64_t, ndim=2] intervals, int stepMultiplier):
+# Given an already-built downsample, this function builds the next downsample up.
+# It bases the "next downsample up" on the time-per-interval of the original
+# downsample and the step multiplier provided. For example, if the original
+# time-per-interval is 5s and the step multiplier is 3, the new downsample will
+# have a time-per-interval of 5*3=15s.
+def buildNextDownsampleUp(np.ndarray[np.float64_t, ndim=2] intervalsOrig, double timePerIntervalOrig, int stepMultiplier):
 
     # Get the number of intervals in the original downsample.
-    cdef int numIntervalsOriginal = intervals.shape[0]
+    cdef int numIntervalsOrig = intervalsOrig.shape[0]
 
     # Do a sanity check
-    if numIntervalsOriginal < 2:
+    if numIntervalsOrig < stepMultiplier:
         return
-
-    # The new downsample will hold original/stepMultiplier number of intervals
-    # (we're building the next level up, so we're consolidating intervals).
-    # NOTE: We can assume even divisibility.
-    cdef int numIntervalsNew = numIntervalsOriginal/stepMultiplier
 
     # Will hold our new downsample. We allocate the worst-case number of
     # intervals needed for the new downsample, which would be equal to the
     # original downsample (for example, if each interval of the original
     # downsample were separated from the other by at least
-    # timePerIntervalOriginal * stepMultiplier.
-    cdef np.ndarray[np.float64_t, ndim=2] intervalsNew = np.zeros((numIntervalsNew, 3))
+    # timePerIntervalOrig * stepMultiplier.
+    cdef np.ndarray[np.float64_t, ndim=2] intervalsNew = np.zeros((numIntervalsOrig, 3))
 
-    # Determine the original time-per-interval
-    cdef double timePerIntervalOriginal = intervals[1][0] - intervals[0][0]
+    # Determine the new time-per-interval
+    cdef double timePerIntervalNew = timePerIntervalOrig*stepMultiplier
 
-    # Hold the half time-per-interval so we can save some computation in the loop.
-    cdef double halfTimePerIntervalOriginal = timePerIntervalOriginal / 2
+    # This is the base offset, or essentially the time offset of the original
+    # first raw data point in the series.
+    cdef double baseOffset = intervalsOrig[0][0] - (timePerIntervalOrig / 2)
+    print("Base offset: "+str(baseOffset))
 
     # Will track the stepwise left & right boundary of the new intervals
-    cdef double leftboundaryNew = intervals[0][0]-halfTimePerIntervalOriginal
-    cdef double rightboundaryNew = leftboundary + timePerIntervalOriginal*stepMultiplier
+    cdef double leftboundaryNew = baseOffset
+    cdef double rightboundaryNew = leftboundaryNew + timePerIntervalNew
     
-    # These index pointers will track our position along the original & new
-    # interval sets.
+    # Holds the index of the current original interval we're working on.
     cdef int cio = 0
-    cdef int cin = 0
-    
+
+    # Holds the index of the current new interval we're working on. We start at
+    # -1 because the loop will increment the index the first time it runs in
+    # order to point to the "first" interval.
+    cdef int cin = -1
+
     # Temporary-use iterator to be used below
     cdef int i
 
-    # Build the new downsample intervals
-    while cin < numIntervalsNew:
-        
-        # Prime the min & max of the new interval to the first original interval
-        intervalsNew[cin][1] = intervals[cio][1]
-        intervalsNew[cin][2] = intervals[cio][2]
+    while cio < numIntervalsOrig:
 
-        # Go through the next stepMultiplier intervals of the original, and
-        # consolidate the statistics for the new set.
+        # If this original interval does not belong to the current new interval
+        # boundaries, compute the subsequent new interval boundaries to which
+        # it belongs.
+        if intervalsOrig[cio][0] >= rightboundaryNew:
+
+            leftboundaryNew = floor( (intervalsOrig[cio][0]-baseOffset) / timePerIntervalNew) * timePerIntervalNew + baseOffset
+            rightboundaryNew = leftboundaryNew + timePerIntervalNew
+
+            # NOTE: We do not progress cin because we have simply skipped an
+            # empty interval, and we do not store/represent empty intervals.
+
+        # Do a sanity check.
+        if intervalsOrig[cio][0] < leftboundaryNew or intervalsOrig[cio][0] >= rightboundaryNew:
+            raise RuntimeError("NOT AS EXPECTED - FROM DOWNSAMPLE")
+
+        # Increment the current index pointer to the next available interval.
+        cin = cin + 1
+
+        # Do a sanity check and double check that we have not gone out of bounds.
+        if cin >= numIntervalsOrig:
+            raise RuntimeError("Unexpectedly require more than numIntervalsOrig during downsample building from downsample.")
+
+        # Prime the min & max of the new interval to the first original interval
+        intervalsNew[cin][1] = intervalsOrig[cio][1]
+        intervalsNew[cin][2] = intervalsOrig[cio][2]
+
         i = 0
-        while i < stepMultiplier and cio < numIntervalsOriginal:
+        while cio < numIntervalsOrig and i < stepMultiplier and intervalsOrig[cio][0] < rightboundaryNew:
 
             # Update min & max
-            if intervals[cio][1] < intervalsNew[cin][1]:
-                intervalsNew[cin][1] = intervals[cio][1]
-            if intervals[cio][2] > intervalsNew[cin][2]:
-                intervalsNew[cin][2] = intervals[cio][2]
+            if intervalsOrig[cio][1] < intervalsNew[cin][1]:
+                intervalsNew[cin][1] = intervalsOrig[cio][1]
+            if intervalsOrig[cio][2] > intervalsNew[cin][2]:
+                intervalsNew[cin][2] = intervalsOrig[cio][2]
 
-            # Add the time offset (it will be divided by stepMultiplier at the
+            # Add the time offset (it will be divided by i at the
             # end to yield the average time offset for the new interval
-            intervalsNew[cin][0] = intervalsNew[cin][0] + intervals[cio][0]
+            intervalsNew[cin][0] = intervalsNew[cin][0] + intervalsOrig[cio][0]
 
-            # Increment to proceed to the next original interval
             cio = cio + 1
-
-            # Increment our counter
             i = i + 1
 
-        # Divide the time offset for the new interval by stepMultiplier to
-        # yield the average time offset of the original intervals represented.
-        intervalsNew[cin][0] = intervalsNew[cin][0] / stepMultiplier
+        # Divide the time offset for the new interval by i to yield the
+        # average time offset of the original intervals represented.
+        intervalsNew[cin][0] = intervalsNew[cin][0] / i
 
-        # Increment to proceed to the next new interval
-        cin = cin + 1
+    # Slice off the unused intervals
+    intervalsNew = intervalsNew[:cin+1]
+
+
+
+
+
+
+
+    
+    # # Temporary-use iterator to be used below
+    # cdef int i
+    #
+    # # Build the new downsample intervals
+    # while cin < numIntervalsNew:
+    #
+    #     # Prime the min & max of the new interval to the first original interval
+    #     intervalsNew[cin][1] = intervals[cio][1]
+    #     intervalsNew[cin][2] = intervals[cio][2]
+    #
+    #     # Go through the next stepMultiplier intervals of the original, and
+    #     # consolidate the statistics for the new set.
+    #     i = 0
+    #     while i < stepMultiplier and cio < numIntervalsOrig:
+    #
+    #         # Update min & max
+    #         if intervals[cio][1] < intervalsNew[cin][1]:
+    #             intervalsNew[cin][1] = intervals[cio][1]
+    #         if intervals[cio][2] > intervalsNew[cin][2]:
+    #             intervalsNew[cin][2] = intervals[cio][2]
+    #
+    #         # Add the time offset (it will be divided by stepMultiplier at the
+    #         # end to yield the average time offset for the new interval
+    #         intervalsNew[cin][0] = intervalsNew[cin][0] + intervals[cio][0]
+    #
+    #         # Increment to proceed to the next original interval
+    #         cio = cio + 1
+    #
+    #         # Increment our counter
+    #         i = i + 1
+    #
+    #     # Divide the time offset for the new interval by stepMultiplier to
+    #     # yield the average time offset of the original intervals represented.
+    #     intervalsNew[cin][0] = intervalsNew[cin][0] / stepMultiplier
+    #
+    #     # Increment to proceed to the next new interval
+    #     cin = cin + 1
 
     # Return the new downsample intervals
     return intervalsNew
@@ -97,14 +165,18 @@ def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarr
     # rows. The columns, in order, will be: Time Offset, Min, Max, # Points.
     cdef np.ndarray[np.float64_t, ndim=2] intervals = np.zeros((numIntervals, 3))
 
+    # This is the base offset, or the time offset of the first data point.
+    cdef double baseOffset = rawOffsets[0]
+    print("Base offset: "+str(baseOffset))
+
     # Establish our initial boundaries for the first interval
-    cdef double leftboundary = rawOffsets[0]
+    cdef double leftboundary = baseOffset
     cdef double rightboundary = leftboundary + timePerInterval
 
     # Grab data points length so we don't have to look it up every time.
     cdef int numDataPoints = rawOffsets.shape[0]
 
-    # Holds the index of the current data point we're working on
+    # Holds the index of the current data point we're working on.
     cdef int cdpi = 0
     
     # Holds the index of the current interval we're working on. We start at -1
@@ -112,8 +184,16 @@ def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarr
     # to point to the "first" interval.
     cdef int cii = -1
 
+    cdef double leftboundaryORIG, rightboundaryORIG, leftboundaryIF, rightboundaryIF, leftboundaryWHILE, rightboundaryWHILE
+    cdef double x
+
     # For all data points
     while cdpi < numDataPoints:
+
+        leftboundaryORIG = leftboundary
+        rightboundaryORIG = rightboundary
+
+
 
         # While the next data point does not belong to the current interval,
         # progress to the next interval.
@@ -126,15 +206,69 @@ def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarr
             # NOTE: We do not progress cii because we have simply skipped an
             # empty interval, and we do not store/represent empty intervals.
 
-        # Having escaped the while loop, we have reached a new interval to
-        # which the next data point belongs, so we increment the current index
-        # pointer to point to the next available interval.
+        leftboundaryWHILE = leftboundary
+        rightboundaryWHILE = rightboundary
+
+
+
+        leftboundary = leftboundaryORIG
+        rightboundary = rightboundaryORIG
+
+
+
+
+        # If the next data point does not belong to the current interval
+        # boundaries, compute the next interval boundaries to which it belongs.
+        if rawOffsets[cdpi] >= rightboundary:
+            x = floor(1.3)
+            # Compute the left & right boundaries for the new interval.
+            leftboundary = floor( (rawOffsets[cdpi]-baseOffset) / timePerInterval) * timePerInterval + baseOffset
+            rightboundary = leftboundary + timePerInterval
+
+            # NOTE: We do not progress cii because we have simply skipped an
+            # empty interval, and we do not store/represent empty intervals.
+
+        leftboundaryIF = leftboundary
+        rightboundaryIF = rightboundary
+
+
+
+
+
+        #if leftboundaryORIG != leftboundary and (leftboundaryIF != leftboundary or rightboundaryIF != rightboundary):
+        if leftboundaryIF != leftboundaryWHILE or rightboundaryIF != rightboundaryWHILE:
+            print("Originally:         ("+str(leftboundaryORIG)+", "+str(rightboundaryORIG)+")")
+            print("The if computed:    ("+str(leftboundaryIF)+", "+str(rightboundaryIF)+")")
+            print("The while computed: ("+str(leftboundaryWHILE)+", "+str(rightboundaryWHILE)+")")
+            print("The point offset is: "+str(rawOffsets[cdpi]))
+
+            #floor( (rawOffsets[cdpi]-baseOffset) / timePerInterval) * timePerInterval + baseOffset
+            print(rawOffsets[cdpi])
+            print(baseOffset)
+            print(timePerInterval)
+            print(rawOffsets[cdpi]-baseOffset)
+            print((rawOffsets[cdpi]-baseOffset) / timePerInterval)
+            print(floor( (rawOffsets[cdpi]-baseOffset) / timePerInterval))
+            print(floor( (rawOffsets[cdpi]-baseOffset) / timePerInterval) * timePerInterval)
+            print(floor( (rawOffsets[cdpi]-baseOffset) / timePerInterval) * timePerInterval + baseOffset)
+            print(leftboundaryIF)
+
+
+            print(floor(1.0)*leftboundaryWHILE)
+
+            quit()
+
+        # Do a sanity check.
+        if rawOffsets[cdpi] < leftboundary or rawOffsets[cdpi] >= rightboundary:
+            raise RuntimeError("NOT AS EXPECTED - FROM RAW")
+
+        # Increment the current index pointer to the next available interval.
         cii = cii + 1
 
         # Do a sanity check. We don't expect to ever need more than numIntervals
         # intervals. However, double check that we have not gone out of bounds.
         if cii >= numIntervals:
-            raise RuntimeError("Unexpectedly required more than numIntervals intervals during downsample buiding.")
+            raise RuntimeError("Unexpectedly required more than numIntervals intervals during downsample buiding from raw.")
 
         # Set the time for the interval
         intervals[cii][0] = leftboundary + (timePerInterval / 2)
