@@ -1,5 +1,31 @@
 # Medview Patient Data Viewer/Annotator
 
+## Development
+
+### Compiling Cython
+
+The Cython files may be compiled by running the following while in the server directory:
+
+```bash
+python setup.py build_ext --inplace
+```
+
+### Running Flask 
+
+The following environment variables should be set:
+
+```bash
+export FLASK_APP=serve.py
+export FLASK_ENV=development
+```
+
+The Flask development web server may be started with the following command from the server directory:
+```bash
+flask run --port=8001
+```
+
+The ```--no-reload``` argument may be added to disable auto-reload upon code change.
+
 ## API Methods
 
 ### Overview
