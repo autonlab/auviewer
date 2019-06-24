@@ -47,7 +47,7 @@ class Downsamples:
         self.downsamples[-1] = buildDownsampleFromRaw(self.seriesparent.rawTimeOffsets, self.seriesparent.rawValues, lastDownsampleNumIntervals)
         end = time.time()
         print("Done. Yielded " + str(self.downsamples[-1].shape[0]) + " intervals. Took " + str(round(end - start, 5)) + "s.")
-        quit()
+        
         # Build the next numDownsamples-1 downsamples (because we've already
         # built the first one).
         for i in range(-2, -numDownsamples-1, -1):

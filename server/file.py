@@ -138,7 +138,7 @@ class File:
             self.prepareSeries('numeric', s)
 
         end = time.time()
-        print("Completed preparing all numeric series for file (took " + str(round((end-start)/60), 3) + " minutes).")
+        print("Completed preparing all numeric series for file (took " + str(round((end-start)/60, 3)) + " minutes).")
 
     # Prepare all waveform series by both pulling the raw data into memory and
     # producing & storing in memory all necessary downsamples.
@@ -152,7 +152,7 @@ class File:
             self.prepareSeries('waveform', s)
 
         end = time.time()
-        print("Completed preparing all waveform series for file (took " + str(round((end-start)/60), 3) + " minutes).")
+        print("Completed preparing all waveform series for file (took " + str(round((end-start)/60, 3)) + " minutes).")
 
     # Attempts to unpickle the pickle file for filename, and returns the
     # unpickled object if successful.

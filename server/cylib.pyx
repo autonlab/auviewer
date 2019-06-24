@@ -64,9 +64,30 @@ def buildNextDownsampleUp(np.ndarray[np.float64_t, ndim=2] intervalsOrig, double
             # NOTE: We do not progress cin because we have simply skipped an
             # empty interval, and we do not store/represent empty intervals.
 
-        # Do a sanity check.
-        if intervalsOrig[cio][0] < leftboundaryNew or intervalsOrig[cio][0] >= rightboundaryNew:
-            raise RuntimeError("NOT AS EXPECTED - FROM DOWNSAMPLE")
+        # The above code block (if statement) calculates precisely which
+        # interval window the data point is a member of. However, in the case of
+        # very small intervals (e.g. if a data series has dense data and
+        # requires downsampling using high floating point precision), there may
+        # be floating point rounding which mucks things up and the data point
+        # actually belongs to an adjacent interval. This is a heuristic to
+        # account for such a possibility. The while loop criterion matches what
+        # is used in the while loop below, so we avoid an infinite loop
+        # situation in case there is a rounding error as described.
+        #
+        # NOTE: For some reason, the while loop (C addition) will use 15 places
+        # past the decimal for the exponent, but the computation in the if
+        # statement above only uses 12. In testing, the below while loop is used
+        # not infrequently for dense data sets (e.g. waveforms at 500 Hz). It
+        # has been observed to be used frequently for the downsample with the
+        # smallest interval and for 4-5 data points in waveform data sets in the
+        # 270-330MM data points range.
+        while intervalsOrig[cio][0] >= rightboundaryNew:
+
+            print("Using the while heuristic for data point " + str(intervalsOrig[cio][0]))
+
+            # Update left & right boundaries to the next interval
+            leftboundaryNew = rightboundaryNew
+            rightboundaryNew = leftboundaryNew + timePerIntervalNew
 
         # Increment the current index pointer to the next available interval.
         cin = cin + 1
@@ -101,51 +122,6 @@ def buildNextDownsampleUp(np.ndarray[np.float64_t, ndim=2] intervalsOrig, double
 
     # Slice off the unused intervals
     intervalsNew = intervalsNew[:cin+1]
-
-
-
-
-
-
-
-    
-    # # Temporary-use iterator to be used below
-    # cdef int i
-    #
-    # # Build the new downsample intervals
-    # while cin < numIntervalsNew:
-    #
-    #     # Prime the min & max of the new interval to the first original interval
-    #     intervalsNew[cin][1] = intervals[cio][1]
-    #     intervalsNew[cin][2] = intervals[cio][2]
-    #
-    #     # Go through the next stepMultiplier intervals of the original, and
-    #     # consolidate the statistics for the new set.
-    #     i = 0
-    #     while i < stepMultiplier and cio < numIntervalsOrig:
-    #
-    #         # Update min & max
-    #         if intervals[cio][1] < intervalsNew[cin][1]:
-    #             intervalsNew[cin][1] = intervals[cio][1]
-    #         if intervals[cio][2] > intervalsNew[cin][2]:
-    #             intervalsNew[cin][2] = intervals[cio][2]
-    #
-    #         # Add the time offset (it will be divided by stepMultiplier at the
-    #         # end to yield the average time offset for the new interval
-    #         intervalsNew[cin][0] = intervalsNew[cin][0] + intervals[cio][0]
-    #
-    #         # Increment to proceed to the next original interval
-    #         cio = cio + 1
-    #
-    #         # Increment our counter
-    #         i = i + 1
-    #
-    #     # Divide the time offset for the new interval by stepMultiplier to
-    #     # yield the average time offset of the original intervals represented.
-    #     intervalsNew[cin][0] = intervalsNew[cin][0] / stepMultiplier
-    #
-    #     # Increment to proceed to the next new interval
-    #     cin = cin + 1
 
     # Return the new downsample intervals
     return intervalsNew
@@ -190,37 +166,10 @@ def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarr
     # For all data points
     while cdpi < numDataPoints:
 
-        leftboundaryORIG = leftboundary
-        rightboundaryORIG = rightboundary
-
-
-
-        # While the next data point does not belong to the current interval,
-        # progress to the next interval.
-        while rawOffsets[cdpi] >= rightboundary:
-
-            # Update left & right boundaries to the next interval
-            leftboundary = rightboundary
-            rightboundary = leftboundary + timePerInterval
-
-            # NOTE: We do not progress cii because we have simply skipped an
-            # empty interval, and we do not store/represent empty intervals.
-
-        leftboundaryWHILE = leftboundary
-        rightboundaryWHILE = rightboundary
-
-
-
-        leftboundary = leftboundaryORIG
-        rightboundary = rightboundaryORIG
-
-
-
-
         # If the next data point does not belong to the current interval
         # boundaries, compute the next interval boundaries to which it belongs.
         if rawOffsets[cdpi] >= rightboundary:
-            x = floor(1.3)
+
             # Compute the left & right boundaries for the new interval.
             leftboundary = floor( (rawOffsets[cdpi]-baseOffset) / timePerInterval) * timePerInterval + baseOffset
             rightboundary = leftboundary + timePerInterval
@@ -228,39 +177,30 @@ def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarr
             # NOTE: We do not progress cii because we have simply skipped an
             # empty interval, and we do not store/represent empty intervals.
 
-        leftboundaryIF = leftboundary
-        rightboundaryIF = rightboundary
+        # The above code block (if statement) calculates precisely which
+        # interval window the data point is a member of. However, in the case of
+        # very small intervals (e.g. if a data series has dense data and
+        # requires downsampling using high floating point precision), there may
+        # be floating point rounding which mucks things up and the data point
+        # actually belongs to an adjacent interval. This is a heuristic to
+        # account for such a possibility. The while loop criterion matches what
+        # is used in the while loop below, so we avoid an infinite loop
+        # situation in case there is a rounding error as described.
+        #
+        # NOTE: For some reason, the while loop (C addition) will use 15 places
+        # past the decimal for the exponent, but the computation in the if
+        # statement above only uses 12. In testing, the below while loop is used
+        # not infrequently for dense data sets (e.g. waveforms at 500 Hz). It
+        # has been observed to be used frequently for the downsample with the
+        # smallest interval and for 4-5 data points in waveform data sets in the
+        # 270-330MM data points range.
+        while rawOffsets[cdpi] >= rightboundary:
 
+            print("Using the while heuristic for data point " + str(rawOffsets[cdpi]))
 
-
-
-
-        #if leftboundaryORIG != leftboundary and (leftboundaryIF != leftboundary or rightboundaryIF != rightboundary):
-        if leftboundaryIF != leftboundaryWHILE or rightboundaryIF != rightboundaryWHILE:
-            print("Originally:         ("+str(leftboundaryORIG)+", "+str(rightboundaryORIG)+")")
-            print("The if computed:    ("+str(leftboundaryIF)+", "+str(rightboundaryIF)+")")
-            print("The while computed: ("+str(leftboundaryWHILE)+", "+str(rightboundaryWHILE)+")")
-            print("The point offset is: "+str(rawOffsets[cdpi]))
-
-            #floor( (rawOffsets[cdpi]-baseOffset) / timePerInterval) * timePerInterval + baseOffset
-            print(rawOffsets[cdpi])
-            print(baseOffset)
-            print(timePerInterval)
-            print(rawOffsets[cdpi]-baseOffset)
-            print((rawOffsets[cdpi]-baseOffset) / timePerInterval)
-            print(floor( (rawOffsets[cdpi]-baseOffset) / timePerInterval))
-            print(floor( (rawOffsets[cdpi]-baseOffset) / timePerInterval) * timePerInterval)
-            print(floor( (rawOffsets[cdpi]-baseOffset) / timePerInterval) * timePerInterval + baseOffset)
-            print(leftboundaryIF)
-
-
-            print(floor(1.0)*leftboundaryWHILE)
-
-            quit()
-
-        # Do a sanity check.
-        if rawOffsets[cdpi] < leftboundary or rawOffsets[cdpi] >= rightboundary:
-            raise RuntimeError("NOT AS EXPECTED - FROM RAW")
+            # Update left & right boundaries to the next interval
+            leftboundary = rightboundary
+            rightboundary = leftboundary + timePerInterval
 
         # Increment the current index pointer to the next available interval.
         cii = cii + 1
@@ -296,6 +236,16 @@ def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarr
     # Return the downsampled intervals
     return intervals
 
+# This function calculates the number of downsample levels to build based on the
+# value of M and stepMultiplier (see the config file for details on those). It
+# calculates this by finding the smallest timespan of any consecutive 2M points
+# in the data series (the densest window of 2M points) and determining the
+# number of downsample levels that approach but do not exceed that threshold.
+#
+# To illustrate how the function response may be used, take the example of
+# M=3000 and stepMultiplier=2, and assume the return value is 7. In this case,
+# the following downsamples should be built: 3000, 6000, 12000, 24000, 48000,
+# 96000, 192000.
 def numDownsamplesToBuild(np.ndarray[np.float64_t, ndim=1] rawOffsets, int M, int stepMultiplier):
 
     # Grab the rawOffsets length

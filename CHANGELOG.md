@@ -2,6 +2,10 @@
 
 #### June 25, 2019
 
+##### Technical
+
+* Converted downsampling to Cython.
+
 ##### Documentation
 
 * Added documentation of API methods to README.
