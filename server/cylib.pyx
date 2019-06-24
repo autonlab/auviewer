@@ -33,7 +33,7 @@ def buildNextDownsampleUp(np.ndarray[np.float64_t, ndim=2] intervalsOrig, double
 
     # This is the base offset, or essentially the time offset of the original
     # first raw data point in the series.
-    cdef double baseOffset = intervalsOrig[0][0] - (timePerIntervalOrig / 2)
+    cdef double baseOffset = intervalsOrig[0,0] - (timePerIntervalOrig / 2)
     print("Base offset: "+str(baseOffset))
 
     # Will track the stepwise left & right boundary of the new intervals
@@ -56,9 +56,9 @@ def buildNextDownsampleUp(np.ndarray[np.float64_t, ndim=2] intervalsOrig, double
         # If this original interval does not belong to the current new interval
         # boundaries, compute the subsequent new interval boundaries to which
         # it belongs.
-        if intervalsOrig[cio][0] >= rightboundaryNew:
+        if intervalsOrig[cio,0] >= rightboundaryNew:
 
-            leftboundaryNew = floor( (intervalsOrig[cio][0]-baseOffset) / timePerIntervalNew) * timePerIntervalNew + baseOffset
+            leftboundaryNew = floor( (intervalsOrig[cio,0]-baseOffset) / timePerIntervalNew) * timePerIntervalNew + baseOffset
             rightboundaryNew = leftboundaryNew + timePerIntervalNew
 
             # NOTE: We do not progress cin because we have simply skipped an
@@ -81,9 +81,9 @@ def buildNextDownsampleUp(np.ndarray[np.float64_t, ndim=2] intervalsOrig, double
         # has been observed to be used frequently for the downsample with the
         # smallest interval and for 4-5 data points in waveform data sets in the
         # 270-330MM data points range.
-        while intervalsOrig[cio][0] >= rightboundaryNew:
+        while intervalsOrig[cio,0] >= rightboundaryNew:
 
-            print("Using the while heuristic for data point " + str(intervalsOrig[cio][0]))
+            print("Using the while heuristic for data point " + str(intervalsOrig[cio,0]))
 
             # Update left & right boundaries to the next interval
             leftboundaryNew = rightboundaryNew
@@ -97,28 +97,28 @@ def buildNextDownsampleUp(np.ndarray[np.float64_t, ndim=2] intervalsOrig, double
             raise RuntimeError("Unexpectedly require more than numIntervalsOrig during downsample building from downsample.")
 
         # Prime the min & max of the new interval to the first original interval
-        intervalsNew[cin][1] = intervalsOrig[cio][1]
-        intervalsNew[cin][2] = intervalsOrig[cio][2]
+        intervalsNew[cin,1] = intervalsOrig[cio,1]
+        intervalsNew[cin,2] = intervalsOrig[cio,2]
 
         i = 0
-        while cio < numIntervalsOrig and i < stepMultiplier and intervalsOrig[cio][0] < rightboundaryNew:
+        while cio < numIntervalsOrig and i < stepMultiplier and intervalsOrig[cio,0] < rightboundaryNew:
 
             # Update min & max
-            if intervalsOrig[cio][1] < intervalsNew[cin][1]:
-                intervalsNew[cin][1] = intervalsOrig[cio][1]
-            if intervalsOrig[cio][2] > intervalsNew[cin][2]:
-                intervalsNew[cin][2] = intervalsOrig[cio][2]
+            if intervalsOrig[cio,1] < intervalsNew[cin,1]:
+                intervalsNew[cin,1] = intervalsOrig[cio,1]
+            if intervalsOrig[cio,2] > intervalsNew[cin,2]:
+                intervalsNew[cin,2] = intervalsOrig[cio,2]
 
             # Add the time offset (it will be divided by i at the
             # end to yield the average time offset for the new interval
-            intervalsNew[cin][0] = intervalsNew[cin][0] + intervalsOrig[cio][0]
+            intervalsNew[cin,0] = intervalsNew[cin,0] + intervalsOrig[cio,0]
 
             cio = cio + 1
             i = i + 1
 
         # Divide the time offset for the new interval by i to yield the
         # average time offset of the original intervals represented.
-        intervalsNew[cin][0] = intervalsNew[cin][0] / i
+        intervalsNew[cin,0] = intervalsNew[cin,0] / i
 
     # Slice off the unused intervals
     intervalsNew = intervalsNew[:cin+1]
@@ -211,21 +211,21 @@ def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarr
             raise RuntimeError("Unexpectedly required more than numIntervals intervals during downsample buiding from raw.")
 
         # Set the time for the interval
-        intervals[cii][0] = leftboundary + (timePerInterval / 2)
+        intervals[cii,0] = leftboundary + (timePerInterval / 2)
 
         # Prime this interval's min & max with the first data point
-        intervals[cii][1] = rawValues[cdpi]
-        intervals[cii][2] = rawValues[cdpi]
+        intervals[cii,1] = rawValues[cdpi]
+        intervals[cii,2] = rawValues[cdpi]
 
         # While the next data point occurs within the current interval, add
         # it to the interval's statistics.
         while cdpi < numDataPoints and rawOffsets[cdpi] < rightboundary:
 
             # Update interval's min & max based on the new data point
-            if intervals[cii][1] > rawOffsets[cdpi]:
-                intervals[cii][1] = rawOffsets[cdpi]
-            if intervals[cii][2] < rawOffsets[cdpi]:
-                intervals[cii][2] = rawOffsets[cdpi]
+            if intervals[cii,1] > rawOffsets[cdpi]:
+                intervals[cii,1] = rawOffsets[cdpi]
+            if intervals[cii,2] < rawOffsets[cdpi]:
+                intervals[cii,2] = rawOffsets[cdpi]
 
             # Increment cdpi to progress to the next data point
             cdpi = cdpi + 1
