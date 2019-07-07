@@ -4,7 +4,8 @@
 M = 3000
 
 # Original patient data files (which should be preserved and unaltered) go here.
-originalFilesDir = '../data/originals/'
+# originalFilesDir = '../data/originals/'
+originalFilesDir = '/zfsauton/data/public/vleonard/'
 
 # Processed (i.e. downsampled) patient data files go here.
 processedFilesDir = '../data/processed/'

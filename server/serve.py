@@ -1,10 +1,11 @@
 from flask import Flask, Blueprint, send_from_directory, request
 from file import File
 
-mf = File('output.h5')
+mf = File('test_wave_20190626.h5')
 #mf.prepareAllWaveformSeries()
-mf.prepareAllSeries()
-mf.pickle()
+# mf.prepareAllSeries()
+mf.prepareAllNumericSeries()
+#mf.pickle()
 
 # mf = File.unpickle('output.h5')
 # if not mf:

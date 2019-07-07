@@ -1,5 +1,5 @@
 import bisect
-# import datetime as dt
+import numpy as np
 from downsamples import Downsamples
 
 # Simplejson package is required in order to "ignore" NaN values and implicitly convert them into null values.
@@ -48,8 +48,12 @@ class Series:
         #     data.append([i.time.isoformat(), i.min, i.max, None])
 
         # Assemble the output data
-        data = [[i.time, i.min, i.max, None] for i in self.downsampleSet.downsamples[0].intervals]
-
+        # data = [[i.time, i.min, i.max, None] for i in self.downsamples.downsamples[0].intervals]
+        if len(self.downsamples.downsamples) > 0:
+            data = self.downsamples.downsamples[0].tolist()
+        else:
+            data = []
+        
         return {
             "labels": ['Date/Offset', 'Min', 'Max', self.name],
             "data": data
@@ -137,7 +141,10 @@ class Series:
         # Get reference to the series datastream from the HDF5 file
         data = self.getData()
 
-        self.rawTimeOffsets = data['datetime'][()]
-        self.rawValues = data['value'][()]
+        # self.rawTimeOffsets = data['datetime'][()]
+        # self.rawValues = data['value'][()]
+        self.rawTimeOffsets = data['time']
+        # self.rawValues = data['value']
+        self.rawValues = data['value'].astype(np.float64)
 
         print("Finished reading raw series data into memory for " + self.name + " (" + str(self.rawTimeOffsets.shape[0]) + " points).")

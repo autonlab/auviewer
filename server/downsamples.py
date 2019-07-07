@@ -6,9 +6,6 @@ from cylib import buildDownsampleFromRaw, buildNextDownsampleUp, numDownsamplesT
 # Represents a set of downsamples for a series of data.
 class Downsamples:
 
-    # Expected member variables:
-    #   downsamples: array of downsamples at various resolutions
-
     def __init__(self, seriesparent):
 
         outerStart = time.time()
@@ -148,12 +145,12 @@ class Downsamples:
 
             s = s + "First 5:" + "\n"
             j = 0
-            while j < 5:
+            while j < 5 and j < len(self.downsamples[i]):
                 s = s + str(self.downsamples[i][j]) + "\n"
                 j = j + 1
 
             s = s + "Last 5:" + "\n"
-            j = 6
+            j = min(5, len(self.downsamples[i]))
             while j > 0:
                 s = s + str(self.downsamples[i][-j]) + "\n"
                 j = j - 1

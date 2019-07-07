@@ -41,7 +41,11 @@ class File:
 
         for s in self.numericSeries:
 
-            outputObject[s.name] = s.getFullOutputAllSeries()
+            outputObject["Numeric: "+s.name] = s.getFullOutputAllSeries()
+
+        for s in self.waveformSeries:
+
+            outputObject["Waveform: "+s.name] = s.getFullOutputAllSeries()
 
         return json.dumps(outputObject, ignore_nan = True)
 
@@ -100,28 +104,28 @@ class File:
         print('Preparing series ' + name + '.')
 
         # Check if the series already exists
-        if type == 'numeric':
+        if type == 'numerics':
             for s in self.numericSeries:
                 if s.name == name:
                     print('Aborting series preparation because series already exists.')
                     return
-        elif type == 'waveform':
+        elif type == 'waveforms':
             for s in self.waveformSeries:
                 if s.name == name:
                     print('Aborting series preparation because series already exists.')
                     return
 
         # We expect type to be one of two values
-        if type != 'numeric' and type != 'waveform':
+        if type != 'numerics' and type != 'waveforms':
             raise RuntimeError('Invalid type was provided to File.prepareSeries(): ' + str(type))
 
         # Prepare the series
         series = Series(type, name, self)
 
         # Add the series to the appropriate list
-        if type == 'numeric':
+        if type == 'numerics':
             self.numericSeries.append(series)
-        elif type == 'waveform':
+        elif type == 'waveforms':
             self.waveformSeries.append(series)
 
         print("Finished preparing series " + name + ".")
@@ -145,8 +149,8 @@ class File:
 
         print("Preparing all numeric series for file.")
 
-        for s in self.f['numeric']:
-            self.prepareSeries('numeric', s)
+        for s in self.f['numerics']:
+            self.prepareSeries('numerics', s)
 
         end = time.time()
         print("Completed preparing all numeric series for file (took " + str(round((end-start)/60, 3)) + " minutes).")
@@ -159,8 +163,8 @@ class File:
 
         print("Preparing all waveform series for file.")
 
-        for s in self.f['waveform']:
-            self.prepareSeries('waveform', s)
+        for s in self.f['waveforms']:
+            self.prepareSeries('waveforms', s)
 
         end = time.time()
         print("Completed preparing all waveform series for file (took " + str(round((end-start)/60, 3)) + " minutes).")
