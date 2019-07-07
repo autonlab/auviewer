@@ -2,7 +2,8 @@ from flask import Flask, Blueprint, send_from_directory, request
 from file import File
 
 mf = File('output.h5')
-mf.prepareAllWaveformSeries()
+#mf.prepareAllWaveformSeries()
+mf.prepareAllSeries()
 mf.pickle()
 
 # mf = File.unpickle('output.h5')

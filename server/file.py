@@ -126,6 +126,17 @@ class File:
 
         print("Finished preparing series " + name + ".")
 
+    def prepareAllSeries(self):
+        start = time.time()
+
+        print("Preparing all series for file.")
+
+        self.prepareAllNumericSeries()
+        self.prepareAllWaveformSeries()
+
+        end = time.time()
+        print("Completed preparing all series for file (took " + str(round((end - start) / 60, 3)) + " minutes).")
+
     # Prepare all numeric series by both pulling the raw data into memory and
     # producing & storing in memory all necessary downsamples.
     def prepareAllNumericSeries(self):
