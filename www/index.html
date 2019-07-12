@@ -15,7 +15,7 @@
 			top: 0;
 			left: 0;
 			box-sizing: border-box;
-			width: 150px;
+			width: 200px;
 			height: 100%;
 			padding-left: 8px;
 			padding-top: 8px;
@@ -23,7 +23,7 @@
 
 		#graphs {
 			box-sizing: border-box;
-			padding-left: 150px;
+			padding-left: 200px;
 			width: 99%;
 			height: 100%;
 		}
@@ -62,13 +62,27 @@
 <!-- Webix Library (PRO) -->
 <script type="text/javascript" src="https://cdn.webix.com/site/webix.js"></script>
 
+<script src="js/config.js"></script>
+
 <script src="js/annotation.js"></script>
 <script src="js/annotation_event_handlers.js"></script>
 <script src="js/graph_event_handlers.js"></script>
 <script src="js/main.js"></script>
 <script type="application/javascript">
+
+	/*webix.ready(function() {
+		webix.ui({
+			type: "clean",
+			rows: [
+				{ view: "template", template: "Hi", type: "header" },
+				{ view: "template", template: "Content" }
+			]
+		})
+	})*/
+
     xhttp.open("GET", allDataAllSeriesURL, true);
     xhttp.send();
+
 </script>
 
 </body>

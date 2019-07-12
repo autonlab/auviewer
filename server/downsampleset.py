@@ -1,10 +1,10 @@
-import bisect
 import config
+import numpy as np
 import time
 from cylib import buildDownsampleFromRaw, buildNextDownsampleUp, numDownsamplesToBuild
 
 # Represents a set of downsamples for a series of data.
-class Downsamples:
+class DownsampleSet:
 
     def __init__(self, seriesparent):
 
@@ -61,28 +61,10 @@ class Downsamples:
 
         print(self)
 
-    ################ FROM DOWNSAMPLE -- NEEDS ADAPTATION
-    # Returns a list of the intervals in the range of starttime to stoptime.
-    def getIntervals(self, starttime, stoptime):
-
-        # Determine the index of the first interval to transmit for the view. To
-        # do this, find the first interval which occurs after the starttime and
-        # take the index prior to that as the starting interval.
-        startIntervalIndex = bisect.bisect(self.intervals, starttime) - 1
-        if startIntervalIndex < 0:
-            startIntervalIndex = 0
-
-        # Determine the index of the last interval to transmit for the view. To
-        # do this, find the first interval which occurs after the stoptime and
-        # take the index prior to that as the starting interval.
-        stopIntervalIndex = bisect.bisect(self.intervals, stoptime) - 1
-        if stopIntervalIndex < 0:
-            stopIntervalIndex = 0
-
-        return self.intervals[startIntervalIndex:(stopIntervalIndex + 1)]
-
-    # Returns a reference to the appropriate downsample for the given time range.
-    # Expects starttime & stoptime to be time offsets floats in seconds.
+    # Returns a slice of the appropriate downsample for the given time range, or
+    # nothing if there is no appropriate downsample available (in this case, raw
+    # data should be used). Expects starttime & stoptime to be time offsets
+    # floats in seconds.
     def getDownsample(self, starttime, stoptime):
 
         # If there are no downsamples available, we cannot provide one
@@ -99,7 +81,7 @@ class Downsamples:
         # downsample, going from the largest interval downwards, which is too
         # small and then select the previous one.
         i = 0
-        while i < len(self.downsamples) and self.downsamples[i].timePerInterval >= maxTimePerInterval:
+        while i < len(self.downsamples) and self.getTimePerIntervalByIndex(i) >= maxTimePerInterval:
             i = i + 1
         chosenDownsampleIndex = i - 1
 
@@ -110,10 +92,16 @@ class Downsamples:
 
         # If we reached the lowest downsample level, check whether we should be
         # using real data points. If so, return nothing.
-        if (chosenDownsampleIndex == len(self.downsamples) - 1) and maxTimePerInterval <= self.downsamples[chosenDownsampleIndex].timePerInterval / 2:
+        if (chosenDownsampleIndex == len(self.downsamples) - 1) and maxTimePerInterval <= self.getTimePerIntervalByIndex(chosenDownsampleIndex) / 2:
             return
 
-        return self.downsamples[chosenDownsampleIndex]
+        # Find the start & stop indices based on the start & stop times.
+        ds = self.downsamples[chosenDownsampleIndex]
+        startIndex = np.searchsorted(ds.T[0], starttime)
+        stopIndex = np.searchsorted(ds.T[0], stoptime, side='right')
+
+        # Return the downsample slice
+        return ds[startIndex:stopIndex]
 
     # Returns the number of intervals for the downsample at index i.
     def getNumIntervalsByIndex(self, i):

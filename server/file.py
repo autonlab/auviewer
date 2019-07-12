@@ -34,6 +34,7 @@ class File:
         # Load the file
         self.loadFile()
 
+    # UPDATEDONE
     # Produces JSON output for all series in the file at the maximum time range.
     def getFullOutputAllSeries(self):
 
@@ -53,26 +54,38 @@ class File:
     def getRangedOutputAllSeries(self, start, stop):
 
         outputObject = {}
-
+            
         for s in self.numericSeries:
 
-            outputObject[s.name] = s.getRangedOutput(start, stop)
+            outputObject["Numeric: "+s.name] = s.getRangedOutput(start, stop)
+
+        for s in self.waveformSeries:
+
+            outputObject["Waveform: "+s.name] = s.getRangedOutput(start, stop)
 
         return json.dumps(outputObject, ignore_nan = True)
 
     # Produces JSON output for a given series in the file at a specified
     # time range.
-    def getRangedOutputSingleSeries(selfself, series, start, stop):
+    def getRangedOutputSingleSeries(self, series, start, stop):
 
         outputObject = {}
 
         for s in self.numericSeries:
 
-            if s.name == series:
+            if "Numeric: " + s.name == series:
 
-                outputObject[s.name] = s.getRangedOutput(start, stop)
+                outputObject["Numeric: " + s.name] = s.getRangedOutput(start, stop)
 
-        return json.dumps(outputObject, ignore_nan = True)
+                return json.dumps(outputObject, ignore_nan=True)
+
+        for s in self.waveformSeries:
+
+            if "Waveform: " + s.name == series:
+                
+                outputObject["Waveform: " + s.name] = s.getRangedOutput(start, stop)
+
+                return json.dumps(outputObject, ignore_nan=True)
 
     # Opens the HDF5 file.
     def loadFile(self):

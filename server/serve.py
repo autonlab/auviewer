@@ -2,21 +2,9 @@ from flask import Flask, Blueprint, send_from_directory, request
 from file import File
 
 mf = File('test_wave_20190626.h5')
+#mf.prepareAllNumericSeries()
 #mf.prepareAllWaveformSeries()
-# mf.prepareAllSeries()
-mf.prepareAllNumericSeries()
-#mf.pickle()
-
-# mf = File.unpickle('output.h5')
-# if not mf:
-#     mf = File('output.h5')
-#     mf.prepareAllWaveformSeries()
-#     #mf.prepareAllNumericSeries()
-#     mf.pickle()
-#
-# else:
-#     mf.prepareAllWaveformSeries()
-#     #mf.pickle()
+mf.prepareAllSeries()
 
 # Instantiate the Flask web application class
 app = Flask(__name__)
@@ -29,6 +17,10 @@ app.register_blueprint(Blueprint('js', __name__, static_url_path='/js', static_f
 @app.route('/index.html')
 def index():
     return send_from_directory('../www', 'index.html')
+
+@app.route('/bokeh.html')
+def bokeh():
+    return send_from_directory('../www', 'bokeh.html')
 
 @app.route('/all_data_all_series')
 def all_data_all_series():
@@ -57,7 +49,7 @@ def data_window_single_series():
     if request.method == 'GET' and len(request.args.get('start', default='')) > 0 and len(request.args.get('start', default='')) > 0 and len(request.args.get('stop', default='')) > 0:
 
         # Parse the series name and start & stop times
-        series = request.args.get('series', type=string)
+        series = request.args.get('series')
         start = request.args.get('start', type=float)
         stop = request.args.get('stop', type=float)
 

@@ -1,5 +1,13 @@
 # Change Log
 
+#### July 9, 2019
+
+##### Technical
+
+* Converted file processing to the new HDF5 file format from Jim.
+* Got all previously working API functionality working after it was broken in the conversion to Cython downsampling.
+* Added ability to add a graph while zoomed in without resetting the zoom to all time.
+
 #### June 25, 2019
 
 ##### Technical

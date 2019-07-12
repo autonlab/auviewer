@@ -1,13 +1,4 @@
-// Backend address & port
-var serverAddress = 'localhost';
-var serverPort = '8001';
-var allDataAllSeriesURL = "http://" + serverAddress + ":" + serverPort + "/all_data_all_series";
-var dataWindowAllSeriesURL = "http://" + serverAddress + ":" + serverPort + "/data_window_all_series";
-
-// Series to display by default
-defaultSeries = ['HR', 'RR', 'BP', 'SpO2', 'CVP', 'ArtWave'];
-
-// TODO(gus): Convert these redundant tracking objects into one a unified object.
+// TODO(gus): Convert these (below) redundant tracking objects into one a unified object.
 
 // Holds the dom elements of instantiated graphs, keyed by series name
 var graphDomElements = {};
@@ -19,7 +10,7 @@ var legendDomElements = {};
 var dygraphInstances = {};
 
 // Holds the initial dataset for a given data series, keyed by series name
-var initialDataSeries = {}
+var initialDataSeries = {};
 
 // Holds the reference to the graph synchronization object
 var sync = null;
@@ -70,7 +61,7 @@ function addGraphInitialLoad(backendData, series) {
 
 	// Instantiate the dygraph
 	if (defaultSeries.includes(series)) {
-		instantiateDygraph(series, backendData[series]);
+		instantiateDygraph(series, backendData[series], globalXExtremes);
 	} else {
 		hideGraphDivs(series);
 	}
@@ -90,13 +81,13 @@ function addGraphPostLoad(series) {
 	unsynchronizeGraphs();
 
 	// Instantiate the dygraph
-	instantiateDygraph(series, initialDataSeries[series]);
+	var g = instantiateDygraph(series, initialDataSeries[series], getCurrentRange());
 
 	// Resynchronize the graphs now that addition is complete.
 	synchronizeGraphs();
 
-	// Reset the zoom to trigger all graphs back to global range
-	resetZoom();
+	// Update the data from the backend for the new series only
+	updateCurrentViewData(g, false)
 
 }
 
@@ -136,43 +127,6 @@ function addSeriesControlToInterface(series) {
 	// Create & attach a br element
 	var br = document.createElement('BR');
 	controls.appendChild(br);
-
-}
-
-// Converts all x values in a data array to javascript Date objects.
-// function convertToDateObjs(data) {
-//
-// 	// Go through all values in the series.
-// 	for(var i = 0; i < data.length; i++) {
-//
-// 		// Convert the ISO8601-format string into a Date object.
-// 		data[i][0] = new Date(data[i][0]);
-//
-// 	}
-//
-// }
-
-// Converts all x values in a data array to javascript Date objects, and also
-// updates the global x-axis extremes.
-function convertToDateObjsAndUpdateExtremes(data) {
-
-	// Go through all values in the series.
-	for(var i = 0; i < data.length; i++) {
-
-		// Convert the ISO8601-format string into a Date object.
-		//data[i][0] = new Date(data[i][0]);
-
-		// Update global x-minimum if warranted
-		if(globalXExtremes[0] == null || data[i][0] < globalXExtremes[0]) {
-			globalXExtremes[0] = data[i][0]
-		}
-
-		// Update global x-maximum if warranted
-		if(globalXExtremes[1] == null || data[i][0] > globalXExtremes[1]) {
-			globalXExtremes[1] = data[i][0]
-		}
-
-	}
 
 }
 
@@ -249,6 +203,14 @@ function downsamplePlotter(e) {
 
 }
 
+// Returns the currently displayed range of the first graph being displayed.
+function getCurrentRange() {
+	d = Object.keys(dygraphInstances);
+	if (d.length > 0) {
+		return dygraphInstances[d[0]].xAxisRange();
+	}
+}
+
 // Produces a meshed dataset consisting of the outerDataset and innerDataset,
 // with  innerDataset replacing its time range of data points in outerDataset.
 function getDownsampleMesh(outerDataset, innerDataset) {
@@ -296,7 +258,7 @@ function hideGraphDivs(series) {
 }
 
 // Instantiates a dygraph on the interface.
-function instantiateDygraph(series, dataset) {
+function instantiateDygraph(series, dataset, timeWindow) {
 
 	// Create the dygraph
 	dygraphInstances[series] = new Dygraph(graphDomElements[series], dataset.data, {
@@ -311,7 +273,7 @@ function instantiateDygraph(series, dataset) {
 			}
 		},
 		colors: ['#171717'],//'#5253FF'],
-		dateWindow: globalXExtremes,
+		dateWindow: timeWindow,
 		//drawPoints: true,
 		gridLineColor: 'rgb(232,122,128)',
 		interactionModel: {
@@ -334,6 +296,9 @@ function instantiateDygraph(series, dataset) {
 
 	// Attach the original dataset to the graph for later use
 	dygraphInstances[series].originalDataset = dataset.data
+
+	// Return reference to the graph instance in case needed
+	return dygraphInstances[series];
 }
 
 // Indicate whether the named graph is currently showing on the interface.
@@ -362,6 +327,40 @@ function offsetToPercentage(g, offsetX) {
 	return xPct;
 }
 
+// Performs post-load, pre-render processing of data received from the backend.
+function processData(data, calculateExtremes) {
+
+	var addNull = data.length > 0 && data[0].length == 3;
+
+	// Go through all values in the series.
+	for(var i = 0; i < data.length; i++) {
+
+		// Convert the ISO8601-format string into a Date object.
+		//data[i][0] = new Date(data[i][0]);
+
+		if (calculateExtremes) {
+
+			// Update global x-minimum if warranted
+			if (globalXExtremes[0] == null || data[i][0] < globalXExtremes[0]) {
+				globalXExtremes[0] = data[i][0]
+			}
+
+			// Update global x-maximum if warranted
+			if (globalXExtremes[1] == null || data[i][0] > globalXExtremes[1]) {
+				globalXExtremes[1] = data[i][0]
+			}
+
+		}
+
+		// TEMPORARY: Add null value to end of array for downsample sets.
+		if (addNull) {
+			data[i].push(null);
+		}
+
+	}
+
+}
+
 // Removes a graph from the interface
 function removeGraph(series) {
 
@@ -381,9 +380,6 @@ function removeGraph(series) {
 
 		// Resynchronize the graphs now that removal is complete.
 		synchronizeGraphs()
-
-		// Reset the zoom to trigger all graphs back to global range
-		resetZoom();
 
 	}
 
@@ -443,7 +439,7 @@ function unsynchronizeGraphs() {
 
 // Will request and update the current view of the graph with new data that is
 // appropriately downsampled (or not).
-function updateCurrentViewData(graph) {
+function updateCurrentViewData(graph, updateAllGraphs) {
 
 	// Get the x-axis range
 	var xRange = graph.xAxisRange();
@@ -474,7 +470,7 @@ function updateCurrentViewData(graph) {
 				if (isGraphShowing(series)) {
 
 					// Convert date strings to Date objects in all datasets.
-					// convertToDateObjs(backendData[series]['data']);
+					processData(backendData[series]['data'], false);
 
 					var meshedData = getDownsampleMesh(dygraphInstances[series].originalDataset, backendData[series]['data']);
 
@@ -503,7 +499,13 @@ function updateCurrentViewData(graph) {
 
 	// Send the async request
 	//xt1 = performance.now();
-	x.open("GET", dataWindowAllSeriesURL+"?start="+xRange[0]+"&stop="+xRange[1], true);
+	if (updateAllGraphs) {
+		x.open("GET", dataWindowAllSeriesURL + "?start=" + xRange[0] + "&stop=" + xRange[1], true);
+	} else {
+		console.log(dataWindowSingleSeriesURL + "?series=" + encodeURIComponent(graph.getOption("title")) + "&start=" + xRange[0] + "&stop=" + xRange[1])
+		console.log(graph)
+		x.open("GET", dataWindowSingleSeriesURL + "?series=" + encodeURIComponent(graph.getOption("title")) + "&start=" + xRange[0] + "&stop=" + xRange[1], true)
+	}
 	x.send();
 
 }
@@ -545,7 +547,7 @@ xhttp.onreadystatechange = function() {
 		// default zoom can be set. There won't be that many graphs, so redundant
 		// for loops are not costly.
 		for(series in backendData) {
-			convertToDateObjsAndUpdateExtremes(backendData[series]['data']);
+			processData(backendData[series]['data'], true);
 		}
 
 		// When the x-axis extremes have been calculated (as dates), convert them

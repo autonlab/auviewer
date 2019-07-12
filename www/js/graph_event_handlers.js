@@ -46,11 +46,11 @@ function handleMouseUp(event, g, context) {
 	}
 	else if (context.isZooming) {
 		Dygraph.endZoom(event, g, context);
-		updateCurrentViewData(g);
+		updateCurrentViewData(g, true);
 	}
 	else if (context.isPanning) {
 		if (context.medViewPanningMouseMoved) {
-			updateCurrentViewData(g);
+			updateCurrentViewData(g, true);
 			context.medViewPanningMouseMoved = false;
 		}
 		Dygraph.endPan(event, g, context);
@@ -85,7 +85,7 @@ function handleMouseWheel(event, g, context) {
 		if (g.updateDataTimer != null) {
 			clearTimeout(g.updateDataTimer);
 		}
-		g.updateDataTimer = setTimeout(function(){ g.updateDataTimer = null; updateCurrentViewData(g); }, 200);
+		g.updateDataTimer = setTimeout(function(){ g.updateDataTimer = null; updateCurrentViewData(g, true); }, 200);
 
 
 		//updateCurrentViewData(g);

@@ -222,10 +222,10 @@ def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarr
         while cdpi < numDataPoints and rawOffsets[cdpi] < rightboundary:
 
             # Update interval's min & max based on the new data point
-            if intervals[cii,1] > rawOffsets[cdpi]:
-                intervals[cii,1] = rawOffsets[cdpi]
-            if intervals[cii,2] < rawOffsets[cdpi]:
-                intervals[cii,2] = rawOffsets[cdpi]
+            if intervals[cii,1] > rawValues[cdpi]:
+                intervals[cii,1] = rawValues[cdpi]
+            if intervals[cii,2] < rawValues[cdpi]:
+                intervals[cii,2] = rawValues[cdpi]
 
             # Increment cdpi to progress to the next data point
             cdpi = cdpi + 1
