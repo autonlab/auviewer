@@ -108,13 +108,18 @@ function underlayCallbackHandler(canvas, area, g) {
         height = area.h;
 
         // Draw the annotation highlight.
-		canvas.fillStyle = "rgba(255, 255, 102, 1.0)";
+		//canvas.fillStyle = "rgba(255, 255, 102, 1.0)";
+		//canvas.fillStyle = "#4B89BF";
+		//canvas.fillStyle = "#D91414";
+		//canvas.fillStyle = "#768FA6";
+		canvas.fillStyle = "rgba(0,72,182,0.73)";
 		canvas.fillRect(x, y, width, height);
 
 		// Draw annotation label text
 		if (annotations[i].label) {
 			canvas.font = "12px Arial";
-			canvas.fillStyle = "#0000e6";
+			//canvas.fillStyle = "#0000e6";
+			canvas.fillStyle = "#221E40";
 			canvas.textAlign = "center";
 			canvas.fillText(annotations[i].label, x + (width / 2), area.y + (area.h * .1));
 		}

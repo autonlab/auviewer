@@ -1,6 +1,8 @@
 import bisect
 import numpy as np
 from downsampleset import DownsampleSet
+from cylib import generateThresholdAlerts
+import time
 
 # Simplejson package is required in order to "ignore" NaN values and implicitly convert them into null values.
 # RFC JSON spec left out NaN values, even though ES5 supports them (https://www.ecma-international.org/ecma-262/5.1/#sec-4.3.23).
@@ -12,7 +14,6 @@ import simplejson as json
 # Represents a single time series of data.
 class Series:
 
-    # UPDATEDONE
     # Reads a series into memory and builds the downsampling. Type is either
     # 'numeric' or 'waveform'. Fileparent is a reference to the File class
     # instance which contains the Series.
@@ -32,8 +33,11 @@ class Series:
 
         # Holds the downsample set
         self.dss = DownsampleSet(self)
+        
+    def generateThresholdAlerts(self, threshold, duration, dutycycle, maxgap):
+        # return generateThresholdAlerts(self.rawTimeOffsets, self.rawValues, 90, 300, .7, 60)
+        return generateThresholdAlerts(self.rawTimeOffsets, self.rawValues, threshold, duration, dutycycle, maxgap)
 
-    # UPDATEDONE
     # Produces JSON output for the series at the maximum time range.
     def getFullOutputAllSeries(self):
 
@@ -61,7 +65,6 @@ class Series:
             "data": data
         }
 
-    # UPDATEDONE
     # Produces JSON output for the series over a specified time range, with
     # starttime and stoptime being time offset floats in seconds.
     def getRangedOutput(self, starttime, stoptime):
@@ -96,12 +99,13 @@ class Series:
             "data": data
         }
 
-    # UPDATEDONE
     # Pulls the raw data for the series from the file into memory (self.rawTimeOffsets
     # and self.rawValues).
     def pullRawData(self):
 
         print("Reading raw series data into memory for " + self.name + ".")
+
+        start = time.time()
 
         # Get reference to the series datastream from the HDF5 file
         data = self.fileparent.f[self.type][self.name]['data']
@@ -109,4 +113,6 @@ class Series:
         self.rawTimeOffsets = data['time']
         self.rawValues = data['value'].astype(np.float64)
 
-        print("Finished reading raw series data into memory for " + self.name + " (" + str(self.rawTimeOffsets.shape[0]) + " points).")
+        end = time.time()
+
+        print("Finished reading raw series data into memory for " + self.name + " (" + str(self.rawTimeOffsets.shape[0]) + " points). Took " + str(round(end - start, 5)) + "s.")

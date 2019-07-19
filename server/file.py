@@ -34,7 +34,6 @@ class File:
         # Load the file
         self.loadFile()
 
-    # UPDATEDONE
     # Produces JSON output for all series in the file at the maximum time range.
     def getFullOutputAllSeries(self):
 
@@ -50,6 +49,15 @@ class File:
 
         return json.dumps(outputObject, ignore_nan = True)
 
+    def generateAlerts(self, seriesname, threshold, duration, dutycycle, maxgap):
+        
+        # Find the series
+        for s in self.numericSeries:
+            
+            if s.name == seriesname:#"SpO₂.SpO₂":
+                
+                return json.dumps(s.generateThresholdAlerts(threshold, duration, dutycycle, maxgap).tolist())
+    
     # Produces JSON output for all series in the file at a specified time range.
     def getRangedOutputAllSeries(self, start, stop):
 
@@ -111,7 +119,7 @@ class File:
 
     # Prepare a specific series by both pulling the raw data into memory and
     # producing & storing in memory all necessary downsamples. Type is either
-    # 'numeric' or 'waveform'.
+    # 'numeric' or 'waveform'. Returns a reference to the new series.
     def prepareSeries(self, type, name):
 
         print('Preparing series ' + name + '.')
@@ -142,6 +150,9 @@ class File:
             self.waveformSeries.append(series)
 
         print("Finished preparing series " + name + ".")
+        
+        # Return reference to series
+        return series
 
     def prepareAllSeries(self):
         start = time.time()
@@ -163,6 +174,7 @@ class File:
         print("Preparing all numeric series for file.")
 
         for s in self.f['numerics']:
+            
             self.prepareSeries('numerics', s)
 
         end = time.time()

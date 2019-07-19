@@ -15,15 +15,17 @@
 			top: 0;
 			left: 0;
 			box-sizing: border-box;
-			width: 200px;
+			width: 220px;
 			height: 100%;
 			padding-left: 8px;
 			padding-top: 8px;
+			overflow-y: auto;
+			overflow-x: hidden;
 		}
 
 		#graphs {
 			box-sizing: border-box;
-			padding-left: 200px;
+			padding-left: 220px;
 			width: 99%;
 			height: 100%;
 		}
@@ -52,9 +54,31 @@
 <body>
 
 <div id="controls">
+
+	<span style="font-style: italic;">Alerts</span><br><br>
+	<table style="width: 190px; margin-bottom: 16px;">
+		<tr><td><label for="alert_gen_series_field">Series</label></td><td><input type="text" id="alert_gen_series_field" style="width: 100%; font-weight: bold;" value="SpO₂.SpO₂" /></td></tr>
+		<tr><td><label for="alert_gen_threshold_field">Threshold<sub>Low</sub></label></td><td><input type="text" id="alert_gen_threshold_field" style="width: 100%;" /></td></tr>
+		<tr><td><label for="alert_gen_duration_field">Duration</label></td><td><input type="text" id="alert_gen_duration_field" style="width: 100%;" /></td></tr>
+		<tr><td style="white-space: nowrap;"><label for="alert_gen_dutycycle_field">Duty Cycle</label></td><td><input type="text" id="alert_gen_dutycycle_field" style="width: 100%;" /></td></tr>
+		<tr><td><label for="alert_gen_maxgap_field">Max Gap</label></td><td><input type="text" id="alert_gen_maxgap_field" style="width: 100%;" /></td></tr>
+		<tr><td colspan="2">
+			<button onclick="generateAlerts();" style="float: right;">Generate</button>
+			<button onclick="clearAlerts();" style="float: right; margin-right: 4px;">Clear</button>
+		</td></tr>
+	</table>
+
 	<span style="font-style: italic;">Data Series</span><br>
+
 </div>
-<div id="graphs"></div>
+<div id="graphs">
+
+	<video controls>
+		<source src="js/sample.webm" type="video/webm">
+		Your browser does not support the video tag.
+	</video>
+
+</div>
 
 <script src="js/dygraph.js"></script>
 <script src="js/synchronizer.js"></script>
@@ -64,6 +88,7 @@
 
 <script src="js/config.js"></script>
 
+<script src="js/alerts.js"></script>
 <script src="js/annotation.js"></script>
 <script src="js/annotation_event_handlers.js"></script>
 <script src="js/graph_event_handlers.js"></script>

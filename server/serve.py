@@ -54,3 +54,15 @@ def data_window_single_series():
         stop = request.args.get('stop', type=float)
 
         return mf.getRangedOutputSingleSeries(series, start, stop)
+    
+@app.route('/get_alerts', methods=['GET'])
+def get_alerts():
+    
+    # Parse the series name and alert parameters
+    series = request.args.get('series')
+    threshold = request.args.get('threshold', type=float)
+    duration = request.args.get('duration', type=float)
+    dutycycle = request.args.get('dutycycle', type=float)
+    maxgap = request.args.get('maxgap', type=float)
+    
+    return mf.generateAlerts(series, threshold, duration, dutycycle, maxgap)

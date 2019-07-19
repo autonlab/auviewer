@@ -125,6 +125,26 @@ class DownsampleSet:
     def getTimespan(self):
         return self.seriesparent.rawTimeOffsets[-1] - self.seriesparent.rawTimeOffsets[0]
 
+    def recursiveDetectAlertsFromDownsamples(self, downsampleIndex, threshold, leftBoundary=-1, rightBoundary=-1):
+        
+        # # This is unexpected, but check for downsampleIndex out-of-bounds. We
+        # # are not handling negative indices.
+        # if downsampleIndex < 0 or downsampleIndex >= len(self.downsamples):
+        #     return
+        #
+        # indices = np.nonzero(self.downsamples[downsampleIndex].transpose()[1] <= threshold)
+        #
+        # print(indices)
+        #
+        # for i in indices:
+        #     #print(self.downsamples[downsampleIndex][i])
+        #     if downsampleIndex + 1 < len(self.downsamples)):
+        #         self.recursiveDetectAlertsFromDownsamples(downsampleIndex+1, threshold)
+        #     else:
+        #         # WHAT????
+        
+        quit()
+
     def __str__(self):
         s = ""
         for i in range(len(self.downsamples)):

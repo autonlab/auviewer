@@ -161,7 +161,6 @@ def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarr
     cdef int cii = -1
 
     cdef double leftboundaryORIG, rightboundaryORIG, leftboundaryIF, rightboundaryIF, leftboundaryWHILE, rightboundaryWHILE
-    cdef double x
 
     # For all data points
     while cdpi < numDataPoints:
@@ -235,6 +234,136 @@ def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarr
 
     # Return the downsampled intervals
     return intervals
+
+def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarray[np.float64_t, ndim=1] rawValues, double threshold, double duration, double dutycycle, double maxgap):
+
+    # Pull the indices of all data points that exceed the threshold
+    cdef np.ndarray[long, ndim=1] indices = np.nonzero(rawValues <= threshold)[0]
+    
+    # Holds generated alerts (start & stop time offsets). We assume there can be
+    # a maximum of len(indices) alerts and slice it shorter at the end.
+    cdef np.ndarray[np.float64_t, ndim=2] alerts = np.zeros((indices.shape[0], 2))
+    
+    # Holds the index of the current data point we're working on.
+    cdef long cdpi = 0
+    
+    # Holds the index of the next available unwritten alert
+    cdef long cai = 0
+    
+    # Tracks the left & right boundaries of the current alert sample
+    cdef double leftboundary, rightboundary
+    
+    # Tracks the number of points that exceed the threshold and the total number
+    # of sample points for calculation of the sample duty cycle.
+    cdef long numexceed, numtotal
+    
+    # Holds the sample duty cycle once calculated
+    cdef double sampleduty
+    
+    # print(indices)
+        
+    for alertSampleBeginIndex in indices:
+        
+        # print(rawOffsets[alertSampleBeginIndex], rawValues[alertSampleBeginIndex])
+        
+        cdpi = alertSampleBeginIndex
+        leftboundary = rawOffsets[cdpi]
+        rightboundary = leftboundary + duration
+        
+        # Reset sample duty cycle statistics
+        numexceed = 0
+        numtotal = 0
+        
+        while cdpi < rawOffsets.shape[0] and rawOffsets[cdpi] < rightboundary:
+            
+            # Increment the number of total data points
+            numtotal = numtotal + 1
+            
+            # If this data point exceeds the threshold, increment the number of
+            # threshold-exceed data points.
+            if rawValues[cdpi] <= threshold:
+                numexceed = numexceed + 1
+                
+            # Increment to the next data point
+            cdpi = cdpi + 1
+                
+        # Calculate the sample duty cycle
+        sampleduty = <double>numexceed / <double>numtotal
+        
+        # If the duty cycle of the sample exceeds the minimum to qualify for an
+        # alert, add this to our alerts.
+        if sampleduty >= dutycycle:
+            
+            alerts[cai,0] = leftboundary
+            alerts[cai,1] = rawOffsets[cdpi-1]
+            
+            # Increment to the next available unwritten alert
+            cai = cai + 1
+            
+    # Slice off unused alerts
+    alerts = alerts[0:cai]
+    
+    # Holds the final, consolidated alerts to be returned
+    cdef np.ndarray[np.float64_t, ndim=2] finalalerts = np.zeros((alerts.shape[0], 2))
+    
+    # Holds the index of the current raw alert
+    cdef long crai = 0
+    
+    # Holds the index of the current final alert
+    cdef long cfai = 0
+    
+    # Holds start & stop times for a candidate final alert
+    cdef double candalertbegin, candalertend
+    
+    # Handle the special case that there is only zero or one alert
+    if len(alerts) <= 1:
+        return alerts
+    
+    # Prime the while loop with the first alert as candidate alert
+    candalertbegin = alerts[crai,0]
+    candalertend = alerts[crai,1]
+    crai = crai + 1
+    
+    while crai < len(alerts):
+        
+        # For each iteration, we either extend the candidate time and move on,
+        # or write out the final alert and start a new candidate.
+    
+        # If the next alert is less than maxgap from the previous alert, extend
+        # the alert window and move on
+        if alerts[crai][0] <= candalertend + maxgap:
+            candalertend = alerts[crai][1]
+            
+        # Otherwise, add the current candidate as a final alert and start a
+        # new candidate.
+        else:
+            
+            # Write the  candidate alert as a final alert
+            finalalerts[cfai,0] = candalertbegin
+            finalalerts[cfai,1] = candalertend
+            cfai = cfai + 1
+            
+            # Start a new candidate
+            candalertbegin = alerts[crai,0]
+            candalertend = alerts[crai,1]
+            
+        # Increment to the next alert
+        crai = crai + 1
+            
+    # Write the final unwritten candidate as a final alert.
+    finalalerts[cfai,0] = candalertbegin
+    finalalerts[cfai,1] = candalertend
+    cfai = cfai + 1
+    
+    # Slice off the unused final alerts array elements
+    finalalerts = finalalerts[0:cfai]
+    
+    # print("Alerts:")
+    # print(alerts)
+    # print("Final Alerts:")
+    # print(finalalerts)
+        
+    return finalalerts
 
 # This function calculates the number of downsample levels to build based on the
 # value of M and stepMultiplier (see the config file for details on those). It
