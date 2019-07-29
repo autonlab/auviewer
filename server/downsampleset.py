@@ -1,168 +1,187 @@
 import config
 import numpy as np
 import time
-from cylib import buildDownsampleFromRaw, buildNextDownsampleUp, numDownsamplesToBuild
+from cylib import buildDownsampleFromRaw, buildNextDownsampleUp, getSliceParam, numDownsamplesToBuild
 
 # Represents a set of downsamples for a series of data.
 class DownsampleSet:
 
     def __init__(self, seriesparent):
 
-        outerStart = time.time()
-
         # Set the series parent
         self.seriesparent = seriesparent
-
-        # We assume datagroup has two non-empty datasets, "datetime" and "value".
-        if len(self.seriesparent.rawTimeOffsets) < 1 or len(self.seriesparent.rawValues) < 1:
-            return
-
-        # We assume the two datasets are of equal length
-        if len(self.seriesparent.rawTimeOffsets) != len(self.seriesparent.rawValues):
-            return
-
-        # Get an array of the downsamples to build (each element of the array
-        # is a number of intervals to divide the data set into).
-        numDownsamples = numDownsamplesToBuild(self.seriesparent.rawTimeOffsets, config.M, config.stepMultiplier)
-
-        # Holds the downsample sets (each element is a NumPy array which holds
-        # the intervals for that downsample level
-        self.downsamples = [None] * numDownsamples
-
-        # If we do not need to build any downsamples, return now.
-        if numDownsamples < 1:
-            return
-
-        # Begin by building the last downsample from the raw data first.
-        # NOTE: We will build the self.downsamples list in reverse order
-        # initially and then reverse its order at the end so that we end
-        # up with the downsamples in order from smallest number of
-        # intervals to largest.
-        lastDownsampleNumIntervals = config.M*(config.stepMultiplier**(numDownsamples-1))
-        print("Creating " + str(lastDownsampleNumIntervals) + " intervals.")
-        start = time.time()
-        self.downsamples[-1] = buildDownsampleFromRaw(self.seriesparent.rawTimeOffsets, self.seriesparent.rawValues, lastDownsampleNumIntervals)
-        end = time.time()
-        print("Done. Yielded " + str(self.downsamples[-1].shape[0]) + " intervals. Took " + str(round(end - start, 5)) + "s.")
         
-        # Build the next numDownsamples-1 downsamples (because we've already
-        # built the first one).
-        for i in range(-2, -numDownsamples-1, -1):
-            print("Creating " + str(self.getNumIntervalsByIndex(i)) + " intervals.")
-            start = time.time()
-            self.downsamples[i] = buildNextDownsampleUp(self.downsamples[i+1], self.getTimePerIntervalByIndex(i+1), config.stepMultiplier)
-            end = time.time()
-            print("Done. Yielded " + str(self.downsamples[i].shape[0]) + " intervals. Took " + str(round(end - start, 5)) + "s.")
+        # Holds the number of downsamples available for the series
+        self.numDownsamples = self.getNumDownsamplesFromFile()
+        
+    # Returns the full series output at the highest downsample level, or None
+    # if no downsample exists for the series.
+    def getFullOutput(self):
+        
+        if self.numDownsamples < 1:
+            return None
+        
+        return self.seriesparent.fileparent.pf.get('/'.join(self.seriesparent.h5path) + '/' + '0')[()]
 
-        print("Completed build of all downsamples for this series.")
+    # Returns the number of downsamples available for this series in the
+    # processed data file.
+    def getNumDownsamplesFromFile(self):
 
-        outerEnd = time.time()
-        print("Downsample Set: " + str(round(outerEnd - outerStart, 5)) + "s")
+        # If the processed data file is not available, return 0
+        if not hasattr(self.seriesparent.fileparent, 'pf'):
+            return 0
 
-        print(self)
+        # Get reference to the group containing the downsamples
+        grp = self.seriesparent.fileparent.pf.get('/'.join(self.seriesparent.h5path))
 
+        # If the series has no downsamples, return 0
+        if not grp or grp == None:
+            return 0
+
+        # Get the keys present in the group (they should all be strings of
+        # integers 0..n where n+1 is the count of downsamples.
+        keys = grp.keys()
+
+        # We start with -1
+        maxDownsampleIndex = -1
+
+        # Crawl up the downsample indicates, confirming that each is present.
+        # There's obviously an easier way to do this, but we're doing some
+        # verification of integrity here.
+        while str(maxDownsampleIndex + 1) in keys:
+            maxDownsampleIndex = maxDownsampleIndex + 1
+
+        # We have the real max downsample index, so that plus one is the count.
+        return maxDownsampleIndex + 1
+
+    # Returns the number of intervals for the downsample at index i.
+    def getNumIntervalsByIndex(self, i, nds=-1):
+        
+        if nds == -1:
+            nds = self.numDownsamples
+
+        # Handle negative index
+        if i < 0:
+            i = nds + i
+
+        return config.M * (config.stepMultiplier ** i)
+    
     # Returns a slice of the appropriate downsample for the given time range, or
     # nothing if there is no appropriate downsample available (in this case, raw
     # data should be used). Expects starttime & stoptime to be time offsets
     # floats in seconds.
-    def getDownsample(self, starttime, stoptime):
-
+    def getRangedOutput(self, starttime, stoptime):
+        
         # If there are no downsamples available, we cannot provide one
-        if len(self.downsamples) < 1:
+        if self.numDownsamples < 1:
             return
-
+        
         # Calculate the timespan of the view window, in seconds
         timespan = stoptime - starttime
+        
+        # Get index of the appropriate downsample to use
+        dsi = self.whichDownsampleIndexForTimespan(timespan)
+        
+        # If we should be using raw data, return nothing
+        if dsi == -1:
+            return
+        
+        # Get reference to the downsample dataset in the processed file
+        ds = self.seriesparent.fileparent.pf.get('/'.join(self.seriesparent.h5path) + '/' + str(dsi))
+        
+        # Find the start & stop indices based on the start & stop times.
+        startIndex = getSliceParam(ds, 0, starttime)
+        stopIndex = getSliceParam(ds, 1, stoptime)
+        
+        # Return the downsample slice
+        return ds[startIndex:stopIndex]
 
+    # Returns the time-per-interval for the downsample at index i.
+    def getTimePerIntervalByIndex(self, i, nds=-1):
+        
+        if nds == -1:
+            nds = self.numDownsamples
+
+        # Handle negative index
+        if i < 0:
+            i = nds + i
+
+        return self.seriesparent.rd.timespan / self.getNumIntervalsByIndex(i, nds)
+
+    # Build all necessary downsamples, and store in the processed file.
+    def processAndStore(self):
+
+        # We assume:
+        #   - Datagroup has two non-empty datasets, "datetime" and "value";
+        #   - The two datasets are of equal length;
+        #   - There exists a file for storing processed data.
+        if (len(self.seriesparent.rawTimeOffsets) < 1 or len(self.seriesparent.rawValues) < 1) or len(self.seriesparent.rawTimeOffsets) != len(self.seriesparent.rawValues) or not hasattr(self.seriesparent.fileparent, 'pf'):
+            return
+
+        # Get an array of the downsamples to build (each element of the array
+        # is a number of intervals to divide the data set into).
+        ndtb = numDownsamplesToBuild(self.seriesparent.rawTimeOffsets, config.M, config.stepMultiplier)
+
+        # If we do not need to build any downsamples, return now.
+        if ndtb < 1:
+            return
+
+        # Begin by building the last downsample from the raw data first. Then
+        # proceed by building the next downsample up from the previously-built
+        # downsample until all downsamples have been created.
+        for i in range(-1, -ndtb - 1, -1):
+
+            print("Creating downsample (" + str(self.getNumIntervalsByIndex(i, ndtb)) + " intervals possible).")
+            start = time.time()
+
+            # Build the downsample
+            if i == -1:
+                print("This pass from raw.")
+                downsample = buildDownsampleFromRaw(self.seriesparent.rawTimeOffsets, self.seriesparent.rawValues, self.getNumIntervalsByIndex(i, ndtb))
+            else:
+                downsample = buildNextDownsampleUp(previousDownsample, self.getTimePerIntervalByIndex(i + 1, ndtb), config.stepMultiplier)
+                
+            # Save the just-computed downsample for use on the next loop iteration
+            previousDownsample = downsample
+
+            end = time.time()
+            print("Done creating downsample. Yielded " + str(downsample.shape[0]) + " actual intervals. Took " + str(round(end - start, 5)) + "s.")
+            
+            print("Storing the downsample to the processed file.")
+            start = time.time()
+
+            # Store the downsample
+            self.seriesparent.fileparent.pf.create_dataset('/'.join(self.seriesparent.h5path) + '/' + str(i%ndtb), data=downsample, compression="gzip", shuffle=True)
+
+            end = time.time()
+            print("Done storing to file. Took " + str(round(end - start, 5)) + "s.")
+            
+        # Update the self.numDownsamples count.
+        self.numDownsamples = self.getNumDownsamplesFromFile()
+        
+    # Returns the index of the appropriate downsample which should be used for
+    # the given timespan, or -1 if raw data should be used instead.
+    def whichDownsampleIndexForTimespan(self, timespan):
+    
         # Calculate the largest interval size to deliver <= M intervals, in seconds
         maxTimePerInterval = timespan / config.M
-
+    
         # Determine which downsample to use. To do this, find the first
         # downsample, going from the largest interval downwards, which is too
         # small and then select the previous one.
         i = 0
-        while i < len(self.downsamples) and self.getTimePerIntervalByIndex(i) >= maxTimePerInterval:
+        while i < self.numDownsamples and self.getTimePerIntervalByIndex(i) >= maxTimePerInterval:
             i = i + 1
-        chosenDownsampleIndex = i - 1
-
+        dsi = i - 1
+    
         # We do not expect this, but in case even the largest interval size was
         # too small, return the largest one we have.
-        if chosenDownsampleIndex < 0:
-            chosenDownsampleIndex = 0
-
+        if dsi < 0:
+            dsi = 0
+    
         # If we reached the lowest downsample level, check whether we should be
-        # using real data points. If so, return nothing.
-        if (chosenDownsampleIndex == len(self.downsamples) - 1) and maxTimePerInterval <= self.getTimePerIntervalByIndex(chosenDownsampleIndex) / 2:
-            return
-
-        # Find the start & stop indices based on the start & stop times.
-        ds = self.downsamples[chosenDownsampleIndex]
-        startIndex = np.searchsorted(ds.T[0], starttime)
-        stopIndex = np.searchsorted(ds.T[0], stoptime, side='right')
-
-        # Return the downsample slice
-        return ds[startIndex:stopIndex]
-
-    # Returns the number of intervals for the downsample at index i.
-    def getNumIntervalsByIndex(self, i):
-
-        # Handle negative index
-        if i < 0:
-            i = len(self.downsamples) + i
-
-        return config.M * (config.stepMultiplier ** i)
-
-    # Returns the time-per-interval for the downsample at index i.
-    def getTimePerIntervalByIndex(self, i):
-
-        # Handle negative index
-        if i < 0:
-            i = len(self.downsamples) + i
-
-        return self.getTimespan() / self.getNumIntervalsByIndex(i)
-
-    # Returns the timespan of the data series.
-    def getTimespan(self):
-        return self.seriesparent.rawTimeOffsets[-1] - self.seriesparent.rawTimeOffsets[0]
-
-    def recursiveDetectAlertsFromDownsamples(self, downsampleIndex, threshold, leftBoundary=-1, rightBoundary=-1):
+        # using real data points. If so, return -1.
+        if (dsi == self.numDownsamples - 1) and maxTimePerInterval <= self.getTimePerIntervalByIndex(dsi) / 2:
+            return -1
         
-        # # This is unexpected, but check for downsampleIndex out-of-bounds. We
-        # # are not handling negative indices.
-        # if downsampleIndex < 0 or downsampleIndex >= len(self.downsamples):
-        #     return
-        #
-        # indices = np.nonzero(self.downsamples[downsampleIndex].transpose()[1] <= threshold)
-        #
-        # print(indices)
-        #
-        # for i in indices:
-        #     #print(self.downsamples[downsampleIndex][i])
-        #     if downsampleIndex + 1 < len(self.downsamples)):
-        #         self.recursiveDetectAlertsFromDownsamples(downsampleIndex+1, threshold)
-        #     else:
-        #         # WHAT????
-        
-        quit()
-
-    def __str__(self):
-        s = ""
-        for i in range(len(self.downsamples)):
-
-            s = s + "Downsample #" + str(i + 1) + " - Official Intervals " + str(self.getNumIntervalsByIndex(i)) + " - Actual Intervals " + str(self.downsamples[i].shape[0]) + " - Time Per Interval " + str(self.getTimePerIntervalByIndex(i)) + "s" + "\n"
-
-            s = s + "First 5:" + "\n"
-            j = 0
-            while j < 5 and j < len(self.downsamples[i]):
-                s = s + str(self.downsamples[i][j]) + "\n"
-                j = j + 1
-
-            s = s + "Last 5:" + "\n"
-            j = min(5, len(self.downsamples[i]))
-            while j > 0:
-                s = s + str(self.downsamples[i][-j]) + "\n"
-                j = j - 1
-
-            s = s + "\n"
-
-        return s
+        return dsi

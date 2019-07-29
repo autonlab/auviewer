@@ -10,10 +10,14 @@ stepMultiplier = 2
 
 # Original patient data files (which should be preserved and unaltered) go here.
 # originalFilesDir = '../data/originals/'
-originalFilesDir = '/zfsauton/data/public/vleonard/'
+# originalFilesDir = '/zfsauton/data/public/vleonard/'
+originalFilesDir = '/home/scratch/gwelter/meddata/originals/'
 
 # Processed (i.e. downsampled) patient data files go here.
-processedFilesDir = '../data/processed/'
+# processedFilesDir = '../data/processed/'
+processedFilesDir = '/home/scratch/gwelter/meddata/processed/'
 
-# Scratch directory for use during development (storing pickle files here currently).
-scratchFilesDir = '../data/scratch/'
+# Scratch directory for use during development (not currently in use, kept for
+# now in case it's needed in future).
+# scratchFilesDir = '../data/scratch/'
+scratchFilesDir = '/home/scratch/gwelter/meddata/scratch/'

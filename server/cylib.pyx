@@ -235,6 +235,44 @@ def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarr
     # Return the downsampled intervals
     return intervals
 
+# Returns the index where a provided target value should be inserted in a
+# downsample or raw data series. The side parameter indicates whether to
+# approach from the left or right, where 0 indicates left and non-zero is right.
+def getSliceParam(ds, unsigned short side, double target):
+    
+    cdef int low = 0
+    cdef int high = ds.len()-1
+    
+    # Will hold the midpoint index
+    cdef int mid
+    
+    # Will be used later for iteration
+    cdef int i
+    
+    while low <= high:
+        
+        mid = (low + high) / 2
+        
+        if target > ds[mid][0]:
+            low = mid + 1
+        elif target < ds[mid][0]:
+            high = mid - 1
+        else:
+           
+           # For left slice param, we want leftmost equal value index
+            if side == 0:
+                while ds[i][0] == target:
+                    i = i - 1
+                return i + 1
+        
+            # For right slice param, we want 1 + rightmost equal value index
+            else:
+                while ds[i][0] == target:
+                    i = i + 1
+                return i
+            
+    return low
+
 def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarray[np.float64_t, ndim=1] rawValues, double threshold, double duration, double dutycycle, double maxgap):
 
     # Pull the indices of all data points that exceed the threshold
