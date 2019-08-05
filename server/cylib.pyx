@@ -34,7 +34,7 @@ def buildNextDownsampleUp(np.ndarray[np.float64_t, ndim=2] intervalsOrig, double
     # This is the base offset, or essentially the time offset of the original
     # first raw data point in the series.
     cdef double baseOffset = intervalsOrig[0,0] - (timePerIntervalOrig / 2)
-    print("Base offset: "+str(baseOffset))
+    # print("Base offset: "+str(baseOffset))
 
     # Will track the stepwise left & right boundary of the new intervals
     cdef double leftboundaryNew = baseOffset
@@ -129,12 +129,16 @@ def buildNextDownsampleUp(np.ndarray[np.float64_t, ndim=2] intervalsOrig, double
 # Given a series of raw values and a time-per-interval parameter, produces and
 # returns a two-dimension NumPy array of downsample intervals
 def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarray[np.float64_t, ndim=1] rawValues, int numIntervals):
-
+    
     # Calculate the timespan of the entire dataset
     cdef double timespan = rawOffsets[rawOffsets.shape[0]-1] - rawOffsets[0]
 
     # Calculate the interval size in seconds
     cdef double timePerInterval = timespan / numIntervals
+
+    # TODO(gus): FIX THIS BS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    origNumIntervals = numIntervals
+    numIntervals = numIntervals + 1
 
     # Allocate the maximum number of intervals needed (excess will be sliced off
     # at the end). The two-dimensional array will have 3 columns and numIntervals
@@ -143,7 +147,7 @@ def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarr
 
     # This is the base offset, or the time offset of the first data point.
     cdef double baseOffset = rawOffsets[0]
-    print("Base offset: "+str(baseOffset))
+    # print("Base offset: "+str(baseOffset))
 
     # Establish our initial boundaries for the first interval
     cdef double leftboundary = baseOffset
@@ -207,7 +211,7 @@ def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarr
         # Do a sanity check. We don't expect to ever need more than numIntervals
         # intervals. However, double check that we have not gone out of bounds.
         if cii >= numIntervals:
-            raise RuntimeError("Unexpectedly required more than numIntervals intervals during downsample buiding from raw.")
+            raise RuntimeError("Unexpectedly required more than numIntervals intervals during downsample building from raw. numIntervals: "+str(numIntervals)+", cii: "+str(cii)+", leftboundary: "+str(leftboundary)+", rightboundary: "+str(rightboundary)+", cdpi: "+str(cdpi)+", numDataPoints: "+str(numDataPoints)+", rawOffsets[cdpi]: "+str(rawOffsets[cdpi])+", rawValues[cdpi]: "+str(rawValues[cdpi]))
 
         # Set the time for the interval
         intervals[cii,0] = leftboundary + (timePerInterval / 2)
@@ -229,6 +233,10 @@ def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarr
             # Increment cdpi to progress to the next data point
             cdpi = cdpi + 1
 
+    # TODO(gus): TEMP
+    if cii >= origNumIntervals:
+        print("EXCEEDED numIntervals!!! origNumIntervals: "+str(origNumIntervals)+", numIntervals: "+str(numIntervals)+", timePerInterval: "+str(timePerInterval)+", cii: "+str(cii)+", leftboundary: "+str(leftboundary)+", rightboundary: "+str(rightboundary)+", cdpi: "+str(cdpi)+", numDataPoints: "+str(numDataPoints)+", rawOffsets[cdpi]: "+str(rawOffsets[cdpi])+", rawValues[cdpi]: "+str(rawValues[cdpi]))
+
     # Slice off the unused intervals
     intervals = intervals[:cii+1]
 
@@ -239,6 +247,8 @@ def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarr
 # downsample or raw data series. The side parameter indicates whether to
 # approach from the left or right, where 0 indicates left and non-zero is right.
 def getSliceParam(ds, unsigned short side, double target):
+
+    cdef long numDataPoints = len(ds)
     
     cdef int low = 0
     cdef int high = ds.len()-1
@@ -258,16 +268,18 @@ def getSliceParam(ds, unsigned short side, double target):
         elif target < ds[mid][0]:
             high = mid - 1
         else:
-           
-           # For left slice param, we want leftmost equal value index
+
+            i = mid
+
+            # For left slice param, we want leftmost equal value index
             if side == 0:
-                while ds[i][0] == target:
+                while i > 0 and ds[i][0] == target:
                     i = i - 1
                 return i + 1
         
             # For right slice param, we want 1 + rightmost equal value index
             else:
-                while ds[i][0] == target:
+                while i < numDataPoints and ds[i][0] == target:
                     i = i + 1
                 return i
             

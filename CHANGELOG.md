@@ -1,10 +1,27 @@
 # Change Log
 
+#### July 30, 2019
+
+##### Functionality
+
+* Added ability to handle multiple patient files at significant scale.
+
+##### Technical
+
+* Converted all functionality other than initial processing & storage of downsamples to use file-based data and not rely on anything being stored/cached in memory.
+* Added a file-based binary search for finding ranged output indices.
+
+#### July 16, 2019
+
+##### Functionality
+
+* Added proof-of-concept threshold alert generation functionality.
+
 #### July 9, 2019
 
 ##### Technical
 
-* Converted file processing to the new HDF5 file format from Jim.
+* Converted file processing to the new HDF5 file format.
 * Got all previously working API functionality working after it was broken in the conversion to Cython downsampling.
 * Added ability to add a graph while zoomed in without resetting the zoom to all time.
 

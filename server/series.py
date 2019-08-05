@@ -1,9 +1,9 @@
-import bisect
 import numpy as np
 from rawdata import RawData
 from downsampleset import DownsampleSet
 from cylib import generateThresholdAlerts
 import time
+import psutil
 
 # Simplejson package is required in order to "ignore" NaN values and implicitly convert them into null values.
 # RFC JSON spec left out NaN values, even though ES5 supports them (https://www.ecma-international.org/ecma-262/5.1/#sec-4.3.23).
@@ -65,20 +65,22 @@ class Series:
     
         # Attempt to retrieve the full downsample output
         downsampleFullOutput = self.dss.getFullOutput()
-    
+        
         # Set data either to the retrieved downsample or to the raw data
         if downsampleFullOutput is not None:
+            print("(downsampled output)")
             data = downsampleFullOutput.tolist()
+            
         else:
-            # nones = [None] * len(self.rawTimeOffsets)
-            # data = [list(i) for i in zip(self.rawTimeOffsets, nones, nones, self.rawValues)]
+            print("(raw data output)")
 
             # Get reference to the series datastream from the HDF5 file
-            dataset = self.fileparent.f.get('/'.join(self.h5path))
-            
+            dataset = self.fileparent.f.get('/'.join(self.h5path))[()]
             nones = [None] * self.rd.len
-            data = [list(i) for i in zip(dataset['time'][()], nones, nones, dataset['value'].astype(np.float64)[()])]
-        
+            data = [list(i) for i in zip(dataset['time'], nones, nones, dataset['value'].astype(np.float64))]
+
+        print("Completed assembly of full output for " + self.name + ".")
+
         # Return the JSON-ready output object
         return {
             "labels": ['Date/Offset', 'Min', 'Max', self.name],
@@ -89,24 +91,20 @@ class Series:
     # starttime and stoptime being time offset floats in seconds.
     def getRangedOutput(self, starttime, stoptime):
 
+        print("Assembling ranged output for " + self.name + ".")
+
         # Get the appropriate downsample for this time range
         ds = self.dss.getRangedOutput(starttime, stoptime)
 
         if isinstance(ds, np.ndarray):
-
-            print("Assembling ranged downsampled data for " + self.name + ".")
-            
+            print("(downsampled output)")
             data = ds.tolist()
 
-            print("Assembly complete for " + self.name + ".")
-
         else:
-
-            print("Assembling ranged raw data for " + self.name + ".")
-
+            print("(raw data output)")
             data = self.rd.getRangedOutput(starttime, stoptime)
 
-            print("Assembly complete for " + self.name + ".")
+        print("Completed assembly of ranged output for " + self.name + ".")
 
         # Return the JSON-ready output object
         return {
@@ -116,18 +114,28 @@ class Series:
 
     # Process and store all downsamples for the series.
     def processAndStore(self):
+    
+        p = psutil.Process()
         
         print("Processing & storing all downsamples for the series " + self.name)
         start = time.time()
 
+        print("MEM PRE-PULLD: " + str(p.memory_full_info().uss / 1024 / 1024) + " MB")
+
         # Pull raw data for the series into memory
         self.pullRawDataIntoMemory()
+        
+        print("MEM AFT-PULLD: "+str(p.memory_full_info().uss/1024/1024)+" MB")
 
         # Build & store to file all downsamples for the series
         self.dss.processAndStore()
+
+        print("MEM AFT-DSPRC: " + str(p.memory_full_info().uss / 1024 / 1024) + " MB")
         
         # Remove raw data for the series fromm memory
         self.removeRawDataFromMemory()
+
+        print("MEM AFT-REMVD: " + str(p.memory_full_info().uss / 1024 / 1024) + " MB")
 
         end = time.time()
         print("Completed processing & storing all downsamples for the series " + self.name + ". Took " + str(round((end - start) / 60, 3)) + " minutes.")

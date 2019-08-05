@@ -1,23 +1,17 @@
 import h5py
 import config
 import os.path
-import os.remove
+from os import remove as rmfile
 from series import Series
 import time
-
-# Simplejson package is required in order to "ignore" NaN values and implicitly
-# convert them into null values. RFC JSON spec left out NaN values, even though
-# ES5 supports them (https://www.ecma-international.org/ecma-262/5.1/#sec-4.3.23).
-# By default, Python "json" module will allow & json-encode NaN values, but the
-# Chrome JS engine will throw an error when trying to parse them. Simplejson
-# package, with ignore_nan=True, will implicitly convert NaN values into null
-# values. Find "ignore_nan" here: https://simplejson.readthedocs.io/en/latest/
-import simplejson as json
+from exceptions import ProcessedFileExists
 
 # File represents a single patient data file.
 class File:
 
     def __init__(self, filename, path):
+
+        print("\n------------------------------------------------\nSTARTING NEW FILE: " + filename + "\n------------------------------------------------\n")
 
         # Holds the filename
         self.filename = filename
@@ -48,7 +42,7 @@ class File:
         
         # Load data series into memory from file (does not load data though)
         self.loadSeriesFromFile()
-        
+
         # If we need to newly process data, do so now.
         if self.newlyProcessData:
             self.processAndStore()
@@ -60,7 +54,7 @@ class File:
 
             if s.name == seriesname:
 
-                return json.dumps(s.generateThresholdAlerts(threshold, duration, dutycycle, maxgap).tolist())
+                return s.generateThresholdAlerts(threshold, duration, dutycycle, maxgap).tolist()
 
     # Returns the complete path to the original data file, including filename.
     def getFilepath(self):
@@ -87,12 +81,8 @@ class File:
         end = time.time()
         print("Completed assembly of all series full output for file " + self.filename + ". Took " + str(round(end - start, 5)) + "s.")
 
-        # TEMP -- MOVE THIS TO BEFORE END TIME LATER
-        # Encode the JSON string
-        jsonStr = json.dumps(outputObject, ignore_nan=True)
-
-        # Return JSON-encoded string
-        return jsonStr
+        # Return the output object
+        return outputObject
     
     # Produces JSON output for all series in the file at a specified time range.
     def getRangedOutputAllSeries(self, starttime, stoptime):
@@ -111,12 +101,8 @@ class File:
         end = time.time()
         print("Completed assembly of all series ranged output for file " + self.filename + ". Took " + str(round(end - start, 5)) + "s.")
 
-        # TEMP -- MOVE THIS TO BEFORE END TIME LATER
-        # Encode the JSON string
-        jsonStr = json.dumps(outputObject, ignore_nan=True)
-
-        # Return JSON-encoded string
-        return jsonStr
+        # Return the output object
+        return outputObject
 
     # Produces JSON output for a given series in the file at a specified
     # time range.
@@ -138,12 +124,8 @@ class File:
         et = time.time()
         print("Completed assembly of single series ranged output for file " + self.filename + ", series " + series + ". Took " + str(round(et - st, 5)) + "s.")
 
-        # TEMP -- MOVE THIS TO BEFORE END TIME LATER
-        # Encode the JSON string
-        jsonStr = json.dumps(outputObject, ignore_nan=True)
-
-        # Return JSON-encoded string
-        return jsonStr
+        # Return the output object
+        return outputObject
             
     # Sets up classes for all series from file (but does not load series data
     # into memory).
@@ -151,11 +133,13 @@ class File:
         
         print('Loading series from file.')
 
-        for name in self.f['numerics']:
-            self.numericSeries.append(Series(name, ['numerics', name, 'data'], self))
+        if 'numerics' in self.f.keys():
+            for name in self.f['numerics']:
+                self.numericSeries.append(Series(name, ['numerics', name, 'data'], self))
 
-        for name in self.f['waveforms']:
-            self.waveformSeries.append(Series(name, ['waveforms', name, 'data'], self))
+        if 'waveforms' in self.f.keys():
+            for name in self.f['waveforms']:
+                self.waveformSeries.append(Series(name, ['waveforms', name, 'data'], self))
             
         print('Completed loading series from file.')
 
@@ -190,11 +174,15 @@ class File:
     
         # Verify that the processed file does not already exist
         if os.path.isfile(self.getProcessedFilepath()):
-            print("Processed file already exists. Aborting.")
-            return False
+            print("Processed file already exists. Raising ProcessedFileExists exception.")
+            raise ProcessedFileExists
     
         # Create the file which will be used to store processed data
-        self.pf = h5py.File(self.getProcessedFilepath(), "w")
+        try:
+            self.pf = h5py.File(self.getProcessedFilepath(), "w")
+        except:
+            print("There was an exception while h5py was creating the processed file. Raising ProcessedFileExists exception.")
+            raise ProcessedFileExists
 
     # Process and store all downsamples for all series for the file.
     def processAndStore(self):
@@ -217,20 +205,40 @@ class File:
         
             end = time.time()
             print("Completed processing & storing all series for file " + self.filename + ". Took " + str(round((end - start) / 60, 3)) + " minutes).")
+
+        # For ProcessedFileExists exception, don't delete the file but simply
+        # re-raise the exception.
+        except ProcessedFileExists:
+            raise
+
+        except (KeyboardInterrupt, SystemExit):
+
+            print("Interrupt detected. Aborting as requested.")
+            print("Deleting partially completed processed file " + self.getProcessedFilepath() + ".")
+
+            # Delete the processed data file
+            rmfile(self.getProcessedFilepath())
+
+            print("File has been removed.")
+
+            # Quit the program
+            quit()
             
         except Exception as e:
         
             print("There was an exception while processing & storing data for " + self.filename + ".")
-            
-            # Print the exception
             print(e)
-            
             print("Deleting partially completed processed file " + self.getProcessedFilepath() + ".")
             
             # Delete the processed data file
-            os.remove(self.getProcessedFilepath())
+            rmfile(self.getProcessedFilepath())
             
             print("File has been removed.")
+            
+            # Re-aise the exception
+            raise
+            
+            
 
     
     

@@ -2,6 +2,7 @@ import config
 import numpy as np
 import time
 from cylib import buildDownsampleFromRaw, buildNextDownsampleUp, getSliceParam, numDownsamplesToBuild
+import psutil
 
 # Represents a set of downsamples for a series of data.
 class DownsampleSet:
@@ -26,16 +27,19 @@ class DownsampleSet:
     # Returns the number of downsamples available for this series in the
     # processed data file.
     def getNumDownsamplesFromFile(self):
-
-        # If the processed data file is not available, return 0
-        if not hasattr(self.seriesparent.fileparent, 'pf'):
+    
+        # If we're newly processing data, return 0. Otherwise, if a processed
+        # data file is expected but not available, raise an exception.
+        if self.seriesparent.fileparent.newlyProcessData:
             return 0
+        elif not hasattr(self.seriesparent.fileparent, 'pf'):
+            raise RuntimeError
 
         # Get reference to the group containing the downsamples
         grp = self.seriesparent.fileparent.pf.get('/'.join(self.seriesparent.h5path))
-
-        # If the series has no downsamples, return 0
-        if not grp or grp == None:
+        
+        # If no downsamples are available, return 0
+        if grp is None:
             return 0
 
         # Get the keys present in the group (they should all be strings of
@@ -110,6 +114,8 @@ class DownsampleSet:
 
     # Build all necessary downsamples, and store in the processed file.
     def processAndStore(self):
+    
+        p = psutil.Process()
 
         # We assume:
         #   - Datagroup has two non-empty datasets, "datetime" and "value";
@@ -129,6 +135,7 @@ class DownsampleSet:
         # Begin by building the last downsample from the raw data first. Then
         # proceed by building the next downsample up from the previously-built
         # downsample until all downsamples have been created.
+        print("MEM PRE-DSBLD: " + str(p.memory_full_info().uss / 1024 / 1024) + " MB")
         for i in range(-1, -ndtb - 1, -1):
 
             print("Creating downsample (" + str(self.getNumIntervalsByIndex(i, ndtb)) + " intervals possible).")
@@ -140,18 +147,31 @@ class DownsampleSet:
                 downsample = buildDownsampleFromRaw(self.seriesparent.rawTimeOffsets, self.seriesparent.rawValues, self.getNumIntervalsByIndex(i, ndtb))
             else:
                 downsample = buildNextDownsampleUp(previousDownsample, self.getTimePerIntervalByIndex(i + 1, ndtb), config.stepMultiplier)
+
+            print("MEM AFT-DSBLD: " + str(p.memory_full_info().uss / 1024 / 1024) + " MB")
                 
             # Save the just-computed downsample for use on the next loop iteration
             previousDownsample = downsample
+
+            print("MEM AFT-REPLP: " + str(p.memory_full_info().uss / 1024 / 1024) + " MB")
 
             end = time.time()
             print("Done creating downsample. Yielded " + str(downsample.shape[0]) + " actual intervals. Took " + str(round(end - start, 5)) + "s.")
             
             print("Storing the downsample to the processed file.")
             start = time.time()
+            
+            try:
 
-            # Store the downsample
-            self.seriesparent.fileparent.pf.create_dataset('/'.join(self.seriesparent.h5path) + '/' + str(i%ndtb), data=downsample, compression="gzip", shuffle=True)
+                # Store the downsample
+                self.seriesparent.fileparent.pf.create_dataset('/'.join(self.seriesparent.h5path) + '/' + str(i%ndtb), data=downsample, compression="gzip", shuffle=True)
+                print("MEM AFT-STRFL: " + str(p.memory_full_info().uss / 1024 / 1024) + " MB")
+                
+            except:
+                
+                print("There was an exception while creating the dataset in the processed data file at the path: " + '/'.join(self.seriesparent.h5path) + '/' + str(i%ndtb) + ".")
+
+                raise
 
             end = time.time()
             print("Done storing to file. Took " + str(round(end - start, 5)) + "s.")

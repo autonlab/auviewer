@@ -1,12 +1,20 @@
 from flask import Flask, Blueprint, send_from_directory, request
-from file import File
 from project import Project
+
+# Simplejson package is required in order to "ignore" NaN values and implicitly
+# convert them into null values. RFC JSON spec left out NaN values, even though
+# ES5 supports them (https://www.ecma-international.org/ecma-262/5.1/#sec-4.3.23).
+# By default, Python "json" module will allow & json-encode NaN values, but the
+# Chrome JS engine will throw an error when trying to parse them. Simplejson
+# package, with ignore_nan=True, will implicitly convert NaN values into null
+# values. Find "ignore_nan" here: https://simplejson.readthedocs.io/en/latest/
+import simplejson as json
 
 # These imports are temporary for performance testing
 import config
 import time
 
-file = File('test_wave_20190626.h5', config.originalFilesDir)
+# file = File('test_wave_20190626.h5', config.originalFilesDir)
 
 #mf = File('test_wave_20190626.h5')
 #mf.prepareAllNumericSeries()
@@ -18,9 +26,9 @@ file = File('test_wave_20190626.h5', config.originalFilesDir)
 # print("Done.")
 # quit()
 
-# project = Project()
-# project.processUnprocessedFiles()
-# file = project.files[0]
+project = Project()
+project.processFiles()
+project.loadProcessedFiles()
 
 # # TESTING: Begin test code
 #
@@ -75,20 +83,41 @@ def bokeh():
 @app.route('/all_data_all_series')
 def all_data_all_series():
 
-    # Return the full (zoomed-out but downsampled if appropriate) datasets for
-    # all data series.
-    return file.getFullOutputAllSeries()
+    if request.method == 'GET' and len(request.args.get('file', default='')) > 0:
+
+        # Parse the filename
+        filename = request.args.get('file')
+
+        # Get the file
+        file = project.getFile(filename)
+
+        # Return the full (zoomed-out but downsampled if appropriate) datasets for
+        # all data series.
+        output = file.getFullOutputAllSeries()
+        json_output = json.dumps(output, ignore_nan=True)
+        
+        return json_output
+
+    else:
+        return "Invalid request."
 
 @app.route('/data_window_all_series', methods=['GET'])
 def data_window_all_series():
 
-    if request.method == 'GET' and len(request.args.get('start', default='')) > 0 and len(request.args.get('stop', default='')) > 0:
+    if request.method == 'GET' and len(request.args.get('file', default='')) > 0 and len(request.args.get('start', default='')) > 0 and len(request.args.get('stop', default='')) > 0:
 
         # Parse the start & stop times
+        filename = request.args.get('file')
         start = request.args.get('start', type=float)
         stop = request.args.get('stop', type=float)
 
-        return file.getRangedOutputAllSeries(start, stop)
+        # Get the file
+        file = project.getFile(filename)
+
+        output = file.getRangedOutputAllSeries(start, stop)
+        json_output = json.dumps(output, ignore_nan=True)
+        
+        return json_output
 
     else:
         return "Invalid request."
@@ -96,28 +125,43 @@ def data_window_all_series():
 @app.route('/data_window_single_series', methods=['GET'])
 def data_window_single_series():
 
-    if request.method == 'GET' and len(request.args.get('start', default='')) > 0 and len(request.args.get('start', default='')) > 0 and len(request.args.get('stop', default='')) > 0:
+    if request.method == 'GET' and len(request.args.get('file', default='')) > 0 and len(request.args.get('start', default='')) > 0 and len(request.args.get('start', default='')) > 0 and len(request.args.get('stop', default='')) > 0:
 
         # Parse the series name and start & stop times
+        filename = request.args.get('file')
         series = request.args.get('series')
         start = request.args.get('start', type=float)
         stop = request.args.get('stop', type=float)
 
-        return file.getRangedOutputSingleSeries(series, start, stop)
+        # Get the file
+        file = project.getFile(filename)
+
+        output = file.getRangedOutputSingleSeries(series, start, stop)
+        json_output = json.dumps(output, ignore_nan=True)
+        
+        return json_output
     
 @app.route('/get_alerts', methods=['GET'])
 def get_alerts():
+
+    # TODO(gus): Add checks here
     
     # Parse the series name and alert parameters
+    filename = request.args.get('file')
     series = request.args.get('series')
     threshold = request.args.get('threshold', type=float)
     duration = request.args.get('duration', type=float)
     dutycycle = request.args.get('dutycycle', type=float)
     maxgap = request.args.get('maxgap', type=float)
-    
-    return file.generateAlerts(series, threshold, duration, dutycycle, maxgap)
 
-@app.route('/get_unprocessed_files')
-def get_unprocessed_files():
+    # Get the file
+    file = project.getFile(filename)
 
-    return str(project.getUnprocessedFiles())
+    output = file.generateAlerts(series, threshold, duration, dutycycle, maxgap)
+    return json.dumps(output, ignore_nan=True)
+
+@app.route('/get_files')
+def get_files():
+
+    output = project.getActiveFileListOutput()
+    return json.dumps(output, ignore_nan=True)
