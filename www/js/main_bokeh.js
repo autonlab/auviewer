@@ -33,7 +33,7 @@ passed into the options.dateWindow parameter for a dygraph.
 */
 var globalXExtremes = [];
 
-var xhttp = new XMLHttpRequest();
+var fileLoaderHTTP = new XMLHttpRequest();
 
 // Creates a dygraph and adds it to the DOM
 function addGraphInitialLoad(backendData, series) {
@@ -640,14 +640,14 @@ function zoom(g, zoomInPercentage, xBias) {
 	});
 }
 
-xhttp.onreadystatechange = function() {
+fileLoaderHTTP.onreadystatechange = function() {
 
 	if (this.readyState == 4 && this.status == 200) {
 
 		//t2 = performance.now();
 
 		// Parse the backend JSON response into a JS object
-		var backendData = JSON.parse(xhttp.responseText);
+		var backendData = JSON.parse(fileLoaderHTTP.responseText);
 console.log(backendData);
 		// Convert date strings to Date objects in all datasets and produce global
 		// x-axis extremes. It is an obvious potential optimization to combine this
@@ -681,8 +681,8 @@ console.log(backendData);
 
 };
 //xhttpt1 = performance.now();
-xhttp.open("GET", "http://"+serverAddress+":"+serverPort, true);
-xhttp.send();
+fileLoaderHTTP.open("GET", "http://"+serverAddress+":"+serverPort, true);
+fileLoaderHTTP.send();
 
 
 

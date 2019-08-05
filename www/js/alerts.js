@@ -1,11 +1,11 @@
-var alertshttp = new XMLHttpRequest();
+var alertsHTTP = new XMLHttpRequest();
 
-alertshttp.onreadystatechange = function() {
+alertsHTTP.onreadystatechange = function() {
 
 	if (this.readyState == 4 && this.status == 200) {
 
 		// Parse the backend JSON response into a JS object
-		var backendData = JSON.parse(alertshttp.responseText);
+		var backendData = JSON.parse(alertsHTTP.responseText);
 
 		console.log(backendData);
 
@@ -44,12 +44,13 @@ function generateAlerts() {
 	}
 
 	annotations = [];
-	alertshttp.open("GET", getAlertsURL +
-		"?series="+encodeURIComponent(series) +
+	alertsHTTP.open("GET", getAlertsURL +
+		"?file=" + currentSelectedFile +
+		"&series="+encodeURIComponent(series) +
 		"&threshold="+encodeURIComponent(threshold) +
 		"&duration="+encodeURIComponent(duration) +
 		"&dutycycle="+encodeURIComponent(dutycycle) +
 		"&maxgap="+encodeURIComponent(maxgap), true);
-    alertshttp.send();
+    alertsHTTP.send();
 
 }

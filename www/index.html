@@ -2,60 +2,27 @@
 <html>
 <head>
 	<title>Med Viewer &amp; Annotator</title>
-
-	<link rel='stylesheet' href='css/dygraph.css'/>
-
 	<link rel="stylesheet" href="https://cdn.webix.com/site/webix.css">
 	<!--<link rel="stylesheet" href="https://cdn.materialdesignicons.com/2.8.94/css/materialdesignicons.css" type="text/css" charset="utf-8">-->
+	<link rel='stylesheet' href='css/dygraph.css'/>
+	<link rel='stylesheet' href='css/main.css'/>
 
-	<style>
-
-		#controls {
-			position: fixed;
-			top: 0;
-			left: 0;
-			box-sizing: border-box;
-			width: 220px;
-			height: 100%;
-			padding-left: 8px;
-			padding-top: 8px;
-			overflow-y: auto;
-			overflow-x: hidden;
-		}
-
-		#graphs {
-			box-sizing: border-box;
-			padding-left: 220px;
-			width: 99%;
-			height: 100%;
-		}
-
-		.graph {
-			width: 100%;
-			height: 180px;
-		}
-
-		.legend {
-			/*position: absolute;
-			top: 0;
-			right: 0;*/
-			height: 50px;
-			width: 100%;
-			margin-bottom: -50px;
-			/*text-align: right !important;*/
-		}
-
-		.webix_message_area {
-			display: none !important;
-		}
-
-	</style>
 </head>
 <body>
 
 <div id="controls">
 
-	<span style="font-style: italic;">Alerts</span><br><br>
+	<span style="font-style: italic;">File</span><br>
+
+	<select id="file_selection" name="file_selection" onchange="globalStateManager.newMainFile();" style="margin-bottom: 24px;">
+		<option></option>
+	</select>
+
+	<span style="font-style: italic;">Data Series</span><br>
+
+	<div id="series_toggle_controls" style="margin-bottom: 24px;"></div>
+
+	<span style="font-style: italic;">Alerts</span><br>
 	<table style="width: 190px; margin-bottom: 16px;">
 		<tr><td><label for="alert_gen_series_field">Series</label></td><td><input type="text" id="alert_gen_series_field" style="width: 100%; font-weight: bold;" value="SpO₂.SpO₂" /></td></tr>
 		<tr><td><label for="alert_gen_threshold_field">Threshold<sub>Low</sub></label></td><td><input type="text" id="alert_gen_threshold_field" style="width: 100%;" /></td></tr>
@@ -67,8 +34,6 @@
 			<button onclick="clearAlerts();" style="float: right; margin-right: 4px;">Clear</button>
 		</td></tr>
 	</table>
-
-	<span style="font-style: italic;">Data Series</span><br>
 
 </div>
 <div id="graphs">
@@ -88,8 +53,14 @@
 
 <script src="js/config.js"></script>
 
-<script src="js/alerts.js"></script>
+<!-- Classes -->
 <script src="js/annotation.js"></script>
+<script src="js/file.js"></script>
+<script src="js/graph.js"></script>
+<script src="js/requesthandler.js"></script>
+<script src="js/statemanager.js"></script>
+
+<script src="js/alerts.js"></script>
 <script src="js/annotation_event_handlers.js"></script>
 <script src="js/graph_event_handlers.js"></script>
 <script src="js/main.js"></script>
@@ -105,8 +76,26 @@
 		})
 	})*/
 
-    xhttp.open("GET", allDataAllSeriesURL, true);
-    xhttp.send();
+    // fileLoaderHTTP.open("GET", allSeriesAllDataURL, true);
+    // fileLoaderHTTP.send();
+
+	// Request the list of files for the project
+    requestHandler.requestFileList(function(data) {
+
+    	var fileSelect = document.getElementById('file_selection');
+
+		for (var i in data) {
+
+			var opt = document.createElement('OPTION');
+			opt.setAttribute('value', data[i]);
+			opt.innerText = data[i];
+			fileSelect.appendChild(opt);
+
+		}
+
+	});
+
+
 
 </script>
 

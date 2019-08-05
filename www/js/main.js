@@ -1,32 +1,11 @@
-// TODO(gus): Convert these (below) redundant tracking objects into one a unified object.
+var requestHandler = new RequestHandler();
+var globalStateManager = new GlobalStateManager();
 
-// Holds the dom elements of instantiated graphs, keyed by series name
-var graphDomElements = {};
 
-// Holds the dom elements of instantiated legends, keyed by series name
-var legendDomElements = {};
 
-// Holds the instantiated dygraphs, keyed by series name
-var dygraphInstances = {};
 
-// Holds the initial dataset for a given data series, keyed by series name
-var initialDataSeries = {};
 
-// Holds the reference to the graph synchronization object
-var sync = null;
 
-/*
-This will be a 2-dimensional array that holds the min ([0]) and max ([1])
-x-value across all graphs currently displayed. This is calculated in the
-convertToDateObjsAndUpdateExtremes() function. The values should hold
-milliseconds since epoch, as this is the format specified for
-options.dateWindow, though the values will intermediately be instances of the
-Date object while the extremes are being calculated. This array may be
-passed into the options.dateWindow parameter for a dygraph.
-*/
-var globalXExtremes = [];
-
-var xhttp = new XMLHttpRequest();
 
 // Creates a dygraph and adds it to the DOM
 function addGraphInitialLoad(backendData, series) {
@@ -95,7 +74,7 @@ function addGraphPostLoad(series) {
 function addSeriesControlToInterface(series) {
 
 	// Grab the controls div
-	controls = document.getElementById('controls');
+	var controls = document.getElementById('series_toggle_controls');
 
 	// Create the checkbox DOM element
 	var checkbox = document.createElement('INPUT');
@@ -500,11 +479,9 @@ function updateCurrentViewData(graph, updateAllGraphs) {
 	// Send the async request
 	//xt1 = performance.now();
 	if (updateAllGraphs) {
-		x.open("GET", dataWindowAllSeriesURL + "?start=" + xRange[0] + "&stop=" + xRange[1], true);
+		x.open("GET", dataWindowAllSeriesURL + "?file=" + currentSelectedFile + "&start=" + xRange[0] + "&stop=" + xRange[1], true);
 	} else {
-		console.log(dataWindowSingleSeriesURL + "?series=" + encodeURIComponent(graph.getOption("title")) + "&start=" + xRange[0] + "&stop=" + xRange[1])
-		console.log(graph)
-		x.open("GET", dataWindowSingleSeriesURL + "?series=" + encodeURIComponent(graph.getOption("title")) + "&start=" + xRange[0] + "&stop=" + xRange[1], true)
+		x.open("GET", dataWindowSingleSeriesURL + "?file=" + currentSelectedFile + "&series=" + encodeURIComponent(graph.getOption("title")) + "&start=" + xRange[0] + "&stop=" + xRange[1], true)
 	}
 	x.send();
 
@@ -528,48 +505,3 @@ function zoom(g, zoomInPercentage, xBias) {
 		dateWindow: adjustAxis(g.xAxisRange(), zoomInPercentage, xBias)
 	});
 }
-
-xhttp.onreadystatechange = function() {
-
-	if (this.readyState == 4 && this.status == 200) {
-
-		//t2 = performance.now();
-
-		// Parse the backend JSON response into a JS object
-		var backendData = JSON.parse(xhttp.responseText);
-
-		console.log(backendData);
-
-		// Convert date strings to Date objects in all datasets and produce global
-		// x-axis extremes. It is an obvious potential optimization to combine this
-		// for loop and the subsequent one, but don't. Global x-axis extremes from
-		// all datasets must be calculated before any graph is plotted so that the
-		// default zoom can be set. There won't be that many graphs, so redundant
-		// for loops are not costly.
-		for(series in backendData) {
-			processData(backendData[series]['data'], true);
-		}
-
-		// When the x-axis extremes have been calculated (as dates), convert them
-		// to milliseconds since epoch, as this is what is specified in the options
-		// reference: http://dygraphs.com/options.html#dateWindow
-		globalXExtremes[0] = globalXExtremes[0].valueOf();
-		globalXExtremes[1] = globalXExtremes[1].valueOf();
-
-		// Create a graph for each series if it is in the default series array
-		for(series in backendData) {
-			addGraphInitialLoad(backendData, series);
-		}
-
-		// Synchronize the graphs
-		synchronizeGraphs();
-
-		// t3 = performance.now();
-		// console.log("It took "+(t2-xhttpt1)+"ms for the data to arrive from the backend.");
-		// console.log("It took "+(t3-t2)+"ms for all client-side processing to happen.");
-
-	}
-
-};
-//xhttpt1 = performance.now();
-
