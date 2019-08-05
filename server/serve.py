@@ -27,7 +27,7 @@ import time
 # quit()
 
 project = Project()
-project.processFiles()
+# project.processFiles()
 project.loadProcessedFiles()
 
 # # TESTING: Begin test code
@@ -68,19 +68,19 @@ project.loadProcessedFiles()
 app = Flask(__name__)
 
 # Map our static assets to be served
-app.register_blueprint(Blueprint('css', __name__, static_url_path='/css', static_folder='../www/css'))
-app.register_blueprint(Blueprint('js', __name__, static_url_path='/js', static_folder='../www/js'))
+app.register_blueprint(Blueprint('css', __name__, static_url_path=config.rootDir+'/css', static_folder='../www/css'))
+app.register_blueprint(Blueprint('js', __name__, static_url_path=config.rootDir+'/js', static_folder='../www/js'))
 
-@app.route('/')
-@app.route('/index.html')
+@app.route(config.rootDir+'/')
+@app.route(config.rootDir+'/index.html')
 def index():
     return send_from_directory('../www', 'index.html')
 
-@app.route('/bokeh.html')
+@app.route(config.rootDir+'/bokeh.html')
 def bokeh():
     return send_from_directory('../www', 'bokeh.html')
 
-@app.route('/all_data_all_series')
+@app.route(config.rootDir+'/all_data_all_series')
 def all_data_all_series():
 
     if request.method == 'GET' and len(request.args.get('file', default='')) > 0:
@@ -101,7 +101,7 @@ def all_data_all_series():
     else:
         return "Invalid request."
 
-@app.route('/data_window_all_series', methods=['GET'])
+@app.route(config.rootDir+'/data_window_all_series', methods=['GET'])
 def data_window_all_series():
 
     if request.method == 'GET' and len(request.args.get('file', default='')) > 0 and len(request.args.get('start', default='')) > 0 and len(request.args.get('stop', default='')) > 0:
@@ -122,7 +122,7 @@ def data_window_all_series():
     else:
         return "Invalid request."
 
-@app.route('/data_window_single_series', methods=['GET'])
+@app.route(config.rootDir+'/data_window_single_series', methods=['GET'])
 def data_window_single_series():
 
     if request.method == 'GET' and len(request.args.get('file', default='')) > 0 and len(request.args.get('start', default='')) > 0 and len(request.args.get('start', default='')) > 0 and len(request.args.get('stop', default='')) > 0:
@@ -141,7 +141,7 @@ def data_window_single_series():
         
         return json_output
     
-@app.route('/get_alerts', methods=['GET'])
+@app.route(config.rootDir+'/get_alerts', methods=['GET'])
 def get_alerts():
 
     # TODO(gus): Add checks here
@@ -160,7 +160,7 @@ def get_alerts():
     output = file.generateAlerts(series, threshold, duration, dutycycle, maxgap)
     return json.dumps(output, ignore_nan=True)
 
-@app.route('/get_files')
+@app.route(config.rootDir+'/get_files')
 def get_files():
 
     output = project.getActiveFileListOutput()

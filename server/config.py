@@ -1,5 +1,9 @@
 # This file holds configuration parameters for the medview application.
 
+# A root directory from which the web application is served. Should begin with a
+# slash and end without a slask (in other words, end with a directory name).
+rootDir = '/auv'
+
 # Max number of data points to transmit for a given view
 M = 3000
 
@@ -16,8 +20,3 @@ originalFilesDir = '/home/scratch/gwelter/meddata/originals/'
 # Processed (i.e. downsampled) patient data files go here.
 # processedFilesDir = '../data/processed/'
 processedFilesDir = '/home/scratch/gwelter/meddata/processed/'
-
-# Scratch directory for use during development (not currently in use, kept for
-# now in case it's needed in future).
-# scratchFilesDir = '../data/scratch/'
-scratchFilesDir = '/home/scratch/gwelter/meddata/scratch/'
