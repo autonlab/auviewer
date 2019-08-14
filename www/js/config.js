@@ -6,7 +6,7 @@ let config = {
 	verbose: true,
 
 	// Function for assembling paths. Do not modify unless necessary.
-	buildDir: function(subpath) { return this.serverProtocol+this.serverAddress+':'+this.serverPort+this.rootDir+subpath; },
+	buildDir: function(subpath) { return this.serverProtocol+this.serverAddress+':'+this.serverPort+this.rootWebPath+subpath; },
 	
 	// Backend address & port
 	serverProtocol: 'http://',
@@ -19,8 +19,8 @@ let config = {
 	//   '/approot'
 	//   '/app/rooot'
 	//   ''
-	// rootDir: '/auv',
-	rootDir: '',
+	// rootWebPath: '/auv',
+	rootWebPath: '',
 	
 	// Backend request URLs
 	allSeriesAllDataSubpath: '/all_data_all_series',

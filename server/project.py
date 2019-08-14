@@ -34,7 +34,11 @@ class Project:
         return response
 
     def getActiveFileListOutput(self):
-        return [list(i) for i in zip(*self.getActiveFileList())][0]
+        r = [list(i) for i in zip(*self.getActiveFileList())]
+        if len(r) > 0:
+            return r[0]
+        else:
+            return [];
 
     def getUnprocessedFileList(self):
 

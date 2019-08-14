@@ -2,9 +2,9 @@
 
 # A root directory from which the web application is served. Should begin with a
 # slash and end without a slask (in other words, end with a directory name). If
-# there is no root directory, rootDir should be empty string.
-# rootDir = '/auv'
-rootDir = ''
+# there is no root directory, rootWebPath should be empty string.
+# rootWebPath = '/auv'
+rootWebPath = ''
 
 # Max number of data points to transmit for a given view
 M = 3000
