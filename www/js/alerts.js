@@ -44,7 +44,7 @@ function generateAlerts() {
 	}
 
 	annotations = [];
-	alertsHTTP.open("GET", getAlertsURL +
+	alertsHTTP.open("GET", config.getAlertsURL +
 		"?file=" + globalStateManager.currentFile.filename +
 		"&series="+encodeURIComponent(series) +
 		"&threshold="+encodeURIComponent(threshold) +
