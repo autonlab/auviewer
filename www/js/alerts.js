@@ -1,19 +1,19 @@
-var alertsHTTP = new XMLHttpRequest();
+let alertsHTTP = new XMLHttpRequest();
 
 alertsHTTP.onreadystatechange = function() {
 
 	if (this.readyState == 4 && this.status == 200) {
 
 		// Parse the backend JSON response into a JS object
-		var backendData = JSON.parse(alertsHTTP.responseText);
+		let backendData = JSON.parse(alertsHTTP.responseText);
 
 		console.log(backendData);
 
-		for (var i in backendData) {
+		for (let i in backendData) {
 			annotations.push(new Annotation(backendData[i][0], backendData[i][1]));
 		}
 
-		triggerRedraw();
+		globalStateManager.currentFile.triggerRedraw();
 
 	}
 
@@ -21,7 +21,7 @@ alertsHTTP.onreadystatechange = function() {
 
 function clearAlerts() {
 	annotations = [];
-	triggerRedraw();
+	globalStateManager.currentFile.triggerRedraw();
 }
 
 function generateAlerts() {
@@ -45,7 +45,7 @@ function generateAlerts() {
 
 	annotations = [];
 	alertsHTTP.open("GET", getAlertsURL +
-		"?file=" + currentSelectedFile +
+		"?file=" + globalStateManager.currentFile.filename +
 		"&series="+encodeURIComponent(series) +
 		"&threshold="+encodeURIComponent(threshold) +
 		"&duration="+encodeURIComponent(duration) +

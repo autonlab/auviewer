@@ -52,17 +52,18 @@
 <script type="text/javascript" src="https://cdn.webix.com/site/webix.js"></script>
 
 <script src="js/config.js"></script>
+<script src="js/common.js"></script>
 
 <!-- Classes -->
-<script src="js/annotation.js"></script>
-<script src="js/file.js"></script>
-<script src="js/graph.js"></script>
-<script src="js/requesthandler.js"></script>
-<script src="js/statemanager.js"></script>
+<script src="js/classes/annotation.js"></script>
+<script src="js/classes/file.js"></script>
+<script src="js/classes/globalstatemanager.js"></script>
+<script src="js/classes/graph.js"></script>
+<script src="js/classes/graphselectionmenu.js"></script>
+<script src="js/classes/requesthandler.js"></script>
 
 <script src="js/alerts.js"></script>
 <script src="js/annotation_event_handlers.js"></script>
-<script src="js/graph_event_handlers.js"></script>
 <script src="js/main.js"></script>
 <script type="application/javascript">
 
@@ -82,11 +83,11 @@
 	// Request the list of files for the project
     requestHandler.requestFileList(function(data) {
 
-    	var fileSelect = document.getElementById('file_selection');
+    	let fileSelect = document.getElementById('file_selection');
 
-		for (var i in data) {
+		for (let i in data) {
 
-			var opt = document.createElement('OPTION');
+			let opt = document.createElement('OPTION');
 			opt.setAttribute('value', data[i]);
 			opt.innerText = data[i];
 			fileSelect.appendChild(opt);

@@ -1,18 +1,17 @@
 // Ends an annotation highlighting action in response to a mouse-up event.
 function endAnnotationHighlight (event, g, context) {
 
-	var left = Math.min(context.dragStartX, context.dragEndX);
-	var right = Math.max(context.dragStartX, context.dragEndX);
-	var from = g.toDataXCoord(left);
-	var to = g.toDataXCoord(right);
+	let left = Math.min(context.dragStartX, context.dragEndX);
+	let right = Math.max(context.dragStartX, context.dragEndX);
+	let from = g.toDataXCoord(left);
+	let to = g.toDataXCoord(right);
 
 	// Create a new annotation
-	var annotation = new Annotation(from, to);
+	let annotation = new Annotation(from, to);
     annotations.push(annotation);
 
 	// Show the annotation dialog
     annotation.showDialog();
-    console.log(annotation.getIndex());
 
 	// Clear the grey rectangle that was drawn for the user interaction of spanning the annotation section.
 	g.clearZoomRect_();
@@ -26,9 +25,9 @@ function endAnnotationHighlight (event, g, context) {
 	// The zoom rectangle is visibly clipped to the plot area, so its behavior
 	// should be as well.
 	// See http://code.google.com/p/dygraphs/issues/detail?id=280
-	// var plotArea = g.getArea();
+	// let plotArea = g.getArea();
 	// if (context.regionWidth >= 10 && context.dragDirection == utils.HORIZONTAL) {
-	//   var left = Math.min(context.dragStartX, context.dragEndX),
+	//   let left = Math.min(context.dragStartX, context.dragEndX),
 	//       right = Math.max(context.dragStartX, context.dragEndX);
 	//   left = Math.max(left, plotArea.x);
 	//   right = Math.min(right, plotArea.x + plotArea.w);
@@ -37,7 +36,7 @@ function endAnnotationHighlight (event, g, context) {
 	//   }
 	//   context.cancelNextDblclick = true;
 	// } else if (context.regionHeight >= 10 && context.dragDirection == utils.VERTICAL) {
-	//   var top = Math.min(context.dragStartY, context.dragEndY),
+	//   let top = Math.min(context.dragStartY, context.dragEndY),
 	//       bottom = Math.max(context.dragStartY, context.dragEndY);
 	//   top = Math.max(top, plotArea.y);
 	//   bottom = Math.min(bottom, plotArea.y + plotArea.h);
@@ -64,8 +63,8 @@ function moveAnnotationHighlight (event, g, context) {
 	context.dragEndX = Dygraph.pageX(event) - context.px;
 	context.dragEndY = Dygraph.pageY(event) - context.py;
 
-	var xDelta = Math.abs(context.dragStartX - context.dragEndX);
-	var yDelta = Math.abs(context.dragStartY - context.dragEndY);
+	let xDelta = Math.abs(context.dragStartX - context.dragEndX);
+	let yDelta = Math.abs(context.dragStartY - context.dragEndY);
 
 	// drag direction threshold for y axis is twice as large as x axis
 	//context.dragDirection = xDelta < yDelta / 2 ? utils.VERTICAL : utils.HORIZONTAL;
@@ -92,10 +91,10 @@ function startAnnotationHighlight (event, g, context) {
 // This is the callback function provided to dygraphs which draws the
 // annotations on the canvas.
 function underlayCallbackHandler(canvas, area, g) {
+	console.log('underlay');
+	let left, right, x, y, width, height;
 
-	var left, right, x, y, width, height;
-
-	for (var i = 0; i < annotations.length; i++) {
+	for (let i = 0; i < annotations.length; i++) {
 
 		left = g.toDomXCoord(new Date(annotations[i].begin));
 		right = g.toDomXCoord(new Date(annotations[i].end));

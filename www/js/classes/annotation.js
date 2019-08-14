@@ -1,6 +1,8 @@
-var annotations = [];
+'use strict';
 
-var maxAnnotationID = 0;
+let annotations = [];
+
+let maxAnnotationID = 0;
 
 function Annotation(begin, end) {
 
@@ -20,18 +22,18 @@ function Annotation(begin, end) {
 Annotation.prototype.delete = function () {
 
 	// Get this annotation's index in the global array
-	var i = this.getIndex();
+	let i = this.getIndex();
 
 	// Remove the annotation from the global array
 	annotations.splice(i, 1);
 
 	// Trigger a redraw to remove the annotation
-	triggerRedraw();
+	globalStateManager.currentFile.triggerRedraw();
 };
 
 // Returns the index of the object in the annotations array, or -1 if not found.
 Annotation.prototype.getIndex = function () {
-	for (var i = 0; i < annotations.length; i++) {
+	for (let i = 0; i < annotations.length; i++) {
 		if (annotations[i].id == this.id) {
 			return i;
 		}
@@ -46,12 +48,12 @@ Annotation.prototype.setLabel = function (label) {
 	this.label = label;
 
 	// Trigger a redraw to show the annotation
-	triggerRedraw();
+	globalStateManager.currentFile.triggerRedraw();
 };
 
 Annotation.prototype.showDialog = function () {
 
-	var callingAnnotation = this;
+	let callingAnnotation = this;
 
 	webix.ui({
 		view: "window",

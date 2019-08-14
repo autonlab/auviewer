@@ -1,8 +1,10 @@
 # This file holds configuration parameters for the medview application.
 
 # A root directory from which the web application is served. Should begin with a
-# slash and end without a slask (in other words, end with a directory name).
-rootDir = '/auv'
+# slash and end without a slask (in other words, end with a directory name). If
+# there is no root directory, rootDir should be empty string.
+# rootDir = '/auv'
+rootDir = ''
 
 # Max number of data points to transmit for a given view
 M = 3000

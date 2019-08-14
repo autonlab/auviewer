@@ -1,10 +1,12 @@
-var config = {
+'use strict';
+
+let config = {
 
 	// Enable verbose debug output
 	verbose: true,
 
 	// Function for assembling paths. Do not modify unless necessary.
-	buildDir: function(dir) { return serverProtocol+serverAddress+serverPort+rootDir+dir; },
+	buildDir: function(subpath) { return this.serverProtocol+this.serverAddress+':'+this.serverPort+this.rootDir+subpath; },
 	
 	// Backend address & port
 	serverProtocol: 'http://',
@@ -13,21 +15,28 @@ var config = {
 
 	// A root directory structure from which the backend application is served.
 	// Should have a leading but not a trailing slash. If no root directory,
-	// should be single slash. Examples:
+	// should be empty string. Examples:
 	//   '/approot'
 	//   '/app/rooot'
-	//   '/'
-	rootDir: '/auv',
+	//   ''
+	// rootDir: '/auv',
+	rootDir: '',
 	
 	// Backend request URLs
-	allSeriesAllDataURL: buildDir('/all_data_all_series'),
-	dataWindowAllSeriesURL: buildDir('/data_window_all_series'),
-	dataWindowSingleSeriesURL: buildDir('/data_window_single_series'),
-	getAlertsURL: buildDir('/get_alerts'),
-	getFilesURL: buildDir('/get_files'),
+	allSeriesAllDataSubpath: '/all_data_all_series',
+	dataWindowAllSeriesSubpath: '/data_window_all_series',
+	dataWindowSingleSeriesSubpath: '/data_window_single_series',
+	getAlertsSubpath: '/get_alerts',
+	getFilesSubpath: '/get_files',
 	
 	// Series to display by default
 	// defaultSeries: ['HR', 'RR', 'BP', 'SpO2', 'CVP', 'ArtWave'],
 	defaultSeries: ['Numeric: HR.BeatToBeat', 'Numeric: RR.RR', 'Numeric: ART.Systolic', 'Numeric: ART.Diastolic', 'Numeric: SpO₂.SpO₂', 'CVP', 'ArtWave']
 	
 };
+
+config.allSeriesAllDataURL = config.buildDir(config.allSeriesAllDataSubpath);
+config.dataWindowAllSeriesURL = config.buildDir(config.dataWindowAllSeriesSubpath);
+config.dataWindowSingleSeriesURL = config.buildDir(config.dataWindowSingleSeriesSubpath);
+config.getAlertsURL = config.buildDir(config.getAlertsSubpath);
+config.getFilesURL = config.buildDir(config.getFilesSubpath);
