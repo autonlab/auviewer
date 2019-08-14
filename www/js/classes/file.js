@@ -104,7 +104,7 @@ File.prototype.calculateExtremes = function() {
 File.prototype.destroy = function() {
 
 	// Destroy graph synchronization state management
-	unsynchronizeGraphs();
+	this.unsynchronizeGraphs();
 
 	// Remove each graph
 	for (let s of Object.keys(this.graphs)) {
@@ -143,24 +143,11 @@ File.prototype.padDataIfNeeded = function(data) {
 
 };
 
-// Indicate whether the named data series is currently showing on the interface.
-File.prototype.isGraphShowing = function(series) {
-
-	// First, check if series exists in graphs
-	if (!this.graphs.hasOwnProperty(series)) {
-		return false;
-	}
-
-	// Then check if there is a dygraph instance
-	return this.graphs[series].dygraphInstance !== null;
-
-};
-
 // Synchronize the graphs for zoom and selection.
 File.prototype.synchronizeGraphs = function() {
 
-	// If there is not more than one graph or sync is not null, return now.
-	if (Object.keys(this.graphs).length < 2 || this.sync != null) {
+	// If sync is not null, return now.
+	if (this.sync != null) {
 		return;
 	}
 
@@ -170,6 +157,11 @@ File.prototype.synchronizeGraphs = function() {
 		if (this.graphs[s].dygraphInstance !== null) {
 			dygraphInstances.push(this.graphs[s].dygraphInstance);
 		}
+	}
+
+	// If there is not more than one graph showing to synchronize, return now.
+	if (dygraphInstances.length < 2) {
+		return;
 	}
 
 	// Synchronize all of the graphs, if there are more than one.

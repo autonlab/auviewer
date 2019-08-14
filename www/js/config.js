@@ -6,12 +6,13 @@ let config = {
 	verbose: true,
 
 	// Function for assembling paths. Do not modify unless necessary.
-	buildDir: function(subpath) { return this.serverProtocol+this.serverAddress+':'+this.serverPort+this.rootWebPath+subpath; },
+	// buildDir: function(subpath) { return this.serverProtocol+this.serverAddress+':'+this.serverPort+this.rootWebPath+subpath; },
+	buildDir: function(subpath) { return this.rootWebPath+subpath; },
 	
 	// Backend address & port
-	serverProtocol: 'http://',
-	serverAddress: 'localhost',
-	serverPort: '8001',
+	// serverProtocol: 'http://',
+	// serverAddress: 'localhost',
+	// serverPort: '8001',
 
 	// A root directory structure from which the backend application is served.
 	// Should have a leading but not a trailing slash. If no root directory,
@@ -19,8 +20,8 @@ let config = {
 	//   '/approot'
 	//   '/app/rooot'
 	//   ''
-	// rootWebPath: '/auv',
-	rootWebPath: '',
+	rootWebPath: '/auv',
+	// rootWebPath: '',
 	
 	// Backend request URLs
 	allSeriesAllDataSubpath: '/all_data_all_series',

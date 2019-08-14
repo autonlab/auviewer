@@ -11,7 +11,7 @@ function GraphSelectionMenu(file) {
 }
 
 // Adds a checkbox control to toggle display of the data series.
-GraphSelectionMenu.prototype.add = function(series) {
+GraphSelectionMenu.prototype.add = function(series, checked) {
 
 	// Create the checkbox DOM element
 	let checkbox = document.createElement('INPUT');
@@ -19,9 +19,7 @@ GraphSelectionMenu.prototype.add = function(series) {
 	checkbox.setAttribute('value', series);
 
 	// Check the box if the series is showing
-	if (this.file.isGraphShowing(series)) {
-		checkbox.checked = true;
-	}
+	checkbox.checked = (checked !== false);
 
 	// Attach the event handler that will add & remove the graph
 	checkbox.onclick = this.checkboxClickHandler.bind(this);

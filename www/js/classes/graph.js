@@ -56,7 +56,7 @@ Graph.prototype.build = function() {
 	}
 
 	// Add the control for the graph
-	this.file.graphSelectionMenu.add(this.series);
+	this.file.graphSelectionMenu.add(this.series, config.defaultSeries.includes(this.series));
 
 };
 
@@ -288,7 +288,9 @@ Graph.prototype.remove = function() {
 	this.file.unsynchronizeGraphs();
 
 	// Destroy the dygraph instance
-	this.dygraphInstance.destroy();
+	if (this.dygraphInstance !== null) {
+		this.dygraphInstance.destroy();
+	}
 
 	// Delete the dygraph instance reference
 	this.dygraphInstance = null;

@@ -91,7 +91,6 @@ function startAnnotationHighlight (event, g, context) {
 // This is the callback function provided to dygraphs which draws the
 // annotations on the canvas.
 function underlayCallbackHandler(canvas, area, g) {
-	console.log('underlay');
 	let left, right, x, y, width, height;
 
 	for (let i = 0; i < annotations.length; i++) {

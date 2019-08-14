@@ -4,7 +4,7 @@
 # slash and end without a slask (in other words, end with a directory name). If
 # there is no root directory, rootWebPath should be empty string.
 # rootWebPath = '/auv'
-rootWebPath = ''
+rootWebPath = '/auv'
 
 # Max number of data points to transmit for a given view
 M = 3000
@@ -17,8 +17,10 @@ stepMultiplier = 2
 # Original patient data files (which should be preserved and unaltered) go here.
 # originalFilesDir = '../data/originals/'
 # originalFilesDir = '/zfsauton/data/public/vleonard/'
-originalFilesDir = '/home/scratch/gwelter/meddata/originals/'
+# originalFilesDir = '/home/scratch/gwelter/meddata/originals/'
+originalFilesDir = '/zfsauton/data/public/awertz/mladi/conditionc/h5/'
 
 # Processed (i.e. downsampled) patient data files go here.
 # processedFilesDir = '../data/processed/'
-processedFilesDir = '/home/scratch/gwelter/meddata/processed/'
+# processedFilesDir = '/home/scratch/gwelter/meddata/processed/'
+processedFilesDir = '/zfsauton/data/public/gwelter/processed/'
