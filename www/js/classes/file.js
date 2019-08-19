@@ -194,14 +194,23 @@ File.prototype.triggerRedraw = function() {
 // NOTE: There is an identically-named function on both File and Graph classes.
 File.prototype.updateCurrentViewData = function() {
 
-	// Return if there are no graphs
-	if (Object.keys(this.graphs).length < 1) {
+	// Find the first graph which is currently displaying
+	let dg = null;
+	for (let k of Object.keys(this.graphs)) {
+		if (this.graphs[k].dygraphInstance !== null) {
+			dg = this.graphs[k].dygraphInstance;
+			break;
+		}
+	}
+
+	// Return if no visible graph was found
+	if (dg === null) {
 		return;
 	}
 
 	// Get the x-axis range from the first graph (all graphs should be showing
 	// the same range since they are synchronized).
-	let xRange = this.graphs[Object.keys(this.graphs)[0]].dygraphInstance.xAxisRange();
+	let xRange = dg.xAxisRange();
 
 	// Persist for callback
 	let file = this;

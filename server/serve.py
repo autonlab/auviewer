@@ -1,5 +1,6 @@
 from flask import Flask, Blueprint, send_from_directory, request
 from project import Project
+from file import File
 
 # Simplejson package is required in order to "ignore" NaN values and implicitly
 # convert them into null values. RFC JSON spec left out NaN values, even though
@@ -91,6 +92,10 @@ def all_data_all_series():
         # Get the file
         file = project.getFile(filename)
 
+        # If we did not find the file, return empty output
+        if not isinstance(file, File):
+            return ''
+
         # Return the full (zoomed-out but downsampled if appropriate) datasets for
         # all data series.
         output = file.getFullOutputAllSeries()
@@ -114,6 +119,10 @@ def data_window_all_series():
         # Get the file
         file = project.getFile(filename)
 
+        # If we did not find the file, return empty output
+        if not isinstance(file, File):
+            return ''
+
         output = file.getRangedOutputAllSeries(start, stop)
         json_output = json.dumps(output, ignore_nan=True)
         
@@ -136,6 +145,10 @@ def data_window_single_series():
         # Get the file
         file = project.getFile(filename)
 
+        # If we did not find the file, return empty output
+        if not isinstance(file, File):
+            return ''
+
         output = file.getRangedOutputSingleSeries(series, start, stop)
         json_output = json.dumps(output, ignore_nan=True)
         
@@ -149,15 +162,40 @@ def get_alerts():
     # Parse the series name and alert parameters
     filename = request.args.get('file')
     series = request.args.get('series')
-    threshold = request.args.get('threshold', type=float)
+    thresholdlow = request.args.get('thresholdlow', type=float)
+    thresholdhigh = request.args.get('thresholdhigh', type=float)
     duration = request.args.get('duration', type=float)
     dutycycle = request.args.get('dutycycle', type=float)
     maxgap = request.args.get('maxgap', type=float)
 
+    # Generate the mode parameter (see generateThresholdAlerts function
+    # description for details on this parameter).
+    if request.args.get('thresholdhigh') == '':
+        mode = 0
+        thresholdhigh = 0
+        print("MODE 0")
+    elif request.args.get('thresholdlow') == '':
+        mode = 1
+        thresholdlow = 0
+        print("MODE 1")
+    elif request.args.get('thresholdlow') == '' and request.args.get('thresholdhigh') == '':
+        # It is invalid for no threshold to be supplied.
+        # TODO(gus): Add more generalized parameter checking that covers this,
+        # and get rid of this case here.
+        return ''
+        print("INVALID MODE")
+    else:
+        mode = 2
+        print("MODE 2")
+
     # Get the file
     file = project.getFile(filename)
 
-    output = file.generateAlerts(series, threshold, duration, dutycycle, maxgap)
+    # If we did not find the file, return empty output
+    if not isinstance(file, File):
+        return ''
+
+    output = file.generateAlerts(series, thresholdlow, thresholdhigh, mode, duration, dutycycle, maxgap)
     return json.dumps(output, ignore_nan=True)
 
 @app.route(config.rootWebPath+'/get_files')

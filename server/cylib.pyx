@@ -243,62 +243,39 @@ def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarr
     # Return the downsampled intervals
     return intervals
 
-# Returns the index where a provided target value should be inserted in a
-# downsample or raw data series. The side parameter indicates whether to
-# approach from the left or right, where 0 indicates left and non-zero is right.
-def getSliceParam(ds, unsigned short side, double target):
+# Generates a two-dimensional Nx2 alerts array, with N alerts in the first
+# dimension and each alert having a start time in the first array element and a
+# stop time in the second. A low threshold, a high threshold, or both may be
+# provided for alert generation. The mode parameter specifies which of these is
+# provided, with 0 indicating low threshold, 1 indicating high threshold, and 2
+# indicating both being provided. This may not be inferred from the threshold
+# parameter values themselves because no real number is out-of-bounds.
+def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarray[np.float64_t, ndim=1] rawValues, double thresholdlow, double thresholdhigh, int mode, double duration, double dutycycle, double maxgap):
 
-    cdef long numDataPoints = len(ds)
+    # Holds the indices of all raw values which surpass the threshold(s)
+    cdef np.ndarray[long, ndim=1] pastThresholdIndices
     
-    cdef int low = 0
-    cdef int high = ds.len()-1
-    
-    # Will hold the midpoint index
-    cdef int mid
-    
-    # Will be used later for iteration
-    cdef int i
-    
-    while low <= high:
-        
-        mid = (low + high) / 2
-        
-        if target > ds[mid][0]:
-            low = mid + 1
-        elif target < ds[mid][0]:
-            high = mid - 1
-        else:
-
-            i = mid
-
-            # For left slice param, we want leftmost equal value index
-            if side == 0:
-                while i > 0 and ds[i][0] == target:
-                    i = i - 1
-                return i + 1
-        
-            # For right slice param, we want 1 + rightmost equal value index
-            else:
-                while i < numDataPoints and ds[i][0] == target:
-                    i = i + 1
-                return i
-            
-    return low
-
-def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarray[np.float64_t, ndim=1] rawValues, double threshold, double duration, double dutycycle, double maxgap):
-
-    # Pull the indices of all data points that exceed the threshold
-    cdef np.ndarray[long, ndim=1] indices = np.nonzero(rawValues <= threshold)[0]
+    # Pull the indices of all data points that exceed the threshold.
+    # TODO(gus): Is there a more efficient way to do this?
+    if mode == 0:
+        pastThresholdIndices = np.nonzero((rawValues <= thresholdlow))[0]
+    elif mode == 1:
+        pastThresholdIndices = np.nonzero((rawValues >= thresholdhigh))[0]
+    elif mode == 2:
+        pastThresholdIndices = np.nonzero((rawValues <= thresholdlow) | (rawValues >= thresholdhigh))[0]
+    else:
+        print("Invalid mode parameter provided to generateThresholdAlerts.")
+        return np.array([])
     
     # Holds generated alerts (start & stop time offsets). We assume there can be
-    # a maximum of len(indices) alerts and slice it shorter at the end.
-    cdef np.ndarray[np.float64_t, ndim=2] alerts = np.zeros((indices.shape[0], 2))
+    # a max of len(pastThresholdIndices) alerts and slice it shorter at the end.
+    cdef np.ndarray[np.float64_t, ndim=2] alerts = np.zeros((pastThresholdIndices.shape[0], 2))
     
-    # Holds the index of the current data point we're working on.
+    # Holds the index of the current data point we're working on
     cdef long cdpi = 0
     
     # Holds the index of the next available unwritten alert
-    cdef long cai = 0
+    cdef long nuai = 0
     
     # Tracks the left & right boundaries of the current alert sample
     cdef double leftboundary, rightboundary
@@ -310,11 +287,7 @@ def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndar
     # Holds the sample duty cycle once calculated
     cdef double sampleduty
     
-    # print(indices)
-        
-    for alertSampleBeginIndex in indices:
-        
-        # print(rawOffsets[alertSampleBeginIndex], rawValues[alertSampleBeginIndex])
+    for alertSampleBeginIndex in pastThresholdIndices:
         
         cdpi = alertSampleBeginIndex
         leftboundary = rawOffsets[cdpi]
@@ -324,6 +297,8 @@ def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndar
         numexceed = 0
         numtotal = 0
         
+        # Iterate through raw data indices until we hit the raw data bound or
+        # hit the right time boundary for this current alert.
         while cdpi < rawOffsets.shape[0] and rawOffsets[cdpi] < rightboundary:
             
             # Increment the number of total data points
@@ -331,12 +306,14 @@ def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndar
             
             # If this data point exceeds the threshold, increment the number of
             # threshold-exceed data points.
-            if rawValues[cdpi] <= threshold:
+            if (mode == 0 and rawValues[cdpi] <= thresholdlow) or \
+                (mode == 1 and rawValues[cdpi] >= thresholdhigh) or \
+                (mode == 2 and (rawValues[cdpi] <= thresholdlow or rawValues[cdpi] >= thresholdhigh)):
                 numexceed = numexceed + 1
                 
             # Increment to the next data point
             cdpi = cdpi + 1
-                
+            
         # Calculate the sample duty cycle
         sampleduty = <double>numexceed / <double>numtotal
         
@@ -344,14 +321,14 @@ def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndar
         # alert, add this to our alerts.
         if sampleduty >= dutycycle:
             
-            alerts[cai,0] = leftboundary
-            alerts[cai,1] = rawOffsets[cdpi-1]
+            alerts[nuai,0] = leftboundary
+            alerts[nuai,1] = rawOffsets[cdpi-1]
             
             # Increment to the next available unwritten alert
-            cai = cai + 1
+            nuai = nuai + 1
             
     # Slice off unused alerts
-    alerts = alerts[0:cai]
+    alerts = alerts[0:nuai]
     
     # Holds the final, consolidated alerts to be returned
     cdef np.ndarray[np.float64_t, ndim=2] finalalerts = np.zeros((alerts.shape[0], 2))
@@ -399,7 +376,7 @@ def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndar
             
         # Increment to the next alert
         crai = crai + 1
-            
+        
     # Write the final unwritten candidate as a final alert.
     finalalerts[cfai,0] = candalertbegin
     finalalerts[cfai,1] = candalertend
@@ -412,8 +389,50 @@ def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndar
     # print(alerts)
     # print("Final Alerts:")
     # print(finalalerts)
-        
+    
     return finalalerts
+
+# Returns the index where a provided target value should be inserted in a
+# downsample or raw data series. The side parameter indicates whether to
+# approach from the left or right, where 0 indicates left and non-zero is right.
+def getSliceParam(ds, unsigned short side, double target):
+
+    cdef long numDataPoints = len(ds)
+    
+    cdef int low = 0
+    cdef int high = ds.len()-1
+    
+    # Will hold the midpoint index
+    cdef int mid
+    
+    # Will be used later for iteration
+    cdef int i
+    
+    while low <= high:
+        
+        mid = (low + high) / 2
+        
+        if target > ds[mid][0]:
+            low = mid + 1
+        elif target < ds[mid][0]:
+            high = mid - 1
+        else:
+
+            i = mid
+
+            # For left slice param, we want leftmost equal value index
+            if side == 0:
+                while i > 0 and ds[i][0] == target:
+                    i = i - 1
+                return i + 1
+        
+            # For right slice param, we want 1 + rightmost equal value index
+            else:
+                while i < numDataPoints and ds[i][0] == target:
+                    i = i + 1
+                return i
+            
+    return low
 
 # This function calculates the number of downsample levels to build based on the
 # value of M and stepMultiplier (see the config file for details on those). It

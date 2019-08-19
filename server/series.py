@@ -45,13 +45,13 @@ class Series:
         # Holds the downsample set
         self.dss = DownsampleSet(self)
         
-    def generateThresholdAlerts(self, threshold, duration, dutycycle, maxgap):
+    def generateThresholdAlerts(self, thresholdlow, thresholdhigh, mode, duration, dutycycle, maxgap):
         
         # Pull raw data for the series into memory
         self.pullRawDataIntoMemory()
         
         # Run through the data and generate alerts
-        alerts = generateThresholdAlerts(self.rawTimeOffsets, self.rawValues, threshold, duration, dutycycle, maxgap)
+        alerts = generateThresholdAlerts(self.rawTimeOffsets, self.rawValues, thresholdlow, thresholdhigh, mode, duration, dutycycle, maxgap)
 
         # Remove raw data for the series fromm memory
         self.removeRawDataFromMemory()

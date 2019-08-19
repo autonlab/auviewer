@@ -11,6 +11,11 @@
     overflow-x: hidden;
 }
 
+#series_toggle_controls {
+    white-space: nowrap;
+    margin-bottom: 24px;
+}
+
 #graphs {
     box-sizing: border-box;
     padding-left: 220px;

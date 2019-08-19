@@ -47,14 +47,14 @@ class File:
         if self.newlyProcessData:
             self.processAndStore()
 
-    def generateAlerts(self, seriesname, threshold, duration, dutycycle, maxgap):
+    def generateAlerts(self, seriesname, thresholdlow, thresholdhigh, mode, duration, dutycycle, maxgap):
 
         # Find the series
         for s in self.numericSeries:
 
             if s.name == seriesname:
 
-                return s.generateThresholdAlerts(threshold, duration, dutycycle, maxgap).tolist()
+                return s.generateThresholdAlerts(thresholdlow, thresholdhigh, mode, duration, dutycycle, maxgap).tolist()
 
     # Returns the complete path to the original data file, including filename.
     def getFilepath(self):
