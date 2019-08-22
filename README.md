@@ -58,21 +58,21 @@ For downsampled values, *min* & *max* will be defined and *value* will be null; 
 
 If multiple series are requested, there may be a mix of series with downsampled values and series with real values. However, a given series will not have multiple types of values.
 
-### /all_data_all_series
+### /all_series_all_data
 
 #### Request
 
-http://[medview]/all_data_all_series
+http://[medview]/all_series_all_data
 
 #### Response
 
 See *Standard Data Response Format* above. All data series available for the patient for all time will be transmitted.
 
-### /data_window_all_series
+### /all_series_ranged_data
 
 #### Request
 
-http://[medview]/data_window_all_series?start=[float]&stop=[float]
+http://[medview]/all_series_ranged_data?start=[float]&stop=[float]
 
 The *start* & *stop* parameters are time offset floating-point values.
 
@@ -80,11 +80,11 @@ The *start* & *stop* parameters are time offset floating-point values.
 
 See *Standard Data Response Format* above. All data series available for the patient in the given time window will be transmitted.
 
-### /data_window_single_series
+### /single_series_ranged_data
 
 #### Request
 
-http://[medview]/data_window_single_series?series=[string]start=[float]&stop=[float]
+http://[medview]/single_series_ranged_data?series=[string]start=[float]&stop=[float]
 
 The *start* & *stop* parameters are time offset floating-point values, and the series is the URL-encoded name of the series.
 

@@ -24,20 +24,22 @@ let config = {
 	// rootWebPath: '',
 	
 	// Backend request URLs
-	allSeriesAllDataSubpath: '/all_data_all_series',
-	dataWindowAllSeriesSubpath: '/data_window_all_series',
-	dataWindowSingleSeriesSubpath: '/data_window_single_series',
+	allSeriesAllDataSubpath: '/all_series_all_data',
+	allSeriesRangedDataSubpath: '/all_series_ranged_data',
+	singleSeriesRangedDataSubpath: '/single_series_ranged_data',
 	getAlertsSubpath: '/get_alerts',
 	getFilesSubpath: '/get_files',
+	writeAnnotationSubpath: '/write_annotation',
 	
 	// Series to display by default
 	// defaultSeries: ['HR', 'RR', 'BP', 'SpO2', 'CVP', 'ArtWave'],
-	defaultSeries: ['Numeric: HR.BeatToBeat', 'Numeric: RR.RR', 'Numeric: ART.Systolic', 'Numeric: ART.Diastolic', 'Numeric: SpO₂.SpO₂', 'CVP', 'ArtWave']
+	defaultSeries: ['numerics/HR.BeatToBeat/data', 'numerics/RR.RR/data', 'numerics/ART.Systolic/data', 'numerics/ART.Diastolic/data', 'numerics/SpO₂.SpO₂/data', 'CVP/data', 'ArtWave/data']
 	
 };
 
 config.allSeriesAllDataURL = config.buildDir(config.allSeriesAllDataSubpath);
-config.dataWindowAllSeriesURL = config.buildDir(config.dataWindowAllSeriesSubpath);
-config.dataWindowSingleSeriesURL = config.buildDir(config.dataWindowSingleSeriesSubpath);
+config.allSeriesRangedDataURL = config.buildDir(config.allSeriesRangedDataSubpath);
+config.singleSeriesRangedDataURL = config.buildDir(config.singleSeriesRangedDataSubpath);
 config.getAlertsURL = config.buildDir(config.getAlertsSubpath);
 config.getFilesURL = config.buildDir(config.getFilesSubpath);
+config.writeAnnotationURL = config.buildDir(config.writeAnnotationSubpath);

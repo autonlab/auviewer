@@ -43,7 +43,7 @@ project.loadProcessedFiles()
 #     for i in range(n):
 #         file.loadProcessedFileOverrideTEMP(fn, config.processedFilesDir)
 #         start = time.time()
-#         output = file.getFullOutputAllSeries()
+#         output = file.getAllSeriesAllData()
 #         end = time.time()
 #         t = t + (end-start)
 #         # print("\t\t\t\t\t\t\t\t\t\t" + fn + ": " + str(round(end - start, 5)) + "s")
@@ -81,8 +81,8 @@ def index():
 def bokeh():
     return send_from_directory('../www', 'bokeh.html')
 
-@app.route(config.rootWebPath+'/all_data_all_series')
-def all_data_all_series():
+@app.route(config.rootWebPath+'/all_series_all_data')
+def all_series_all_data():
 
     if request.method == 'GET' and len(request.args.get('file', default='')) > 0:
 
@@ -98,7 +98,7 @@ def all_data_all_series():
 
         # Return the full (zoomed-out but downsampled if appropriate) datasets for
         # all data series.
-        output = file.getFullOutputAllSeries()
+        output = file.getAllSeriesAllData()
         json_output = json.dumps(output, ignore_nan=True)
         
         return json_output
@@ -106,8 +106,8 @@ def all_data_all_series():
     else:
         return "Invalid request."
 
-@app.route(config.rootWebPath+'/data_window_all_series', methods=['GET'])
-def data_window_all_series():
+@app.route(config.rootWebPath+'/all_series_ranged_data', methods=['GET'])
+def all_series_ranged_data():
 
     if request.method == 'GET' and len(request.args.get('file', default='')) > 0 and len(request.args.get('start', default='')) > 0 and len(request.args.get('stop', default='')) > 0:
 
@@ -123,7 +123,7 @@ def data_window_all_series():
         if not isinstance(file, File):
             return ''
 
-        output = file.getRangedOutputAllSeries(start, stop)
+        output = file.getAllSeriesRangedOutput(start, stop)
         json_output = json.dumps(output, ignore_nan=True)
         
         return json_output
@@ -131,8 +131,8 @@ def data_window_all_series():
     else:
         return "Invalid request."
 
-@app.route(config.rootWebPath+'/data_window_single_series', methods=['GET'])
-def data_window_single_series():
+@app.route(config.rootWebPath+'/single_series_ranged_data', methods=['GET'])
+def single_series_ranged_data():
 
     if request.method == 'GET' and len(request.args.get('file', default='')) > 0 and len(request.args.get('start', default='')) > 0 and len(request.args.get('start', default='')) > 0 and len(request.args.get('stop', default='')) > 0:
 
@@ -149,7 +149,7 @@ def data_window_single_series():
         if not isinstance(file, File):
             return ''
 
-        output = file.getRangedOutputSingleSeries(series, start, stop)
+        output = file.getSingleSeriesRangedOutput(series, start, stop)
         json_output = json.dumps(output, ignore_nan=True)
         
         return json_output
@@ -173,11 +173,9 @@ def get_alerts():
     if request.args.get('thresholdhigh') == '':
         mode = 0
         thresholdhigh = 0
-        print("MODE 0")
     elif request.args.get('thresholdlow') == '':
         mode = 1
         thresholdlow = 0
-        print("MODE 1")
     elif request.args.get('thresholdlow') == '' and request.args.get('thresholdhigh') == '':
         # It is invalid for no threshold to be supplied.
         # TODO(gus): Add more generalized parameter checking that covers this,
@@ -186,7 +184,6 @@ def get_alerts():
         print("INVALID MODE")
     else:
         mode = 2
-        print("MODE 2")
 
     # Get the file
     file = project.getFile(filename)
@@ -198,8 +195,46 @@ def get_alerts():
     output = file.generateAlerts(series, thresholdlow, thresholdhigh, mode, duration, dutycycle, maxgap)
     return json.dumps(output, ignore_nan=True)
 
+@app.route(config.rootWebPath+'/get_annotations', methods=['GET'])
+def get_annotations():
+    print("not operational")
+
 @app.route(config.rootWebPath+'/get_files')
 def get_files():
 
     output = project.getActiveFileListOutput()
     return json.dumps(output, ignore_nan=True)
+
+@app.route(config.rootWebPath+'/write_annotation', methods=['GET'])
+def write_annotation():
+
+    # Parse parameters
+    filename = request.args.get('file')
+    xBoundLeft = getFloatParamOrNone('xl')
+    xBoundRight = getFloatParamOrNone('xr')
+    yBoundTop = getFloatParamOrNone('yt')
+    yBoundBottom = getFloatParamOrNone('yb')
+    seriesID = request.args.get('sid')
+    label = request.args.get('label')
+    
+    # Get the file
+    file = project.getFile(filename)
+    
+    # If we did not find the file, return empty output
+    if not isinstance(file, File):
+        print("File could not be retrieved:", filename)
+        return ''
+    
+    # Write the annotation
+    file.annotationSet.writeAnnotation(xBoundLeft, xBoundRight, yBoundTop, yBoundBottom, seriesID, label)
+    
+    return ''
+
+# Returns the named request parameter as a float or None if the parameter is
+# empty or not present. The default return of None may be overridden.
+def getFloatParamOrNone(name, default=None):
+    param = request.args.get(name)
+    if param is not None and len(param) > 0:
+        return request.args.get(name, type=float)
+    else:
+        return default

@@ -4,7 +4,7 @@ let annotations = [];
 
 let maxAnnotationID = 0;
 
-function Annotation(begin, end) {
+function Annotation(begin, end, label='') {
 
 	// Default the ID to a local, incremental identifier until we have a
 	// permanent identifier from the backend.
@@ -15,6 +15,10 @@ function Annotation(begin, end) {
 
 	this.begin = begin || 0;
 	this.end = end || 0;
+
+	if (label.length > 0) {
+		this.label = label;
+	}
 
 }
 
@@ -31,6 +35,21 @@ Annotation.prototype.delete = function () {
 	globalStateManager.currentFile.triggerRedraw();
 };
 
+// Sets the label of the annotation and finalizes.
+Annotation.prototype.finalize = function (label) {
+
+	// Set the label
+	this.label = label;
+
+	// Trigger a redraw to show the annotation
+	globalStateManager.currentFile.triggerRedraw();
+
+	// TODO(gus): Handle null current file, make file determination more robust.
+	requestHandler.writeAnnotation(globalStateManager.currentFile.filename, this.begin, this.end, '' /* TODO(gus) */, this.label, function(data) {
+		vo("Annotation has been written.");
+	});
+};
+
 // Returns the index of the object in the annotations array, or -1 if not found.
 Annotation.prototype.getIndex = function () {
 	for (let i = 0; i < annotations.length; i++) {
@@ -39,16 +58,6 @@ Annotation.prototype.getIndex = function () {
 		}
 	}
 	return -1;
-};
-
-// Sets the label of the annotation
-Annotation.prototype.setLabel = function (label) {
-
-	// Set the label
-	this.label = label;
-
-	// Trigger a redraw to show the annotation
-	globalStateManager.currentFile.triggerRedraw();
 };
 
 Annotation.prototype.showDialog = function () {
@@ -83,7 +92,7 @@ Annotation.prototype.showDialog = function () {
 							css: "webix_primary",
 							click: function () {
 								console.log($$('annotationLabel'));
-								callingAnnotation.setLabel($$('annotationLabel').getValue());
+								callingAnnotation.finalize($$('annotationLabel').getValue());
 								$$('annotationPopup').hide();
 								console.log(annotations);
 							}

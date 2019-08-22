@@ -3,14 +3,14 @@
 function RequestHandler() {}
 
 RequestHandler.prototype.requestAllSeriesAllData = function(filename, callback) {
-	this.newRequest(callback, config.allSeriesAllDataURL, {
+	this._newRequest(callback, config.allSeriesAllDataURL, {
 		file: encodeURIComponent(filename)
 	});
 };
 
 RequestHandler.prototype.requestAllSeriesRangedData = function(filename, startTime, stopTime, callback) {
 
-	this.newRequest(callback, config.dataWindowAllSeriesURL, {
+	this._newRequest(callback, config.allSeriesRangedDataURL, {
 		file: encodeURIComponent(filename),
 		start: encodeURIComponent(startTime),
 		stop: encodeURIComponent(stopTime)
@@ -19,11 +19,11 @@ RequestHandler.prototype.requestAllSeriesRangedData = function(filename, startTi
 };
 
 RequestHandler.prototype.requestFileList = function(callback) {
-	this.newRequest(callback, config.getFilesURL, {});
+	this._newRequest(callback, config.getFilesURL, {});
 };
 
 RequestHandler.prototype.requestSingleSeriesRangedData = function(filename, series, startTime, stopTime, callback) {
-	this.newRequest(callback, config.dataWindowSingleSeriesURL, {
+	this._newRequest(callback, config.singleSeriesRangedDataURL, {
 		file: encodeURIComponent(filename),
 		series: encodeURIComponent(series),
 		start: encodeURIComponent(startTime),
@@ -31,8 +31,22 @@ RequestHandler.prototype.requestSingleSeriesRangedData = function(filename, seri
 	});
 };
 
+RequestHandler.prototype.writeAnnotation = function(filename, xBoundLeft, xBoundRight, seriesID, label, callback) {
+
+	this._newRequest(callback, config.writeAnnotationURL, {
+		file: encodeURIComponent(filename),
+		xl: encodeURIComponent(xBoundLeft),
+		xr: encodeURIComponent(xBoundRight),
+		/*yt: encodeURIComponent(),
+		yb: encodeURIComponent(),*/
+		sid: encodeURIComponent(seriesID),
+		label: encodeURIComponent(label),
+	});
+
+};
+
 // Executes a backend request
-RequestHandler.prototype.newRequest = function(callback, path, params) {
+RequestHandler.prototype._newRequest = function(callback, path, params) {
 
 	// Instantiate a new HTTP request object
 	let req = new XMLHttpRequest();
@@ -42,7 +56,10 @@ RequestHandler.prototype.newRequest = function(callback, path, params) {
 		if (this.readyState === 4 && this.status === 200) {
 
 			// JSON-decode the response
-			let data = JSON.parse(this.responseText);
+			let data = {}
+			if (this.responseText.length > 0) {
+				data = JSON.parse(this.responseText);
+			}
 
 			vo("Response received to " + path, data);
 

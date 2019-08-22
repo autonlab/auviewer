@@ -39,17 +39,37 @@ function File(filename) {
 		file.calculateExtremes();
 
 		// Pad data, if necessary, for each series
-		for (let s of Object.keys(file.graphData)) {
-			file.padDataIfNeeded(file.graphData[s].data);
+		for (let s of Object.keys(file.graphData.series)) {
+			file.padDataIfNeeded(file.graphData.series[s].data);
 		}
 
 		// Instantiate each graph
-		for (let s of Object.keys(file.graphData)) {
+		for (let s of Object.keys(file.graphData.series)) {
 			file.graphs[s] = new Graph(s, file);
 		}
 
 		// Synchronize the graphs
 		file.synchronizeGraphs();
+
+		// Populate the alert generation dropdown
+		let alertGenSeriesDropdown = document.getElementById('alert_gen_series_field');
+		for (let i = 0; i < alertGenSeriesDropdown.length; i++) {
+			alertGenSeriesDropdown.remove(i);
+		}
+		let opt = document.createElement('option');
+		alertGenSeriesDropdown.add(opt);
+		for (let s of Object.keys(file.graphData.series)) {
+			let opt = document.createElement('option');
+			opt.text = s;
+			opt.value = s;
+			alertGenSeriesDropdown.add(opt);
+		}
+
+		// Populate the annotations
+		for (let ann of file.graphData.annotations) {
+			annotations.push(new Annotation(ann[0], ann[1], ann[5]));
+		}
+		globalStateManager.currentFile.triggerRedraw();
 
 	});
 
@@ -59,7 +79,7 @@ function File(filename) {
 File.prototype.calculateExtremes = function() {
 
 	// Get array of series
-	let series = Object.keys(this.graphData);
+	let series = Object.keys(this.graphData.series);
 
 	// If there are no series, return
 	if (series.length < 1) {
@@ -67,26 +87,26 @@ File.prototype.calculateExtremes = function() {
 	}
 
 	// Prime the graph extremes with the first series, first point
-	this.globalXExtremes[0] = this.graphData[series[0]].data[0][0];
-	this.globalXExtremes[1] = this.graphData[series[0]].data[0][0];
+	this.globalXExtremes[0] = this.graphData.series[series[0]].data[0][0];
+	this.globalXExtremes[1] = this.graphData.series[series[0]].data[0][0];
 
 	for (let s of series) {
 
 		// If this series has no data, continue
-		if (this.graphData[s].data.length < 1) {
+		if (this.graphData.series[s].data.length < 1) {
 			continue;
 		}
 
-		for (let i in this.graphData[s].data) {
+		for (let i in this.graphData.series[s].data) {
 
 			// Update global x-minimum if warranted
-			if (this.graphData[s].data[i][0] < this.globalXExtremes[0]) {
-				this.globalXExtremes[0] = this.graphData[s].data[i][0];
+			if (this.graphData.series[s].data[i][0] < this.globalXExtremes[0]) {
+				this.globalXExtremes[0] = this.graphData.series[s].data[i][0];
 			}
 
 			// Update global x-maximumm if warranted
-			if (this.graphData[s].data[i][0] > this.globalXExtremes[1]) {
-				this.globalXExtremes[1] = this.graphData[s].data[i][0];
+			if (this.graphData.series[s].data[i][0] > this.globalXExtremes[1]) {
+				this.globalXExtremes[1] = this.graphData.series[s].data[i][0];
 			}
 
 		}
@@ -222,17 +242,17 @@ File.prototype.updateCurrentViewData = function() {
 
 		// For each data series, pad the returned data if necessary and then
 		// mesh the data into the existing graph.
-		for (let s of Object.keys(data)) {
+		for (let s of Object.keys(data.series)) {
 
 			// Pad the data if necessary
-			file.padDataIfNeeded(data[s].data);
+			file.padDataIfNeeded(data.series[s].data);
 
 			// We do this in a try block because it's theoretically possible
 			// that the backend returns a data series we don't have a graph
 			// object for (in other words, a data series it didn't return in
 			// the original on-load request for all data series.
 			try {
-				file.graphs[s].meshData(data[s].data);
+				file.graphs[s].meshData(data.series[s].data);
 			}
 			catch (error) {
 				console.log("Could not find an existing graph object for a data series returned by the backend for all series ranged data.", error);

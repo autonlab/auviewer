@@ -18,16 +18,16 @@ class Series:
     # Reads a series into memory and builds the downsampling. Type is either
     # 'numeric' or 'waveform'. Fileparent is a reference to the File class
     # instance which contains the Series.
-    def __init__(self, name, h5path, fileparent):
+    def __init__(self, h5path, fileparent):
+        
+        # The series ID is the dataset path in the HDF5 file
+        self.id = '/'.join(h5path)
 
         # Holds the ordered (hierarchical) list of groups and, ultimately,
         # dataset to which the series belongs. So, this is like a folder path,
         # where the first element is the outermost group name and the last
         # element is the dataset name of the series.
         self.h5path = h5path
-
-        # Holds the series name
-        self.name = name
 
         # Holds a reference to the file parent which contains the series
         self.fileparent = fileparent
@@ -61,7 +61,7 @@ class Series:
     # Produces JSON output for the series at the maximum time range.
     def getFullOutput(self):
     
-        print("Assembling full output for " + self.name + ".")
+        print("Assembling full output for " + self.id + ".")
     
         # Attempt to retrieve the full downsample output
         downsampleFullOutput = self.dss.getFullOutput()
@@ -79,11 +79,12 @@ class Series:
             nones = [None] * self.rd.len
             data = [list(i) for i in zip(dataset['time'], nones, nones, dataset['value'].astype(np.float64))]
 
-        print("Completed assembly of full output for " + self.name + ".")
+        print("Completed assembly of full output for " + self.id + ".")
 
         # Return the JSON-ready output object
         return {
-            "labels": ['Date/Offset', 'Min', 'Max', self.name],
+            "id": self.id,
+            "labels": ['Date/Offset', 'Min', 'Max', self.id],
             "data": data
         }
 
@@ -91,7 +92,7 @@ class Series:
     # starttime and stoptime being time offset floats in seconds.
     def getRangedOutput(self, starttime, stoptime):
 
-        print("Assembling ranged output for " + self.name + ".")
+        print("Assembling ranged output for " + self.id + ".")
 
         # Get the appropriate downsample for this time range
         ds = self.dss.getRangedOutput(starttime, stoptime)
@@ -104,11 +105,12 @@ class Series:
             print("(raw data output)")
             data = self.rd.getRangedOutput(starttime, stoptime)
 
-        print("Completed assembly of ranged output for " + self.name + ".")
+        print("Completed assembly of ranged output for " + self.id + ".")
 
         # Return the JSON-ready output object
         return {
-            "labels": ['Date/Offset', 'Min', 'Max', self.name],
+            "id": self.id,
+            "labels": ['Date/Offset', 'Min', 'Max', self.id],
             "data": data
         }
 
@@ -117,7 +119,7 @@ class Series:
     
         p = psutil.Process()
         
-        print("Processing & storing all downsamples for the series " + self.name)
+        print("Processing & storing all downsamples for the series " + self.id)
         start = time.time()
 
         print("MEM PRE-PULLD: " + str(p.memory_full_info().uss / 1024 / 1024) + " MB")
@@ -138,13 +140,13 @@ class Series:
         print("MEM AFT-REMVD: " + str(p.memory_full_info().uss / 1024 / 1024) + " MB")
 
         end = time.time()
-        print("Completed processing & storing all downsamples for the series " + self.name + ". Took " + str(round((end - start) / 60, 3)) + " minutes.")
+        print("Completed processing & storing all downsamples for the series " + self.id + ". Took " + str(round((end - start) / 60, 3)) + " minutes.")
 
     # Pulls the raw data for the series from the file into memory (self.rawTimeOffsets
     # and self.rawValues).
     def pullRawDataIntoMemory(self):
 
-        print("Reading raw series data into memory for " + self.name + ".")
+        print("Reading raw series data into memory for " + self.id + ".")
         start = time.time()
 
         # Get reference to the series datastream from the HDF5 file
@@ -154,7 +156,7 @@ class Series:
         self.rawValues = dataset['value'].astype(np.float64)
 
         end = time.time()
-        print("Finished reading raw series data into memory for " + self.name + " (" + str(self.rawTimeOffsets.shape[0]) + " points). Took " + str(round(end - start, 5)) + "s.")
+        print("Finished reading raw series data into memory for " + self.id + " (" + str(self.rawTimeOffsets.shape[0]) + " points). Took " + str(round(end - start, 5)) + "s.")
         
     def removeRawDataFromMemory(self):
     

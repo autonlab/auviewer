@@ -38,7 +38,7 @@ class Project:
         if len(r) > 0:
             return r[0]
         else:
-            return [];
+            return []
 
     def getUnprocessedFileList(self):
 

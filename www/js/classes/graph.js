@@ -182,7 +182,7 @@ Graph.prototype.instantiateDygraph = function() {
 	}
 
 	// Create the dygraph
-	this.dygraphInstance = new Dygraph(this.graphDomElement, this.file.graphData[this.series].data, {
+	this.dygraphInstance = new Dygraph(this.graphDomElement, this.file.graphData.series[this.series].data, {
 		axes: {
 			x: {
 				pixelsPerLabel: 70,
@@ -204,7 +204,7 @@ Graph.prototype.instantiateDygraph = function() {
 			'dblclick': this.handleDoubleClick.bind(this),
 			'mousewheel': this.handleMouseWheel.bind(this)
 		},
-		labels: this.file.graphData[this.series].labels,
+		labels: this.file.graphData.series[this.series].labels,
 		labelsDiv: this.legendDomElement,
 		plotter: downsamplePlotter,
 		/*series: {
@@ -227,7 +227,7 @@ Graph.prototype.meshData = function(data) {
 	}
 
 	// We expect non-empty arrays
-	if (this.file.graphData[this.series].data.length < 1 || typeof data === 'undefined' || data.length < 1) {
+	if (this.file.graphData.series[this.series].data.length < 1 || typeof data === 'undefined' || data.length < 1) {
 		return;
 	}
 
@@ -241,19 +241,19 @@ Graph.prototype.meshData = function(data) {
 	// will be the second parameter in a slice call, which indicates an element
 	// that will not be included in the resulting array.
 	// TODO(gus): Convert this to binary search.
-	while (sliceIndexFirstSegment < this.file.graphData[this.series].data.length && this.file.graphData[this.series].data[sliceIndexFirstSegment][0] < data[0][0]) {
+	while (sliceIndexFirstSegment < this.file.graphData.series[this.series].data.length && this.file.graphData.series[this.series].data[sliceIndexFirstSegment][0] < data[0][0]) {
 		sliceIndexFirstSegment++;
 	}
 
 	// Determine outerDataset index of the data point just after innerDataset ends.
 	sliceIndexSecondSegment = sliceIndexFirstSegment;
-	while (sliceIndexSecondSegment < this.file.graphData[this.series].data.length && this.file.graphData[this.series].data[sliceIndexSecondSegment][0] <= data[data.length-1][0]) {
+	while (sliceIndexSecondSegment < this.file.graphData.series[this.series].data.length && this.file.graphData.series[this.series].data[sliceIndexSecondSegment][0] <= data[data.length-1][0]) {
 		sliceIndexSecondSegment++;
 	}
 
 	// Return the joined dataset with the innerDataset replacing the relevant
 	// section of outerDataset.
-	let meshedData = this.file.graphData[this.series].data.slice(0, sliceIndexFirstSegment).concat(data, this.file.graphData[this.series].data.slice(sliceIndexSecondSegment));
+	let meshedData = this.file.graphData.series[this.series].data.slice(0, sliceIndexFirstSegment).concat(data, this.file.graphData.series[this.series].data.slice(sliceIndexSecondSegment));
 
 	// Update the graph data, and redraw
 	this.dygraphInstance.updateOptions({
