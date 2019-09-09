@@ -27,9 +27,6 @@ class Project:
         for filename in os.listdir(config.originalFilesDir):
             if filename.endswith(".h5") and os.path.isfile(os.path.join(config.processedFilesDir, os.path.splitext(filename)[0] + '_processed.h5')):
                 response.append([filename, config.originalFilesDir])
-                
-                ### TODO(gus): TEMP - REMOVE
-                break
 
         # Sort the list alphabetically
         response.sort()
