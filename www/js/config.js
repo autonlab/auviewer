@@ -16,12 +16,12 @@ let config = {
 
 	// A root directory structure from which the backend application is served.
 	// Should have a leading but not a trailing slash. If no root directory,
-	// should be empty string. Examples:
+	// should be empty string. You must also change the corresponding setting
+	// in config.py. Examples:
 	//   '/approot'
-	//   '/app/rooot'
+	//   '/app/root'
 	//   ''
-	rootWebPath: '/auv',
-	// rootWebPath: '',
+	rootWebPath: '',
 	
 	// Backend request URLs
 	allSeriesAllDataSubpath: '/all_series_all_data',

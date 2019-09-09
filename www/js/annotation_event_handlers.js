@@ -112,6 +112,9 @@ function underlayCallbackHandler(canvas, area, g) {
 		//canvas.fillStyle = "#768FA6";
 		canvas.fillStyle = "rgba(0,72,182,0.73)";
 		canvas.fillRect(x, y, width, height);
+		annotations[i].offsetXLeft = x;
+		annotations[i].offsetXRight = x+width;
+		console.log(annotations[i].offsetXLeft, annotations[i].offsetXRight);
 
 		// Draw annotation label text
 		if (annotations[i].label) {

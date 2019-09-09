@@ -33,13 +33,17 @@ Annotation.prototype.delete = function () {
 
 	// Trigger a redraw to remove the annotation
 	globalStateManager.currentFile.triggerRedraw();
+
+	$('#annotationModal').modal('hide');
+
 };
 
 // Sets the label of the annotation and finalizes.
-Annotation.prototype.finalize = function (label) {
+Annotation.prototype.finalize = function () {
 
-	// Set the label
-	this.label = label;
+	// Retrieve and setthe selected label
+	let annotationSelect = document.getElementById('annotationLabel');
+	this.label = annotationSelect.options[annotationSelect.selectedIndex].value;
 
 	// Trigger a redraw to show the annotation
 	globalStateManager.currentFile.triggerRedraw();
@@ -48,6 +52,9 @@ Annotation.prototype.finalize = function (label) {
 	requestHandler.writeAnnotation(globalStateManager.currentFile.filename, this.begin, this.end, '' /* TODO(gus) */, this.label, function(data) {
 		vo("Annotation has been written.");
 	});
+
+	$('#annotationModal').modal('hide');
+
 };
 
 // Returns the index of the object in the annotations array, or -1 if not found.
@@ -62,53 +69,9 @@ Annotation.prototype.getIndex = function () {
 
 Annotation.prototype.showDialog = function () {
 
-	let callingAnnotation = this;
-
-	webix.ui({
-		view: "window",
-		id: "annotationPopup",
-		height: 250,
-		width: 300,
-		position: "center",
-		head: "Annotation",
-		move: true,
-		body: {
-			view: "form",
-			scroll: false,
-			width: 300,
-			elements: [
-				{
-					view: "select",
-					label: "Label",
-					id: "annotationLabel",
-					options: ["ConditionC", "Artifact"]
-				},
-				{
-					cols: [
-						{
-							view: "button",
-							value: "Confirm",
-							align: "center",
-							css: "webix_primary",
-							click: function () {
-								console.log($$('annotationLabel'));
-								callingAnnotation.finalize($$('annotationLabel').getValue());
-								$$('annotationPopup').hide();
-								console.log(annotations);
-							}
-						},
-						{
-							view: "button",
-							value: "Cancel",
-							click: function () {
-								callingAnnotation.delete();
-								$$('annotationPopup').hide();
-							}
-						}
-					]
-				}
-			]
-		}
-	}).show();
+	$('#annotationStart').val(this.begin);
+	$('#annotationEnd').val(this.end);
+	$('#annotationModal').data('callingAnnotation', this);
+	$('#annotationModal').modal('show');
 
 };

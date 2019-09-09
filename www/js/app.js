@@ -1,18 +1,6 @@
 'use strict';
 
-let requestHandler = new RequestHandler();
-let globalStateManager = new GlobalStateManager();
-
-
-
-
-
-
-
-
-
-
-
+// TODO(gus): This needs to be moved somewhere.
 // This function is a plotter that plugs into dygraphs in order to plot a down-
 // sampled data series. Plotting is not documented, so the best reference for
 // plotting with dygraphs is to review http://dygraphs.com/tests/plotters.html
@@ -85,3 +73,30 @@ function downsamplePlotter(e) {
 	}
 
 }
+
+let requestHandler = new RequestHandler();
+let globalStateManager = new GlobalStateManager();
+
+// Attach event handlers to the annotation modal
+$('#annotationModal button.btn-primary').click(function() {
+	$('#annotationModal').data('callingAnnotation').finalize();
+});
+$('#annotationModal button.btn-secondary').click(function() {
+	$('#annotationModal').data('callingAnnotation').delete();
+});
+
+// Request the list of files for the project
+requestHandler.requestFileList(function(data) {
+
+    	let fileSelect = document.getElementById('file_selection');
+
+		for (let i in data) {
+
+			let opt = document.createElement('OPTION');
+			opt.setAttribute('value', data[i]);
+			opt.innerText = data[i];
+			fileSelect.appendChild(opt);
+
+		}
+
+	});

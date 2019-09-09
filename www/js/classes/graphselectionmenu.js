@@ -13,10 +13,19 @@ function GraphSelectionMenu(file) {
 // Adds a checkbox control to toggle display of the data series.
 GraphSelectionMenu.prototype.add = function(series, checked) {
 
+	// Create an outer div
+	let div = document.createElement('DIV');
+	div.className = 'form-check';
+
+	// Attach the div to the control panel
+	this.controlsDomElement.appendChild(div);
+
 	// Create the checkbox DOM element
 	let checkbox = document.createElement('INPUT');
 	checkbox.setAttribute('type', 'checkbox');
 	checkbox.setAttribute('value', series);
+	checkbox.className = 'form-check-input';
+	checkbox.id = series;
 
 	// Check the box if the series is showing
 	checkbox.checked = (checked !== false);
@@ -24,17 +33,17 @@ GraphSelectionMenu.prototype.add = function(series, checked) {
 	// Attach the event handler that will add & remove the graph
 	checkbox.onclick = this.checkboxClickHandler.bind(this);
 
-	// Attach the checkbox to the controls panel
-	this.controlsDomElement.appendChild(checkbox);
+	// Attach the checkbox to the div
+	div.appendChild(checkbox);
 
 	// Create & attach the span element
-	let span = document.createElement('SPAN');
-	span.innerText = ' '+series;
-	this.controlsDomElement.appendChild(span);
+	let label = document.createElement('LABEL');
+	label.setAttribute('for', series);
+	label.className = 'form-check-label';
+	label.innerText = ' '+series;
 
-	// Create & attach a br element
-	let br = document.createElement('BR');
-	this.controlsDomElement.appendChild(br);
+	// Attach the label to the div
+	div.appendChild(label);
 
 };
 

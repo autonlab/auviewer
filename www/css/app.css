@@ -1,12 +1,12 @@
 #controls {
     position: fixed;
-    top: 0;
+    top: 64px;
     left: 0;
     box-sizing: border-box;
-    width: 220px;
-    height: 100%;
+    width: 260px;
+    height: calc(100% - 64px);
     padding-left: 8px;
-    padding-top: 8px;
+    /*padding-top: 8px;*/
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -18,7 +18,7 @@
 
 #graphs {
     box-sizing: border-box;
-    padding-left: 220px;
+    padding-left: 260px;
     width: 99%;
     height: 100%;
 }
