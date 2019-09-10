@@ -57,19 +57,20 @@ def create_app():
         __tablename__ = 'users'
         
         id = db.Column(db.Integer, primary_key=True)
-        active = db.Column('is_active', db.Boolean(), nullable=False, server_default='1')
     
         # User authentication information. The collation='NOCASE' is required
         # to search case insensitively when USER_IFIND_MODE is 'nocase_collation'.
         email = db.Column(db.String(255, collation='NOCASE'), nullable=False, unique=True)
         confirmed_at = db.Column(db.DateTime(), nullable=True)
         password = db.Column(db.String(255), nullable=False, server_default='')
-    
-        # User information
-        is_enabled = db.Column(db.Boolean(), nullable=False, server_default='0')
 
-        # Define the relationship to Role via UserRoles
-        roles = db.relationship('Role', secondary='user_roles')
+        # User information
+        active = db.Column('is_active', db.Boolean(), nullable=False, server_default='0')
+        first_name = db.Column(db.Unicode(50), nullable=False, server_default=u'')
+        last_name = db.Column(db.Unicode(50), nullable=False, server_default=u'')
+
+        # Relationships
+        roles = db.relationship('Role', secondary='users_roles', backref=db.backref('users', lazy='dynamic'))
 
     class UserInvitation(db.Model):
         __tablename__ = 'user_invite'
@@ -80,15 +81,15 @@ def create_app():
         # token used for registration page to identify user registering
         token = db.Column(db.String(100), nullable=False, server_default='')
 
-    # Define the Role data-model
+    # Define the Role data model
     class Role(db.Model):
         __tablename__ = 'roles'
         id = db.Column(db.Integer(), primary_key=True)
-        name = db.Column(db.String(50), unique=True)
+        name = db.Column(db.String(50), nullable=False, server_default=u'', unique=True)  # for @roles_accepted()
 
-    # Define the UserRoles association table
-    class UserRoles(db.Model):
-        __tablename__ = 'user_roles'
+    # Define the UserRoles association model
+    class UsersRoles(db.Model):
+        __tablename__ = 'users_roles'
         id = db.Column(db.Integer(), primary_key=True)
         user_id = db.Column(db.Integer(), db.ForeignKey('users.id', ondelete='CASCADE'))
         role_id = db.Column(db.Integer(), db.ForeignKey('roles.id', ondelete='CASCADE'))

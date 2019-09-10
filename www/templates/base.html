@@ -36,7 +36,9 @@
 					<a class="dropdown-header">{{ call_or_get(current_user.email) }}</a>
 					<div class="dropdown-divider"></div>
 					<a class="dropdown-item" href="{{ url_for('user.change_password') }}">Change Password</a>
+					{% if current_user.has_roles('admin') %}
 					<a class="dropdown-item" href="{{ url_for('user.invite') }}">Invite User</a>
+					{% endif %}
 					<a class="dropdown-item" href="{{ url_for('user.logout') }}">Sign Out</a>
 				</div>
 			</li>

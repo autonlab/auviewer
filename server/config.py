@@ -26,7 +26,7 @@ originalFilesDir = '/zfsauton/data/public/awertz/mladi/conditionc/h5/'
 # Processed (i.e. downsampled) patient data files go here.
 # processedFilesDir = '../data/processed/'
 # processedFilesDir = '/home/scratch/gwelter/meddata/processed/'
-processedFilesDir = '/zfsauton/data/public/gwelter/processed/'
+processedFilesDir = '/zfsauton/data/public/gwelter/processed_lupe/'
 
 # Flask application configuration
 class FlaskConfigClass(object):
@@ -43,9 +43,9 @@ class FlaskConfigClass(object):
 
     # Flask-Mail SMTP server settings
     MAIL_SERVER = 'smtp.gmail.com'
-    MAIL_PORT = 465
-    MAIL_USE_SSL = True
-    MAIL_USE_TLS = False
+    MAIL_PORT = 587
+    MAIL_USE_SSL = False
+    MAIL_USE_TLS = True
     MAIL_USERNAME = 'fbuqfou29f82012ndnba@gmail.com'
     MAIL_PASSWORD = '[+A1G:%6yQ7g'
     MAIL_DEFAULT_SENDER = '"AUV Medical (noreply)" <fbuqfou29f82012ndnba@gmail.com>'
