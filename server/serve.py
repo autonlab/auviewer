@@ -101,6 +101,18 @@ def create_app():
     db_adapter = SQLAlchemyAdapter(db, User, UserInvitationClass=UserInvitation)  # Select database adapter
     user_manager = UserManager(db_adapter, app)  # Init Flask-User and bind to app
 
+    # You may use the code snippet to create initial/new admin users (since it
+    # is not possible through the interface). Alternatively, you could modify
+    # the database.
+    #
+    # new_admin_email = 'gwelter@andrew.cmu.edu'
+    # new_admin_pass = 'akeminute'
+    # if not User.query.filter(User.email == new_admin_email).first():
+    #     u = User(email=new_admin_email, active=True, password=user_manager.hash_password(new_admin_pass))
+    #     u.roles.append(Role(name='admin'))
+    #     db.session.add(u)
+    #     db.session.commit()
+
     @user_registered.connect_via(app)
     def after_registered_hook(sender, user, user_invite):
         sender.logger.info("USER REGISTERED")

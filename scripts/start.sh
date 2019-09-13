@@ -4,4 +4,4 @@
 rm -rf "$MEDVIEW_BASE_DIR/server/cylib.c" "$MEDVIEW_BASE_DIR/server/cylib.cpython"*
 python "$MEDVIEW_BASE_DIR/server/setup.py" build_ext --build-lib "$MEDVIEW_BASE_DIR/server/"
 rm -rf build
-python ../server/serve.py
+python "$MEDVIEW_BASE_DIR/server/serve.py"

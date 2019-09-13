@@ -31,6 +31,12 @@ processedFilesDir = '/zfsauton/data/public/gwelter/processed_lupe/'
 # Flask application configuration
 class FlaskConfigClass(object):
     """ Flask application config """
+
+    # In production, this is needed to build the URL that will be used in
+    # Flask-User emails. However, it will also make it so that Flask only serves
+    # requests from this hostname. See:
+    # https://code.luasoftware.com/tutorials/flask/things-you-should-know-about-flask-server-name/
+    #SERVER_NAME = '127.0.0.1'
     
     # Flask settings
     SECRET_KEY = '4SV~Pr5?c~i_I*~G&ycn}\`nb>Ni9wbXcd6`827fh(*#2ddwaoi\983'
@@ -48,7 +54,7 @@ class FlaskConfigClass(object):
     MAIL_USE_TLS = True
     MAIL_USERNAME = 'fbuqfou29f82012ndnba@gmail.com'
     MAIL_PASSWORD = '[+A1G:%6yQ7g'
-    MAIL_DEFAULT_SENDER = '"AUV Medical (noreply)" <fbuqfou29f82012ndnba@gmail.com>'
+    MAIL_DEFAULT_SENDER = '"AUView Medical (noreply)" <fbuqfou29f82012ndnba@gmail.com>'
     
     # Flask-User settings
     USER_APP_NAME = "Auton Universal Viewer - Medical"  # Shown in and email templates and page footers
