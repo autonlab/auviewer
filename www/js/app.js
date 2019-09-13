@@ -82,7 +82,13 @@ $('#annotationModal button.btn-primary').click(function() {
 	$('#annotationModal').data('callingAnnotation').finalize();
 });
 $('#annotationModal button.btn-secondary').click(function() {
-	$('#annotationModal').data('callingAnnotation').delete();
+	if ($('#annotationModal').data('state') == 'create') {
+		$('#annotationModal').data('callingAnnotation').cancel();
+	} else if($('#annotationModal').data('state') == 'edit') {
+		// TODO(gus): Implement deletion
+		// $('#annotationModal').data('callingAnnotation').delete();
+		$('#annotationModal').data('callingAnnotation').hideDialog();
+	}
 });
 
 // Request the list of files for the project

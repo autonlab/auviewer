@@ -22,8 +22,9 @@ function Annotation(begin, end, label='') {
 
 }
 
-// Deletes the annotation from the global annotations array.
-Annotation.prototype.delete = function () {
+// Cancel creation of a new annotation. This function removes the annotation
+// from the global annotations array.
+Annotation.prototype.cancel = function () {
 
 	// Get this annotation's index in the global array
 	let i = this.getIndex();
@@ -53,7 +54,8 @@ Annotation.prototype.finalize = function () {
 		vo("Annotation has been written.");
 	});
 
-	$('#annotationModal').modal('hide');
+	// Hide the dialog
+	this.hideDialog();
 
 };
 
@@ -67,11 +69,37 @@ Annotation.prototype.getIndex = function () {
 	return -1;
 };
 
-Annotation.prototype.showDialog = function () {
+// Hide the new/edit annotation dialog.
+Annotation.prototype.hideDialog = function () {
+	$('#annotationModal').removeData('callingAnnotation');
+	$('#annotationModal').removeData('state');
+	$('#annotationModal').modal('hide');
+};
 
+// Show the new/edit annotation dialog. State may be 'create' or 'edit'.
+Annotation.prototype.showDialog = function (state) {
+
+	// For any state, set the begin & end values
 	$('#annotationStart').val(this.begin);
 	$('#annotationEnd').val(this.end);
+
+	// Attach the calling annotation and the state to the dialog
 	$('#annotationModal').data('callingAnnotation', this);
+	$('#annotationModal').data('state', state);
+
+	// If we're editing, take certain further actions
+	if (state === 'edit') {
+
+		// Set the label
+		$('#annotationLabel').val(this.label);
+
+		// For now, disable all form fields
+		$('#annotationLabel').prop('disabled', true);
+		$('#annotationStart').prop('disabled', true);
+		$('#annotationEnd').prop('disabled', true);
+	}
+
+	// Show the dialog to the user
 	$('#annotationModal').modal('show');
 
 };

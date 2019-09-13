@@ -11,7 +11,7 @@ function endAnnotationHighlight (event, g, context) {
     annotations.push(annotation);
 
 	// Show the annotation dialog
-    annotation.showDialog();
+    annotation.showDialog('create');
 
 	// Clear the grey rectangle that was drawn for the user interaction of spanning the annotation section.
 	g.clearZoomRect_();
@@ -114,7 +114,6 @@ function underlayCallbackHandler(canvas, area, g) {
 		canvas.fillRect(x, y, width, height);
 		annotations[i].offsetXLeft = x;
 		annotations[i].offsetXRight = x+width;
-		console.log(annotations[i].offsetXLeft, annotations[i].offsetXRight);
 
 		// Draw annotation label text
 		if (annotations[i].label) {

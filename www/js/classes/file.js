@@ -67,7 +67,7 @@ function File(filename) {
 
 		// Populate the annotations
 		for (let ann of file.graphData.annotations) {
-			annotations.push(new Annotation(ann[0], ann[1], ann[5]));
+			annotations.push(new Annotation(ann[0], ann[1], ann[6]));
 		}
 		globalStateManager.currentFile.triggerRedraw();
 

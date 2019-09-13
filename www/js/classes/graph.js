@@ -194,12 +194,9 @@ Graph.prototype.instantiateDygraph = function() {
 			}
 		},
 		clickCallback: function(e, x) {
-			console.log('hi', e);
-			console.log(x);
 			for (let i = 0; i < annotations.length; i++) {
-				console.log(x, annotations[i].begin, annotations[i].end);
 				if (e.offsetX >= annotations[i].offsetXLeft && e.offsetX <= annotations[i].offsetXRight) {
-					annotations[i].showDialog();
+					annotations[i].showDialog('edit');
 					break;
 				}
 			}
