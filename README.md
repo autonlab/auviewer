@@ -2,29 +2,58 @@
 
 ## Development
 
-### Compiling Cython
+Most common setup and service management processes have been scripted in the _scripts_ directory.
 
-The Cython files may be compiled by running the following while in the server directory:
+### Initial Setup
+
+Run the _setup.sh_ script to setup a new environment. The script assumes that Conda is installed and available with the ```conda``` command. The script will create a new Conda environment called "medview" and install application dependencies in the environment.
+
+```bash
+. setup.sh
+```
+
+### Configuration
+
+Appplication config variables are located in three places:
+* _scripts/config.sh_
+* _server/config.py_
+* _www/js/config.js_
+
+See these files and their comments for the possible configurations. These are the parameters that will typically need to be changed for a new environment:
+* ```MEDVIEW_BASE_DIR``` in _scripts/config.sh_
+* ```originalFilesDir``` & ```processedFilesDir``` in _server/config.py_
+* Mail-server related parameters in _server/config.py_
+
+### Running the Server
+
+To run the server, first run _activate.sh_ to activate the environment and set environment variables. Then run _start.sh_ to compile the Cython code and start the server.
+
+```bash
+. activate.sh
+. start.sh
+```
+
+### Doing Things Manually
+
+For the most part, look at the scripts to see how you would do things manually. However, here are a couple of hints.
+
+#### Compiling Cython
+
+The Cython files may be compiled by running the following while in the _server_ directory:
 
 ```bash
 python setup.py build_ext --inplace
 ```
 
-### Running Flask 
+#### Running the Server Manually 
 
-The following environment variables should be set:
+The server may be started manually by running the following while in the _server_ directory and after having activated the Conda environment:
 
 ```bash
-export FLASK_APP=serve.py
-export FLASK_ENV=development
+python serve.py
 ```
 
-The Flask development web server may be started with the following command from the server directory:
-```bash
-flask run --port=8001
-```
-
-The ```--no-reload``` argument may be added to disable auto-reload upon code change.
+Doing this step manually has the advantage of being able to skip the Cython compiling, which only needs to be done if the Cython code (_.pyx_ files) have changed. However, the Cython compiling is quite fast so it's often most convenient to use the scripts.
 
 ## API Methods
 

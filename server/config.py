@@ -36,10 +36,10 @@ class FlaskConfigClass(object):
     # Flask-User emails. However, it will also make it so that Flask only serves
     # requests from this hostname. See:
     # https://code.luasoftware.com/tutorials/flask/things-you-should-know-about-flask-server-name/
-    #SERVER_NAME = '127.0.0.1'
+    # SERVER_NAME = '127.0.0.1'
     
-    # Flask settings
-    SECRET_KEY = '4SV~Pr5?c~i_I*~G&ycn}\`nb>Ni9wbXcd6`827fh(*#2ddwaoi\983'
+    # Secret key used for password hashing
+    SECRET_KEY = 'THISISADEVELOPMENTSECRETKEY!CHANGEMETONEWRANDOMSTRINGFORPRODUCTION!'
     
     # Flask-SQLAlchemy settings
     SQLALCHEMY_DATABASE_URI = 'sqlite:///userdb.sqlite'  # File-based SQL database
