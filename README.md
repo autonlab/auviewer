@@ -1,6 +1,17 @@
 # Medview Patient Data Viewer/Annotator
 
-## Development
+## Table of Contents
+
+1. [System Requirements](#system-requirements)
+2. [Development](#development)
+3. [API Methods](#api-methods)
+4. [File Standard](#file-standard)
+
+## <a name="system-requirements"></a>System Requirements
+
+* There is enough system memory to hold approximately twice the size of the largest data series which the system will handle, with margin leftover for normal application overhead.
+
+## <a name="development"></a>Development
 
 Most common setup and service management processes have been scripted in the _scripts_ directory.
 
@@ -55,7 +66,7 @@ python serve.py
 
 Doing this step manually has the advantage of being able to skip the Cython compiling, which only needs to be done if the Cython code (_.pyx_ files) have changed. However, the Cython compiling is quite fast so it's often most convenient to use the scripts.
 
-## API Methods
+## <a name="api-methods"></a>API Methods
 
 ### Overview
 
@@ -121,6 +132,33 @@ The *start* & *stop* parameters are time offset floating-point values, and the s
 
 See *Standard Data Response Format* above. The requested data series in the given time window will be transmitted.
 
-## Assumptions (TO BE FINALIZED)
+## <a name="file-standard"></a>File Schema
 
-* There is enough system memory to hold one entire series and one downsample level in memory with margin leftover for normal application overhead.
+The following is the file schema for version ```0.1```.
+
+Need a version attribute in the file to recognize compatibility & when file upgrade needed.
+
+AUView uses the HDF5 file format. AUView and HDF5 each has its own vocabulary, so let us first introduce this vocabulary.
+
+HDF5 is built around groups, datasets, and attributes. In a nutshell, datasets hold tabular data, and they may be stored in an arbitrary hierarchy of grouping structures (like folders on a file system). Both groups and datasets may have attributes. In this sense, HDF is characterized as a "self-describing" data format.
+
+AUView is built around projects, files, and data series. A project holds files, and a file holds data series.
+
+Here is how the two vocabularies connect. An AUView project holds a collection of any number of HDF5 files. The system will index all datasets in a file agnostically of the grouping structure, other than the fact that the ID of the data series held by each dataset becomes the collation of group names and dataset name joined by forward slashes (e.g. File->Group1->Group2->DatasetX has ID "Group1/Group2/DatasetX").
+
+AUView will extract the following from HDF5 files:
+* System-related metadata (e.g. version)
+* Metadata about the file
+* Data series (time series or event data)
+
+Finally, here is the file spec:
+* The root group should have the following attributes:
+  * ```version```: specifies the file schema version
+  * Any other metadata about the file (to be displayed on the viewer)
+* The grouping structure is arbitrary to the system.
+* Each dataset should have the following attributes:
+  * ```name```: name of the series
+  * ```type=[timeseries|events]```: specifies the type of data
+  * ```Ftype_<col>=[time|string|numeric]```: specifies each column's data type
+    * Each column should have one such attribute on the dataset.
+    * There must only be one ```time``` column type per dataset. 

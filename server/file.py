@@ -58,6 +58,7 @@ class File:
     
         # Create the file which will be used to store processed data
         try:
+            print("Creating processed file.")
             self.pf = h5py.File(self.getProcessedFilepath(), "w")
         except:
             print("There was an exception while h5py was creating the processed file. Raising ProcessedFileExists exception.")

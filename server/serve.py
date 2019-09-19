@@ -22,7 +22,7 @@ import simplejson as json
 def create_app():
     
     project = Project()
-    # project.processFiles()
+    project.processFiles()
     project.loadProcessedFiles()
 
     # Instantiate the Flask web application class
