@@ -7,6 +7,7 @@ function GlobalStateManager() {
 
 }
 
+// Switches to a newly selected file in the main viewer.
 GlobalStateManager.prototype.newMainFile = function() {
 
 	if (this.currentFile !== null) {

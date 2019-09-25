@@ -21,7 +21,8 @@ stepMultiplier = 2
 # originalFilesDir = '../data/originals/'
 # originalFilesDir = '/zfsauton/data/public/vleonard/'
 # originalFilesDir = '/home/scratch/gwelter/meddata/originals/'
-originalFilesDir = '/zfsauton/data/public/awertz/mladi/conditionc/h5/'
+# originalFilesDir = '/zfsauton/data/public/awertz/mladi/conditionc/h5/'
+originalFilesDir = '/zfsauton/data/public/gwelter/medorig/'
 
 # Processed (i.e. downsampled) patient data files go here.
 # processedFilesDir = '../data/processed/'

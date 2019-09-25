@@ -134,24 +134,28 @@ See *Standard Data Response Format* above. The requested data series in the give
 
 ## <a name="file-standard"></a>File Schema
 
+### Version
+
 The following is the file schema for version ```0.1```.
 
-Need a version attribute in the file to recognize compatibility & when file upgrade needed.
+### Vocabulary
 
 AUView uses the HDF5 file format. AUView and HDF5 each has its own vocabulary, so let us first introduce this vocabulary.
 
 HDF5 is built around groups, datasets, and attributes. In a nutshell, datasets hold tabular data, and they may be stored in an arbitrary hierarchy of grouping structures (like folders on a file system). Both groups and datasets may have attributes. In this sense, HDF is characterized as a "self-describing" data format.
 
-AUView is built around projects, files, and data series. A project holds files, and a file holds data series.
+AUView, to introduce its vocabulary, is built around projects, files, and data series. A project holds files, and a file holds data series.
 
-Here is how the two vocabularies connect. An AUView project holds a collection of any number of HDF5 files. The system will index all datasets in a file agnostically of the grouping structure, other than the fact that the ID of the data series held by each dataset becomes the collation of group names and dataset name joined by forward slashes (e.g. File->Group1->Group2->DatasetX has ID "Group1/Group2/DatasetX").
+Here is how the two vocabularies connect. An AUView project holds a collection of any number of HDF5 files. The system will index all datasets in a file agnostic of the grouping structure, other than the fact that the ID of the data series held by each dataset becomes the collation of group names and dataset name joined by forward slashes (e.g. the dataset located at File->Group1->Group2->DatasetX has ID ```Group1/Group2/DatasetX```).
+
+### Specifications
 
 AUView will extract the following from HDF5 files:
 * System-related metadata (e.g. version)
 * Metadata about the file
 * Data series (time series or event data)
 
-Finally, here is the file spec:
+Here is the file specification:
 * The root group should have the following attributes:
   * ```version```: specifies the file schema version
   * Any other metadata about the file (to be displayed on the viewer)
@@ -161,4 +165,36 @@ Finally, here is the file spec:
   * ```type=[timeseries|events]```: specifies the type of data
   * ```Ftype_<col>=[time|string|numeric]```: specifies each column's data type
     * Each column should have one such attribute on the dataset.
-    * There must only be one ```time``` column type per dataset. 
+    * There must only be one ```time``` column type per dataset.
+  * ```Slookup_<col>=<dsetpath>```: specifies the path to an optional string lookup dataset for a string column, in the form of slash-separated group names followed by dataset name, e.g. _'/grp1/grp2/somedset'_ or _'/somedset'_ (details below)
+
+#### String Lookup Table
+
+If you have a string column in your dataset, you may optionally specify a string lookup table. The reason to do this would be if you have repeated string values which unnecessarily bloat file size.
+
+The format of the lookup dataset should be simply a 1d array of string values. The original dataset string column then specifies the dataset index of the value in the lookup table.
+
+For example, say we have the following original dataset:
+
+| Time | Event |
+|------|-------|
+| 127  | flex  |
+| 192  | pulse |
+| 207  | flex  |
+| 248  | pulse |
+
+We change this dataset to:
+
+| Time | Event |
+|------|-------|
+| 127  | 0     |
+| 192  | 1     |
+| 207  | 0     |
+| 248  | 1     |
+
+And create the following string lookup dataset
+
+| (index) |       |
+|---------|-------|
+| (0)     | flex  |
+| (1)     | pulse |

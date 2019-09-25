@@ -311,7 +311,7 @@ Graph.prototype.remove = function() {
 
 };
 
-// Show the graph on the interface.
+// Toggle the graph to show.
 Graph.prototype.show = function() {
 
 	// Unsynchronize the graphs temporarily for the duration of the post-load addition.
