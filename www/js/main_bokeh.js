@@ -423,13 +423,7 @@ function instantiateDygraph(series, dataset) {
 	dygraphInstances[series].originalDataset = dataset.data
 	*/
 
-	console.log(dataset)
-
 	var newdata = dataset.data[0].map((col, i) => dataset.data.map(row => row[i]));
-
-	console.log(newdata);
-
-	console.log(dataset);
 
 	p = Bokeh.Plotting.figure({
 		title: "Test of the Emergency Broadcast System",
@@ -648,7 +642,7 @@ fileLoaderHTTP.onreadystatechange = function() {
 
 		// Parse the backend JSON response into a JS object
 		var backendData = JSON.parse(fileLoaderHTTP.responseText);
-console.log(backendData);
+
 		// Convert date strings to Date objects in all datasets and produce global
 		// x-axis extremes. It is an obvious potential optimization to combine this
 		// for loop and the subsequent one, but don't. Global x-axis extremes from

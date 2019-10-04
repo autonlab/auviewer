@@ -1,5 +1,7 @@
 'use strict';
 
+// Graph class constructor. Group is an optional parameter which, if the graph
+// represents a group, should be the array of series names inside the group.
 function Graph(series, file) {
 
 	// References the parent File instance
@@ -16,6 +18,17 @@ function Graph(series, file) {
 
 	// Holds the dygraph instance
 	this.dygraphInstance = null;
+
+	// Set this.isGroup (indicates whether this graph represents a group of
+	// series) and this.group (holds series names belonging to the group, or
+	// empty array if not a group)
+	if (this.file.fileData.series[this.series].hasOwnProperty('group') && this.file.fileData.series[this.series].group.length > 0) {
+		this.isGroup = true;
+		this.group = this.file.fileData.series[this.series].group;
+	} else {
+		this.isGroup = false;
+		this.group = [];
+	}
 
 	// Build the graph
 	this.build();
@@ -182,7 +195,7 @@ Graph.prototype.instantiateDygraph = function() {
 	}
 
 	// Create the dygraph
-	this.dygraphInstance = new Dygraph(this.graphDomElement, this.file.graphData.series[this.series].data, {
+	this.dygraphInstance = new Dygraph(this.graphDomElement, this.file.fileData.series[this.series].data, {
 		axes: {
 			x: {
 				pixelsPerLabel: 70,
@@ -212,7 +225,7 @@ Graph.prototype.instantiateDygraph = function() {
 			'dblclick': this.handleDoubleClick.bind(this),
 			'mousewheel': this.handleMouseWheel.bind(this)
 		},
-		labels: this.file.graphData.series[this.series].labels,
+		labels: this.file.fileData.series[this.series].labels,
 		labelsDiv: this.legendDomElement,
 		plotter: downsamplePlotter,
 		/*series: {
@@ -225,49 +238,9 @@ Graph.prototype.instantiateDygraph = function() {
 
 };
 
-// Meshes a provided subset of data (e.g. higher resolution data for a subset
-// x-axis range) with the outer, original data, and triggers a graph refresh.
-Graph.prototype.meshData = function(data) {
-
-	// This is only necessary for graphs which are currently showing
-	if (this.dygraphInstance === null) {
-		return;
-	}
-
-	// We expect non-empty arrays
-	if (this.file.graphData.series[this.series].data.length < 1 || typeof data === 'undefined' || data.length < 1) {
-		return;
-	}
-
-	// Will hold the relevant places to slice the outerDataset.
-	let sliceIndexFirstSegment = 0;
-	let sliceIndexSecondSegment = 0;
-
-	// Determine outerDataset index of the data point just after innerDataset
-	// starts. We will find the index just *after* the last data point before
-	// innerDataset starts. However, that's okay, because sliceIndexFirstSegment
-	// will be the second parameter in a slice call, which indicates an element
-	// that will not be included in the resulting array.
-	// TODO(gus): Convert this to binary search.
-	while (sliceIndexFirstSegment < this.file.graphData.series[this.series].data.length && this.file.graphData.series[this.series].data[sliceIndexFirstSegment][0] < data[0][0]) {
-		sliceIndexFirstSegment++;
-	}
-
-	// Determine outerDataset index of the data point just after innerDataset ends.
-	sliceIndexSecondSegment = sliceIndexFirstSegment;
-	while (sliceIndexSecondSegment < this.file.graphData.series[this.series].data.length && this.file.graphData.series[this.series].data[sliceIndexSecondSegment][0] <= data[data.length-1][0]) {
-		sliceIndexSecondSegment++;
-	}
-
-	// Return the joined dataset with the innerDataset replacing the relevant
-	// section of outerDataset.
-	let meshedData = this.file.graphData.series[this.series].data.slice(0, sliceIndexFirstSegment).concat(data, this.file.graphData.series[this.series].data.slice(sliceIndexSecondSegment));
-
-	// Update the graph data, and redraw
-	this.dygraphInstance.updateOptions({
-		file: meshedData
-	});
-
+// Returns a boolean indicating whether this graph is currently showing.
+Graph.prototype.isShowing = function() {
+	return this.dygraphInstance !== null;
 };
 
 // Take the offset of a mouse event on the dygraph canvas and
@@ -311,6 +284,12 @@ Graph.prototype.remove = function() {
 
 };
 
+Graph.prototype.replacePlottedData = function(data) {
+	this.dygraphInstance.updateOptions({
+		file: data
+	});
+};
+
 // Toggle the graph to show.
 Graph.prototype.show = function() {
 
@@ -343,6 +322,8 @@ Graph.prototype.showDOMElements = function() {
 // NOTE: There is an identically-named function on both File and Graph classes.
 Graph.prototype.updateCurrentViewData = function() {
 
+	console.log("GRAPH updateCurrentViewData called.");
+
 	// Get the x-axis range
 	let xRange = this.dygraphInstance.xAxisRange();
 
@@ -361,11 +342,12 @@ Graph.prototype.updateCurrentViewData = function() {
 		graph.file.unsynchronizeGraphs();
 
 		// Pad the returned data if necessary
-		graph.file.padDataIfNeeded(data[graph.series].data);
+		padDataIfNeeded(data[graph.series].data);
 		
 		// Mesh the updated current view data
-		graph.meshData(data[graph.series].data);
-		
+		//graph.meshData(data[graph.series].data);
+		graph.replacePlottedData(createMeshedTimeSeries(graph.file.fileData.series[graph.series].data, data[graph.series].data));
+
 		// Resynchronize the graphs
 		graph.file.synchronizeGraphs();
 

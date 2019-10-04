@@ -98,16 +98,6 @@ For downsampled values, *min* & *max* will be defined and *value* will be null; 
 
 If multiple series are requested, there may be a mix of series with downsampled values and series with real values. However, a given series will not have multiple types of values.
 
-### /all_series_all_data
-
-#### Request
-
-http://[medview]/all_series_all_data
-
-#### Response
-
-See *Standard Data Response Format* above. All data series available for the patient for all time will be transmitted.
-
 ### /all_series_ranged_data
 
 #### Request
@@ -118,7 +108,17 @@ The *start* & *stop* parameters are time offset floating-point values.
 
 #### Response
 
-See *Standard Data Response Format* above. All data series available for the patient in the given time window will be transmitted.
+See *Standard Data Response Format* above. All series data in the file for the given time window will be transmitted.
+
+### /initial_file_payload
+
+#### Request
+
+http://[medview]/initial_file_payload
+
+#### Response
+
+Returns initial payload of data related to a file, including annotations and all series data for all time. See *Standard Data Response Format* above.
 
 ### /single_series_ranged_data
 

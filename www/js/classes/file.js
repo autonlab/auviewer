@@ -8,8 +8,8 @@ function File(filename) {
 	// Holds graph object instances pertaining to the file.
 	this.graphs = {};
 
-	// Holds data for all graphs, keyed by series name
-	this.graphData = {};
+	// Holds the initial payload data for the file
+	this.fileData = {};
 
 	// Holds the reference to the graph synchronization object
 	this.sync = null;
@@ -30,21 +30,94 @@ function File(filename) {
 	// Persist for callback
 	let file = this;
 
-	requestHandler.requestAllSeriesAllData(this.filename, function(data) {
+	// Request the initial file payload, and handle the response when it comes.
+	requestHandler.requestInitialFilePayload(this.filename, function(data) {
 
 		// Attach graph data
-		file.graphData = data;
+		file.fileData = data;
 
 		// Calculate x-axis extremes across all data series
 		file.calculateExtremes();
 
 		// Pad data, if necessary, for each series
-		for (let s of Object.keys(file.graphData.series)) {
-			file.padDataIfNeeded(file.graphData.series[s].data);
+		for (let s of Object.keys(file.fileData.series)) {
+			padDataIfNeeded(file.fileData.series[s].data);
 		}
 
+
+
+
+
+
+
+
+
+
+
+		/*** BEGIN HARD-CODED PROJECT CONIG ***/
+		/*
+			Hard-coding some project configuration for now which we will move
+			into db or config files later.
+		 */
+
+		let groups = [
+			['numerics/AR1-D/data', 'numerics/AR1-S/data', 'numerics/AR1-M/data'],
+			['numerics/ART.Diastolic/data', 'numerics/ART.Systolic/data', 'numerics/ART.Mean/data'],
+			['numerics/NBP.NBPd/data', 'numerics/NBP.NBPm/data', 'numerics/NBP.NBPs/data']
+		];
+
+		// Let's create a collated data set for each group.
+		// NOTE: If you're trying to understand this code in the future, I'm
+		// sorry. I could not document this in any way that would help make it
+		// more understandable, and it is a bit of a labyrinth.
+		groupLoop:
+		for (let group of groups) {
+
+			// Check whether all series members of the group are present, and if
+			// not, then skip this group.
+			for (let s of group) {
+				if (!file.fileData.series.hasOwnProperty(s)) {
+					continue groupLoop;
+				}
+			}
+
+			// Enumerate the column labels
+			const labels = ['time'];
+			for (let s of group) {
+				labels.push(s + ' Min');
+				labels.push(s + ' Max');
+				labels.push(s);
+			}
+
+			// Add the combined series to the file data.
+			file.fileData.series["Group:\n" + group.join("\n")] = {
+				id: "Group:\n" + group.join("\n"),
+				labels: labels,
+				group: group,
+				data: createMergedTimeSeries(group, file.fileData.series)
+			};
+
+		}
+
+		/*** END HARD-CODED PROJECT CONIG ***/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 		// Instantiate each graph
-		for (let s of Object.keys(file.graphData.series)) {
+		for (let s of Object.keys(file.fileData.series)) {
 			file.graphs[s] = new Graph(s, file);
 		}
 
@@ -58,7 +131,7 @@ function File(filename) {
 		}
 		let opt = document.createElement('option');
 		alertGenSeriesDropdown.add(opt);
-		for (let s of Object.keys(file.graphData.series)) {
+		for (let s of Object.keys(file.fileData.series)) {
 			let opt = document.createElement('option');
 			opt.text = s;
 			opt.value = s;
@@ -66,7 +139,7 @@ function File(filename) {
 		}
 
 		// Populate the annotations
-		for (let ann of file.graphData.annotations) {
+		for (let ann of file.fileData.annotations) {
 			annotations.push(new Annotation(ann[0], ann[1], ann[6]));
 		}
 		globalStateManager.currentFile.triggerRedraw();
@@ -79,7 +152,7 @@ function File(filename) {
 File.prototype.calculateExtremes = function() {
 
 	// Get array of series
-	let series = Object.keys(this.graphData.series);
+	let series = Object.keys(this.fileData.series);
 
 	// If there are no series, return
 	if (series.length < 1) {
@@ -87,26 +160,26 @@ File.prototype.calculateExtremes = function() {
 	}
 
 	// Prime the graph extremes with the first series, first point
-	this.globalXExtremes[0] = this.graphData.series[series[0]].data[0][0];
-	this.globalXExtremes[1] = this.graphData.series[series[0]].data[0][0];
+	this.globalXExtremes[0] = this.fileData.series[series[0]].data[0][0];
+	this.globalXExtremes[1] = this.fileData.series[series[0]].data[0][0];
 
 	for (let s of series) {
 
 		// If this series has no data, continue
-		if (this.graphData.series[s].data.length < 1) {
+		if (this.fileData.series[s].data.length < 1) {
 			continue;
 		}
 
-		for (let i in this.graphData.series[s].data) {
+		for (let i in this.fileData.series[s].data) {
 
 			// Update global x-minimum if warranted
-			if (this.graphData.series[s].data[i][0] < this.globalXExtremes[0]) {
-				this.globalXExtremes[0] = this.graphData.series[s].data[i][0];
+			if (this.fileData.series[s].data[i][0] < this.globalXExtremes[0]) {
+				this.globalXExtremes[0] = this.fileData.series[s].data[i][0];
 			}
 
 			// Update global x-maximumm if warranted
-			if (this.graphData.series[s].data[i][0] > this.globalXExtremes[1]) {
-				this.globalXExtremes[1] = this.graphData.series[s].data[i][0];
+			if (this.fileData.series[s].data[i][0] > this.globalXExtremes[1]) {
+				this.globalXExtremes[1] = this.fileData.series[s].data[i][0];
 			}
 
 		}
@@ -137,29 +210,8 @@ File.prototype.destroy = function() {
 
 	// Clear state management data
 	this.graphs = {};
-	this.graphData = {};
+	this.fileData = {};
 	this.globalXExtremes = [];
-
-};
-
-// Pads a set of data points, if necessary, with null value at end of each data
-// point array for downsample sets.
-// TODO(gus): Remove later; this is temporary.
-File.prototype.padDataIfNeeded = function(data) {
-
-	// Return if there are no data points
-	if (typeof data === 'undefined' || data.length < 1) {
-		return;
-	}
-
-	// Return if padding is not necessary
-	if (data[0].length !== 3) {
-		return;
-	}
-
-	for (let i in data) {
-		data[i].push(null);
-	}
 
 };
 
@@ -214,49 +266,133 @@ File.prototype.triggerRedraw = function() {
 // NOTE: There is an identically-named function on both File and Graph classes.
 File.prototype.updateCurrentViewData = function() {
 
-	// Find the first graph which is currently displaying
-	let dg = null;
-	for (let k of Object.keys(this.graphs)) {
-		if (this.graphs[k].dygraphInstance !== null) {
-			dg = this.graphs[k].dygraphInstance;
-			break;
+	console.log("FILE updateCurrentViewData called.");
+
+	// Holds the array of series IDs for which we will request updated data.
+	let series = [];
+
+	// Will hold the last graph we found that is showing on the UI, for purposes
+	// of grabbing the x-axis range.
+	let lastGraphShowing = null;
+
+	// Build array of series to request updated data for, including both
+	// individual and group series.
+	for (let g in this.graphs) {
+
+		// We're only adding the series of graphs currently showing.
+		if (this.graphs[g].isShowing()) {
+
+			lastGraphShowing = this.graphs[g];
+
+			if (this.graphs[g].isGroup) {
+
+				for (let s of this.graphs[g].group) {
+					if (series.indexOf(s) === -1) {
+						series.push(s);
+					}
+				}
+
+			} else if (series.indexOf(g) === -1) {
+
+				series.push(this.graphs[g].series);
+
+			}
+
 		}
+
 	}
 
 	// Return if no visible graph was found
-	if (dg === null) {
+	if (series.length === 0) {
 		return;
 	}
 
-	// Get the x-axis range from the first graph (all graphs should be showing
-	// the same range since they are synchronized).
-	let xRange = dg.xAxisRange();
+	// Grab the x-axis range from the last showing graph (all graphs should be
+	// showing the same range since they are synchronized).
+	let xRange = lastGraphShowing.dygraphInstance.xAxisRange();
 
 	// Persist for callback
 	let file = this;
 
-	requestHandler.requestAllSeriesRangedData(this.filename, xRange[0], xRange[1], function(data) {
+	requestHandler.requestMultiSeriesRangedData(this.filename, series, xRange[0], xRange[1], function(data) {
+		// Validate the response data
+		if (typeof data === 'undefined' || !data || !data.hasOwnProperty('series')) {
+			console.log('Invalid response received.');
+			return;
+		}
+
+		// Go through all series received in the response, and pad if necessary.
+		// We do this before iterating through and attaching the data to the
+		// graphs because there is not always a 1:1 relationship between series
+		// and graph instance.
+		//
+		// After padding the data of each series, replace the series data with a
+		// mesh of the series superset (cached) and the current-view series
+		// subset (received in response just now).
+		for (let s in data.series) {
+
+			padDataIfNeeded(data.series[s].data);
+
+			data.series[s].data = createMeshedTimeSeries(file.fileData.series[s].data, data.series[s].data);
+
+		}
+
+		console.log("FINAL DATA", data);
 
 		// Temporarily unsynchronize the graphs
 		file.unsynchronizeGraphs();
 
-		// For each data series, pad the returned data if necessary and then
-		// mesh the data into the existing graph.
-		for (let s of Object.keys(data.series)) {
+		// In order to process the backend response, we actually iterate through
+		// all of the local client-side graph instances (as opposed to iterating
+		// through the series provided in the response). We do this because one
+		// data series could be present in more than one graph (at least as
+		// conceived currently), for example as an individua series graph and in
+		// a group-of-series graph.
+		graphLoop:
+		for (let g in file.graphs) {
 
-			// Pad the data if necessary
-			file.padDataIfNeeded(data.series[s].data);
+			// We're only processing data responses for series of graphs
+			// currently showing.
+			if (file.graphs[g].isShowing()) {
 
-			// We do this in a try block because it's theoretically possible
-			// that the backend returns a data series we don't have a graph
-			// object for (in other words, a data series it didn't return in
-			// the original on-load request for all data series.
-			try {
-				file.graphs[s].meshData(data.series[s].data);
+				if (file.graphs[g].isGroup) {
+
+					// Group-of-series graph handling...
+
+					// Verify that we received all series in the group in the
+					// backend response. If not, continue on to the next graph.
+					for (let s of file.graphs[g].group) {
+						if (!data.series.hasOwnProperty(s)) {
+							vo("Did not receive data for series "+s+". Skipping group "+g+".");
+							continue graphLoop;
+						}
+					}
+
+					// Replace graph data with merge of mesh of group series
+					console.log("Replacing multi series graph data with", createMergedTimeSeries(file.graphs[g].group, data.series));
+					file.graphs[g].replacePlottedData(createMergedTimeSeries(file.graphs[g].group, data.series))
+
+				} else {
+
+					// Single graph handling...
+
+					// If this is a graph that represents a single series, then
+					// we grab the series name from the graph instance property.
+					let s = file.graphs[g].series;
+
+					// Verify that we received the series in question in the
+					// backend response.
+					if (!data.series.hasOwnProperty(s)) {
+						continue;
+					}
+
+					// Replace graph data with mesh of series
+					file.graphs[g].replacePlottedData(data.series[s].data);
+
+				}
+
 			}
-			catch (error) {
-				console.log("Could not find an existing graph object for a data series returned by the backend for all series ranged data.", error);
-			}
+
 		}
 
 		// Resynchronize the graphs

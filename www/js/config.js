@@ -24,8 +24,9 @@ let config = {
 	rootWebPath: '',
 	
 	// Backend request URLs
-	allSeriesAllDataSubpath: '/all_series_all_data',
+	allSeriesAllDataSubpath: '/initial_file_payload',
 	allSeriesRangedDataSubpath: '/all_series_ranged_data',
+	multiSeriesRangedDataSubpath: '/multi_series_ranged_data',
 	singleSeriesRangedDataSubpath: '/single_series_ranged_data',
 	getAlertsSubpath: '/get_alerts',
 	getFilesSubpath: '/get_files',
@@ -37,8 +38,9 @@ let config = {
 	
 };
 
-config.allSeriesAllDataURL = config.buildDir(config.allSeriesAllDataSubpath);
+config.initialFilePayloadURL = config.buildDir(config.allSeriesAllDataSubpath);
 config.allSeriesRangedDataURL = config.buildDir(config.allSeriesRangedDataSubpath);
+config.multiSeriesRangedDataURL = config.buildDir(config.multiSeriesRangedDataSubpath);
 config.singleSeriesRangedDataURL = config.buildDir(config.singleSeriesRangedDataSubpath);
 config.getAlertsURL = config.buildDir(config.getAlertsSubpath);
 config.getFilesURL = config.buildDir(config.getFilesSubpath);

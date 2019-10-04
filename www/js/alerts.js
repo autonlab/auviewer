@@ -9,8 +9,6 @@ alertsHTTP.onreadystatechange = function() {
 		// Parse the backend JSON response into a JS object
 		let backendData = JSON.parse(alertsHTTP.responseText);
 
-		console.log(backendData);
-
 		for (let i in backendData) {
 			annotations.push(new Annotation(backendData[i][0], backendData[i][1]));
 		}

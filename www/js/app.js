@@ -33,43 +33,68 @@ function downsamplePlotter(e) {
 	cnv.fillStyle = '#171717';//'#5253FF';
 	cnv.lineWidth = 1;
 
-	// Plot all raw value data points
-	for (let i = 0; i < e.allSeriesPoints[2].length; i++) {
-
-		//cnv.fillRect(e.allSeriesPoints[2][i].x * area.w + area.x, e.allSeriesPoints[2][i].y * area.h + area.y, 2, 2)
-		cnv.beginPath();
-		cnv.arc(e.allSeriesPoints[2][i].x * area.w + area.x, e.allSeriesPoints[2][i].y * area.h + area.y, 1, 0, 2*Math.PI);
-		cnv.fill();
-
+	// let l = e.allSeriesPoints[0].length;
+	// for (let i = 0; i < e.allSeriesPoints.length; i++) {
+	// 	if (l != e.allSeriesPoints[i].length) {
+	// 		console.log(e.allSeriesPoints);
+	// 		break;
+	// 	}
+	// }
+	if (e.allSeriesPoints.length === 9) {
+		console.log(e.allSeriesPoints);
 	}
 
-	// Plot all downsample intervals
-	for (let i = 0; i < e.allSeriesPoints[0].length; i++) {
+	// Plot each series, whether it be an individual series or a group of them.
+	//console.log(e.allSeriesPoints);
+	for (let i = 0; i + 2 < e.allSeriesPoints.length; i += 3) {
+		
+		// Plot the raw data column for the series, which will be the third
+		// column of this series' set of three columns.
+		for (let j = 0; j < e.allSeriesPoints[i+2].length; j++) {
 
-		// There may be intervals wherein min==max, and to handle these, we must use a different drawing method.
-		if (e.allSeriesPoints[0][i].y == e.allSeriesPoints[1][i].y) {
-
-			cnv.fillRect(e.allSeriesPoints[0][i].x * area.w + area.x, e.allSeriesPoints[0][i].y * area.h + area.y, 1, 1)
-			/*cnv.beginPath();
-			cnv.arc(e.allSeriesPoints[0][i].x * area.w + area.x, e.allSeriesPoints[0][i].y * area.h + area.y, 2, 0, 2*Math.PI);
-			cnv.fill();*/
-
-		} else {
-
-			// Begin a path (this instantiates a path object but does not draw it
+			//cnv.fillRect(e.allSeriesPoints[i+2][j].x * area.w + area.x, e.allSeriesPoints[i+2][j].y * area.h + area.y, 2, 2)
 			cnv.beginPath();
-
-			// Start stroke at the min value
-			cnv.moveTo(e.allSeriesPoints[0][i].x * area.w + area.x, e.allSeriesPoints[0][i].y * area.h + area.y);
-
-			// End stroke at the max value
-			cnv.lineTo(e.allSeriesPoints[1][i].x * area.w + area.x, e.allSeriesPoints[1][i].y * area.h + area.y);
-
-			// Draw the line on the canvas
-			cnv.stroke();
+			cnv.arc(e.allSeriesPoints[i+2][j].x * area.w + area.x, e.allSeriesPoints[i+2][j].y * area.h + area.y, 1, 0, 2 * Math.PI);
+			cnv.fill();
 
 		}
+		
+		// Plot the downsample min & max columns for the series, which will be
+		// the first & second columns of this series' set of three columns.
+		for (let j = 0; j < e.allSeriesPoints[i].length; j++) {
 
+			// There may be intervals wherein min==max, and to handle these, we must use a different drawing method.
+			if (!e.allSeriesPoints[i+1][j]) {
+				// console.log(i, j, e.allSeriesPoints.length, e.allSeriesPoints[i].length);
+				// console.log(e.allSeriesPoints[i][j]);
+				// console.log(e.allSeriesPoints[i+1][j]);
+				// console.log(e.allSeriesPoints);
+			}
+			if (e.allSeriesPoints[i][j].y === e.allSeriesPoints[i+1][j].y) {
+
+				cnv.fillRect(e.allSeriesPoints[i][j].x * area.w + area.x, e.allSeriesPoints[i][j].y * area.h + area.y, 1, 1)
+				/*cnv.beginPath();
+				cnv.arc(e.allSeriesPoints[i][j].x * area.w + area.x, e.allSeriesPoints[i][j].y * area.h + area.y, 2, 0, 2*Math.PI);
+				cnv.fill();*/
+
+			} else {
+
+				// Begin a path (this instantiates a path object but does not draw it
+				cnv.beginPath();
+
+				// Start stroke at the min value
+				cnv.moveTo(e.allSeriesPoints[i][j].x * area.w + area.x, e.allSeriesPoints[i][j].y * area.h + area.y);
+
+				// End stroke at the max value
+				cnv.lineTo(e.allSeriesPoints[i+1][j].x * area.w + area.x, e.allSeriesPoints[i+1][j].y * area.h + area.y);
+
+				// Draw the line on the canvas
+				cnv.stroke();
+
+			}
+
+		}
+		
 	}
 
 }

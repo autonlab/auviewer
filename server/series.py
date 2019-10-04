@@ -70,6 +70,7 @@ class Series:
         if downsampleFullOutput is not None:
             print("(downsampled output)")
             data = downsampleFullOutput.tolist()
+            output_type = 'downsample'
             
         else:
             print("(raw data output)")
@@ -78,6 +79,7 @@ class Series:
             dataset = self.fileparent.f.get('/'.join(self.h5path))[()]
             nones = [None] * self.rd.len
             data = [list(i) for i in zip(dataset['time'], nones, nones, dataset['value'].astype(np.float64))]
+            output_type = 'real'
 
         print("Completed assembly of full output for " + self.id + ".")
 
@@ -85,7 +87,8 @@ class Series:
         return {
             "id": self.id,
             "labels": ['Date/Offset', 'Min', 'Max', self.id],
-            "data": data
+            "data": data,
+            "output_type": output_type
         }
 
     # Produces JSON output for the series over a specified time range, with
@@ -100,10 +103,12 @@ class Series:
         if isinstance(ds, np.ndarray):
             print("(downsampled output)")
             data = ds.tolist()
+            output_type = 'downsample'
 
         else:
             print("(raw data output)")
             data = self.rd.getRangedOutput(starttime, stoptime)
+            output_type = 'real'
 
         print("Completed assembly of ranged output for " + self.id + ".")
 
@@ -111,7 +116,8 @@ class Series:
         return {
             "id": self.id,
             "labels": ['Date/Offset', 'Min', 'Max', self.id],
-            "data": data
+            "data": data,
+            "output_type": output_type
         }
 
     # Process and store all downsamples for the series.

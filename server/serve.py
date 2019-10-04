@@ -172,9 +172,9 @@ def create_app():
     def bokeh():
         return send_from_directory('../www', 'bokeh.html')
     
-    @app.route(config.rootWebPath+'/all_series_all_data')
+    @app.route(config.rootWebPath+'/initial_file_payload')
     @login_required
-    def all_series_all_data():
+    def initial_file_payload():
     
         if request.method == 'GET' and len(request.args.get('file', default='')) > 0:
     
@@ -190,7 +190,7 @@ def create_app():
     
             # Return the full (zoomed-out but downsampled if appropriate) datasets for
             # all data series.
-            output = file.getAllSeriesAllData()
+            output = file.getInitialFilePayload()
             json_output = json.dumps(output, ignore_nan=True)
             
             return json_output
@@ -223,7 +223,33 @@ def create_app():
     
         else:
             return "Invalid request."
-    
+
+    @app.route(config.rootWebPath + '/multi_series_ranged_data', methods=['GET'])
+    @login_required
+    def multi_series_ranged_data():
+
+        if request.method == 'GET' and len(request.args.get('file', default='')) > 0 and len(
+                request.args.get('start', default='')) > 0 and len(request.args.get('start', default='')) > 0 and len(
+                request.args.get('stop', default='')) > 0:
+
+            # Parse the series name and start & stop times
+            filename = request.args.get('file')
+            series = request.args.getlist('s[]')
+            start = request.args.get('start', type=float)
+            stop = request.args.get('stop', type=float)
+
+            # Get the file
+            file = project.getFile(filename)
+
+            # If we did not find the file, return empty output
+            if not isinstance(file, File):
+                return ''
+
+            output = file.getMultiSeriesRangedOutput(series, start, stop)
+            json_output = json.dumps(output, ignore_nan=True)
+
+            return json_output
+
     @app.route(config.rootWebPath+'/single_series_ranged_data', methods=['GET'])
     @login_required
     def single_series_ranged_data():
