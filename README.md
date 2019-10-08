@@ -98,39 +98,37 @@ For downsampled values, *min* & *max* will be defined and *value* will be null; 
 
 If multiple series are requested, there may be a mix of series with downsampled values and series with real values. However, a given series will not have multiple types of values.
 
-### /all_series_ranged_data
+### /get_files
 
 #### Request
 
-http://[medview]/all_series_ranged_data?start=[float]&stop=[float]
-
-The *start* & *stop* parameters are time offset floating-point values.
+http://[medview]/get_files
 
 #### Response
 
-See *Standard Data Response Format* above. All series data in the file for the given time window will be transmitted.
+Returns an array of filenames available for the project.
 
 ### /initial_file_payload
 
 #### Request
 
-http://[medview]/initial_file_payload
+http://[medview]/initial_file_payload?file=[string]
 
 #### Response
 
-Returns initial payload of data related to a file, including annotations and all series data for all time. See *Standard Data Response Format* above.
+Returns initial payload of data related to a file, including annotations, metadata, and all series' data for all time. See *Standard Data Response Format* above.
 
-### /single_series_ranged_data
+### /series_ranged_data
 
 #### Request
 
-http://[medview]/single_series_ranged_data?series=[string]start=[float]&stop=[float]
+http://[medview]/series_ranged_data?file=[string]&series[]=[string]...&start=[float]&stop=[float]
 
-The *start* & *stop* parameters are time offset floating-point values, and the series is the URL-encoded name of the series.
+The *series[]* parameter is an array of series names whose data should be returned. For example, if 'series1' and 'series2' are requested, these parameters would appear as ```series[]=series1&series[]=series2``` in the URL. The *start* & *stop* parameters are time offset floating-point values.
 
 #### Response
 
-See *Standard Data Response Format* above. The requested data series in the given time window will be transmitted.
+See *Standard Data Response Format* above. All series data in the file for the given time window will be transmitted.
 
 ## <a name="file-standard"></a>File Schema
 
@@ -162,11 +160,12 @@ Here is the file specification:
 * The grouping structure is arbitrary to the system.
 * Each dataset should have the following attributes:
   * ```name```: name of the series
-  * ```type=[timeseries|events]```: specifies the type of data
-  * ```Ftype_<col>=[time|string|numeric]```: specifies each column's data type
+  * ```type=[timeseries|enumerated_timeseries|events]```: specifies the type of data
+  * ```Ftype_<colname>=[time|string|numeric]```: specifies each column's data type
     * Each column should have one such attribute on the dataset.
     * There must only be one ```time``` column type per dataset.
-  * ```Slookup_<col>=<dsetpath>```: specifies the path to an optional string lookup dataset for a string column, in the form of slash-separated group names followed by dataset name, e.g. _'/grp1/grp2/somedset'_ or _'/somedset'_ (details below)
+  * ```Funits_<colname>=<unit>```: specifies each column's unit as a string, usually plural (e.g. "seconds")
+  * ```Flookup_<col>=<dsetpath>```: specifies the path to an optional string lookup dataset for a string column, in the form of slash-separated group names followed by dataset name, e.g. _'/grp1/grp2/somedset'_ or _'/somedset'_ (details below)
 
 #### String Lookup Table
 
