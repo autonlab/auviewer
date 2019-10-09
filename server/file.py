@@ -70,25 +70,6 @@ class File:
         for s in self.series:
             if s.id == seriesid:
                 return s.generateThresholdAlerts(thresholdlow, thresholdhigh, mode, duration, dutycycle, maxgap).tolist()
-    
-    # Produces JSON output for all series in the file at a specified time range.
-    def getAllSeriesRangedOutput(self, starttime, stoptime):
-
-        print("Assembling all series ranged output for file " + self.filename + ".")
-        start = time.time()
-
-        outputObject = {
-            'series': {}
-        }
-        
-        for s in self.series:
-            outputObject['series'][s.id] = s.getRangedOutput(starttime, stoptime)
-
-        end = time.time()
-        print("Completed assembly of all series ranged output for file " + self.filename + ". Took " + str(round(end - start, 5)) + "s.")
-
-        # Return the output object
-        return outputObject
 
     # Returns the complete path to the original data file, including filename.
     def getFilepath(self):
@@ -102,6 +83,7 @@ class File:
 
         outputObject = {
             'annotations': self.annotationSet.getAnnotations().tolist(),
+            'metadata': self.getMetadata(),
             'series': {}
         }
 
@@ -113,6 +95,13 @@ class File:
 
         # Return the output object
         return outputObject
+    
+    # Returns a dict of file metadata.
+    def getMetadata(self):
+        metadata = {}
+        for property in self.f.attrs:
+            metadata[property] = self.f.attrs[property]
+        return metadata
     
     # Returns a reference to the processed data file, or None if there is none.
     def getProcessedFile(self):
@@ -139,9 +128,9 @@ class File:
 
     # Produces JSON output for a given list of series in the file at a specified
     # time range.
-    def getMultiSeriesRangedOutput(self, seriesids, start, stop):
+    def getSeriesRangedOutput(self, seriesids, start, stop):
 
-        print("Assembling multi series ranged output for file " + self.filename + ", series ]" + ', '.join(seriesids) + "].")
+        print("Assembling series ranged output for file " + self.filename + ", series ]" + ', '.join(seriesids) + "].")
         st = time.time()
 
         outputObject = {
@@ -153,27 +142,7 @@ class File:
                 outputObject['series'][s.id] = s.getRangedOutput(start, stop)
 
         et = time.time()
-        print("Completed assembly of multi series ranged output for file " + self.filename + ", series [" + ', '.join(seriesids) + "]. Took " + str(round(et - st, 5)) + "s.")
-
-        # Return the output object
-        return outputObject
-
-    # Produces JSON output for a given series in the file at a specified
-    # time range.
-    def getSingleSeriesRangedOutput(self, seriesid, start, stop):
-        
-        print("Assembling single series ranged output for file " + self.filename + ", series " + seriesid + ".")
-        st = time.time()
-
-        outputObject = {}
-
-        for s in self.series:
-            if s.id == seriesid:
-                outputObject[s.id] = s.getRangedOutput(start, stop)
-                break
-
-        et = time.time()
-        print("Completed assembly of single series ranged output for file " + self.filename + ", series " + seriesid + ". Took " + str(round(et - st, 5)) + "s.")
+        print("Completed assembly of series ranged output for file " + self.filename + ", series [" + ', '.join(seriesids) + "]. Took " + str(round(et - st, 5)) + "s.")
 
         # Return the output object
         return outputObject

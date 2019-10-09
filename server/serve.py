@@ -197,36 +197,10 @@ def create_app():
     
         else:
             return "Invalid request."
-    
-    @app.route(config.rootWebPath+'/all_series_ranged_data', methods=['GET'])
-    @login_required
-    def all_series_ranged_data():
-    
-        if request.method == 'GET' and len(request.args.get('file', default='')) > 0 and len(request.args.get('start', default='')) > 0 and len(request.args.get('stop', default='')) > 0:
-    
-            # Parse the start & stop times
-            filename = request.args.get('file')
-            start = request.args.get('start', type=float)
-            stop = request.args.get('stop', type=float)
-    
-            # Get the file
-            file = project.getFile(filename)
-    
-            # If we did not find the file, return empty output
-            if not isinstance(file, File):
-                return ''
-    
-            output = file.getAllSeriesRangedOutput(start, stop)
-            json_output = json.dumps(output, ignore_nan=True)
-            
-            return json_output
-    
-        else:
-            return "Invalid request."
 
-    @app.route(config.rootWebPath + '/multi_series_ranged_data', methods=['GET'])
+    @app.route(config.rootWebPath + '/series_ranged_data', methods=['GET'])
     @login_required
-    def multi_series_ranged_data():
+    def series_ranged_data():
 
         if request.method == 'GET' and len(request.args.get('file', default='')) > 0 and len(
                 request.args.get('start', default='')) > 0 and len(request.args.get('start', default='')) > 0 and len(
@@ -245,33 +219,9 @@ def create_app():
             if not isinstance(file, File):
                 return ''
 
-            output = file.getMultiSeriesRangedOutput(series, start, stop)
+            output = file.getSeriesRangedOutput(series, start, stop)
             json_output = json.dumps(output, ignore_nan=True)
 
-            return json_output
-
-    @app.route(config.rootWebPath+'/single_series_ranged_data', methods=['GET'])
-    @login_required
-    def single_series_ranged_data():
-    
-        if request.method == 'GET' and len(request.args.get('file', default='')) > 0 and len(request.args.get('start', default='')) > 0 and len(request.args.get('start', default='')) > 0 and len(request.args.get('stop', default='')) > 0:
-    
-            # Parse the series name and start & stop times
-            filename = request.args.get('file')
-            series = request.args.get('series')
-            start = request.args.get('start', type=float)
-            stop = request.args.get('stop', type=float)
-    
-            # Get the file
-            file = project.getFile(filename)
-    
-            # If we did not find the file, return empty output
-            if not isinstance(file, File):
-                return ''
-    
-            output = file.getSingleSeriesRangedOutput(series, start, stop)
-            json_output = json.dumps(output, ignore_nan=True)
-            
             return json_output
         
     @app.route(config.rootWebPath+'/get_alerts', methods=['GET'])
@@ -315,11 +265,6 @@ def create_app():
     
         output = file.generateAlerts(series, thresholdlow, thresholdhigh, mode, duration, dutycycle, maxgap)
         return json.dumps(output, ignore_nan=True)
-    
-    @app.route(config.rootWebPath+'/get_annotations', methods=['GET'])
-    @login_required
-    def get_annotations():
-        print("not operational")
     
     @app.route(config.rootWebPath+'/get_files')
     @login_required

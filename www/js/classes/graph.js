@@ -194,6 +194,26 @@ Graph.prototype.instantiateDygraph = function() {
 		}
 	}
 
+	// Determine if we have a specified y-axis range for this group or series.
+	// If it's a group, then determine a range that would include each series'
+	// configured range.
+	let yAxisRange = [null, null];
+	if (this.isGroup) {
+		for (let s of this.group) {
+			if (moveToConfig.ranges.hasOwnProperty(s)) {
+				if (yAxisRange[0] === null || yAxisRange[0] > moveToConfig.ranges[s][0]) {
+					yAxisRange[0] = moveToConfig.ranges[s][0];
+				}
+				if (yAxisRange[1] === null || yAxisRange[1] < moveToConfig.ranges[s][1]) {
+					yAxisRange[1] = moveToConfig.ranges[s][1];
+				}
+			}
+		}
+	}
+	else if (moveToConfig.ranges.hasOwnProperty(this.series)) {
+		yAxisRange = moveToConfig.ranges[this.series];
+	}
+
 	// Create the dygraph
 	this.dygraphInstance = new Dygraph(this.graphDomElement, this.file.fileData.series[this.series].data, {
 		axes: {
@@ -233,7 +253,8 @@ Graph.prototype.instantiateDygraph = function() {
 		  'Max': { plotter: downsamplePlotter }
 		},*/
 		title: this.series,
-		underlayCallback: underlayCallbackHandler
+		underlayCallback: underlayCallbackHandler,
+		valueRange: yAxisRange
 	});
 
 };
@@ -319,39 +340,19 @@ Graph.prototype.showDOMElements = function() {
 };
 
 // Request and update data for the current view of the graph.
-// NOTE: There is an identically-named function on both File and Graph classes.
+// NOTE: There is an identically-named function on both File and Graph classes,
+// the former which updates data for all graphs currently appearing and the
+// latter which updates the data only for the single graph.
 Graph.prototype.updateCurrentViewData = function() {
-
-	console.log("GRAPH updateCurrentViewData called.");
 
 	// Get the x-axis range
 	let xRange = this.dygraphInstance.xAxisRange();
 
-	// Persist for callback
-	let graph = this;
+	// Assemble the series ID(s) for which we will request updated data.
+	let series = this.isGroup ? this.group : [this.series];
 
-	requestHandler.requestSingleSeriesRangedData(this.file.filename, this.series, xRange[0], xRange[1], function(data) {
-
-		// Validate the response data
-		if (typeof data === 'undefined' || !data || !data.hasOwnProperty(graph.series) || !data[graph.series].hasOwnProperty('data') || !data[graph.series].hasOwnProperty('labels')) {
-			console.log('Invalid response received.');
-			return;
-		}
-
-		// Temporarily unsynchronize the graphs
-		graph.file.unsynchronizeGraphs();
-
-		// Pad the returned data if necessary
-		padDataIfNeeded(data[graph.series].data);
-		
-		// Mesh the updated current view data
-		//graph.meshData(data[graph.series].data);
-		graph.replacePlottedData(createMeshedTimeSeries(graph.file.fileData.series[graph.series].data, data[graph.series].data));
-
-		// Resynchronize the graphs
-		graph.file.synchronizeGraphs();
-
-	});
+	// Request the updated view data from the backend.
+	requestHandler.requestSeriesRangedData(this.file.filename, series, xRange[0], xRange[1], this.file.getPostloadDataUpdateHandler());
 
 };
 

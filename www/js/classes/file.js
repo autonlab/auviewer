@@ -5,6 +5,9 @@ function File(filename) {
 	// Holds the filelname
 	this.filename = filename;
 
+	// Holds the file metadata
+	this.metadata = {};
+
 	// Holds graph object instances pertaining to the file.
 	this.graphs = {};
 
@@ -55,23 +58,13 @@ function File(filename) {
 
 
 		/*** BEGIN HARD-CODED PROJECT CONIG ***/
-		/*
-			Hard-coding some project configuration for now which we will move
-			into db or config files later.
-		 */
-
-		let groups = [
-			['numerics/AR1-D/data', 'numerics/AR1-S/data', 'numerics/AR1-M/data'],
-			['numerics/ART.Diastolic/data', 'numerics/ART.Systolic/data', 'numerics/ART.Mean/data'],
-			['numerics/NBP.NBPd/data', 'numerics/NBP.NBPm/data', 'numerics/NBP.NBPs/data']
-		];
 
 		// Let's create a collated data set for each group.
 		// NOTE: If you're trying to understand this code in the future, I'm
 		// sorry. I could not document this in any way that would help make it
 		// more understandable, and it is a bit of a labyrinth.
 		groupLoop:
-		for (let group of groups) {
+		for (let group of moveToConfig.groups) {
 
 			// Check whether all series members of the group are present, and if
 			// not, then skip this group.
@@ -100,6 +93,24 @@ function File(filename) {
 		}
 
 		/*** END HARD-CODED PROJECT CONIG ***/
+
+
+
+
+
+
+
+
+
+
+
+		// Attach & render file metadata
+		file.metadata = data.metadata;
+		file.renderMetadata();
+
+
+
+
 
 
 
@@ -215,6 +226,111 @@ File.prototype.destroy = function() {
 
 };
 
+// Returns a handler function which processes new series data received from the
+// backend.
+File.prototype.getPostloadDataUpdateHandler = function() {
+
+	let file = this;
+
+	return function(data) {
+
+		// Validate the response data
+		if (typeof data === 'undefined' || !data || !data.hasOwnProperty('series')) {
+			console.log('Invalid response received.');
+			return;
+		}
+
+		// Go through all series received in the response, and pad if necessary.
+		// We do this before iterating through and attaching the data to the
+		// graphs because there is not always a 1:1 relationship between series
+		// and graph instance.
+		//
+		// After padding the data of each series, replace the series data with a
+		// mesh of the series superset (cached) and the current-view series
+		// subset (received in response just now).
+		for (let s in data.series) {
+
+			padDataIfNeeded(data.series[s].data);
+
+			data.series[s].data = createMeshedTimeSeries(file.fileData.series[s].data, data.series[s].data);
+
+		}
+
+		// Temporarily unsynchronize the graphs
+		file.unsynchronizeGraphs();
+
+		// In order to process the backend response, we actually iterate through
+		// all of the local client-side graph instances (as opposed to iterating
+		// through the series provided in the response). We do this because one
+		// data series could be present in more than one graph (at least as
+		// conceived currently), for example as an individua series graph and in
+		// a group-of-series graph.
+		graphLoop:
+			for (let g in file.graphs) {
+
+				// We're only processing data responses for series of graphs
+				// currently showing.
+				if (file.graphs[g].isShowing()) {
+
+					if (file.graphs[g].isGroup) {
+
+						// Group-of-series graph handling...
+
+						// Verify that we received all series in the group in the
+						// backend response. If not, continue on to the next graph.
+						for (let s of file.graphs[g].group) {
+							if (!data.series.hasOwnProperty(s)) {
+								vo("Did not receive data for series " + s + ". Skipping group " + g + ".");
+								continue graphLoop;
+							}
+						}
+
+						// Replace graph data with merge of mesh of group series
+						file.graphs[g].replacePlottedData(createMergedTimeSeries(file.graphs[g].group, data.series))
+
+					} else {
+
+						// Single graph handling...
+
+						// If this is a graph that represents a single series, then
+						// we grab the series name from the graph instance property.
+						let s = file.graphs[g].series;
+
+						// Verify that we received the series in question in the
+						// backend response.
+						if (!data.series.hasOwnProperty(s)) {
+							continue;
+						}
+
+						// Replace graph data with mesh of series
+						file.graphs[g].replacePlottedData(data.series[s].data);
+
+					}
+
+				}
+
+			}
+
+		// Resynchronize the graphs
+		file.synchronizeGraphs();
+
+	};
+
+};
+
+// Render the file metadata
+File.prototype.renderMetadata = function() {
+
+	let div = document.createElement('DIV');
+	div.id = 'metadata';
+	div.innerHTML = '<h2>Metadata</h2>';
+	for (let property of Object.keys(this.metadata)) {
+		div.innerHTML += '<br>'+property+': '+this.metadata[property];
+	}
+	document.getElementById('graphs').appendChild(div);
+
+};
+
 // Synchronize the graphs for zoom and selection.
 File.prototype.synchronizeGraphs = function() {
 
@@ -266,8 +382,6 @@ File.prototype.triggerRedraw = function() {
 // NOTE: There is an identically-named function on both File and Graph classes.
 File.prototype.updateCurrentViewData = function() {
 
-	console.log("FILE updateCurrentViewData called.");
-
 	// Holds the array of series IDs for which we will request updated data.
 	let series = [];
 
@@ -311,94 +425,8 @@ File.prototype.updateCurrentViewData = function() {
 	// showing the same range since they are synchronized).
 	let xRange = lastGraphShowing.dygraphInstance.xAxisRange();
 
-	// Persist for callback
-	let file = this;
-
-	requestHandler.requestMultiSeriesRangedData(this.filename, series, xRange[0], xRange[1], function(data) {
-		// Validate the response data
-		if (typeof data === 'undefined' || !data || !data.hasOwnProperty('series')) {
-			console.log('Invalid response received.');
-			return;
-		}
-
-		// Go through all series received in the response, and pad if necessary.
-		// We do this before iterating through and attaching the data to the
-		// graphs because there is not always a 1:1 relationship between series
-		// and graph instance.
-		//
-		// After padding the data of each series, replace the series data with a
-		// mesh of the series superset (cached) and the current-view series
-		// subset (received in response just now).
-		for (let s in data.series) {
-
-			padDataIfNeeded(data.series[s].data);
-
-			data.series[s].data = createMeshedTimeSeries(file.fileData.series[s].data, data.series[s].data);
-
-		}
-
-		console.log("FINAL DATA", data);
-
-		// Temporarily unsynchronize the graphs
-		file.unsynchronizeGraphs();
-
-		// In order to process the backend response, we actually iterate through
-		// all of the local client-side graph instances (as opposed to iterating
-		// through the series provided in the response). We do this because one
-		// data series could be present in more than one graph (at least as
-		// conceived currently), for example as an individua series graph and in
-		// a group-of-series graph.
-		graphLoop:
-		for (let g in file.graphs) {
-
-			// We're only processing data responses for series of graphs
-			// currently showing.
-			if (file.graphs[g].isShowing()) {
-
-				if (file.graphs[g].isGroup) {
-
-					// Group-of-series graph handling...
-
-					// Verify that we received all series in the group in the
-					// backend response. If not, continue on to the next graph.
-					for (let s of file.graphs[g].group) {
-						if (!data.series.hasOwnProperty(s)) {
-							vo("Did not receive data for series "+s+". Skipping group "+g+".");
-							continue graphLoop;
-						}
-					}
-
-					// Replace graph data with merge of mesh of group series
-					console.log("Replacing multi series graph data with", createMergedTimeSeries(file.graphs[g].group, data.series));
-					file.graphs[g].replacePlottedData(createMergedTimeSeries(file.graphs[g].group, data.series))
-
-				} else {
-
-					// Single graph handling...
-
-					// If this is a graph that represents a single series, then
-					// we grab the series name from the graph instance property.
-					let s = file.graphs[g].series;
-
-					// Verify that we received the series in question in the
-					// backend response.
-					if (!data.series.hasOwnProperty(s)) {
-						continue;
-					}
-
-					// Replace graph data with mesh of series
-					file.graphs[g].replacePlottedData(data.series[s].data);
-
-				}
-
-			}
-
-		}
-
-		// Resynchronize the graphs
-		file.synchronizeGraphs();
-
-	});
+	// Request the updated view data from the backend.
+	requestHandler.requestSeriesRangedData(this.filename, series, xRange[0], xRange[1], this.getPostloadDataUpdateHandler());
 
 };
 

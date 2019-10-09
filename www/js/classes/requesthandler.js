@@ -8,33 +8,14 @@ RequestHandler.prototype.requestInitialFilePayload = function(filename, callback
 	});
 };
 
-RequestHandler.prototype.requestAllSeriesRangedData = function(filename, startTime, stopTime, callback) {
-
-	this._newRequest(callback, config.allSeriesRangedDataURL, {
-		file: filename,
-		start: startTime,
-		stop: stopTime
-	});
-
-};
-
 RequestHandler.prototype.requestFileList = function(callback) {
 	this._newRequest(callback, config.getFilesURL, {});
 };
 
-RequestHandler.prototype.requestMultiSeriesRangedData = function(filename, series, startTime, stopTime, callback) {
-	this._newRequest(callback, config.multiSeriesRangedDataURL, {
+RequestHandler.prototype.requestSeriesRangedData = function(filename, series, startTime, stopTime, callback) {
+	this._newRequest(callback, config.seriesRangedDataURL, {
 		file: filename,
 		s: series,
-		start: startTime,
-		stop: stopTime
-	});
-};
-
-RequestHandler.prototype.requestSingleSeriesRangedData = function(filename, series, startTime, stopTime, callback) {
-	this._newRequest(callback, config.singleSeriesRangedDataURL, {
-		file: filename,
-		series: series,
 		start: startTime,
 		stop: stopTime
 	});

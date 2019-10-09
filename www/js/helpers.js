@@ -87,7 +87,7 @@ function createMergedTimeSeries(groupSeries, data) {
 		}
 
 	}
-console.log(combinedSeries);
+
 	return combinedSeries;
 
 }

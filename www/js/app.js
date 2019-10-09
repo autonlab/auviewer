@@ -1,5 +1,41 @@
 'use strict';
 
+/*
+  Hard-coding some project configuration for now which we will move into db or
+  config files later.
+*/
+let bpRange = [0, 250];
+let pulseRange = [0, 200];
+let spo2Range = [30, 100];
+let moveToConfig = {
+
+	groups: [
+		['numerics/AR1-D/data', 'numerics/AR1-S/data', 'numerics/AR1-M/data'],
+		['numerics/ART.Diastolic/data', 'numerics/ART.Systolic/data', 'numerics/ART.Mean/data'],
+		['numerics/NBP.NBPd/data', 'numerics/NBP.NBPm/data', 'numerics/NBP.NBPs/data']
+	],
+
+	ranges: {
+		'numerics/AR1-D/data': bpRange,
+		'numerics/AR1-M/data': bpRange,
+		'numerics/AR1-S/data': bpRange,
+		'numerics/ART.Diastolic/data': bpRange,
+		'numerics/ART.Mean/data': bpRange,
+		'numerics/ART.Pulse/data': pulseRange,
+		'numerics/ART.Systolic/data': bpRange,
+		'numerics/NBP.NBPd/data': bpRange,
+		'numerics/NBP.NBPm/data': bpRange,
+		'numerics/NBP.NBPs/data': bpRange,
+		'numerics/NBP.Pulse/data': pulseRange,
+		'numerics/RR.RR/data': [0, 50],
+		'numerics/SpO₂.Pulse/data': pulseRange,
+		'numerics/SpO₂.SpO₂/data': spo2Range,
+		'numerics/SpO₂T.SpO₂T/data': spo2Range,
+		'numerics/SPO2-%/data': spo2Range
+	}
+
+};
+
 // TODO(gus): This needs to be moved somewhere.
 // This function is a plotter that plugs into dygraphs in order to plot a down-
 // sampled data series. Plotting is not documented, so the best reference for
@@ -32,17 +68,6 @@ function downsamplePlotter(e) {
 	cnv.strokeStyle = '#171717';//'#5253FF';
 	cnv.fillStyle = '#171717';//'#5253FF';
 	cnv.lineWidth = 1;
-
-	// let l = e.allSeriesPoints[0].length;
-	// for (let i = 0; i < e.allSeriesPoints.length; i++) {
-	// 	if (l != e.allSeriesPoints[i].length) {
-	// 		console.log(e.allSeriesPoints);
-	// 		break;
-	// 	}
-	// }
-	if (e.allSeriesPoints.length === 9) {
-		console.log(e.allSeriesPoints);
-	}
 
 	// Plot each series, whether it be an individual series or a group of them.
 	//console.log(e.allSeriesPoints);
