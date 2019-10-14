@@ -58,6 +58,11 @@ Graph.prototype.build = function() {
 	// Set element to graph css class
 	graphDiv.className = 'graph';
 
+	// Attach this class instance as a DOM element property (this is for the
+	// click callback handler to work properly since dygraphs implements it
+	// poorly).
+	$(graphDiv).data('graphClassInstance', this);
+
 	// Attach new graph div to the DOM
 	document.getElementById('graphs').appendChild(graphDiv);
 
@@ -226,14 +231,7 @@ Graph.prototype.instantiateDygraph = function() {
 				independentTicks: true
 			}
 		},
-		clickCallback: function(e, x) {
-			for (let i = 0; i < annotations.length; i++) {
-				if (e.offsetX >= annotations[i].offsetXLeft && e.offsetX <= annotations[i].offsetXRight) {
-					annotations[i].showDialog('edit');
-					break;
-				}
-			}
-		},
+		clickCallback: clickCallbackHandler,
 		colors: ['#171717'],//'#5253FF'],
 		dateWindow: timeWindow,
 		//drawPoints: true,
@@ -325,6 +323,15 @@ Graph.prototype.show = function() {
 
 	// Resynchronize the graphs now that the addition is complete.
 	this.file.synchronizeGraphs();
+
+	// Run pre-defined anomaly detection jobs (async).
+	// NOTE: This function takes either string or array as parameter, so it
+	// works for a single or group series graph.
+	if (this.isGroup) {
+		this.file.runAnomalyDetectionJobsForSeries(this.group);
+	} else {
+		this.file.runAnomalyDetectionJobsForSeries(this.series);
+	}
 
 	// Update the data from the backend for the new series only
 	this.updateCurrentViewData()

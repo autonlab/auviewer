@@ -1,7 +1,6 @@
 from flask import Flask, Blueprint, send_from_directory, request, render_template, render_template_string
 from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
-#from flask_user import current_user, login_required, roles_required, UserManager, UserMixin
 from flask_user import confirm_email_required, current_user, login_required, UserManager, UserMixin, SQLAlchemyAdapter
 from flask_user.signals import user_sent_invitation, user_registered
 from project import Project
@@ -9,6 +8,7 @@ from file import File
 import config
 from pprint import pprint
 from htmlmin.main import minify
+import dbgw
 
 # Simplejson package is required in order to "ignore" NaN values and implicitly
 # convert them into null values. RFC JSON spec left out NaN values, even though
@@ -21,10 +21,6 @@ import simplejson as json
 
 def create_app():
     
-    project = Project()
-    project.processFiles()
-    project.loadProcessedFiles()
-
     # Instantiate the Flask web application class
     app = Flask(__name__, template_folder='../www/templates')
     
@@ -50,14 +46,33 @@ def create_app():
     db = SQLAlchemy(app)
     mail = Mail(app)
 
-    # Define the User data-model.
-    # NB: Make sure to add flask_user UserMixin !!!
+    class Annotation(db.Model):
+
+        __tablename__ = 'annotations'
+
+        id = db.Column(db.Integer(), primary_key=True)
+
+        user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+        filepath = db.Column(db.String(255), nullable=False)
+        xboundleft = db.Column(db.Float, nullable=True)
+        xboundright = db.Column(db.Float, nullable=True)
+        yboundtop = db.Column(db.Float, nullable=True)
+        yboundbottom = db.Column(db.Float, nullable=True)
+        annotation = db.Column(db.Text, nullable=False)
+
+    class Role(db.Model):
+
+        __tablename__ = 'roles'
+
+        id = db.Column(db.Integer(), primary_key=True)
+        name = db.Column(db.String(50), nullable=False, server_default=u'', unique=True)  # for @roles_accepted()
+
     class User(db.Model, UserMixin):
-        
+
         __tablename__ = 'users'
-        
+
         id = db.Column(db.Integer, primary_key=True)
-    
+
         # User authentication information. The collation='NOCASE' is required
         # to search case insensitively when USER_IFIND_MODE is 'nocase_collation'.
         email = db.Column(db.String(255, collation='NOCASE'), nullable=False, unique=True)
@@ -73,7 +88,9 @@ def create_app():
         roles = db.relationship('Role', secondary='users_roles', backref=db.backref('users', lazy='dynamic'))
 
     class UserInvitation(db.Model):
+
         __tablename__ = 'user_invite'
+
         id = db.Column(db.Integer, primary_key=True)
         email = db.Column(db.String(255), nullable=False)
         # save the user of the invitee
@@ -81,29 +98,28 @@ def create_app():
         # token used for registration page to identify user registering
         token = db.Column(db.String(100), nullable=False, server_default='')
 
-    # Define the Role data model
-    class Role(db.Model):
-        __tablename__ = 'roles'
-        id = db.Column(db.Integer(), primary_key=True)
-        name = db.Column(db.String(50), nullable=False, server_default=u'', unique=True)  # for @roles_accepted()
-
     # Define the UserRoles association model
     class UsersRoles(db.Model):
+
         __tablename__ = 'users_roles'
+
         id = db.Column(db.Integer(), primary_key=True)
         user_id = db.Column(db.Integer(), db.ForeignKey('users.id', ondelete='CASCADE'))
         role_id = db.Column(db.Integer(), db.ForeignKey('roles.id', ondelete='CASCADE'))
 
     # Create all database tables
     db.create_all()
+    
+    dbgw.provide('db', db)
+    dbgw.provide('Annotation', Annotation)
 
     # Setup Flask-User
     db_adapter = SQLAlchemyAdapter(db, User, UserInvitationClass=UserInvitation)  # Select database adapter
     user_manager = UserManager(db_adapter, app)  # Init Flask-User and bind to app
 
-    # You may use the code snippet to create initial/new admin users (since it
-    # is not possible through the interface). Alternatively, you could modify
-    # the database.
+    # You may use this code snippet below to create initial/new admin users
+    # (since it is not possible through the interface). Alternatively, you
+    # could modify the database.
     #
     # new_admin_email = 'gwelter@andrew.cmu.edu'
     # new_admin_pass = 'akeminute'
@@ -112,6 +128,11 @@ def create_app():
     #     u.roles.append(Role(name='admin'))
     #     db.session.add(u)
     #     db.session.commit()
+
+    # Load the project
+    project = Project()
+    project.processFiles()
+    project.loadProcessedFiles()
 
     @user_registered.connect_via(app)
     def after_registered_hook(sender, user, user_invite):
@@ -159,6 +180,114 @@ def create_app():
             """)
     
     ### SECURE AREAS (LOGIN REQUIRED) ###
+    ### All methods below should have ###
+    ### the @login_required decorator ###
+
+    @app.route(config.rootWebPath + '/bokeh.html')
+    @login_required
+    def bokeh():
+        return send_from_directory('../www', 'bokeh.html')
+
+    @app.route(config.rootWebPath+'/create_annotation', methods=['GET'])
+    @login_required
+    def create_annotation():
+
+        # Parse parameters
+        filename = request.args.get('file')
+        xBoundLeft = getFloatParamOrNone('xl')
+        xBoundRight = getFloatParamOrNone('xr')
+        yBoundTop = getFloatParamOrNone('yt')
+        yBoundBottom = getFloatParamOrNone('yb')
+        seriesID = request.args.get('sid')
+        label = request.args.get('label')
+
+        # Get the file
+        file = project.getFile(filename)
+
+        # If we did not find the file, return empty output
+        if not isinstance(file, File):
+            print("File could not be retrieved:", filename)
+            return json.dumps({
+                'success': False
+            })
+
+        # Write the annotation
+        return json.dumps({
+            'success': True,
+            'id': file.annotationSet.createAnnotation(xBoundLeft, xBoundRight, yBoundTop, yBoundBottom, seriesID, label)
+        })
+
+    @app.route(config.rootWebPath + '/delete_annotation')
+    @login_required
+    def delete_annotation():
+    
+        # Parse parameters
+        id = request.args.get('id')
+        filename = request.args.get('file')
+
+        # Get the file
+        file = project.getFile(filename)
+
+        # If we did not find the file, return empty output
+        if not isinstance(file, File):
+            print("File could not be retrieved:", filename)
+            return json.dumps({
+                'success': False
+            })
+        
+        # Delete the annotation
+        return json.dumps({
+            'success': file.annotationSet.deleteAnnotation(id)
+        })
+
+    @app.route(config.rootWebPath + '/detect_anomalies', methods=['GET'])
+    @login_required
+    def detect_anomalies():
+    
+        # TODO(gus): Add checks here
+    
+        # Parse the series name and alert parameters
+        filename = request.args.get('file')
+        series = request.args.get('series')
+        thresholdlow = request.args.get('thresholdlow', type=float)
+        thresholdhigh = request.args.get('thresholdhigh', type=float)
+        duration = request.args.get('duration', type=float)
+        dutycycle = request.args.get('dutycycle', type=float)
+        maxgap = request.args.get('maxgap', type=float)
+    
+        # Generate the mode parameter (see generateThresholdAlerts function
+        # description for details on this parameter).
+        if request.args.get('thresholdhigh') == '':
+            mode = 0
+            thresholdhigh = 0
+        elif request.args.get('thresholdlow') == '':
+            mode = 1
+            thresholdlow = 0
+        elif request.args.get('thresholdlow') == '' and request.args.get('thresholdhigh') == '':
+            # It is invalid for no threshold to be supplied.
+            # TODO(gus): Add more generalized parameter checking that covers this,
+            # and get rid of this case here.
+            print("INVALID MODE")
+            return ''
+        else:
+            mode = 2
+    
+        # Get the file
+        file = project.getFile(filename)
+    
+        # If we did not find the file, return empty output
+        if not isinstance(file, File):
+            print("File could not be retrieved:", filename)
+            return ''
+    
+        return json.dumps(file.detectAnomalies(series, thresholdlow, thresholdhigh, mode, duration, dutycycle, maxgap), ignore_nan=True)
+
+    @app.route(config.rootWebPath + '/get_files')
+    @login_required
+    def get_files():
+    
+        output = project.getActiveFileListOutput()
+        return json.dumps(output, ignore_nan=True)
     
     @app.route(config.rootWebPath+'/')
     @app.route(config.rootWebPath+'/index.html')
@@ -166,11 +295,6 @@ def create_app():
     def index():
         #return send_from_directory('../www', 'index.html')
         return render_template('index.html')
-    
-    @app.route(config.rootWebPath+'/bokeh.html')
-    @login_required
-    def bokeh():
-        return send_from_directory('../www', 'bokeh.html')
     
     @app.route(config.rootWebPath+'/initial_file_payload')
     @login_required
@@ -190,7 +314,7 @@ def create_app():
     
             # Return the full (zoomed-out but downsampled if appropriate) datasets for
             # all data series.
-            output = file.getInitialFilePayload()
+            output = file.getInitialPayloadOutput()
             json_output = json.dumps(output, ignore_nan=True)
             
             return json_output
@@ -223,81 +347,35 @@ def create_app():
             json_output = json.dumps(output, ignore_nan=True)
 
             return json_output
-        
-    @app.route(config.rootWebPath+'/get_alerts', methods=['GET'])
+
+    @app.route(config.rootWebPath + '/update_annotation', methods=['GET'])
     @login_required
-    def get_alerts():
-    
-        # TODO(gus): Add checks here
-        
-        # Parse the series name and alert parameters
-        filename = request.args.get('file')
-        series = request.args.get('series')
-        thresholdlow = request.args.get('thresholdlow', type=float)
-        thresholdhigh = request.args.get('thresholdhigh', type=float)
-        duration = request.args.get('duration', type=float)
-        dutycycle = request.args.get('dutycycle', type=float)
-        maxgap = request.args.get('maxgap', type=float)
-    
-        # Generate the mode parameter (see generateThresholdAlerts function
-        # description for details on this parameter).
-        if request.args.get('thresholdhigh') == '':
-            mode = 0
-            thresholdhigh = 0
-        elif request.args.get('thresholdlow') == '':
-            mode = 1
-            thresholdlow = 0
-        elif request.args.get('thresholdlow') == '' and request.args.get('thresholdhigh') == '':
-            # It is invalid for no threshold to be supplied.
-            # TODO(gus): Add more generalized parameter checking that covers this,
-            # and get rid of this case here.
-            return ''
-            print("INVALID MODE")
-        else:
-            mode = 2
-    
-        # Get the file
-        file = project.getFile(filename)
-    
-        # If we did not find the file, return empty output
-        if not isinstance(file, File):
-            return ''
-    
-        output = file.generateAlerts(series, thresholdlow, thresholdhigh, mode, duration, dutycycle, maxgap)
-        return json.dumps(output, ignore_nan=True)
-    
-    @app.route(config.rootWebPath+'/get_files')
-    @login_required
-    def get_files():
-    
-        output = project.getActiveFileListOutput()
-        return json.dumps(output, ignore_nan=True)
-    
-    @app.route(config.rootWebPath+'/write_annotation', methods=['GET'])
-    @login_required
-    def write_annotation():
-    
+    def update_annotation():
+
         # Parse parameters
         filename = request.args.get('file')
+        id = request.args.get('id')
         xBoundLeft = getFloatParamOrNone('xl')
         xBoundRight = getFloatParamOrNone('xr')
         yBoundTop = getFloatParamOrNone('yt')
         yBoundBottom = getFloatParamOrNone('yb')
         seriesID = request.args.get('sid')
         label = request.args.get('label')
-        
+
         # Get the file
         file = project.getFile(filename)
-        
+
         # If we did not find the file, return empty output
         if not isinstance(file, File):
             print("File could not be retrieved:", filename)
-            return ''
-        
+            return json.dumps({
+                'success': False
+            })
+
         # Write the annotation
-        file.annotationSet.writeAnnotation(xBoundLeft, xBoundRight, yBoundTop, yBoundBottom, seriesID, label)
-        
-        return ''
+        return json.dumps({
+            'success': file.annotationSet.updateAnnotation(id, xBoundLeft, xBoundRight, yBoundTop, yBoundBottom, seriesID, label)
+        })
     
     ### HELPERS ###
     

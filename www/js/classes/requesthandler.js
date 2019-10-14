@@ -2,6 +2,41 @@
 
 function RequestHandler() {}
 
+RequestHandler.prototype.createAnnotation = function(filename, xBoundLeft, xBoundRight, seriesID, label, callback) {
+
+	this._newRequest(callback, config.createAnnotationURL, {
+		file: filename,
+		xl: xBoundLeft,
+		xr: xBoundRight,
+		/*yt: ,
+		yb: ,*/
+		sid: seriesID,
+		label: label
+	});
+
+};
+
+RequestHandler.prototype.deleteAnnotation = function(id, filename, callback) {
+	this._newRequest(callback, config.deleteAnnotationURL, {
+		id: id,
+		file: filename
+	});
+};
+
+RequestHandler.prototype.requestAnomalyDetection = function(filename, seriesID, tlow, thigh, duration, dutycycle, maxgap, callback) {
+
+	this._newRequest(callback, config.detectAnomaliesURL, {
+		file: filename,
+		series: seriesID,
+		thresholdlow: tlow,
+		thresholdhigh: thigh,
+		duration: duration,
+		dutycycle: dutycycle,
+		maxgap: maxgap
+	});
+
+};
+
 RequestHandler.prototype.requestInitialFilePayload = function(filename, callback) {
 	this._newRequest(callback, config.initialFilePayloadURL, {
 		file: filename
@@ -21,16 +56,17 @@ RequestHandler.prototype.requestSeriesRangedData = function(filename, series, st
 	});
 };
 
-RequestHandler.prototype.writeAnnotation = function(filename, xBoundLeft, xBoundRight, seriesID, label, callback) {
+RequestHandler.prototype.updateAnnotation = function(id, filename, xBoundLeft, xBoundRight, seriesID, label, callback) {
 
-	this._newRequest(callback, config.writeAnnotationURL, {
-		file: encodeURIComponent(filename),
-		xl: encodeURIComponent(xBoundLeft),
-		xr: encodeURIComponent(xBoundRight),
-		/*yt: encodeURIComponent(),
-		yb: encodeURIComponent(),*/
-		sid: encodeURIComponent(seriesID),
-		label: encodeURIComponent(label),
+	this._newRequest(callback, config.updateAnnotationURL, {
+		id: id,
+		file: filename,
+		xl: xBoundLeft,
+		xr: xBoundRight,
+		/*yt: ,
+		yb: ,*/
+		sid: seriesID,
+		label: label,
 	});
 
 };
@@ -49,7 +85,7 @@ RequestHandler.prototype._newRequest = function(callback, path, params) {
 		if (this.readyState === 4 && this.status === 200) {
 
 			// JSON-decode the response
-			let data = {}
+			let data = {};
 			if (this.responseText.length > 0) {
 				data = JSON.parse(this.responseText);
 			}
@@ -57,7 +93,11 @@ RequestHandler.prototype._newRequest = function(callback, path, params) {
 			vo("Response received to " + path, data);
 
 			// Call the callback with data
-			callback(data);
+			if (typeof callback === 'function') {
+				callback(data);
+			} else {
+				console.log("Important: Callback not provided to request handler.");
+			}
 
 		}
 
@@ -71,15 +111,17 @@ RequestHandler.prototype._newRequest = function(callback, path, params) {
 		} else {
 			path += '&';
 		}
-		if (params[keys[i]].constructor === Array) {
+		if (params[keys[i]] != null && params[keys[i]].constructor === Array) {
 			for (let j = 0; j < params[keys[i]].length; j++) {
 				if (j !== 0) {
 					path += '&';
 				}
 				path += keys[i]+ '[]=' + encodeURIComponent(params[keys[i]][j]);
 			}
-		} else {
+		} else if (params[keys[i]] || params[keys[i]] === 0) {
 			path += keys[i] + '=' + encodeURIComponent(params[keys[i]]);
+		} else {
+			path += keys[i] + '='
 		}
 	}
 

@@ -9,10 +9,52 @@ let pulseRange = [0, 200];
 let spo2Range = [30, 100];
 let moveToConfig = {
 
+	anomalyDetection: [
+		{
+			series: 'numerics/HR/data',
+			tlow: 58,
+			thigh: 110,
+			dur: 300,
+			duty: .7,
+			maxgap: 60
+		},
+		{
+			series: 'numerics/rRR/data',
+			tlow: 10,
+			thigh: 29,
+			dur: 300,
+			duty: .7,
+			maxgap: 60
+		},
+		{
+			series: 'numerics/NBP-S/data',
+			tlow: 90,
+			thigh: 165,
+			dur: 300,
+			duty: .7,
+			maxgap: 60
+		},
+		{
+			series: 'numerics/NBP-M/data',
+			tlow: 65,
+			dur: 300,
+			duty: .7,
+			maxgap: 60
+		},
+		{
+			series: 'numerics/SPO2-%/data',
+			tlow: 90,
+			dur: 300,
+			duty: .7,
+			maxgap: 60
+		},
+	],
+
 	groups: [
 		['numerics/AR1-D/data', 'numerics/AR1-S/data', 'numerics/AR1-M/data'],
 		['numerics/ART.Diastolic/data', 'numerics/ART.Systolic/data', 'numerics/ART.Mean/data'],
-		['numerics/NBP.NBPd/data', 'numerics/NBP.NBPm/data', 'numerics/NBP.NBPs/data']
+		['numerics/NBP.NBPd/data', 'numerics/NBP.NBPm/data', 'numerics/NBP.NBPs/data'],
+		['numerics/NBP-D/data', 'numerics/NBP-M/data', 'numerics/NBP-S/data']
 	],
 
 	ranges: {
@@ -128,17 +170,14 @@ let requestHandler = new RequestHandler();
 let globalStateManager = new GlobalStateManager();
 
 // Attach event handlers to the annotation modal
-$('#annotationModal button.btn-primary').click(function() {
-	$('#annotationModal').data('callingAnnotation').finalize();
+$('#annotationModal button.saveButton').click(function() {
+	$('#annotationModal').data('callingAnnotation').save();
 });
-$('#annotationModal button.btn-secondary').click(function() {
-	if ($('#annotationModal').data('state') == 'create') {
-		$('#annotationModal').data('callingAnnotation').cancel();
-	} else if($('#annotationModal').data('state') == 'edit') {
-		// TODO(gus): Implement deletion
-		// $('#annotationModal').data('callingAnnotation').delete();
-		$('#annotationModal').data('callingAnnotation').hideDialog();
-	}
+$('#annotationModal button.cancelButton').click(function() {
+	$('#annotationModal').data('callingAnnotation').cancel();
+});
+$('#annotationModal button.deleteButton').click(function() {
+	$('#annotationModal').data('callingAnnotation').delete();
 });
 
 // Request the list of files for the project

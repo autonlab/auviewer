@@ -24,20 +24,24 @@ let config = {
 	rootWebPath: '',
 	
 	// Backend request URLs
+	createAnnotationSubpath: '/create_annotation',
+	deleteAnnotationSubpath: '/delete_annotation',
+	detectAnomaliesSubpath: '/detect_anomalies',
+	getFilesSubpath: '/get_files',
 	initialFilePayloadSubpath: '/initial_file_payload',
 	seriesRangedDataSubpath: '/series_ranged_data',
-	getAlertsSubpath: '/get_alerts',
-	getFilesSubpath: '/get_files',
-	writeAnnotationSubpath: '/write_annotation',
-	
+	updateAnnotationSubpath: '/update_annotation',
+
 	// Series to display by default
 	// defaultSeries: ['HR', 'RR', 'BP', 'SpO2', 'CVP', 'ArtWave'],
-	defaultSeries: ['numerics/HR.BeatToBeat/data', 'numerics/RR.RR/data', 'numerics/ART.Systolic/data', 'numerics/ART.Diastolic/data', 'numerics/SpO₂.SpO₂/data', 'CVP/data', 'ArtWave/data']
+	defaultSeries: ['numerics/HR/data', 'numerics/HR.BeatToBeat/data', 'numerics/RR.RR/data', 'numerics/ART.Systolic/data', 'numerics/ART.Diastolic/data', 'numerics/SpO₂.SpO₂/data', 'numerics/SPO2-%/data', 'CVP/data', 'ArtWave/data']
 	
 };
 
+config.createAnnotationURL = config.buildDir(config.createAnnotationSubpath);
+config.deleteAnnotationURL = config.buildDir(config.deleteAnnotationSubpath);
+config.detectAnomaliesURL = config.buildDir(config.detectAnomaliesSubpath);
+config.getFilesURL = config.buildDir(config.getFilesSubpath);
 config.initialFilePayloadURL = config.buildDir(config.initialFilePayloadSubpath);
 config.seriesRangedDataURL = config.buildDir(config.seriesRangedDataSubpath);
-config.getAlertsURL = config.buildDir(config.getAlertsSubpath);
-config.getFilesURL = config.buildDir(config.getFilesSubpath);
-config.writeAnnotationURL = config.buildDir(config.writeAnnotationSubpath);
+config.updateAnnotationURL = config.buildDir(config.updateAnnotationSubpath);

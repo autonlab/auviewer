@@ -14,8 +14,15 @@ function File(filename) {
 	// Holds the initial payload data for the file
 	this.fileData = {};
 
+	// Holds annotations for the file
+	this.annotations = [];
+
 	// Holds the reference to the graph synchronization object
 	this.sync = null;
+
+	// Holds the parameters of executed anomaly detection jobs whose results are
+	// still being displayed (avoids duplication of jobs).
+	this.alreadyExecutedAnomalyDetectionJobs = [];
 
 	/*
 	Holds the min [0] and max [1] x-value across all graphs currently displayed.
@@ -47,19 +54,7 @@ function File(filename) {
 			padDataIfNeeded(file.fileData.series[s].data);
 		}
 
-
-
-
-
-
-
-
-
-
-
-		/*** BEGIN HARD-CODED PROJECT CONIG ***/
-
-		// Let's create a collated data set for each group.
+		// For each project-defined group, create a new, collated data set.
 		// NOTE: If you're trying to understand this code in the future, I'm
 		// sorry. I could not document this in any way that would help make it
 		// more understandable, and it is a bit of a labyrinth.
@@ -92,40 +87,9 @@ function File(filename) {
 
 		}
 
-		/*** END HARD-CODED PROJECT CONIG ***/
-
-
-
-
-
-
-
-
-
-
-
 		// Attach & render file metadata
 		file.metadata = data.metadata;
 		file.renderMetadata();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 		// Instantiate each graph
 		for (let s of Object.keys(file.fileData.series)) {
@@ -134,6 +98,12 @@ function File(filename) {
 
 		// Synchronize the graphs
 		file.synchronizeGraphs();
+
+		// Populate the annotations
+		for (let a of file.fileData.annotations) {
+			file.annotations.push(new Annotation({ valuesArrayFromBackend: a }, 'existing'));
+		}
+		globalStateManager.currentFile.triggerRedraw();
 
 		// Populate the alert generation dropdown
 		let alertGenSeriesDropdown = document.getElementById('alert_gen_series_field');
@@ -149,11 +119,22 @@ function File(filename) {
 			alertGenSeriesDropdown.add(opt);
 		}
 
-		// Populate the annotations
-		for (let ann of file.fileData.annotations) {
-			annotations.push(new Annotation(ann[0], ann[1], ann[6]));
+		// Process pre-defined anomaly detection for all currently-displaying
+		// series. We gather all displaying series before starting to send the
+		// anomaly detection requests because we don't want to conflict with a
+		// the on-display anomaly detection that will happen when a user toggles
+		// a hidden series to display.
+		let seriesInitiallyDisplaying = [];
+		for (let s of Object.keys(file.graphs)) {
+			if (file.graphs[s].isShowing()) {
+				if (file.graphs[s].isGroup) {
+					seriesInitiallyDisplaying.push.apply(file.graphs[s].series);
+				} else {
+					seriesInitiallyDisplaying.push(file.graphs[s].series);
+				}
+			}
 		}
-		globalStateManager.currentFile.triggerRedraw();
+		file.runAnomalyDetectionJobsForSeries(seriesInitiallyDisplaying);
 
 	});
 
@@ -205,6 +186,24 @@ File.prototype.calculateExtremes = function() {
 
 };
 
+// Removes all detected anomalies
+File.prototype.clearAnomalies = function() {
+
+	// Clear all anomaly annotations from the annotations array
+	for (let i = this.annotations.length-1; i >= 0; i--) {
+		if (this.annotations[i].state === 'anomaly') {
+			this.annotations[i].deleteLocal();
+		}
+	}
+
+	// Clear the already-executed anomaly detection jobs array
+	this.alreadyExecutedAnomalyDetectionJobs = [];
+
+	// Redraw
+	this.triggerRedraw();
+
+};
+
 File.prototype.destroy = function() {
 
 	// Destroy graph synchronization state management
@@ -223,6 +222,120 @@ File.prototype.destroy = function() {
 	this.graphs = {};
 	this.fileData = {};
 	this.globalXExtremes = [];
+
+};
+
+// Run anomaly detection with the parameters provided. The callback parameter,
+// if provided, will be called either after the response has been received from
+// the server and processed or upon a return resulting from a missing-parameter
+// error.
+File.prototype.detectAnomalies = function(series, thresholdlow, thresholdhigh, duration, dutycycle, maxgap, callback=null) {
+
+	console.log("Anomaly detection called.");
+
+	// In case any of our numerical parameters are numerical 0, convert them to
+	// strings now so we can effectively do parameter checking.
+	if (thresholdlow === 0) {
+		thresholdlow = '0';
+	}
+	if (thresholdhigh === 0) {
+		thresholdhigh = '0';
+	}
+	if (duration === 0) {
+		duration = '0';
+	}
+	if (dutycycle === 0) {
+		dutycycle = '0';
+	}
+	if (maxgap === 0) {
+		maxgap = '0';
+	}
+
+	// These parameters are required, and either threshold low or threshold high
+	// or both is required.
+	if(
+		(!series ||
+		(!duration && duration !== 0) ||
+		(!dutycycle && dutycycle !== 0) ||
+		(!maxgap && maxgap !== 0))
+
+		||
+
+		((!thresholdlow && thresholdlow !== 0) &&
+		(!thresholdhigh && thresholdhigh !== 0))
+	) {
+
+		// Log the error to console.
+		console.log("Required parameters are missing for anomaly detection.");
+
+		// Call callback if provided
+		if (callback !== null && typeof callback === 'function') {
+			callback();
+		}
+
+		// Return as we cannot continue anomaly detection.
+		return;
+
+	}
+
+	// Check whether this job has already run
+	for (let j of this.alreadyExecutedAnomalyDetectionJobs) {
+		if (j[0] === series &&
+			(j[1] === parseFloat(thresholdlow) || (isNaN(j[1]) && isNaN(parseFloat(thresholdlow)))) &&
+			(j[2] === parseFloat(thresholdhigh) || (isNaN(j[2]) && isNaN(parseFloat(thresholdhigh)))) &&
+			(j[3] === parseFloat(duration) || (isNaN(j[3]) && isNaN(parseFloat(duration)))) &&
+			(j[4] === parseFloat(dutycycle) || (isNaN(j[4]) && isNaN(parseFloat(dutycycle)))) &&
+			(j[5] === parseFloat(maxgap)) || (isNaN(j[5]) && isNaN(parseFloat(maxgap)))) {
+
+			// Log the error to console.
+			console.log("An anomaly detection job with the same parameters executed previously. Aborting.");
+
+			// Call callback if provided
+			if (callback !== null && typeof callback === 'function') {
+				callback();
+			}
+
+			// Return as we cannot continue anomaly detection.
+			return;
+		}
+	}
+
+	// Add this job's parameters to the already-executed jobs array
+	this.alreadyExecutedAnomalyDetectionJobs.push([series, parseFloat(thresholdlow), parseFloat(thresholdhigh), parseFloat(duration), parseFloat(dutycycle), parseFloat(maxgap)]);
+	
+	// Persist for callback
+	let file = this;
+
+	requestHandler.requestAnomalyDetection(globalStateManager.currentFile.filename, series, thresholdlow, thresholdhigh, duration, dutycycle, maxgap, function (data) {
+
+		for (let a of data) {
+			file.annotations.push(new Annotation({ series: series, begin: a[0], end: a[1] }, 'anomaly'));
+		}
+
+		file.triggerRedraw();
+
+		// Call callback if provided
+		if (callback !== null && typeof callback === 'function') {
+			callback();
+		}
+
+	});
+
+    console.log("Anomaly detection request sent.");
+
+};
+
+// Run anomaly detection with the user-input form values.
+File.prototype.detectAnomaliesFromForm = function() {
+
+	let series = document.getElementById("alert_gen_series_field").value;
+	let thresholdlow = document.getElementById("alert_gen_threshold_low_field").value;
+	let thresholdhigh = document.getElementById("alert_gen_threshold_high_field").value;
+	let duration = document.getElementById("alert_gen_duration_field").value;
+	let dutycycle = document.getElementById("alert_gen_dutycycle_field").value;
+	let maxgap = document.getElementById("alert_gen_maxgap_field").value;
+
+	this.detectAnomalies(series, thresholdlow, thresholdhigh, duration, dutycycle, maxgap);
 
 };
 
@@ -328,6 +441,51 @@ File.prototype.renderMetadata = function() {
 		div.innerHTML += '<br>'+property+': '+this.metadata[property];
 	}
 	document.getElementById('graphs').appendChild(div);
+
+};
+
+// Runs pre-defined anomaly detection jobs for one or more series. The series
+// parameter may be a string or array of strings.
+File.prototype.runAnomalyDetectionJobsForSeries = function(series) {
+
+	if (!Array.isArray(series)) {
+		series = [series];
+	}
+
+	// Persist for callback
+	let file = this;
+
+	// We now use recursion to send the anomaly detection requests serially.
+	let adi = 0;
+	let recursiveDetectionFunc = function() {
+
+		if (adi < moveToConfig.anomalyDetection.length) {
+
+			let i = adi++;
+
+			// If the series was initially displaying, run the pre-defined
+			// anomaly detection for it.
+			if (moveToConfig.anomalyDetection[i].hasOwnProperty('series') && series.includes(moveToConfig.anomalyDetection[i].series)) {
+				file.detectAnomalies(
+					moveToConfig.anomalyDetection[i].hasOwnProperty('series') ? moveToConfig.anomalyDetection[i].series : null,
+					moveToConfig.anomalyDetection[i].hasOwnProperty('tlow') ? moveToConfig.anomalyDetection[i].tlow : null,
+					moveToConfig.anomalyDetection[i].hasOwnProperty('thigh') ? moveToConfig.anomalyDetection[i].thigh : null,
+					moveToConfig.anomalyDetection[i].hasOwnProperty('dur') ? moveToConfig.anomalyDetection[i].dur : null,
+					moveToConfig.anomalyDetection[i].hasOwnProperty('duty') ? moveToConfig.anomalyDetection[i].duty : null,
+					moveToConfig.anomalyDetection[i].hasOwnProperty('maxgap') ? moveToConfig.anomalyDetection[i].maxgap : null,
+					recursiveDetectionFunc);
+			} else {
+				// Even if this anomaly detection was not processed because
+				// the series was not passed in, continue onto the next one.
+				recursiveDetectionFunc();
+			}
+
+		}
+
+	};
+
+	// Kick off the recursive pre-defined anomaly detection.
+	recursiveDetectionFunc();
 
 };
 

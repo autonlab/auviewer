@@ -64,7 +64,7 @@ class File:
             print("There was an exception while h5py was creating the processed file. Raising ProcessedFileExists exception.")
             raise ProcessedFileExists
         
-    def generateAlerts(self, seriesid, thresholdlow, thresholdhigh, mode, duration, dutycycle, maxgap):
+    def detectAnomalies(self, seriesid, thresholdlow, thresholdhigh, mode, duration, dutycycle, maxgap):
 
         # Find the series
         for s in self.series:
@@ -76,13 +76,14 @@ class File:
         return os.path.join(self.path, self.filename)
 
     # Produces JSON output for all series in the file at the maximum time range.
-    def getInitialFilePayload(self):
+    def getInitialPayloadOutput(self):
 
         print("Assembling all series full output for file " + self.filename + ".")
         start = time.time()
 
         outputObject = {
-            'annotations': self.annotationSet.getAnnotations().tolist(),
+            # 'annotations': self.annotationSet.getAnnotations().tolist(),
+            'annotations': self.annotationSet.getAnnotations(),
             'metadata': self.getMetadata(),
             'series': {}
         }

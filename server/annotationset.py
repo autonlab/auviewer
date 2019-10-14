@@ -2,6 +2,7 @@ import h5py
 import numpy as np
 from flask_login import current_user
 from pprint import pprint
+import dbgw
 
 class AnnotationSet:
     
@@ -10,29 +11,52 @@ class AnnotationSet:
         # Set the file parent
         self.fileparent = fileparent
         
+        self.anndb = dbgw.receive('Annotation')
+        self.db=dbgw.receive('db')
+
+    def createAnnotation(self, xBoundLeft=None, xBoundRight=None, yBoundTop=None, yBoundBottom=None, seriesID='', label=''):
+    
+        newann = self.anndb(
+            user_id=current_user.id,
+            filepath=self.fileparent.getFilepath(),
+            xboundleft=xBoundLeft,
+            xboundright=xBoundRight,
+            yboundtop=yBoundTop,
+            yboundbottom=yBoundBottom,
+            annotation=label)
+        self.db.session.add(newann)
+        self.db.session.commit()
+    
+        return newann.id
+        
+    # Deletes the annotation with the given ID, after some checks. Returns true
+    # or false to indicate success.
+    def deleteAnnotation(self, id):
+        
+        # Get the annotation in question
+        annotationToDelete = self.anndb.query.filter_by(id=id).first()
+        
+        # Verify the user has requested to delete his or her own annotation.
+        if annotationToDelete.user_id != current_user.id:
+            print("Error/securityissue on annotation deletion: User (id "+str(current_user.id)+") tried to delete an annotation (id "+str(id)+") belonging to another user (id "+str(annotationToDelete.user_id)+").")
+            return False
+        
+        # Verify the annotation ID belongs to the file it should
+        if annotationToDelete.filepath != self.fileparent.getFilepath():
+            print("Error on annotation deletion: File passed in did not match file of annotation. Annotation ID "+str(id)+", file specified in request '"+self.fileparent.getFilepath()+"', file listed in annotation '"+str(annotationToDelete.filepath)+"'.")
+            return False
+        
+        # Having reached this point, delete the annotation
+        self.db.session.delete(annotationToDelete)
+        self.db.session.commit()
+        
+        # Return true to indicate success
+        return True
+        
     # Returns a NumPy array of the annotations, or an empty list.
     def getAnnotations(self):
         
-        pprint(vars(current_user))
-
-        # Grab the user ID
-        userID = current_user.email
-
-        # We expect a non-empty user ID to be present
-        if len(userID) < 1:
-            print("User ID was not found in getAnnotations.")
-            return []
-        
-        adset = self.getAnnotationsDataset()
-        
-        if adset is None:
-            return []
-        else:
-    
-            # Return results filtered for only the user's annotations
-            bset = adset[()]
-            print('here: ', bset[bset['userid']==userID])
-            return bset[bset['userid']==userID]
+        return [[a.id, a.xboundleft, a.xboundright, a.yboundtop, a.yboundbottom, a.annotation] for a in self.anndb.query.filter_by(user_id=current_user.id, filepath=self.fileparent.getFilepath()).all()]
     
     # Returns the annotations dataset or None if it cannot be retrieved. If the
     # annotations dataset does not exist in the processed file, it will create
@@ -57,42 +81,30 @@ class AnnotationSet:
         # Otherwise, create the annotations dataset and return it
         return pf.create_dataset("annotations", (0,), maxshape=(None,), dtype=[('xboundleft', 'float64'), ('xboundright', 'float64'), ('yboundtop', 'float64'), ('yboundbottom', 'float64'), ('userid', h5py.special_dtype(vlen=str)), ('seriesid', h5py.special_dtype(vlen=str)), ('label', h5py.special_dtype(vlen=str))])
 
-    def writeAnnotation(self, xBoundLeft=None, xBoundRight=None, yBoundTop=None, yBoundBottom=None, seriesID='', label=''):
-    
-        # If a series ID is specified but does not exist, we cannot proceed.
-        if len(seriesID) > 0 and self.fileparent.getSeries(seriesID) is None:
-            print("Unable to write annotation because the series ID specified is not found.")
-            return
+    def updateAnnotation(self, id, xBoundLeft=None, xBoundRight=None, yBoundTop=None, yBoundBottom=None, seriesID='', label=''):
 
-        # Grab the user ID
-        userID = current_user.email
+        # Get the annotation in question
+        annotationToUpdate = self.anndb.query.filter_by(id=id).first()
 
-        # We expect a non-empty user ID to be present
-        if len(userID) < 1:
-            print("User ID was not found in writeAnnotation.")
-            return
-    
-        # Get the annotations dataset for the processed data file for writing
-        adset = self.getAnnotationsDataset()
-    
-        # Handle the case where we were not able to get the annotations dataset
-        if adset is None:
-            print("Unable to write annotation because the annotations dataset could not be retrieved.")
-            return
-        
-        # Assemble the recarray which we'll add to the annotations dataset
-        ra = np.recarray((1,), dtype=[('xboundleft', 'float64'), ('xboundright', 'float64'), ('yboundtop', 'float64'), ('yboundbottom', 'float64'), ('userid', h5py.special_dtype(vlen=str)), ('seriesid', h5py.special_dtype(vlen=str)), ('label', h5py.special_dtype(vlen=str))])
+        # Verify the user has requested to update his or her own annotation.
+        if annotationToUpdate.user_id != current_user.id:
+            print("Error/securityissue on annotation update: User (id " + str(current_user.id) + ") tried to update an annotation (id " + str(id) + ") belonging to another user (id " + str(annotationToUpdate.user_id) + ").")
+            return False
 
-        ra[0].xboundleft = xBoundLeft
-        ra[0].xboundright = xBoundRight
-        ra[0].yboundtop = yBoundTop
-        ra[0].yboundbottom = yBoundBottom
-        ra[0].userid = userID
-        ra[0].seriesid = seriesID
-        ra[0].label = label
-    
-        # Add a row to the annotations dataset
-        adset.resize(adset.shape[0] + 1, axis=0)
-    
-        # Write the annotation
-        adset[-1] = ra
+        # Verify the annotation ID belongs to the file it should
+        if annotationToUpdate.filepath != self.fileparent.getFilepath():
+            print("Error on annotation update: File passed in did not match file of annotation. Annotation ID " + str(id) + ", file specified in request '" + self.fileparent.getFilepath() + "', file listed in annotation '" + str(annotationToUpdate.filepath) + "'.")
+            return False
+
+        # Set updated values
+        annotationToUpdate.xboundleft=xBoundLeft
+        annotationToUpdate.xboundright=xBoundRight
+        annotationToUpdate.yboundtop=yBoundTop
+        annotationToUpdate.yboundbottom=yBoundBottom
+        annotationToUpdate.annotation=label
+
+        # Commit the changes
+        self.db.session.commit()
+
+        # Return true to indicate success
+        return True

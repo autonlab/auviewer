@@ -1,5 +1,38 @@
+let useRandomAnomalyColors = false;
+let seriesAnomalyColors = {};
+
+// The click callback handler displays the annotation input form if the user
+// clicks on an annotation. If multiple annotations are under the mouse-click,
+// the first input form is displayed for the first annotation found.
+function clickCallbackHandler(e, x) {
+
+	// Get reference to current file
+	let file = globalStateManager.currentFile;
+
+	// Get a reference to the graph instance. Dygraphs implements the click
+	// callback poorly, so we have to get it in a convoluted way.
+	let graph = $(e.path[2]).data('graphClassInstance');
+
+	// Iterate through the annotations to look for an annotation under the click
+	for (let i = 0; i < file.annotations.length; i++) {
+		if (e.offsetX >= file.annotations[i].offsetXLeft && e.offsetX <= file.annotations[i].offsetXRight) {
+			if (
+				!file.annotations[i].series ||
+				(!graph.isGroup && file.annotations[i].series === graph.series) ||
+				(graph.isGroup && graph.series.includes(file.annotations[i].series))
+			) {
+				file.annotations[i].showDialog();
+				break;
+			}
+		}
+	}
+
+}
+
 // Ends an annotation highlighting action in response to a mouse-up event.
 function endAnnotationHighlight (event, g, context) {
+
+	let file = globalStateManager.currentFile;
 
 	let left = Math.min(context.dragStartX, context.dragEndX);
 	let right = Math.max(context.dragStartX, context.dragEndX);
@@ -7,11 +40,14 @@ function endAnnotationHighlight (event, g, context) {
 	let to = g.toDataXCoord(right);
 
 	// Create a new annotation
-	let annotation = new Annotation(from, to);
-    annotations.push(annotation);
+	let annotation = new Annotation({
+		begin: from,
+		end: to
+	}, 'new');
+    file.annotations.push(annotation);
 
 	// Show the annotation dialog
-    annotation.showDialog('create');
+    annotation.showDialog();
 
 	// Clear the grey rectangle that was drawn for the user interaction of spanning the annotation section.
 	g.clearZoomRect_();
@@ -91,12 +127,25 @@ function startAnnotationHighlight (event, g, context) {
 // This is the callback function provided to dygraphs which draws the
 // annotations on the canvas.
 function underlayCallbackHandler(canvas, area, g) {
+
+	let file = globalStateManager.currentFile;
+
 	let left, right, x, y, width, height;
 
-	for (let i = 0; i < annotations.length; i++) {
+	// console.log(canvas);
+	// console.log(area);
+	// console.log(g);
+	// console.log(Object.getOwnPropertyNames(g.setIndexByName_));
 
-		left = g.toDomXCoord(new Date(annotations[i].begin));
-		right = g.toDomXCoord(new Date(annotations[i].end));
+	for (let i = 0; i < file.annotations.length; i++) {
+
+		// If this annotation does not belong to this series, move on.
+		if (file.annotations[i].series != null && !Object.getOwnPropertyNames(g.setIndexByName_).includes(file.annotations[i].series)) {
+			continue;
+		}
+
+		left = g.toDomXCoord(new Date(file.annotations[i].begin));
+		right = g.toDomXCoord(new Date(file.annotations[i].end));
 
         // Prepare the parameters we'll pass into fillRect. We impose a minimum
         // of 1px width so that, at any zoom level, the annotation is visible.
@@ -110,18 +159,32 @@ function underlayCallbackHandler(canvas, area, g) {
 		//canvas.fillStyle = "#4B89BF";
 		//canvas.fillStyle = "#D91414";
 		//canvas.fillStyle = "#768FA6";
-		canvas.fillStyle = "rgba(0,72,182,0.73)";
+		if (file.annotations[i].state === 'anomaly') {
+			// canvas.fillStyle = "rgba(182,85,0,0.73)";
+			if (useRandomAnomalyColors) {
+				if (!seriesAnomalyColors.hasOwnProperty(file.annotations[i].series)) {
+					seriesAnomalyColors[file.annotations[i].series] = randomColor();
+					console.log(file.annotations[i].series, seriesAnomalyColors[file.annotations[i].series]);
+				}
+				canvas.fillStyle = seriesAnomalyColors[file.annotations[i].series];
+			} else {
+				canvas.fillStyle = '#f7a438';
+			}
+		} else {
+			canvas.fillStyle = "rgba(0,72,182,0.73)";
+		}
 		canvas.fillRect(x, y, width, height);
-		annotations[i].offsetXLeft = x;
-		annotations[i].offsetXRight = x+width;
+		file.annotations[i].offsetXLeft = x;
+		file.annotations[i].offsetXRight = x+width;
 
 		// Draw annotation label text
-		if (annotations[i].label) {
+		if (file.annotations[i].annotation.label) {
 			canvas.font = "12px Arial";
 			//canvas.fillStyle = "#0000e6";
-			canvas.fillStyle = "#221E40";
+			// canvas.fillStyle = "#221E40";
+			canvas.fillStyle = "#fff";
 			canvas.textAlign = "center";
-			canvas.fillText(annotations[i].label, x + (width / 2), area.y + (area.h * .1));
+			canvas.fillText(file.annotations[i].annotation.label, x + (width / 2), area.y + (area.h * .1));
 		}
 
 	}
