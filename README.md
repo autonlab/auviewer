@@ -153,7 +153,7 @@ AUView will extract the following from HDF5 files:
 * Metadata about the file
 * Data series (time series or event data)
 
-Here is the file specification:
+The HDF5 files should have the following structure:
 * The root group should have the following attributes:
   * ```version```: specifies the file schema version
   * Any other metadata about the file (to be displayed on the viewer)
@@ -191,7 +191,7 @@ We change this dataset to:
 | 207  | 0     |
 | 248  | 1     |
 
-And create the following string lookup dataset
+And create the following string lookup dataset:
 
 | (index) |       |
 |---------|-------|
