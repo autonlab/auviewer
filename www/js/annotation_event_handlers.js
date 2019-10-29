@@ -1,3 +1,5 @@
+'use strict';
+
 let useRandomAnomalyColors = false;
 let seriesAnomalyColors = {};
 
@@ -30,14 +32,14 @@ function clickCallbackHandler(e, x) {
 }
 
 // Ends an annotation highlighting action in response to a mouse-up event.
-function endAnnotationHighlight (event, g, context) {
+function endAnnotationHighlight (event, g, context, fileOrGraph) {
 
 	let file = globalStateManager.currentFile;
 
 	let left = Math.min(context.dragStartX, context.dragEndX);
 	let right = Math.max(context.dragStartX, context.dragEndX);
-	let from = g.toDataXCoord(left);
-	let to = g.toDataXCoord(right);
+	let from = g.toDataXCoord(left)/1000 - ('file' in fileOrGraph ? fileOrGraph.file.fileData.baseTime : fileOrGraph.fileData.baseTime);
+	let to = g.toDataXCoord(right)/1000 - ('file' in fileOrGraph ? fileOrGraph.file.fileData.baseTime : fileOrGraph.fileData.baseTime);
 
 	// Create a new annotation
 	let annotation = new Annotation({
@@ -137,54 +139,62 @@ function underlayCallbackHandler(canvas, area, g) {
 	// console.log(g);
 	// console.log(Object.getOwnPropertyNames(g.setIndexByName_));
 
-	for (let i = 0; i < file.annotations.length; i++) {
+	for (let mode = 0; mode < 2; mode++) {
 
-		// If this annotation does not belong to this series, move on.
-		if (file.annotations[i].series != null && !Object.getOwnPropertyNames(g.setIndexByName_).includes(file.annotations[i].series)) {
-			continue;
-		}
+		for (let i = 0; i < file.annotations.length; i++) {
 
-		left = g.toDomXCoord(new Date(file.annotations[i].begin));
-		right = g.toDomXCoord(new Date(file.annotations[i].end));
+			if ( (mode == 0 && file.annotations[i].state == 'anomaly') || (mode == 1 && (file.annotations[i].state == 'new' || file.annotations[i].state == 'existing')) ) {
 
-        // Prepare the parameters we'll pass into fillRect. We impose a minimum
-        // of 1px width so that, at any zoom level, the annotation is visible.
-        x = left;
-        y = area.y;
-        width = Math.max(1, right - left);
-        height = area.h;
-
-        // Draw the annotation highlight.
-		//canvas.fillStyle = "rgba(255, 255, 102, 1.0)";
-		//canvas.fillStyle = "#4B89BF";
-		//canvas.fillStyle = "#D91414";
-		//canvas.fillStyle = "#768FA6";
-		if (file.annotations[i].state === 'anomaly') {
-			// canvas.fillStyle = "rgba(182,85,0,0.73)";
-			if (useRandomAnomalyColors) {
-				if (!seriesAnomalyColors.hasOwnProperty(file.annotations[i].series)) {
-					seriesAnomalyColors[file.annotations[i].series] = randomColor();
-					console.log(file.annotations[i].series, seriesAnomalyColors[file.annotations[i].series]);
+				// If this annotation does not belong to this series, move on.
+				if (file.annotations[i].series != null && !Object.getOwnPropertyNames(g.setIndexByName_).includes(file.annotations[i].series)) {
+					continue;
 				}
-				canvas.fillStyle = seriesAnomalyColors[file.annotations[i].series];
-			} else {
-				canvas.fillStyle = '#f7a438';
-			}
-		} else {
-			canvas.fillStyle = "rgba(0,72,182,0.73)";
-		}
-		canvas.fillRect(x, y, width, height);
-		file.annotations[i].offsetXLeft = x;
-		file.annotations[i].offsetXRight = x+width;
 
-		// Draw annotation label text
-		if (file.annotations[i].annotation.label) {
-			canvas.font = "12px Arial";
-			//canvas.fillStyle = "#0000e6";
-			// canvas.fillStyle = "#221E40";
-			canvas.fillStyle = "#fff";
-			canvas.textAlign = "center";
-			canvas.fillText(file.annotations[i].annotation.label, x + (width / 2), area.y + (area.h * .1));
+				left = g.toDomXCoord(new Date((file.annotations[i].begin + file.fileData.baseTime) * 1000));
+				right = g.toDomXCoord(new Date((file.annotations[i].end + file.fileData.baseTime) * 1000));
+
+				// Prepare the parameters we'll pass into fillRect. We impose a minimum
+				// of 1px width so that, at any zoom level, the annotation is visible.
+				x = left;
+				y = area.y;
+				width = Math.max(1, right - left);
+				height = area.h;
+
+				// Draw the annotation highlight.
+				//canvas.fillStyle = "rgba(255, 255, 102, 1.0)";
+				//canvas.fillStyle = "#4B89BF";
+				//canvas.fillStyle = "#D91414";
+				//canvas.fillStyle = "#768FA6";
+				if (file.annotations[i].state === 'anomaly') {
+					// canvas.fillStyle = "rgba(182,85,0,0.73)";
+					if (useRandomAnomalyColors) {
+						if (!seriesAnomalyColors.hasOwnProperty(file.annotations[i].series)) {
+							seriesAnomalyColors[file.annotations[i].series] = randomColor();
+							console.log(file.annotations[i].series, seriesAnomalyColors[file.annotations[i].series]);
+						}
+						canvas.fillStyle = seriesAnomalyColors[file.annotations[i].series];
+					} else {
+						canvas.fillStyle = '#f7a438';
+					}
+				} else {
+					canvas.fillStyle = "rgba(0,72,182,0.73)";
+				}
+				canvas.fillRect(x, y, width, height);
+				file.annotations[i].offsetXLeft = x;
+				file.annotations[i].offsetXRight = x + width;
+
+				// Draw annotation label text
+				if (file.annotations[i].annotation.confidence) {
+					canvas.font = "12px Arial";
+					//canvas.fillStyle = "#0000e6";
+					// canvas.fillStyle = "#221E40";
+					canvas.fillStyle = "#fff";
+					canvas.textAlign = "center";
+					canvas.fillText(file.annotations[i].annotation.confidence, x + (width / 2), area.y + (area.h * .1));
+				}
+
+			}
+
 		}
 
 	}

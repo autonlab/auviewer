@@ -19,7 +19,23 @@ let moveToConfig = {
 			maxgap: 60
 		},
 		{
+			series: 'numerics/HR.HR/data',
+			tlow: 58,
+			thigh: 110,
+			dur: 300,
+			duty: .7,
+			maxgap: 60
+		},
+		{
 			series: 'numerics/rRR/data',
+			tlow: 10,
+			thigh: 29,
+			dur: 300,
+			duty: .7,
+			maxgap: 60
+		},
+		{
+			series: 'numerics/RR.RR/data',
 			tlow: 10,
 			thigh: 29,
 			dur: 300,
@@ -48,7 +64,17 @@ let moveToConfig = {
 			duty: .7,
 			maxgap: 60
 		},
+		{
+			series: 'numerics/SpO₂T.SpO₂T/data',
+			tlow: 90,
+			dur: 300,
+			duty: .7,
+			maxgap: 60
+		},
 	],
+
+	// Series to display by default
+	defaultSeries: ['numerics/HR/data', 'numerics/HR.HR/data', 'numerics/HR.BeatToBeat/data', 'numerics/RR.RR/data', 'numerics/ART.Systolic/data', 'numerics/ART.Diastolic/data', 'numerics/SpO₂.SpO₂/data', 'numerics/SpO₂T.SpO₂T/data', 'numerics/SPO2-%/data', 'CVP/data', 'ArtWave/data'],
 
 	groups: [
 		['numerics/AR1-D/data', 'numerics/AR1-S/data', 'numerics/AR1-M/data'],

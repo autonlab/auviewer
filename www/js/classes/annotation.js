@@ -131,13 +131,13 @@ Annotation.prototype.populateFormFromValues = function() {
 	$('#annotationStart').val(this.begin);
 	$('#annotationEnd').val(this.end);
 
-	if (this.annotation.hasOwnProperty('label')) {
-		// Set the annotation label
-		$('#annotationLabel').val(this.annotation.label);
-	} else {
-		// Set the annotation label to the first option
-		$('#annotationLabel').val($('#annotationLabel option:first').val());
-	}
+	// if (this.annotation.hasOwnProperty('label')) {
+	// 	// Set the annotation label
+	// 	$('#annotationLabel').val(this.annotation.label);
+	// } else {
+	// 	// Set the annotation label to the first option
+	// 	$('#annotationLabel').val($('#annotationLabel option:first').val());
+	// }
 
 	if (this.annotation.hasOwnProperty('confidence')) {
 		// Set the annotation confidence
@@ -164,7 +164,7 @@ Annotation.prototype.populateValuesFromForm = function() {
 	this.end = parseFloat($('#annotationEnd').val());
 
 	this.annotation = {
-		label: $('#annotationLabel').val(),
+		// label: $('#annotationLabel').val(),
 		confidence: $("input[name='annotationConfidence']:checked").val(),
 		notes: $('#annotationNotes').val()
 	};

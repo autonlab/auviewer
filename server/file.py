@@ -71,6 +71,36 @@ class File:
             if s.id == seriesid:
                 return s.generateThresholdAlerts(thresholdlow, thresholdhigh, mode, duration, dutycycle, maxgap).tolist()
 
+    # Returns all event series
+    def getEvents(self):
+        
+        print("Assembling all event series for file " + self.filename + ".")
+        start = time.time()
+        
+        events = {}
+        
+        # Prepare references to HDF5 data
+        meds = self.f['meds']['all']['data'][()]
+        meds_attributes = dict(self.f['meds']['all']['data'].attrs)
+        meds_columns = list(meds.dtype.fields.keys())
+        meds_columns.remove('time')
+        slookup = self.f['meds']['all']['strings'][()]
+        
+        # Initialize the prepared meds data as a list comprehension with time
+        events['meds'] = [[t, ''] for t in meds['time']]
+        
+        for i in range(len(events['meds'])):
+            for c in meds_columns:
+                if 'Ftype_'+c in meds_attributes and meds_attributes['Ftype_'+c] == 'string':
+                    events['meds'][i][1] += ("\n" if len(events['meds'][i][1]) > 0 else '') + c + ': ' + str(slookup[meds[c][i]])
+                else:
+                    events['meds'][i][1] += ("\n" if len(events['meds'][i][1]) > 0 else '') + c + ': ' + str(meds[c][i])
+
+        end = time.time()
+        print("Completed assembly of all event series for file " + self.filename + ". Took " + str(round(end - start, 5)) + "s.")
+        
+        return events
+
     # Returns the complete path to the original data file, including filename.
     def getFilepath(self):
         return os.path.join(self.path, self.filename)
@@ -84,6 +114,8 @@ class File:
         outputObject = {
             # 'annotations': self.annotationSet.getAnnotations().tolist(),
             'annotations': self.annotationSet.getAnnotations(),
+            'baseTime': self.f['meta'].attrs['baseTime'],
+            'events': self.getEvents(),
             'metadata': self.getMetadata(),
             'series': {}
         }

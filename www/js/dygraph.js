@@ -2338,7 +2338,7 @@ DygraphInteraction.movePan = function (event, g, context) {
   // y-axis scaling is automatic unless this is a full 2D pan.
   if (context.is2DPan) {
 
-    var pixelsDragged = context.dragEndY - context.dragStartY;
+    var pixelsDragged = 0;//context.dragEndY - context.dragStartY;
 
     // Adjust each axis appropriately.
     for (var i = 0; i < g.axes_.length; i++) {

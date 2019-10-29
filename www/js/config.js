@@ -31,10 +31,6 @@ let config = {
 	initialFilePayloadSubpath: '/initial_file_payload',
 	seriesRangedDataSubpath: '/series_ranged_data',
 	updateAnnotationSubpath: '/update_annotation',
-
-	// Series to display by default
-	// defaultSeries: ['HR', 'RR', 'BP', 'SpO2', 'CVP', 'ArtWave'],
-	defaultSeries: ['numerics/HR/data', 'numerics/HR.BeatToBeat/data', 'numerics/RR.RR/data', 'numerics/ART.Systolic/data', 'numerics/ART.Diastolic/data', 'numerics/SpO₂.SpO₂/data', 'numerics/SPO2-%/data', 'CVP/data', 'ArtWave/data']
 	
 };
 

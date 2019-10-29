@@ -43,11 +43,11 @@ function File(filename) {
 	// Request the initial file payload, and handle the response when it comes.
 	requestHandler.requestInitialFilePayload(this.filename, function(data) {
 
-		// Attach graph data
+		// Attach received data to our class instance
 		file.fileData = data;
 
-		// Calculate x-axis extremes across all data series
-		file.calculateExtremes();
+		// Prepare data received from the backend
+		file.prepareData();
 
 		// Pad data, if necessary, for each series
 		for (let s of Object.keys(file.fileData.series)) {
@@ -91,7 +91,10 @@ function File(filename) {
 		file.metadata = data.metadata;
 		file.renderMetadata();
 
-		// Instantiate each graph
+		// Instantiate event graphs
+		file.renderEventGraph();
+
+		// Instantiate series graphs
 		for (let s of Object.keys(file.fileData.series)) {
 			file.graphs[s] = new Graph(s, file);
 		}
@@ -139,52 +142,6 @@ function File(filename) {
 	});
 
 }
-
-// Calculate x-axis extremes across all data series.
-File.prototype.calculateExtremes = function() {
-
-	// Get array of series
-	let series = Object.keys(this.fileData.series);
-
-	// If there are no series, return
-	if (series.length < 1) {
-		return;
-	}
-
-	// Prime the graph extremes with the first series, first point
-	this.globalXExtremes[0] = this.fileData.series[series[0]].data[0][0];
-	this.globalXExtremes[1] = this.fileData.series[series[0]].data[0][0];
-
-	for (let s of series) {
-
-		// If this series has no data, continue
-		if (this.fileData.series[s].data.length < 1) {
-			continue;
-		}
-
-		for (let i in this.fileData.series[s].data) {
-
-			// Update global x-minimum if warranted
-			if (this.fileData.series[s].data[i][0] < this.globalXExtremes[0]) {
-				this.globalXExtremes[0] = this.fileData.series[s].data[i][0];
-			}
-
-			// Update global x-maximumm if warranted
-			if (this.fileData.series[s].data[i][0] > this.globalXExtremes[1]) {
-				this.globalXExtremes[1] = this.fileData.series[s].data[i][0];
-			}
-
-		}
-
-	}
-
-	// When the x-axis extremes have been calculated (as dates), convert them
-	// to milliseconds since epoch, as this is what is specified in the options
-	// reference: http://dygraphs.com/options.html#dateWindow
-	// this.globalXExtremes[0] = this.globalXExtremes[0].valueOf();
-	// this.globalXExtremes[1] = this.globalXExtremes[1].valueOf();
-
-};
 
 // Removes all detected anomalies
 File.prototype.clearAnomalies = function() {
@@ -363,6 +320,8 @@ File.prototype.getPostloadDataUpdateHandler = function() {
 		// subset (received in response just now).
 		for (let s in data.series) {
 
+			convertFirstColumnToDate(data.series[s].data, file.fileData.baseTime);
+
 			padDataIfNeeded(data.series[s].data);
 
 			data.series[s].data = createMeshedTimeSeries(file.fileData.series[s].data, data.series[s].data);
@@ -428,6 +387,154 @@ File.prototype.getPostloadDataUpdateHandler = function() {
 		file.synchronizeGraphs();
 
 	};
+
+};
+
+// Convert times to Date objects, and calculate x-axis extremes across all data.
+File.prototype.prepareData = function() {
+
+	let t0 = performance.now();
+
+	// Get array of series
+	let series = Object.keys(this.fileData.series);
+
+	// If there are no series, return
+	if (series.length < 1) {
+		return;
+	}
+
+	// Prime the graph extremes with the first series, first point
+	this.globalXExtremes[0] = new Date((this.fileData.series[series[0]].data[0][0] + this.fileData.baseTime) * 1000);
+	this.globalXExtremes[1] = new Date((this.fileData.series[series[0]].data[0][0] + this.fileData.baseTime) * 1000);
+
+	// Process series data
+	for (let s of series) {
+
+		// If this series has no data, continue
+		if (this.fileData.series[s].data.length < 1) {
+			continue;
+		}
+
+		convertFirstColumnToDate(this.fileData.series[s].data, this.fileData.baseTime);
+
+		// Update global x-minimum if warranted
+		if (this.fileData.series[s].data[0][0] < this.globalXExtremes[0]) {
+			this.globalXExtremes[0] = this.fileData.series[s].data[0][0];
+		}
+
+		// Update global x-maximumm if warranted
+		if (this.fileData.series[s].data[this.fileData.series[s].data.length-1][0] > this.globalXExtremes[1]) {
+			this.globalXExtremes[1] = this.fileData.series[s].data[this.fileData.series[s].data.length-1][0];
+		}
+
+	}
+
+	// Get array of event series
+	let events = Object.keys(this.fileData.events);
+
+	// Process event data
+	for (let s of events) {
+
+		// If this series has no data, continue
+		if (this.fileData.events[s].length < 1) {
+			continue;
+		}
+
+		for (let i in this.fileData.events[s]) {
+
+			// Convert the ISO8601-format string into a Date object.
+			this.fileData.events[s][i][0] = new Date((this.fileData.events[s][i][0] + this.fileData.baseTime) * 1000);
+
+		}
+
+		// Update global x-minimum if warranted
+		if (this.fileData.events[s][0][0] < this.globalXExtremes[0]) {
+			this.globalXExtremes[0] = this.fileData.events[s][0][0];
+		}
+
+		// Update global x-maximumm if warranted
+		if (this.fileData.events[s][this.fileData.events[s].length-1][0] > this.globalXExtremes[1]) {
+			this.globalXExtremes[1] = this.fileData.events[s][this.fileData.events[s].length-1][0];
+		}
+
+	}
+
+	// When the x-axis extremes have been calculated (as dates), convert them
+	// to milliseconds since epoch, as this is what is specified in the options
+	// reference: http://dygraphs.com/options.html#dateWindow
+	this.globalXExtremes[0] = this.globalXExtremes[0].valueOf();
+	this.globalXExtremes[1] = this.globalXExtremes[1].valueOf();
+
+	let t1 = performance.now()
+	console.log("Processing series data took " + Math.round(t1-t0) + "ms.");
+
+};
+
+// Render event graph
+File.prototype.renderEventGraph = function() {
+
+	// Create our data
+	let graphData = [];
+	for (let e of this.fileData.events.meds) {
+		graphData.push([e[0], 1]);
+	}
+
+	// Create the legend dom element
+	let legendDiv = document.createElement('DIV');
+
+	// Set element to legend css class
+	legendDiv.className = 'legend';
+
+	// Attach legend to the graph div on the DOM
+	document.getElementById('graphs').appendChild(legendDiv);
+
+	// Create the graph dom element
+	let graphDiv = document.createElement('DIV');
+
+	// Set element to graph css class
+	graphDiv.className = 'graph';
+
+	// Attach new graph div to the DOM
+	document.getElementById('graphs').appendChild(graphDiv);
+
+	this.eventDygraphInstance = new Dygraph(graphDiv, graphData, {
+		axes: {
+			y: {
+				pixelsPerLabel: 300
+			}
+		},
+		colors: ['#171717'],
+		dateWindow: this.globalXExtremes,
+		gridLineColor: 'rgb(232,122,128)',
+		interactionModel: {
+			'mousedown': handleMouseDown.bind(this),
+			'mousemove': handleMouseMove.bind(this),
+			'mouseup': handleMouseUp.bind(this),
+			'dblclick': handleDoubleClick.bind(this),
+			'mousewheel': handleMouseWheel.bind(this)
+		},
+		labels: ['Time', 'Medications'],
+		labelsDiv: legendDiv,
+		title: 'Medications',
+		valueRange: [0,2]
+	});
+
+	let annotations = [];
+	for (let e of this.fileData.events.meds) {
+		annotations.push({
+			series: 'Medications',
+			x: e[0].valueOf(),
+			shortText: 'M',
+			text: e[1]
+		});
+	}
+
+	// Persist this for the callback
+	let file = this;
+
+	this.eventDygraphInstance.ready(function() {
+		file.eventDygraphInstance.setAnnotations(annotations);
+	});
 
 };
 
@@ -503,6 +610,9 @@ File.prototype.synchronizeGraphs = function() {
 		if (this.graphs[s].dygraphInstance !== null) {
 			dygraphInstances.push(this.graphs[s].dygraphInstance);
 		}
+	}
+	if ('eventDygraphInstance' in this && this.eventDygraphInstance !== null) {
+		dygraphInstances.push(this.eventDygraphInstance);
 	}
 
 	// If there is not more than one graph showing to synchronize, return now.
@@ -584,7 +694,7 @@ File.prototype.updateCurrentViewData = function() {
 	let xRange = lastGraphShowing.dygraphInstance.xAxisRange();
 
 	// Request the updated view data from the backend.
-	requestHandler.requestSeriesRangedData(this.filename, series, xRange[0], xRange[1], this.getPostloadDataUpdateHandler());
+	requestHandler.requestSeriesRangedData(this.filename, series, xRange[0]/1000-this.fileData.baseTime, xRange[1]/1000-this.fileData.baseTime, this.getPostloadDataUpdateHandler());
 
 };
 

@@ -1,5 +1,14 @@
 'use strict';
 
+// Converts the first column of the series to date object, based on first
+// column and basetime being in being in milliseconds.
+function convertFirstColumnToDate(data, baseTime) {
+	for (let i in data) {
+			// Convert the ISO8601-format string into a Date object.
+			data[i][0] = new Date((data[i][0] + baseTime) * 1000);
+		}
+}
+
 // Creates a merged time series dataset of the series specified by groupSeries,
 // pulling data from data.
 function createMergedTimeSeries(groupSeries, data) {
@@ -147,6 +156,25 @@ function createMeshedTimeSeries(superset, subset) {
 
 }
 
+// Take the offset of a mouse event on the dygraph canvas and
+// convert it to a percentages from the left.
+function offsetToPercentage(g, offsetX) {
+	// This is calculating the pixel offset of the leftmost date.
+	let xOffset = g.toDomCoords(g.xAxisRange()[0], null)[0];
+
+	// x y w and h are relative to the corner of the drawing area,
+	// so that the upper corner of the drawing area is (0, 0).
+	let x = offsetX - xOffset;
+
+	// This is computing the rightmost pixel, effectively defining the width.
+	let w = g.toDomCoords(g.xAxisRange()[1], null)[0] - xOffset;
+
+	// Percentage from the left.
+	// The (1-) part below changes it from "% distance down from the top"
+	// to "% distance up from the bottom".
+	return w === 0 ? 0 : (x / w);
+}
+
 // This is a specialized and temporoary function that pads a 3-column 2d array /
 // set of data points with an additional, 4th column of null values. It modifies
 // the original array if it is 3 columns; otherwise, nothing is changed.
@@ -167,4 +195,20 @@ function padDataIfNeeded(data) {
 		data[i].push(null);
 	}
 
+}
+
+// Adjusts x inward by zoomInPercentage%
+// Split it so the left axis gets xBias of that change and
+// right gets (1-xBias) of that change.
+//
+// If a bias is missing it splits it down the middle.
+function zoom(g, zoomInPercentage, xBias) {
+	xBias = xBias || 0.5;
+	let axis = g.xAxisRange();
+	let delta = axis[1] - axis[0];
+	let increment = delta * zoomInPercentage;
+	let foo = [increment * xBias, increment * (1-xBias)];
+	g.updateOptions({
+		dateWindow: [ axis[0] + foo[0], axis[1] - foo[1] ]
+	});
 }

@@ -67,114 +67,14 @@ Graph.prototype.build = function() {
 	document.getElementById('graphs').appendChild(graphDiv);
 
 	// Instantiate the dygraph
-	if (config.defaultSeries.includes(this.series)) {
+	if (moveToConfig.defaultSeries.includes(this.series)) {
 		this.instantiateDygraph();
 	} else {
 		this.hideDOMElements();
 	}
 
 	// Add the control for the graph
-	this.file.graphSelectionMenu.add(this.series, config.defaultSeries.includes(this.series));
-
-};
-
-// Handle double-click for restoring the original zoom.
-Graph.prototype.handleDoubleClick = function(event, g, context) {
-	g.updateOptions({
-		dateWindow: this.file.globalXExtremes
-	});
-};
-
-// Handle mouse-down for pan & zoom
-Graph.prototype.handleMouseDown = function(event, g, context) {
-
-	context.initializeMouseDown(event, g, context);
-
-	if (event.altKey) {
-		startAnnotationHighlight(event, g, context);
-	}
-	else if (event.shiftKey) {
-		Dygraph.startZoom(event, g, context);
-	} else {
-		context.medViewPanningMouseMoved = false;
-		Dygraph.startPan(event, g, context);
-	}
-
-};
-
-// Handle mouse-move for pan & zoom.
-Graph.prototype.handleMouseMove = function(event, g, context) {
-
-	if (context.mvIsAnnotating) {
-		moveAnnotationHighlight(event, g, context);
-	}
-	else if (context.isZooming) {
-		Dygraph.moveZoom(event, g, context);
-	}
-	else if (context.isPanning) {
-		context.medViewPanningMouseMoved = true;
-		Dygraph.movePan(event, g, context);
-	}
-
-};
-
-// Handle mouse-up for pan & zoom.
-Graph.prototype.handleMouseUp = function(event, g, context) {
-
-	if (context.mvIsAnnotating) {
-		endAnnotationHighlight(event, g, context);
-	}
-	else if (context.isZooming) {
-		Dygraph.endZoom(event, g, context);
-		this.file.updateCurrentViewData();
-	}
-	else if (context.isPanning) {
-		if (context.medViewPanningMouseMoved) {
-			this.file.updateCurrentViewData();
-			context.medViewPanningMouseMoved = false;
-		}
-		Dygraph.endPan(event, g, context);
-	}
-
-};
-
-// Handle shift+scroll or alt+scroll for zoom.
-Graph.prototype.handleMouseWheel = function(event, g, context) {
-
-	// We allow the user to use either alt or shift plus the mousewheel to zoom.
-	// We also allow the user to use pinch-to-zoom; the event.ctrlKey is true
-	// when the user is using pinch-to-zoom gesture.
-	if (event.ctrlKey || event.altKey || event.shiftKey) {
-
-		let normal = event.detail ? event.detail * -1 : event.wheelDelta / 40;
-		// For me the normalized value shows 0.075 for one click. If I took
-		// that verbatim, it would be a 7.5%.
-		let percentage = normal / 50;
-
-		if (!(event.offsetX)){
-			event.offsetX = event.layerX - event.target.offsetLeft;
-		}
-
-		let xPct = this.offsetToPercentage(g, event.offsetX);
-
-		this.zoom(g, percentage, xPct);
-
-		// Persist for timeout callback
-		let graph = this;
-
-		// If we're zooming with the mouse-wheel or with pinch-to-zoom, we want
-		// to set a timeout to update the current view's data. This is to prevent
-		// repeated, overlapping calls in the midst of zooming.
-		if (g.updateDataTimer != null) {
-			clearTimeout(g.updateDataTimer);
-		}
-		g.updateDataTimer = setTimeout(function(){ g.updateDataTimer = null; graph.file.updateCurrentViewData(); }, 200);
-
-
-		//updateCurrentViewData(g);
-		event.preventDefault();
-
-	}
+	this.file.graphSelectionMenu.add(this.series, moveToConfig.defaultSeries.includes(this.series));
 
 };
 
@@ -237,11 +137,11 @@ Graph.prototype.instantiateDygraph = function() {
 		//drawPoints: true,
 		gridLineColor: 'rgb(232,122,128)',
 		interactionModel: {
-			'mousedown': this.handleMouseDown.bind(this),
-			'mousemove': this.handleMouseMove.bind(this),
-			'mouseup': this.handleMouseUp.bind(this),
-			'dblclick': this.handleDoubleClick.bind(this),
-			'mousewheel': this.handleMouseWheel.bind(this)
+			'mousedown': handleMouseDown.bind(this),
+			'mousemove': handleMouseMove.bind(this),
+			'mouseup': handleMouseUp.bind(this),
+			'dblclick': handleDoubleClick.bind(this),
+			'mousewheel': handleMouseWheel.bind(this)
 		},
 		labels: this.file.fileData.series[this.series].labels,
 		labelsDiv: this.legendDomElement,
@@ -260,25 +160,6 @@ Graph.prototype.instantiateDygraph = function() {
 // Returns a boolean indicating whether this graph is currently showing.
 Graph.prototype.isShowing = function() {
 	return this.dygraphInstance !== null;
-};
-
-// Take the offset of a mouse event on the dygraph canvas and
-// convert it to a percentages from the left.
-Graph.prototype.offsetToPercentage = function(g, offsetX) {
-	// This is calculating the pixel offset of the leftmost date.
-	let xOffset = g.toDomCoords(g.xAxisRange()[0], null)[0];
-
-	// x y w and h are relative to the corner of the drawing area,
-	// so that the upper corner of the drawing area is (0, 0).
-	let x = offsetX - xOffset;
-
-	// This is computing the rightmost pixel, effectively defining the width.
-	let w = g.toDomCoords(g.xAxisRange()[1], null)[0] - xOffset;
-
-	// Percentage from the left.
-	// The (1-) part below changes it from "% distance down from the top"
-	// to "% distance up from the bottom".
-	return w === 0 ? 0 : (x / w);
 };
 
 // Remove the graph from the interface.
@@ -359,22 +240,6 @@ Graph.prototype.updateCurrentViewData = function() {
 	let series = this.isGroup ? this.group : [this.series];
 
 	// Request the updated view data from the backend.
-	requestHandler.requestSeriesRangedData(this.file.filename, series, xRange[0], xRange[1], this.file.getPostloadDataUpdateHandler());
+	requestHandler.requestSeriesRangedData(this.file.filename, series, xRange[0]/1000-this.file.fileData.baseTime, xRange[1]/1000-this.file.fileData.baseTime, this.file.getPostloadDataUpdateHandler());
 
-};
-
-// Adjusts x inward by zoomInPercentage%
-// Split it so the left axis gets xBias of that change and
-// right gets (1-xBias) of that change.
-//
-// If a bias is missing it splits it down the middle.
-Graph.prototype.zoom = function(g, zoomInPercentage, xBias) {
-	xBias = xBias || 0.5;
-	let axis = g.xAxisRange();
-	let delta = axis[1] - axis[0];
-	let increment = delta * zoomInPercentage;
-	let foo = [increment * xBias, increment * (1-xBias)];
-	g.updateOptions({
-		dateWindow: [ axis[0] + foo[0], axis[1] - foo[1] ]
-	});
 };

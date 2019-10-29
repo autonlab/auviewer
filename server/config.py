@@ -23,12 +23,12 @@ stepMultiplier = 2
 # originalFilesDir = '/home/scratch/gwelter/meddata/originals/'
 # originalFilesDir = '/zfsauton/data/public/awertz/mladi/conditionc/h5/'
 # originalFilesDir = '/zfsauton/data/public/gwelter/medorig/'
-originalFilesDir = '/zfsauton/data/public/gwelter/ismett/'
+originalFilesDir = '/zfsauton/data/public/gwelter/new_medorig/'
 
 # Processed (i.e. downsampled) patient data files go here.
 # processedFilesDir = '../data/processed/'
 # processedFilesDir = '/home/scratch/gwelter/meddata/processed/'
-processedFilesDir = '/zfsauton/data/public/gwelter/processed_lupe/'
+processedFilesDir = '/zfsauton/data/public/gwelter/new_processed/'
 
 # Flask application configuration
 class FlaskConfigClass(object):

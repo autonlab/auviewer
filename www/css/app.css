@@ -53,3 +53,11 @@
 .webix_message_area {
     display: none !important;
 }
+
+#interactionsModal table {
+    width: 100%;
+}
+
+#interactionsModal table > tbody > tr > td:first-child {
+    padding-right: 24px;
+}
