@@ -37,34 +37,50 @@ function Graph(series, file) {
 
 Graph.prototype.build = function() {
 
-	// Create the legend dom element
-	let legendDiv = document.createElement('DIV');
+	// Create the graph wrapper dom element
+	this.graphWrapperDomElement = document.createElement('DIV');
+	this.graphWrapperDomElement.className = 'graph_wrapper';
 
-	// Add the dom element to the object for later reference
-	this.legendDomElement = legendDiv;
+	this.graphWrapperDomElement.innerHTML =
+		'<table>' +
+			'<tbody>' +
+				'<tr>' +
+					'<td class="graph_title">'+this.series+'</td>' +
+					'<td rowspan="2">' +
+						'<div class="graph"></div>' +
+					'</td>' +
+				'</tr>' +
+				'<tr>' +
+					'<td class="legend"><div></div></td>'
+				'</tr>' +
+			'</tbody>' +
+		'</table>';
 
-	// Set element to legend css class
-	legendDiv.className = 'legend';
+	document.getElementById('graphs').appendChild(this.graphWrapperDomElement);
 
-	// Attach legend to the graph div on the DOM
-	document.getElementById('graphs').appendChild(legendDiv);
+	// Grab references to the legend & graph elements so they can be used later.
+	this.legendDomElement = this.graphWrapperDomElement.querySelector('.legend > div');
+	this.graphDomElement = this.graphWrapperDomElement.querySelector('.graph');
 
-	// Create the graph dom element
-	let graphDiv = document.createElement('DIV');
-
-	// Add the dom element to the object for later reference
-	this.graphDomElement = graphDiv;
-
-	// Set element to graph css class
-	graphDiv.className = 'graph';
+	// let titleDomElement = document.createElement('DIV');
+	// titleDomElement.className = 'graph_title';
+	// titleDomElement.innerText = this.series;
+	// this.graphWrapperDomElement.appendChild(titleDomElement);
+	//
+	// // Create the legend dom element
+	// this.legendDomElement = document.createElement('DIV');
+	// this.legendDomElement.className = 'legend';
+	// this.graphWrapperDomElement.appendChild(this.legendDomElement);
+	//
+	// // Create the graph dom element
+	// this.graphDomElement = document.createElement('DIV');
+	// this.graphDomElement.className = 'graph';
+	// this.graphWrapperDomElement.appendChild(this.graphDomElement);
 
 	// Attach this class instance as a DOM element property (this is for the
 	// click callback handler to work properly since dygraphs implements it
 	// poorly).
-	$(graphDiv).data('graphClassInstance', this);
-
-	// Attach new graph div to the DOM
-	document.getElementById('graphs').appendChild(graphDiv);
+	$(this.graphDomElement).data('graphClassInstance', this);
 
 	// Instantiate the dygraph
 	if (moveToConfig.defaultSeries.includes(this.series)) {
@@ -80,10 +96,7 @@ Graph.prototype.build = function() {
 
 // Hide the graph & legend divs
 Graph.prototype.hideDOMElements = function() {
-
-	this.graphDomElement.style.display = 'none';
-	this.legendDomElement.style.display = 'none';
-
+	this.graphWrapperDomElement.style.display = 'none';
 };
 
 // Instantiates a dygraph on the UI
@@ -150,7 +163,7 @@ Graph.prototype.instantiateDygraph = function() {
 		  'Min': { plotter: downsamplePlotter },
 		  'Max': { plotter: downsamplePlotter }
 		},*/
-		title: this.series,
+		//title: this.series,
 		underlayCallback: underlayCallbackHandler,
 		valueRange: yAxisRange
 	});
@@ -221,10 +234,7 @@ Graph.prototype.show = function() {
 
 // Show the graph & legend divs for the named series.
 Graph.prototype.showDOMElements = function() {
-
-	this.graphDomElement.style.display = 'block';
-	this.legendDomElement.style.display = 'block';
-
+	this.graphWrapperDomElement.style.display = 'block';
 };
 
 // Request and update data for the current view of the graph.

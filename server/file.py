@@ -209,7 +209,7 @@ class File:
         try:
             self.f = h5py.File(self.getFilepath(), 'r')
         except Exception as e:
-            print("Unable to open the original data file " + self.getProcessedFilepath() + ".\n", e)
+            print("Unable to open the original data file " + self.getFilepath() + ".\n", e)
             return False
 
         # If an exception was not raised, that means the file was opened

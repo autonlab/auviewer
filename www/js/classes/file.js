@@ -479,25 +479,32 @@ File.prototype.renderEventGraph = function() {
 		graphData.push([e[0], 1]);
 	}
 
-	// Create the legend dom element
-	let legendDiv = document.createElement('DIV');
+	// Create the graph wrapper dom element
+	let graphWrapperDomElement = document.createElement('DIV');
+	graphWrapperDomElement.className = 'graph_wrapper';
 
-	// Set element to legend css class
-	legendDiv.className = 'legend';
+	graphWrapperDomElement.innerHTML =
+		'<table>' +
+			'<tbody>' +
+				'<tr>' +
+					'<td class="graph_title">Medications</td>' +
+					'<td rowspan="2">' +
+						'<div class="graph"></div>' +
+					'</td>' +
+				'</tr>' +
+				'<tr>' +
+					'<td class="legend"><div></div></td>'
+				'</tr>' +
+			'</tbody>' +
+		'</table>';
 
-	// Attach legend to the graph div on the DOM
-	document.getElementById('graphs').appendChild(legendDiv);
+	document.getElementById('graphs').appendChild(graphWrapperDomElement);
 
-	// Create the graph dom element
-	let graphDiv = document.createElement('DIV');
+	// Grab references to the legend & graph elements so they can be used later.
+	let legendDomElement = graphWrapperDomElement.querySelector('.legend > div');
+	let graphDomElement = graphWrapperDomElement.querySelector('.graph');
 
-	// Set element to graph css class
-	graphDiv.className = 'graph';
-
-	// Attach new graph div to the DOM
-	document.getElementById('graphs').appendChild(graphDiv);
-
-	this.eventDygraphInstance = new Dygraph(graphDiv, graphData, {
+	this.eventDygraphInstance = new Dygraph(graphDomElement, graphData, {
 		axes: {
 			y: {
 				pixelsPerLabel: 300
@@ -514,8 +521,7 @@ File.prototype.renderEventGraph = function() {
 			'mousewheel': handleMouseWheel.bind(this)
 		},
 		labels: ['Time', 'Medications'],
-		labelsDiv: legendDiv,
-		title: 'Medications',
+		labelsDiv: legendDomElement,
 		valueRange: [0,2]
 	});
 

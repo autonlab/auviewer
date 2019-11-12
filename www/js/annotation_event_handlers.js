@@ -145,10 +145,10 @@ function underlayCallbackHandler(canvas, area, g) {
 
 			if ( (mode == 0 && file.annotations[i].state == 'anomaly') || (mode == 1 && (file.annotations[i].state == 'new' || file.annotations[i].state == 'existing')) ) {
 
-				// If this annotation does not belong to this series, move on.
-				if (file.annotations[i].series != null && !Object.getOwnPropertyNames(g.setIndexByName_).includes(file.annotations[i].series)) {
-					continue;
-				}
+				// // If this annotation does not belong to this series, move on.
+				// if (file.annotations[i].series != null && !Object.getOwnPropertyNames(g.setIndexByName_).includes(file.annotations[i].series)) {
+				// 	continue;
+				// }
 
 				left = g.toDomXCoord(new Date((file.annotations[i].begin + file.fileData.baseTime) * 1000));
 				right = g.toDomXCoord(new Date((file.annotations[i].end + file.fileData.baseTime) * 1000));
@@ -161,12 +161,7 @@ function underlayCallbackHandler(canvas, area, g) {
 				height = area.h;
 
 				// Draw the annotation highlight.
-				//canvas.fillStyle = "rgba(255, 255, 102, 1.0)";
-				//canvas.fillStyle = "#4B89BF";
-				//canvas.fillStyle = "#D91414";
-				//canvas.fillStyle = "#768FA6";
 				if (file.annotations[i].state === 'anomaly') {
-					// canvas.fillStyle = "rgba(182,85,0,0.73)";
 					if (useRandomAnomalyColors) {
 						if (!seriesAnomalyColors.hasOwnProperty(file.annotations[i].series)) {
 							seriesAnomalyColors[file.annotations[i].series] = randomColor();
@@ -174,7 +169,15 @@ function underlayCallbackHandler(canvas, area, g) {
 						}
 						canvas.fillStyle = seriesAnomalyColors[file.annotations[i].series];
 					} else {
-						canvas.fillStyle = '#f7a438';
+						if (file.annotations[i].series != null && !Object.getOwnPropertyNames(g.setIndexByName_).includes(file.annotations[i].series)) {
+							// Use a lighter color to highlight anomalies from
+							// other series.
+							canvas.fillStyle = '#f5d4ab';
+						} else {
+							// If the anomaly belongs to this series, use a
+							// the darker orange.
+							canvas.fillStyle = '#f7a438';
+						}
 					}
 				} else {
 					canvas.fillStyle = "rgba(0,72,182,0.73)";
@@ -186,8 +189,6 @@ function underlayCallbackHandler(canvas, area, g) {
 				// Draw annotation label text
 				if (file.annotations[i].annotation.confidence) {
 					canvas.font = "12px Arial";
-					//canvas.fillStyle = "#0000e6";
-					// canvas.fillStyle = "#221E40";
 					canvas.fillStyle = "#fff";
 					canvas.textAlign = "center";
 					canvas.fillText(file.annotations[i].annotation.confidence, x + (width / 2), area.y + (area.h * .1));

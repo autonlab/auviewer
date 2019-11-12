@@ -16,7 +16,7 @@ let moveToConfig = {
 			thigh: 110,
 			dur: 300,
 			duty: .7,
-			maxgap: 60
+			maxgap: 300
 		},
 		{
 			series: 'numerics/HR.HR/data',
@@ -24,7 +24,7 @@ let moveToConfig = {
 			thigh: 110,
 			dur: 300,
 			duty: .7,
-			maxgap: 60
+			maxgap: 300
 		},
 		{
 			series: 'numerics/rRR/data',
@@ -32,7 +32,7 @@ let moveToConfig = {
 			thigh: 29,
 			dur: 300,
 			duty: .7,
-			maxgap: 60
+			maxgap: 300
 		},
 		{
 			series: 'numerics/RR.RR/data',
@@ -40,7 +40,7 @@ let moveToConfig = {
 			thigh: 29,
 			dur: 300,
 			duty: .7,
-			maxgap: 60
+			maxgap: 300
 		},
 		{
 			series: 'numerics/NBP-S/data',
@@ -48,29 +48,36 @@ let moveToConfig = {
 			thigh: 165,
 			dur: 300,
 			duty: .7,
-			maxgap: 60
+			maxgap: 300
 		},
 		{
 			series: 'numerics/NBP-M/data',
 			tlow: 65,
 			dur: 300,
 			duty: .7,
-			maxgap: 60
+			maxgap: 300
 		},
 		{
 			series: 'numerics/SPO2-%/data',
 			tlow: 90,
 			dur: 300,
 			duty: .7,
-			maxgap: 60
+			maxgap: 300
+		},
+		{
+			series: 'numerics/SpO₂.SpO₂/data',
+			tlow: 90,
+			dur: 300,
+			duty: .7,
+			maxgap: 300
 		},
 		{
 			series: 'numerics/SpO₂T.SpO₂T/data',
 			tlow: 90,
 			dur: 300,
 			duty: .7,
-			maxgap: 60
-		},
+			maxgap: 300
+		}
 	],
 
 	// Series to display by default
@@ -203,7 +210,9 @@ $('#annotationModal button.cancelButton').click(function() {
 	$('#annotationModal').data('callingAnnotation').cancel();
 });
 $('#annotationModal button.deleteButton').click(function() {
-	$('#annotationModal').data('callingAnnotation').delete();
+	if (confirm("Are you sure you want to delete this annotation?")) {
+		$('#annotationModal').data('callingAnnotation').delete();
+	}
 });
 
 // Request the list of files for the project
