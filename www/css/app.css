@@ -76,6 +76,13 @@
     /*margin-bottom: -50px;*/
 }
 
+/* Annotations */
+
+#annotationStartDate, #annotationStartTime, #annotationEndDate, #annotationEndTime {
+    width: 75%;
+    margin-bottom: 3px;
+}
+
 .webix_message_area {
     display: none !important;
 }

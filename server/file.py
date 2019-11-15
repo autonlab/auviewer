@@ -59,7 +59,7 @@ class File:
         # Create the file which will be used to store processed data
         try:
             print("Creating processed file.")
-            self.pf = h5py.File(self.getProcessedFilepath(), "w")
+            self.pf = h5py.File(self.getProcessedFilepath(), "w-")
         except:
             print("There was an exception while h5py was creating the processed file. Raising ProcessedFileExists exception.")
             raise ProcessedFileExists
@@ -220,7 +220,7 @@ class File:
 
         # Open the processed data file
         try:
-            self.pf = h5py.File(self.getProcessedFilepath(), "r+")
+            self.pf = h5py.File(self.getProcessedFilepath(), "r")
         except Exception as e:
             print("Unable to open the processed data file " + self.getProcessedFilepath() + ".\n", e)
             return False

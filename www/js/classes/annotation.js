@@ -128,8 +128,18 @@ Annotation.prototype.hideDialog = function () {
 // Populates annotation form values from the annotation instance values.
 Annotation.prototype.populateFormFromValues = function() {
 
-	$('#annotationStart').val(this.begin);
-	$('#annotationEnd').val(this.end);
+	// Populate annotation start date & time fields
+	let annotationStartDate = new Date((this.begin + globalStateManager.currentFile.fileData.baseTime) * 1000);
+	let annotationStartDateStrings = getHTML5DateTimeStringsFromDate(annotationStartDate);
+	document.getElementById('annotationStartDate').value = annotationStartDateStrings[0];
+	document.getElementById('annotationStartTime').value = annotationStartDateStrings[1];
+
+
+	// Populate annotation end date & time fields
+	let annotationEndDate = new Date((this.end + globalStateManager.currentFile.fileData.baseTime) * 1000);
+	let annotationEndDateStrings = getHTML5DateTimeStringsFromDate(annotationEndDate);
+	document.getElementById('annotationEndDate').value = annotationEndDateStrings[0];
+	document.getElementById('annotationEndTime').value = annotationEndDateStrings[1];
 
 	// if (this.annotation.hasOwnProperty('label')) {
 	// 	// Set the annotation label
@@ -159,9 +169,15 @@ Annotation.prototype.populateFormFromValues = function() {
 
 // Populates annotation instance values from the annotation form values.
 Annotation.prototype.populateValuesFromForm = function() {
+	
+	let annotationStartDate = new Date(document.getElementById('annotationStartDate').value + ' ' + document.getElementById('annotationStartTime').value);
+	let annotationStartOffset = annotationStartDate.getTime()/1000 - globalStateManager.currentFile.fileData.baseTime;
+	
+	let annotationEndDate = new Date(document.getElementById('annotationEndDate').value + ' ' + document.getElementById('annotationEndTime').value);
+	let annotationEndOffset = annotationEndDate.getTime()/1000 - globalStateManager.currentFile.fileData.baseTime;
 
-	this.begin = parseFloat($('#annotationStart').val());
-	this.end = parseFloat($('#annotationEnd').val());
+	this.begin = annotationStartOffset;
+	this.end = annotationEndOffset;
 
 	this.annotation = {
 		// label: $('#annotationLabel').val(),

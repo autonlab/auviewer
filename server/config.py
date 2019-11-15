@@ -18,17 +18,10 @@ M = 3000
 stepMultiplier = 2
 
 # Original patient data files (which should be preserved and unaltered) go here.
-# originalFilesDir = '../data/originals/'
-# originalFilesDir = '/zfsauton/data/public/vleonard/'
-# originalFilesDir = '/home/scratch/gwelter/meddata/originals/'
-# originalFilesDir = '/zfsauton/data/public/awertz/mladi/conditionc/h5/'
-# originalFilesDir = '/zfsauton/data/public/gwelter/medorig/'
-originalFilesDir = '/zfsauton/data/public/gwelter/new_medorig/'
+originalFilesDir = '/zfsauton/data/public/gwelter/AUView/originals/conditionc/'
 
 # Processed (i.e. downsampled) patient data files go here.
-# processedFilesDir = '../data/processed/'
-# processedFilesDir = '/home/scratch/gwelter/meddata/processed/'
-processedFilesDir = '/zfsauton/data/public/gwelter/new_processed/'
+processedFilesDir = '/zfsauton/data/public/gwelter/AUView/processed/'
 
 # Flask application configuration
 class FlaskConfigClass(object):
