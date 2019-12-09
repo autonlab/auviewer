@@ -64,12 +64,12 @@ class File:
             print("There was an exception while h5py was creating the processed file. Raising ProcessedFileExists exception.")
             raise ProcessedFileExists
         
-    def detectAnomalies(self, seriesid, thresholdlow, thresholdhigh, mode, duration, dutycycle, maxgap):
+    def detectAnomalies(self, seriesid, thresholdlow, thresholdhigh, mode, duration, persistence, maxgap):
 
         # Find the series
         for s in self.series:
             if s.id == seriesid:
-                return s.generateThresholdAlerts(thresholdlow, thresholdhigh, mode, duration, dutycycle, maxgap).tolist()
+                return s.generateThresholdAlerts(thresholdlow, thresholdhigh, mode, duration, persistence, maxgap).tolist()
 
     # Returns all event series
     def getEvents(self):
@@ -79,25 +79,30 @@ class File:
         
         events = {}
         
-        # Prepare references to HDF5 data
-        meds = self.f['meds']['all']['data'][()]
-        meds_attributes = dict(self.f['meds']['all']['data'].attrs)
-        meds_columns = list(meds.dtype.fields.keys())
-        meds_columns.remove('time')
-        slookup = self.f['meds']['all']['strings'][()]
+        try:
         
-        # Initialize the prepared meds data as a list comprehension with time
-        events['meds'] = [[t, ''] for t in meds['time']]
-        
-        for i in range(len(events['meds'])):
-            for c in meds_columns:
-                if 'Ftype_'+c in meds_attributes and meds_attributes['Ftype_'+c] == 'string':
-                    events['meds'][i][1] += ("\n" if len(events['meds'][i][1]) > 0 else '') + c + ': ' + str(slookup[meds[c][i]])
-                else:
-                    events['meds'][i][1] += ("\n" if len(events['meds'][i][1]) > 0 else '') + c + ': ' + str(meds[c][i])
-
-        end = time.time()
-        print("Completed assembly of all event series for file " + self.filename + ". Took " + str(round(end - start, 5)) + "s.")
+            # Prepare references to HDF5 data
+            meds = self.f['meds']['all']['data'][()]
+            meds_attributes = dict(self.f['meds']['all']['data'].attrs)
+            meds_columns = list(meds.dtype.fields.keys())
+            meds_columns.remove('time')
+            slookup = self.f['meds']['all']['strings'][()]
+            
+            # Initialize the prepared meds data as a list comprehension with time
+            events['meds'] = [[t, ''] for t in meds['time']]
+            
+            for i in range(len(events['meds'])):
+                for c in meds_columns:
+                    if 'Ftype_'+c in meds_attributes and meds_attributes['Ftype_'+c] == 'string':
+                        events['meds'][i][1] += ("\n" if len(events['meds'][i][1]) > 0 else '') + c + ': ' + str(slookup[meds[c][i]])
+                    else:
+                        events['meds'][i][1] += ("\n" if len(events['meds'][i][1]) > 0 else '') + c + ': ' + str(meds[c][i])
+    
+            end = time.time()
+            print("Completed assembly of all event series for file " + self.filename + ". Took " + str(round(end - start, 5)) + "s.")
+            
+        except:
+            print("Error retrieving meds.")
         
         return events
 
@@ -114,7 +119,7 @@ class File:
         outputObject = {
             # 'annotations': self.annotationSet.getAnnotations().tolist(),
             'annotations': self.annotationSet.getAnnotations(),
-            'baseTime': self.f['meta'].attrs['baseTime'],
+            'baseTime': 0 if 'baseTime' not in self.f['meta'].attrs else self.f['meta'].attrs['baseTime'],
             'events': self.getEvents(),
             'metadata': self.getMetadata(),
             'series': {}

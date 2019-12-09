@@ -5,13 +5,6 @@ from cylib import generateThresholdAlerts
 import time
 import psutil
 
-# Simplejson package is required in order to "ignore" NaN values and implicitly convert them into null values.
-# RFC JSON spec left out NaN values, even though ES5 supports them (https://www.ecma-international.org/ecma-262/5.1/#sec-4.3.23).
-# By default, Python "json" module will allow & json-encode NaN values, but the Chrome JS engine will throw an error when trying to parse them.
-# Simplejson package, with ignore_nan=True, will implicitly convert NaN values into null values.
-# Find "ignore_nan" here: https://simplejson.readthedocs.io/en/latest/
-import simplejson as json
-
 # Represents a single time series of data.
 class Series:
 
@@ -45,13 +38,13 @@ class Series:
         # Holds the downsample set
         self.dss = DownsampleSet(self)
         
-    def generateThresholdAlerts(self, thresholdlow, thresholdhigh, mode, duration, dutycycle, maxgap):
+    def generateThresholdAlerts(self, thresholdlow, thresholdhigh, mode, duration, persistence, maxgap):
         
         # Pull raw data for the series into memory
         self.pullRawDataIntoMemory()
         
         # Run through the data and generate alerts
-        alerts = generateThresholdAlerts(self.rawTimeOffsets, self.rawValues, thresholdlow, thresholdhigh, mode, duration, dutycycle, maxgap)
+        alerts = generateThresholdAlerts(self.rawTimeOffsets, self.rawValues, thresholdlow, thresholdhigh, mode, duration, persistence, maxgap)
 
         # Remove raw data for the series fromm memory
         self.removeRawDataFromMemory()
@@ -68,11 +61,14 @@ class Series:
         
         # Set data either to the retrieved downsample or to the raw data
         if downsampleFullOutput is not None:
+            
             print("(downsampled output)")
+            
             data = downsampleFullOutput.tolist()
             output_type = 'downsample'
             
         else:
+            
             print("(raw data output)")
 
             # Get reference to the series datastream from the HDF5 file

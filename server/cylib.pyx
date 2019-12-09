@@ -250,7 +250,7 @@ def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarr
 # provided, with 0 indicating low threshold, 1 indicating high threshold, and 2
 # indicating both being provided. This may not be inferred from the threshold
 # parameter values themselves because no real number is out-of-bounds.
-def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarray[np.float64_t, ndim=1] rawValues, double thresholdlow, double thresholdhigh, int mode, double duration, double dutycycle, double maxgap):
+def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarray[np.float64_t, ndim=1] rawValues, double thresholdlow, double thresholdhigh, int mode, double duration, double persistence, double maxgap):
 
     # Holds the indices of all raw values which surpass the threshold(s)
     cdef np.ndarray[long, ndim=1] pastThresholdIndices
@@ -281,10 +281,10 @@ def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndar
     cdef double leftboundary, rightboundary
     
     # Tracks the number of points that exceed the threshold and the total number
-    # of sample points for calculation of the sample duty cycle.
+    # of sample points for calculation of the sample persistence.
     cdef long numexceed, numtotal
     
-    # Holds the sample duty cycle once calculated
+    # Holds the sample persistence once calculated
     cdef double sampleduty
     
     for alertSampleBeginIndex in pastThresholdIndices:
@@ -293,7 +293,7 @@ def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndar
         leftboundary = rawOffsets[cdpi]
         rightboundary = leftboundary + duration
         
-        # Reset sample duty cycle statistics
+        # Reset sample persistence statistics
         numexceed = 0
         numtotal = 0
         
@@ -314,12 +314,12 @@ def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndar
             # Increment to the next data point
             cdpi = cdpi + 1
             
-        # Calculate the sample duty cycle
+        # Calculate the sample persistence
         sampleduty = <double>numexceed / <double>numtotal
         
-        # If the duty cycle of the sample exceeds the minimum to qualify for an
+        # If the persistence of the sample exceeds the minimum to qualify for an
         # alert, add this to our alerts.
-        if sampleduty >= dutycycle:
+        if sampleduty >= persistence:
             
             alerts[nuai,0] = leftboundary
             alerts[nuai,1] = rawOffsets[cdpi-1]

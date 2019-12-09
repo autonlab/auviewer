@@ -59,7 +59,7 @@
 <!--		<tr><td><label for="alert_gen_threshold_high_field">Threshold<sub>High</sub></label></td><td><input type="text" id="alert_gen_threshold_high_field" style="width: 100%;" /></td></tr>-->
 <!--		<tr><td><label for="alert_gen_threshold_low_field">Threshold<sub>Low</sub></label></td><td><input type="text" id="alert_gen_threshold_low_field" style="width: 100%;" /></td></tr>-->
 <!--		<tr><td><label for="alert_gen_duration_field">Duration</label></td><td><input type="text" id="alert_gen_duration_field" style="width: 100%;" /></td></tr>-->
-<!--		<tr><td style="white-space: nowrap;"><label for="alert_gen_dutycycle_field">Duty Cycle</label></td><td><input type="text" id="alert_gen_dutycycle_field" style="width: 100%;" /></td></tr>-->
+<!--		<tr><td style="white-space: nowrap;"><label for="alert_gen_dutycycle_field">Persistence</label></td><td><input type="text" id="alert_gen_dutycycle_field" style="width: 100%;" /></td></tr>-->
 <!--		<tr><td><label for="alert_gen_maxgap_field">Max Gap</label></td><td><input type="text" id="alert_gen_maxgap_field" style="width: 100%;" /></td></tr>-->
 <!--		<tr><td colspan="2">-->
 <!--			<button onclick="generateAlerts();" style="float: right;">Generate</button>-->
@@ -94,9 +94,9 @@
 		</div>
 	</div>
 	<div class="form-group row" style="margin-bottom: 0.3rem">
-		<label for="alert_gen_dutycycle_field" class="col-sm-5 col-form-label col-form-label-sm" style="white-space: nowrap;">Duty Cycle (%)</label>
+		<label for="alert_gen_dutycycle_field" class="col-sm-5 col-form-label col-form-label-sm" style="white-space: nowrap;">Persistence (%)</label>
 		<div class="col-sm-7">
-			<input class="form-control form-control-sm" type="text" id="alert_gen_dutycycle_field" placeholder="e.g. 0.7" />
+			<input class="form-control form-control-sm" type="text" id="alert_gen_dutycycle_field" placeholder="e.g. 70" />
 		</div>
 	</div>
 	<div class="form-group row" style="margin-bottom: 0.3rem">
@@ -160,11 +160,11 @@
 						</div>
 						<div class="form-check form-check-inline">
 							<input class="form-check-input" type="radio" name="annotationConfidence" id="inlineRadio-1" value="1">
-							<label class="form-check-label" for="inlineRadio-1">1</label>
+							<label class="form-check-label" for="inlineRadio-1">+1</label>
 						</div>
 						<div class="form-check form-check-inline">
 							<input class="form-check-input" type="radio" name="annotationConfidence" id="inlineRadio-2" value="2">
-							<label class="form-check-label" for="inlineRadio-2">2</label>
+							<label class="form-check-label" for="inlineRadio-2">+2</label>
 						</div>
 					</div>
 					<div class="form-group">

@@ -252,7 +252,7 @@ def create_app():
         thresholdlow = request.args.get('thresholdlow', type=float)
         thresholdhigh = request.args.get('thresholdhigh', type=float)
         duration = request.args.get('duration', type=float)
-        dutycycle = request.args.get('dutycycle', type=float)
+        persistence = request.args.get('persistence', type=float)/100
         maxgap = request.args.get('maxgap', type=float)
     
         # Generate the mode parameter (see generateThresholdAlerts function
@@ -280,7 +280,7 @@ def create_app():
             print("File could not be retrieved:", filename)
             return ''
     
-        return json.dumps(file.detectAnomalies(series, thresholdlow, thresholdhigh, mode, duration, dutycycle, maxgap), ignore_nan=True)
+        return json.dumps(file.detectAnomalies(series, thresholdlow, thresholdhigh, mode, duration, persistence, maxgap), ignore_nan=True)
 
     @app.route(config.rootWebPath + '/get_files')
     @login_required

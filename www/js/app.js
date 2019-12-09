@@ -15,7 +15,7 @@ let moveToConfig = {
 			tlow: 58,
 			thigh: 110,
 			dur: 300,
-			duty: .7,
+			duty: 70,
 			maxgap: 300
 		},
 		{
@@ -23,7 +23,7 @@ let moveToConfig = {
 			tlow: 58,
 			thigh: 110,
 			dur: 300,
-			duty: .7,
+			duty: 70,
 			maxgap: 300
 		},
 		{
@@ -31,7 +31,7 @@ let moveToConfig = {
 			tlow: 10,
 			thigh: 29,
 			dur: 300,
-			duty: .7,
+			duty: 70,
 			maxgap: 300
 		},
 		{
@@ -39,7 +39,7 @@ let moveToConfig = {
 			tlow: 10,
 			thigh: 29,
 			dur: 300,
-			duty: .7,
+			duty: 70,
 			maxgap: 300
 		},
 		{
@@ -47,41 +47,41 @@ let moveToConfig = {
 			tlow: 90,
 			thigh: 165,
 			dur: 300,
-			duty: .7,
+			duty: 70,
 			maxgap: 300
 		},
 		{
 			series: 'numerics/NBP-M/data',
 			tlow: 65,
 			dur: 300,
-			duty: .7,
+			duty: 70,
 			maxgap: 300
 		},
 		{
 			series: 'numerics/SPO2-%/data',
 			tlow: 90,
 			dur: 300,
-			duty: .7,
+			duty: 70,
 			maxgap: 300
 		},
 		{
 			series: 'numerics/SpO₂.SpO₂/data',
 			tlow: 90,
 			dur: 300,
-			duty: .7,
+			duty: 70,
 			maxgap: 300
 		},
 		{
 			series: 'numerics/SpO₂T.SpO₂T/data',
 			tlow: 90,
 			dur: 300,
-			duty: .7,
+			duty: 70,
 			maxgap: 300
 		}
 	],
 
 	// Series to display by default
-	defaultSeries: ['numerics/HR/data', 'numerics/HR.HR/data', 'numerics/HR.BeatToBeat/data', 'numerics/RR.RR/data', 'numerics/ART.Systolic/data', 'numerics/ART.Diastolic/data', 'numerics/SpO₂.SpO₂/data', 'numerics/SpO₂T.SpO₂T/data', 'numerics/SPO2-%/data', 'CVP/data', 'ArtWave/data'],
+	defaultSeries: ['numerics/HR/data', 'numerics/HR.HR/data', 'numerics/HR.BeatToBeat/data', 'numerics/ART.Systolic/data', 'numerics/ART.Diastolic/data', 'numerics/SpO₂.SpO₂/data', 'numerics/SpO₂T.SpO₂T/data', 'numerics/SPO2-%/data', 'CVP/data', 'ArtWave/data'],
 
 	groups: [
 		['numerics/AR1-D/data', 'numerics/AR1-S/data', 'numerics/AR1-M/data'],

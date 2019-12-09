@@ -23,7 +23,7 @@ RequestHandler.prototype.deleteAnnotation = function(id, filename, callback) {
 	});
 };
 
-RequestHandler.prototype.requestAnomalyDetection = function(filename, seriesID, tlow, thigh, duration, dutycycle, maxgap, callback) {
+RequestHandler.prototype.requestAnomalyDetection = function(filename, seriesID, tlow, thigh, duration, persistence, maxgap, callback) {
 
 	this._newRequest(callback, config.detectAnomaliesURL, {
 		file: filename,
@@ -31,7 +31,7 @@ RequestHandler.prototype.requestAnomalyDetection = function(filename, seriesID, 
 		thresholdlow: tlow,
 		thresholdhigh: thigh,
 		duration: duration,
-		dutycycle: dutycycle,
+		persistence: persistence,
 		maxgap: maxgap
 	});
 

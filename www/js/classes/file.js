@@ -186,7 +186,7 @@ File.prototype.destroy = function() {
 // if provided, will be called either after the response has been received from
 // the server and processed or upon a return resulting from a missing-parameter
 // error.
-File.prototype.detectAnomalies = function(series, thresholdlow, thresholdhigh, duration, dutycycle, maxgap, callback=null) {
+File.prototype.detectAnomalies = function(series, thresholdlow, thresholdhigh, duration, persistence, maxgap, callback=null) {
 
 	console.log("Anomaly detection called.");
 
@@ -201,8 +201,8 @@ File.prototype.detectAnomalies = function(series, thresholdlow, thresholdhigh, d
 	if (duration === 0) {
 		duration = '0';
 	}
-	if (dutycycle === 0) {
-		dutycycle = '0';
+	if (persistence === 0) {
+		persistence = '0';
 	}
 	if (maxgap === 0) {
 		maxgap = '0';
@@ -213,7 +213,7 @@ File.prototype.detectAnomalies = function(series, thresholdlow, thresholdhigh, d
 	if(
 		(!series ||
 		(!duration && duration !== 0) ||
-		(!dutycycle && dutycycle !== 0) ||
+		(!persistence && persistence !== 0) ||
 		(!maxgap && maxgap !== 0))
 
 		||
@@ -241,7 +241,7 @@ File.prototype.detectAnomalies = function(series, thresholdlow, thresholdhigh, d
 			(j[1] === parseFloat(thresholdlow) || (isNaN(j[1]) && isNaN(parseFloat(thresholdlow)))) &&
 			(j[2] === parseFloat(thresholdhigh) || (isNaN(j[2]) && isNaN(parseFloat(thresholdhigh)))) &&
 			(j[3] === parseFloat(duration) || (isNaN(j[3]) && isNaN(parseFloat(duration)))) &&
-			(j[4] === parseFloat(dutycycle) || (isNaN(j[4]) && isNaN(parseFloat(dutycycle)))) &&
+			(j[4] === parseFloat(persistence) || (isNaN(j[4]) && isNaN(parseFloat(persistence)))) &&
 			(j[5] === parseFloat(maxgap)) || (isNaN(j[5]) && isNaN(parseFloat(maxgap)))) {
 
 			// Log the error to console.
@@ -258,12 +258,12 @@ File.prototype.detectAnomalies = function(series, thresholdlow, thresholdhigh, d
 	}
 
 	// Add this job's parameters to the already-executed jobs array
-	this.alreadyExecutedAnomalyDetectionJobs.push([series, parseFloat(thresholdlow), parseFloat(thresholdhigh), parseFloat(duration), parseFloat(dutycycle), parseFloat(maxgap)]);
+	this.alreadyExecutedAnomalyDetectionJobs.push([series, parseFloat(thresholdlow), parseFloat(thresholdhigh), parseFloat(duration), parseFloat(persistence), parseFloat(maxgap)]);
 	
 	// Persist for callback
 	let file = this;
 
-	requestHandler.requestAnomalyDetection(globalStateManager.currentFile.filename, series, thresholdlow, thresholdhigh, duration, dutycycle, maxgap, function (data) {
+	requestHandler.requestAnomalyDetection(globalStateManager.currentFile.filename, series, thresholdlow, thresholdhigh, duration, persistence, maxgap, function (data) {
 
 		for (let a of data) {
 			file.annotations.push(new Annotation({ series: series, begin: a[0], end: a[1] }, 'anomaly'));
@@ -289,10 +289,10 @@ File.prototype.detectAnomaliesFromForm = function() {
 	let thresholdlow = document.getElementById("alert_gen_threshold_low_field").value;
 	let thresholdhigh = document.getElementById("alert_gen_threshold_high_field").value;
 	let duration = document.getElementById("alert_gen_duration_field").value;
-	let dutycycle = document.getElementById("alert_gen_dutycycle_field").value;
+	let persistence = document.getElementById("alert_gen_dutycycle_field").value;
 	let maxgap = document.getElementById("alert_gen_maxgap_field").value;
 
-	this.detectAnomalies(series, thresholdlow, thresholdhigh, duration, dutycycle, maxgap);
+	this.detectAnomalies(series, thresholdlow, thresholdhigh, duration, persistence, maxgap);
 
 };
 
@@ -472,6 +472,11 @@ File.prototype.prepareData = function() {
 
 // Render event graph
 File.prototype.renderEventGraph = function() {
+
+	// Check that we have the relevant event data
+	if ( !('events' in this.fileData) || !('meds' in this.fileData.events) ) {
+		return;
+	}
 
 	// Create our data
 	let graphData = [];

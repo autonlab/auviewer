@@ -139,11 +139,19 @@ function underlayCallbackHandler(canvas, area, g) {
 	// console.log(g);
 	// console.log(Object.getOwnPropertyNames(g.setIndexByName_));
 
-	for (let mode = 0; mode < 2; mode++) {
+	// We need to make multiple passes to render in layers.
+	// Layer 0: Anomalies detected on self graph
+	// Layer 1: Anomalies detected on other graph
+	// Layer 2: New & existing annotations (new annotations will naturally be rendered above existing by array order)
+	for (let layer = 0; layer < 4; layer++) {
 
 		for (let i = 0; i < file.annotations.length; i++) {
 
-			if ( (mode == 0 && file.annotations[i].state == 'anomaly') || (mode == 1 && (file.annotations[i].state == 'new' || file.annotations[i].state == 'existing')) ) {
+			if (
+				(layer == 0 && file.annotations[i].state == 'anomaly' && file.annotations[i].series != null && !Object.getOwnPropertyNames(g.setIndexByName_).includes(file.annotations[i].series)) ||
+				(layer == 1 && file.annotations[i].state == 'anomaly' && !(file.annotations[i].series != null && !Object.getOwnPropertyNames(g.setIndexByName_).includes(file.annotations[i].series))) ||
+				(layer == 2 && (file.annotations[i].state == 'new' || file.annotations[i].state == 'existing'))
+			) {
 
 				// // If this annotation does not belong to this series, move on.
 				// if (file.annotations[i].series != null && !Object.getOwnPropertyNames(g.setIndexByName_).includes(file.annotations[i].series)) {
