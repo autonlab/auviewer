@@ -70,7 +70,8 @@ function createMergedTimeSeries(groupSeries, data) {
 		// column values as well and increment their iteration index
 		// pointers.
 		for (let i = seriesIndexWithEarliest + 1; i < groupSeries.length; i++) {
-			if (data[groupSeries[i]].data[iterationIndexPointers[i]][0] === newRow[0]) {
+
+			if (iterationIndexPointers[i] < data[groupSeries[i]].data.length && data[groupSeries[i]].data[iterationIndexPointers[i]][0] === newRow[0]) {
 				newRow[3*i + 1] = data[groupSeries[i]].data[iterationIndexPointers[i]][1];
 				newRow[3*i + 2] = data[groupSeries[i]].data[iterationIndexPointers[i]][2];
 				newRow[3*i + 3] = data[groupSeries[i]].data[iterationIndexPointers[i]][3];
