@@ -66,7 +66,7 @@ Annotation.prototype.delete = function () {
 		let annotation = this;
 
 		// Send deletion request to the backend.
-		requestHandler.deleteAnnotation(this.id, globalStateManager.currentFile.filename, function (data) {
+		requestHandler.deleteAnnotation(this.id, globalStateManager.currentFile.projname, globalStateManager.currentFile.filename, function (data) {
 
 			console.log('Delete response received from backend.', data);
 
@@ -241,7 +241,7 @@ Annotation.prototype.save = function () {
 	if (this.state === 'new' || this.state === 'anomaly') {
 
 		// TODO(gus): Handle null current file, make file determination more robust.
-		requestHandler.createAnnotation(globalStateManager.currentFile.filename, this.begin, this.end, '' /* TODO(gus) */, JSON.stringify(this.annotation), function (data) {
+		requestHandler.createAnnotation(globalStateManager.currentFile.projname, globalStateManager.currentFile.filename, this.begin, this.end, '' /* TODO(gus) */, JSON.stringify(this.annotation), function (data) {
 
 			if (data.hasOwnProperty('success') && data.success === true) {
 
@@ -272,7 +272,7 @@ Annotation.prototype.save = function () {
 
 	} else if (this.state === 'existing') {
 
-		requestHandler.updateAnnotation(this.id, globalStateManager.currentFile.filename, this.begin, this.end, '', JSON.stringify(this.annotation), function (data) {
+		requestHandler.updateAnnotation(this.id, globalStateManager.currentFile.projname, globalStateManager.currentFile.filename, this.begin, this.end, '', JSON.stringify(this.annotation), function (data) {
 
 			if (data.hasOwnProperty('success') && data.success === true) {
 

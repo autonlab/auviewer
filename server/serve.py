@@ -9,6 +9,7 @@ import config
 from pprint import pprint
 from htmlmin.main import minify
 import dbgw
+import os
 
 # Simplejson package is required in order to "ignore" NaN values and implicitly
 # convert them into null values. RFC JSON spec left out NaN values, even though
@@ -129,10 +130,15 @@ def create_app():
     #     db.session.add(u)
     #     db.session.commit()
 
-    # Load the project
-    project = Project()
-    project.processFiles()
-    project.loadProcessedFiles()
+    # # Load the project
+    #
+    # project = Project()
+    # project.processFiles()
+    # project.loadProcessedFiles()
+
+    # Load projects
+
+    projects = load_projects()
 
     @user_registered.connect_via(app)
     def after_registered_hook(sender, user, user_invite):
@@ -193,6 +199,7 @@ def create_app():
     def create_annotation():
 
         # Parse parameters
+        projname = request.args.get('project')
         filename = request.args.get('file')
         xBoundLeft = getFloatParamOrNone('xl')
         xBoundRight = getFloatParamOrNone('xr')
@@ -200,6 +207,19 @@ def create_app():
         yBoundBottom = getFloatParamOrNone('yb')
         seriesID = request.args.get('sid')
         label = request.args.get('label')
+
+        # Try to get the project
+        try:
+    
+            # Get the project
+            project = projects[projname]
+
+        except:
+    
+            print("Project could not be retrieved:", projname)
+            return json.dumps({
+                'success': False
+            })
 
         # Get the file
         file = project.getFile(filename)
@@ -223,7 +243,21 @@ def create_app():
     
         # Parse parameters
         id = request.args.get('id')
+        projname = request.args.get('project')
         filename = request.args.get('file')
+
+        # Try to get the project
+        try:
+    
+            # Get the project
+            project = projects[projname]
+
+        except:
+    
+            print("Project could not be retrieved:", projname)
+            return json.dumps({
+                'success': False
+            })
 
         # Get the file
         file = project.getFile(filename)
@@ -247,6 +281,7 @@ def create_app():
         # TODO(gus): Add checks here
     
         # Parse the series name and alert parameters
+        projname = request.args.get('project')
         filename = request.args.get('file')
         series = request.args.get('series')
         thresholdlow = request.args.get('thresholdlow', type=float)
@@ -271,6 +306,17 @@ def create_app():
             return ''
         else:
             mode = 2
+
+        # Try to get the project
+        try:
+
+            # Get the project
+            project = projects[projname]
+
+        except:
+
+            print("Project could not be retrieved:", projname)
+            return json.dumps([])
     
         # Get the file
         file = project.getFile(filename)
@@ -285,9 +331,28 @@ def create_app():
     @app.route(config.rootWebPath + '/get_files')
     @login_required
     def get_files():
+        
+        # Parse parameters
+        projname = request.args.get('project')
+        
+        # Try to get the project
+        try:
+            
+            # Get the project
+            project = projects[projname]
+            
+        except:
     
-        output = project.getActiveFileListOutput()
-        return json.dumps(output, ignore_nan=True)
+            print("Project could not be retrieved:", projname)
+            return json.dumps([])
+
+        return json.dumps(project.getProcessedFileList())
+
+    @app.route(config.rootWebPath + '/get_projects')
+    @login_required
+    def get_projects():
+
+        return json.dumps(list(projects.keys()))
     
     @app.route(config.rootWebPath+'/')
     @app.route(config.rootWebPath+'/index.html')
@@ -302,8 +367,16 @@ def create_app():
     
         if request.method == 'GET' and len(request.args.get('file', default='')) > 0:
     
-            # Parse the filename
+            # Parse parameters
+            projname = request.args.get('project')
             filename = request.args.get('file')
+            
+            # Get the project
+            try:
+                project = projects[projname]
+            except:
+                print("Project could not be retrieved:", projname)
+                return json.dumps({})
     
             # Get the file
             file = project.getFile(filename)
@@ -331,10 +404,22 @@ def create_app():
                 request.args.get('stop', default='')) > 0:
 
             # Parse the series name and start & stop times
+            projname = request.args.get('project')
             filename = request.args.get('file')
             series = request.args.getlist('s[]')
             start = request.args.get('start', type=float)
             stop = request.args.get('stop', type=float)
+
+            # Try to get the project
+            try:
+    
+                # Get the project
+                project = projects[projname]
+
+            except:
+    
+                print("Project could not be retrieved:", projname)
+                return json.dumps({})
 
             # Get the file
             file = project.getFile(filename)
@@ -353,6 +438,7 @@ def create_app():
     def update_annotation():
 
         # Parse parameters
+        projname = request.args.get('project')
         filename = request.args.get('file')
         id = request.args.get('id')
         xBoundLeft = getFloatParamOrNone('xl')
@@ -361,6 +447,19 @@ def create_app():
         yBoundBottom = getFloatParamOrNone('yb')
         seriesID = request.args.get('sid')
         label = request.args.get('label')
+
+        # Try to get the project
+        try:
+    
+            # Get the project
+            project = projects[projname]
+
+        except:
+    
+            print("Project could not be retrieved:", projname)
+            return json.dumps({
+                'success': False
+            })
 
         # Get the file
         file = project.getFile(filename)
@@ -389,6 +488,27 @@ def create_app():
             return default
         
     return app
+
+def load_projects():
+
+    # Get list of subdirectories
+    print(config.originalsDir)
+    print(os.listdir(config.originalsDir))
+    subdirectories = [subdir for subdir in os.listdir(config.originalsDir) if os.path.isdir(os.path.join(config.originalsDir, subdir))]
+    print(subdirectories)
+    
+    projects = {}
+
+    for s in subdirectories:
+
+        print("\n\n#### LOADING PROJECT "+s+" ####\n\n")
+
+        projects[s] = Project(s)
+        projects[s].processFiles()
+        projects[s].loadProcessedFiles()
+
+    return projects
+    
 
 # Start development web server
 if __name__ == '__main__':

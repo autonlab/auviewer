@@ -1,6 +1,9 @@
 'use strict';
 
-function File(filename) {
+function File(project, filename) {
+
+	// Holds the project name
+	this.projname = project;
 
 	// Holds the filelname
 	this.filename = filename;
@@ -41,7 +44,7 @@ function File(filename) {
 	let file = this;
 
 	// Request the initial file payload, and handle the response when it comes.
-	requestHandler.requestInitialFilePayload(this.filename, function(data) {
+	requestHandler.requestInitialFilePayload(this.projname, this.filename, function(data) {
 
 		// Attach received data to our class instance
 		file.fileData = data;
@@ -263,7 +266,7 @@ File.prototype.detectAnomalies = function(series, thresholdlow, thresholdhigh, d
 	// Persist for callback
 	let file = this;
 
-	requestHandler.requestAnomalyDetection(globalStateManager.currentFile.filename, series, thresholdlow, thresholdhigh, duration, persistence, maxgap, function (data) {
+	requestHandler.requestAnomalyDetection(globalStateManager.currentFile.projname, globalStateManager.currentFile.filename, series, thresholdlow, thresholdhigh, duration, persistence, maxgap, function (data) {
 
 		for (let a of data) {
 			file.annotations.push(new Annotation({ series: series, begin: a[0], end: a[1] }, 'anomaly'));
@@ -705,7 +708,7 @@ File.prototype.updateCurrentViewData = function() {
 	let xRange = lastGraphShowing.dygraphInstance.xAxisRange();
 
 	// Request the updated view data from the backend.
-	requestHandler.requestSeriesRangedData(this.filename, series, xRange[0]/1000-this.fileData.baseTime, xRange[1]/1000-this.fileData.baseTime, this.getPostloadDataUpdateHandler());
+	requestHandler.requestSeriesRangedData(this.projname, this.filename, series, xRange[0]/1000-this.fileData.baseTime, xRange[1]/1000-this.fileData.baseTime, this.getPostloadDataUpdateHandler());
 
 };
 

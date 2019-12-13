@@ -28,6 +28,7 @@ let config = {
 	deleteAnnotationSubpath: '/delete_annotation',
 	detectAnomaliesSubpath: '/detect_anomalies',
 	getFilesSubpath: '/get_files',
+	getProjectsSubpath: '/get_projects',
 	initialFilePayloadSubpath: '/initial_file_payload',
 	seriesRangedDataSubpath: '/series_ranged_data',
 	updateAnnotationSubpath: '/update_annotation',
@@ -38,6 +39,7 @@ config.createAnnotationURL = config.buildDir(config.createAnnotationSubpath);
 config.deleteAnnotationURL = config.buildDir(config.deleteAnnotationSubpath);
 config.detectAnomaliesURL = config.buildDir(config.detectAnomaliesSubpath);
 config.getFilesURL = config.buildDir(config.getFilesSubpath);
+config.getProjectsURL = config.buildDir(config.getProjectsSubpath);
 config.initialFilePayloadURL = config.buildDir(config.initialFilePayloadSubpath);
 config.seriesRangedDataURL = config.buildDir(config.seriesRangedDataSubpath);
 config.updateAnnotationURL = config.buildDir(config.updateAnnotationSubpath);

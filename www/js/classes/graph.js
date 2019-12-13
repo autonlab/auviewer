@@ -250,6 +250,6 @@ Graph.prototype.updateCurrentViewData = function() {
 	let series = this.isGroup ? this.group : [this.series];
 
 	// Request the updated view data from the backend.
-	requestHandler.requestSeriesRangedData(this.file.filename, series, xRange[0]/1000-this.file.fileData.baseTime, xRange[1]/1000-this.file.fileData.baseTime, this.file.getPostloadDataUpdateHandler());
+	requestHandler.requestSeriesRangedData(this.file.projname, this.file.filename, series, xRange[0]/1000-this.file.fileData.baseTime, xRange[1]/1000-this.file.fileData.baseTime, this.file.getPostloadDataUpdateHandler());
 
 };

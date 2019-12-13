@@ -216,17 +216,19 @@ $('#annotationModal button.deleteButton').click(function() {
 });
 
 // Request the list of files for the project
-requestHandler.requestFileList(function(data) {
+requestHandler.requestProjectsList(function(data) {
 
-    	let fileSelect = document.getElementById('file_selection');
+	console.log(data);
 
-		for (let i in data) {
+	let projectSelect = document.getElementById('project_selection');
 
-			let opt = document.createElement('OPTION');
-			opt.setAttribute('value', data[i]);
-			opt.innerText = data[i];
-			fileSelect.appendChild(opt);
+	for (let i in data) {
 
-		}
+		let opt = document.createElement('OPTION');
+		opt.setAttribute('value', data[i]);
+		opt.innerText = data[i];
+		projectSelect.appendChild(opt);
 
-	});
+	}
+
+});

@@ -11,22 +11,18 @@ from exceptions import ProcessedFileExists
 # File represents a single patient data file.
 class File:
 
-    def __init__(self, filename, path):
+    def __init__(self, projparent, filename):
 
-        print("\n------------------------------------------------\nACCESSING FILE: " + filename + "\n------------------------------------------------\n")
+        print("\n------------------------------------------------\nACCESSING FILE: " + projparent.originals_dir + '/' + filename + "\n------------------------------------------------\n")
+
+        # Holds a reference to the project parent which contains the file
+        self.projparent = projparent
 
         # Holds the filename
         self.filename = filename
 
-        # Holds the path of the file (not including filename)
-        self.path = path
-
         # Holds the filename of the processed data file (may not exist yet)
         self.processedFilename = os.path.splitext(self.filename)[0] + '_processed.h5'
-
-        # Holds the path of the processed data file (not including filename;
-        # may not exist yet)
-        self.processedPath = config.processedFilesDir
 
         # Will hold the numeric series from the file
         self.series = []
@@ -108,7 +104,7 @@ class File:
 
     # Returns the complete path to the original data file, including filename.
     def getFilepath(self):
-        return os.path.join(self.path, self.filename)
+        return os.path.join(self.projparent.originals_dir, self.filename)
 
     # Produces JSON output for all series in the file at the maximum time range.
     def getInitialPayloadOutput(self):
@@ -151,7 +147,7 @@ class File:
 
     # Returns the complete path to the processed data file, including filename.
     def getProcessedFilepath(self):
-        return os.path.join(self.processedPath, self.processedFilename)
+        return os.path.join(self.projparent.processed_dir, self.processedFilename)
     
     # Returns the series instance corresponding to the provided series ID, or
     # None if the series cannot be found.

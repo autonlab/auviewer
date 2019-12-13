@@ -22,6 +22,7 @@
 <script src="js/classes/globalstatemanager.js"></script>
 <script src="js/classes/graph.js"></script>
 <script src="js/classes/graphselectionmenu.js"></script>
+<script src="js/classes/project.js"></script>
 <script src="js/classes/requesthandler.js"></script>
 
 <script src="js/annotation_event_handlers.js"></script>
@@ -34,11 +35,18 @@
 {% block content %}
 <div id="controls">
 
+	<h5>Project</h5>
+
+	<div class="form-group">
+		<select class="form-control form-control-sm" id="project_selection" onchange="globalStateManager.newMainProject();">
+			<option></option>
+		</select>
+	</div>
+
 	<h5>File</h5>
 
 	<div class="form-group">
 		<select class="form-control form-control-sm" id="file_selection" onchange="globalStateManager.newMainFile();">
-			<option></option>
 		</select>
 	</div>
 
