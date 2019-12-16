@@ -18,7 +18,7 @@ M = 3000
 stepMultiplier = 2
 
 # Original patient data files (which should be preserved and unaltered) go here.
-originalFilesDir = '/zfsauton/data/public/gwelter/AUView/originals/conditionc/'
+originalsDir = '/zfsauton/data/public/gwelter/AUView/originals/'
 
 # Processed (i.e. downsampled) patient data files go here.
 processedFilesDir = '/zfsauton/data/public/gwelter/AUView/processed/'
