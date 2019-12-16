@@ -95,7 +95,7 @@ function File(project, filename) {
 		file.renderMetadata();
 
 		// Instantiate event graphs
-		file.renderEventGraph();
+		file.renderEventGraphs();
 
 		// Instantiate series graphs
 		for (let s of Object.keys(file.fileData.series)) {
@@ -474,81 +474,98 @@ File.prototype.prepareData = function() {
 };
 
 // Render event graph
-File.prototype.renderEventGraph = function() {
+File.prototype.renderEventGraphs = function() {
 
 	// Check that we have the relevant event data
 	if ( !('events' in this.fileData) || !('meds' in this.fileData.events) ) {
 		return;
 	}
 
-	// Create our data
-	let graphData = [];
-	for (let e of this.fileData.events.meds) {
-		graphData.push([e[0], 1]);
-	}
+	for (let eventtype of ['ce', 'meds']) {
 
-	// Create the graph wrapper dom element
-	let graphWrapperDomElement = document.createElement('DIV');
-	graphWrapperDomElement.className = 'graph_wrapper';
+		let eventdata = null;
+		if (eventtype === 'ce') {
+			eventdata = this.fileData.events.ce;
+		} else if (eventtype === 'meds') {
+			eventdata = this.fileData.events.meds;
+		}
 
-	graphWrapperDomElement.innerHTML =
-		'<table>' +
-			'<tbody>' +
-				'<tr>' +
-					'<td class="graph_title">Medications</td>' +
-					'<td rowspan="2">' +
-						'<div class="graph"></div>' +
-					'</td>' +
-				'</tr>' +
-				'<tr>' +
-					'<td class="legend"><div></div></td>'
-				'</tr>' +
-			'</tbody>' +
-		'</table>';
+		// Create our data
+		let graphData = [];
+		for (let e of eventdata) {
+			graphData.push([e[0], 1]);
+		}
 
-	document.getElementById('graphs').appendChild(graphWrapperDomElement);
+		// Create the graph wrapper dom element
+		let graphWrapperDomElement = document.createElement('DIV');
+		graphWrapperDomElement.className = 'graph_wrapper';
 
-	// Grab references to the legend & graph elements so they can be used later.
-	let legendDomElement = graphWrapperDomElement.querySelector('.legend > div');
-	let graphDomElement = graphWrapperDomElement.querySelector('.graph');
+		graphWrapperDomElement.innerHTML =
+			'<table>' +
+				'<tbody>' +
+					'<tr>' +
+						'<td class="graph_title">' + (eventtype === 'meds' ? 'Medications' : (eventtype === 'ce' ? 'Clinical Events' : '')) +'</td>' +
+						'<td rowspan="2">' +
+							'<div class="graph"></div>' +
+						'</td>' +
+					'</tr>' +
+					'<tr>' +
+						'<td class="legend"><div></div></td>'
+					'</tr>' +
+				'</tbody>' +
+			'</table>';
 
-	this.eventDygraphInstance = new Dygraph(graphDomElement, graphData, {
-		axes: {
-			y: {
-				pixelsPerLabel: 300
-			}
-		},
-		colors: ['#171717'],
-		dateWindow: this.globalXExtremes,
-		gridLineColor: 'rgb(232,122,128)',
-		interactionModel: {
-			'mousedown': handleMouseDown.bind(this),
-			'mousemove': handleMouseMove.bind(this),
-			'mouseup': handleMouseUp.bind(this),
-			'dblclick': handleDoubleClick.bind(this),
-			'mousewheel': handleMouseWheel.bind(this)
-		},
-		labels: ['Time', 'Medications'],
-		labelsDiv: legendDomElement,
-		valueRange: [0,2]
-	});
+		document.getElementById('graphs').appendChild(graphWrapperDomElement);
 
-	let annotations = [];
-	for (let e of this.fileData.events.meds) {
-		annotations.push({
-			series: 'Medications',
-			x: e[0].valueOf(),
-			shortText: 'M',
-			text: e[1]
+		// Grab references to the legend & graph elements so they can be used later.
+		let legendDomElement = graphWrapperDomElement.querySelector('.legend > div');
+		let graphDomElement = graphWrapperDomElement.querySelector('.graph');
+
+		// Create the event dygraph instances object is does not exist
+		if (!('eventDygraphInstances' in this)) {
+			this.eventDygraphInstances = {};
+		}
+
+		this.eventDygraphInstances[eventtype] = new Dygraph(graphDomElement, graphData, {
+			axes: {
+				y: {
+					pixelsPerLabel: 300
+				}
+			},
+			colors: ['#171717'],
+			dateWindow: this.globalXExtremes,
+			gridLineColor: 'rgb(232,122,128)',
+			interactionModel: {
+				'mousedown': handleMouseDown.bind(this),
+				'mousemove': handleMouseMove.bind(this),
+				'mouseup': handleMouseUp.bind(this),
+				'dblclick': handleDoubleClick.bind(this),
+				'mousewheel': handleMouseWheel.bind(this)
+			},
+			labels: ['Time', (eventtype === 'meds' ? 'Medications' : (eventtype === 'ce' ? 'Clinical Events' : ''))],
+			labelsDiv: legendDomElement,
+			valueRange: [0, 2]
 		});
+
+		let annotations = [];
+		for (let e of eventdata) {
+			annotations.push({
+				series: (eventtype === 'meds' ? 'Medications' : (eventtype === 'ce' ? 'Clinical Events' : '')),
+				x: e[0].valueOf(),
+				shortText: 'M',
+				text: e[1]
+			});
+		}
+
+		// Persist this for the callback
+		let file = this;
+		let et = eventtype;
+
+		this.eventDygraphInstances[eventtype].ready(function () {
+			file.eventDygraphInstances[et].setAnnotations(annotations);
+		});
+
 	}
-
-	// Persist this for the callback
-	let file = this;
-
-	this.eventDygraphInstance.ready(function() {
-		file.eventDygraphInstance.setAnnotations(annotations);
-	});
 
 };
 
@@ -625,8 +642,11 @@ File.prototype.synchronizeGraphs = function() {
 			dygraphInstances.push(this.graphs[s].dygraphInstance);
 		}
 	}
-	if ('eventDygraphInstance' in this && this.eventDygraphInstance !== null) {
-		dygraphInstances.push(this.eventDygraphInstance);
+	console.log("ZIP", this.eventDygraphInstances);
+	if ('eventDygraphInstances' in this) {
+		for (let k of Object.keys(this.eventDygraphInstances)) {
+			dygraphInstances.push(this.eventDygraphInstances[k]);
+		}
 	}
 
 	// If there is not more than one graph showing to synchronize, return now.

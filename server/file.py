@@ -93,12 +93,34 @@ class File:
                         events['meds'][i][1] += ("\n" if len(events['meds'][i][1]) > 0 else '') + c + ': ' + str(slookup[meds[c][i]])
                     else:
                         events['meds'][i][1] += ("\n" if len(events['meds'][i][1]) > 0 else '') + c + ': ' + str(meds[c][i])
-    
-            end = time.time()
-            print("Completed assembly of all event series for file " + self.filename + ". Took " + str(round(end - start, 5)) + "s.")
             
-        except:
-            print("Error retrieving meds.")
+        except Exception as e:
+            print("Error retrieving meds.", e)
+            
+        try:
+            
+            # Prepare references to HDF5 data
+            ce = self.f['ce']['all']['data'][()]
+            ce_attributes = dict(self.f['ce']['all']['data'].attrs)
+            ce_columns = list(ce.dtype.fields.keys())
+            ce_columns.remove('date')
+            slookup = self.f['ce']['all']['strings'][()]
+
+            # Initialize the prepared ce data as a list comprehension with time
+            events['ce'] = [[t, ''] for t in ce['date']]
+
+            for i in range(len(events['ce'])):
+                for c in ce_columns:
+                    if 'Ftype_' + c in ce_attributes and ce_attributes['Ftype_' + c] == 'string':
+                        events['ce'][i][1] += ("\n" if len(events['ce'][i][1]) > 0 else '') + c + ': ' + str(slookup[ce[c][i]])
+                    else:
+                        events['ce'][i][1] += ("\n" if len(events['ce'][i][1]) > 0 else '') + c + ': ' + str(ce[c][i])
+            
+        except Exception as e:
+            print("Error retrieving ce.", e)
+
+        end = time.time()
+        print("Completed assembly of all event series for file " + self.filename + ". Took " + str(round(end - start, 5)) + "s.")
         
         return events
 
