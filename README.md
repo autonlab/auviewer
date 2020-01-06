@@ -32,7 +32,7 @@ Appplication config variables are located in three places:
 
 See these files and their comments for the possible configurations. These are the parameters that will typically need to be changed for a new environment:
 * ```MEDVIEW_BASE_DIR``` in _scripts/config.sh_
-* ```originalFilesDir``` & ```processedFilesDir``` in _server/config.py_
+* ```originalsDir``` & ```processedFilesDir``` in _server/config.py_
 * Mail-server related parameters in _server/config.py_
 
 ### Running the Server
@@ -134,19 +134,17 @@ See *Standard Data Response Format* above. All series data in the file for the g
 
 ### Version
 
-The following is the file schema for version ```0.1```.
+The following is the file schema for version ```0.2```.
 
 ### Vocabulary
 
 AUView uses the HDF5 file format. AUView and HDF5 each has its own vocabulary, so let us first introduce this vocabulary.
 
-HDF5 is built around groups, datasets, and attributes. In a nutshell, datasets hold tabular data, and they may be stored in an arbitrary hierarchy of grouping structures (like folders on a file system). Both groups and datasets may have attributes. In this sense, HDF is characterized as a "self-describing" data format.
+HDF5 is built around __groups__, __datasets__, and __attributes__. In a nutshell, __datasets__ hold tabular data, and they may be stored in an arbitrary hierarchy of __groups__ (like folders on a file system). Both __groups__ and __datasets__ may have __attributes__. In this sense, HDF is characterized as a "self-describing" data format.
 
-AUView, to introduce its vocabulary, is built around projects, files, and data series. A project holds files, and a file holds data series.
+AUView is built around __projects__, __files__, and __data series__. A __project__ holds a collection of any number of __files__ (HDF5 files), and a __file__ holds any number of __data series__ (HDF5 datasets). AUView will index all __data series__ in a __file__ agnostic of the grouping structure, other than the fact that the __data series__ ID is the collation of HDF5 group names and dataset name joined by forward slashes (e.g. the dataset located at File->Group1->Group2->DatasetX has ID ```Group1/Group2/DatasetX```).
 
-Here is how the two vocabularies connect. An AUView project holds a collection of any number of HDF5 files. The system will index all datasets in a file agnostic of the grouping structure, other than the fact that the ID of the data series held by each dataset becomes the collation of group names and dataset name joined by forward slashes (e.g. the dataset located at File->Group1->Group2->DatasetX has ID ```Group1/Group2/DatasetX```).
-
-### Specifications
+### File Spec
 
 AUView will extract the following from HDF5 files:
 * System-related metadata (e.g. version)
@@ -157,7 +155,7 @@ The HDF5 files should have the following structure:
 * The root group should have the following attributes:
   * ```version```: specifies the file schema version
   * Any other metadata about the file (to be displayed on the viewer)
-* The grouping structure is arbitrary to the system.
+* The grouping structure for datasets is arbitrary to the system.
 * Each dataset should have the following attributes:
   * ```name```: name of the series
   * ```type=[timeseries|enumerated_timeseries|events]```: specifies the type of data
