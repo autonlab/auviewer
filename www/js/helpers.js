@@ -218,6 +218,13 @@ function padDataIfNeeded(data) {
 
 }
 
+// Prints a message to console if verbose output is enabled
+function vo() {
+	if (config.verbose) {
+		console.log.apply(null, arguments)
+	}
+}
+
 // Adjusts x inward by zoomInPercentage%
 // Split it so the left axis gets xBias of that change and
 // right gets (1-xBias) of that change.

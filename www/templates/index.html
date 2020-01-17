@@ -17,8 +17,8 @@
 <!-- Random color generator -->
 <script src="js/random_color.js"></script>
 
+<!-- Config -->
 <script src="js/config.js"></script>
-<script src="js/common.js"></script>
 
 <!-- Classes -->
 <script src="js/classes/annotation.js"></script>
@@ -29,10 +29,10 @@
 <script src="js/classes/project.js"></script>
 <script src="js/classes/requesthandler.js"></script>
 
+<!-- Function Libraries -->
 <script src="js/annotation_event_handlers.js"></script>
 <script src="js/event_handlers.js"></script>
 <script src="js/helpers.js"></script>
-<script src="js/realtime.js"></script>
 
 <!-- App Main -->
 <script src="js/app.js"></script>
@@ -59,6 +59,10 @@
 		</div>
 
 	</div>
+
+	<h5>Annotation Control</h5>
+
+	<span onclick="globalStateManager.currentFile.annotationWorkflowPrevious();">prev</span>&nbsp;&nbsp;&nbsp;&nbsp;<span onclick="globalStateManager.currentFile.annotationWorkflowNext();">next</span>
 
 	<h5>Data Series</h5>
 
@@ -119,8 +123,10 @@
 <!--			<button onclick="clearAnomalies();" style="float: right; margin-right: 4px;">Clear</button>-->
 
 	<div id="control_footer">
+
 		<p id="enterrealtime" onclick="globalStateManager.enterRealtimeMode();">Switch to Realtime</p>
 		<p id="exitrealtime" onclick="globalStateManager.exitRealtimeMode();">Exit Realtime</p>
+
 	</div>
 
 </div>

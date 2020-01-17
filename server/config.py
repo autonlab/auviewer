@@ -22,9 +22,11 @@ stepMultiplier = 2
 
 # Original patient data files (which should be preserved and unaltered) go here.
 originalsDir = '/zfsauton/data/public/gwelter/AUView/originals/'
+# originalsDir = '/Users/gus/Code/medfiles/originals/'
 
 # Processed (i.e. downsampled) patient data files go here.
 processedFilesDir = '/zfsauton/data/public/gwelter/AUView/processed/'
+# processedFilesDir = '/Users/gus/Code/medfiles/processed/'
 
 # Flask application configuration
 class FlaskConfigClass(object):

@@ -521,7 +521,7 @@ function synchronizeGraphs() {
 
 	// Synchronize all of the graphs, if there are more than one.
 	if (Object.keys(dygraphInstances).length > 1 && sync == null) {
-		if (config.verbose) { console.log("Synchronizing graphs."); }
+		vo("Synchronizing graphs.");
 		sync = Dygraph.synchronize(Object.values(dygraphInstances), {
 			range: false,
 			selection: true,
@@ -543,7 +543,7 @@ function triggerRedraw() {
 function unsynchronizeGraphs() {
 	if (sync != null) {
 
-		if (config.verbose) { console.log("Unsynchronizing graphs."); }
+		vo("Unsynchronizing graphs.");
 		sync.detach();
 		sync = null;
 
@@ -557,7 +557,7 @@ function updateCurrentViewData(graph) {
 	// Get the x-axis range
 	var xRange = graph.xAxisRange();
 
-	console.log("Requesting data for view.");
+	vo("Requesting data for view.");
 
 	// Setup our async http call.
 	var x = new XMLHttpRequest();
@@ -569,7 +569,7 @@ function updateCurrentViewData(graph) {
 
 			//t2 = performance.now();
 
-			console.log("Applying data to view.");
+			vo("Applying data to view.");
 
 			// Parse the backend JSON response into a JS object
 			var backendData = JSON.parse(x.responseText);

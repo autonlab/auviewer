@@ -20,6 +20,10 @@ function File(project, filename) {
 	// Holds annotations for the file
 	this.annotations = [];
 
+	// Indicates the index of the annotation currently being reviewed in the
+	// annotation workflow, or -1 if user is not currently in the workflow.
+	this.annotationWorkflowCurrentIndex = -1;
+
 	// By default, continuous render mode is offline.
 	this.continuousRender = false;
 
@@ -206,7 +210,7 @@ File.prototype.destroy = function() {
 // error.
 File.prototype.detectAnomalies = function(series, thresholdlow, thresholdhigh, duration, persistence, maxgap, callback=null) {
 
-	console.log("Anomaly detection called.");
+	vo("Anomaly detection called.");
 
 	// In case any of our numerical parameters are numerical 0, convert them to
 	// strings now so we can effectively do parameter checking.
@@ -296,7 +300,7 @@ File.prototype.detectAnomalies = function(series, thresholdlow, thresholdhigh, d
 
 	});
 
-    console.log("Anomaly detection request sent.");
+    vo("Anomaly detection request sent.");
 
 };
 
@@ -342,6 +346,24 @@ File.prototype.getPostloadDataUpdateHandler = function() {
 		if (typeof data === 'undefined' || !data || (!data.hasOwnProperty('series') && !data.hasOwnProperty('events'))) {
 			console.log('Invalid response received.');
 			return;
+		}
+
+		// Go through all series received in the response, and pad if necessary.
+		// We do this before iterating through and attaching the data to the
+		// graphs because there is not always a 1:1 relationship between series
+		// and graph instance.
+		//
+		// After padding the data of each series, replace the series data with a
+		// mesh of the series superset (cached) and the current-view series
+		// subset (received in response just now).
+		for (let s in data.series) {
+
+			convertFirstColumnToDate(data.series[s].data, file.fileData.baseTime);
+
+			padDataIfNeeded(data.series[s].data);
+
+			data.series[s].data = createMeshedTimeSeries(file.fileData.series[s].data, data.series[s].data);
+
 		}
 
 		// Temporarily unsynchronize the graphs
@@ -409,6 +431,91 @@ File.prototype.getPostloadDataUpdateHandler = function() {
 // Returns the mode of File, either 'realtime' or 'file'.
 File.prototype.mode = function() {
 	return (this.projname === '__realtime__' && this.filename === '__realtime__') ? 'realtime' : 'file';
+};
+
+File.prototype.annotationWorkflowNext = function() {
+
+	// Iterate through next subsequent annotations until we hit another anomaly
+	// or hit the end of the array.
+	while(this.annotationWorkflowCurrentIndex++) {
+
+		// If we hit the end of the array, we've completed the annotation workflow.
+		if (this.annotationWorkflowCurrentIndex >= this.annotations.length) {
+			this.annotationWorkflowCurrentIndex = -1;
+			this.resetZoomToOutermost();
+			return;
+		}
+
+		// If we reach another anomaly, stop there.
+		if (this.annotations[this.annotationWorkflowCurrentIndex].state === 'anomaly') {
+			break;
+		}
+
+	}
+
+	// Grab our annotation
+	let annotation = this.annotations[this.annotationWorkflowCurrentIndex];
+	console.log(this.annotationWorkflowCurrentIndex, this.fileData.baseTime, annotation)
+	// Calculate the zoom window
+
+	// Total zoom window time to display
+	let zwTotal = 6 * 60 * 60;
+
+	// Total gap = total zoom window less the anomaly duration
+	let zwTotalGap = zwTotal - (annotation.end - annotation.begin);
+
+	// Gap on either side
+	let zwGapSingleSide = zwTotalGap / 2;
+
+	// Zoom window begin & end
+	let zwBegin = (annotation.begin - zwGapSingleSide + this.fileData.baseTime)*1000;
+	let zwEnd = (annotation.end + zwGapSingleSide + this.fileData.baseTime)*1000;
+	console.log(zwBegin, zwEnd);
+	this.zoomTo([zwBegin, zwEnd]);
+};
+
+File.prototype.annotationWorkflowPrevious = function() {
+	console.log("A")
+	// Iterate through next subsequent annotations until we hit another anomaly
+	// or hit the end of the array.
+	while(this.annotationWorkflowCurrentIndex-- || true) {
+console.log("B")
+		// If we hit the end of the array, we've completed the annotation workflow.
+		if (this.annotationWorkflowCurrentIndex < 0) {
+			console.log("C")
+			this.annotationWorkflowCurrentIndex = -1;
+			this.resetZoomToOutermost();
+			console.log("WHY NOOOOT")
+			return;
+		}
+		console.log("D")
+		// If we reach another anomaly, stop there.
+		if (this.annotations[this.annotationWorkflowCurrentIndex].state === 'anomaly') {
+			break;
+		}
+
+	}
+	console.log("HERE", this.annotationWorkflowCurrentIndex)
+
+	// Grab our annotation
+	let annotation = this.annotations[this.annotationWorkflowCurrentIndex];
+	console.log(this.annotationWorkflowCurrentIndex, this.fileData.baseTime, annotation)
+	// Calculate the zoom window
+
+	// Total zoom window time to display
+	let zwTotal = 6 * 60 * 60;
+
+	// Total gap = total zoom window less the anomaly duration
+	let zwTotalGap = zwTotal - (annotation.end - annotation.begin);
+
+	// Gap on either side
+	let zwGapSingleSide = zwTotalGap / 2;
+
+	// Zoom window begin & end
+	let zwBegin = (annotation.begin - zwGapSingleSide + this.fileData.baseTime)*1000;
+	let zwEnd = (annotation.end + zwGapSingleSide + this.fileData.baseTime)*1000;
+	console.log(zwBegin, zwEnd);
+	this.zoomTo([zwBegin, zwEnd]);
 };
 
 // Prepares & returns data by converting times to Date objects and calculating
@@ -521,7 +628,7 @@ File.prototype.processNewRealtimeData = function() {
 	// If there is no data in the queue, take us out of continuous render mode.
 	if (!Array.isArray(this.newDataQueue) || this.newDataQueue.length === 0) {
 
-		if (config.verbose) console.log('No data in realtime queue. Aborting continuous render mode.');
+		vo('No data in realtime queue. Aborting continuous render mode.');
 
 		// Indicate that continuous render mode is offline.
 		this.continuousRender = false;
@@ -737,21 +844,7 @@ File.prototype.renderMetadata = function() {
 // Reset zoom to outermost view
 File.prototype.resetZoomToOutermost = function() {
 
-	for (let s of Object.keys(this.graphs)) {
-
-		if (this.graphs[s].dygraphInstance !== null) {
-
-			this.graphs[s].dygraphInstance.updateOptions({
-				dateWindow: this.getOutermostZoomWindow()
-			});
-
-			// We only need to trigger this on one graph since they are expected
-			// to be synchronized.
-			break;
-
-		}
-
-	}
+	this.zoomTo(this.getOutermostZoomWindow());
 
 };
 
@@ -828,7 +921,7 @@ File.prototype.synchronizeGraphs = function() {
 	}
 
 	// Synchronize all of the graphs.
-	if (config.verbose) { console.log("Synchronizing graphs."); }
+	vo("Synchronizing graphs.");
 	this.sync = Dygraph.synchronize(dygraphInstances, {
 		range: false,
 		selection: true,
@@ -913,6 +1006,27 @@ File.prototype.unsynchronizeGraphs = function() {
 		if (config.verbose) { console.log("Unsynchronizing graphs."); }
 		this.sync.detach();
 		this.sync = null;
+
+	}
+
+};
+
+// TODO: Update description, get rid of resetZoomToOutermost
+File.prototype.zoomTo = function(timeWindow) {
+
+	for (let s of Object.keys(this.graphs)) {
+
+		if (this.graphs[s].dygraphInstance !== null) {
+
+			this.graphs[s].dygraphInstance.updateOptions({
+				dateWindow: timeWindow
+			});
+
+			// We only need to trigger this on one graph since they are expected
+			// to be synchronized.
+			break;
+
+		}
 
 	}
 

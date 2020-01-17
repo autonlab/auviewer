@@ -205,15 +205,13 @@ let globalStateManager = new GlobalStateManager();
 // Setup the websocket connection
 let socket = io();
 socket.on('connect', function() {
-    console.log('Connected to pseudo-realtime connection.')
+    console.log('Connected to realtime connection.')
 });
 
 socket.on('new_data', function(data) {
 
 	// Log the received data
-	if (config.verbose) {
-		console.log('rcvd new_data:', JSON.parse(JSON.stringify(data)));
-	}
+	vo('rcvd socketio new_data:', deepCopy(data));
 
 	// Grab the current file
 	let currentFile = globalStateManager.currentFile;
@@ -250,8 +248,6 @@ $('#annotationModal button.deleteButton').click(function() {
 
 // Request the list of files for the project
 requestHandler.requestProjectsList(function(data) {
-
-	console.log(data);
 
 	let projectSelect = document.getElementById('project_selection');
 

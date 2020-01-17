@@ -26,7 +26,7 @@ sio.connect('http://localhost:8001')
 n = 0
 
 # Oscillations per second
-f = 2.5;
+f = 2.5
 
 # Time interval in seconds
 interval = 0.1

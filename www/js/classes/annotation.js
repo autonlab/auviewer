@@ -16,7 +16,7 @@ function Annotation(dataObjOrArray, state) {
 	if (typeof dataObjOrArray === 'object' && dataObjOrArray !== null) {
 		this.populateValuesFromObject(dataObjOrArray);
 	} else {
-		console.log('Error: Invalid data provided to annotation constructor (neither object nor array).', dataObjOrArray);
+		console.log('Error: Invalid data provided to annotation constructor (neither object nor array).', deepCopy(dataObjOrArray));
 	}
 
 	// Set the local ID if a backend ID was not provided
@@ -68,7 +68,7 @@ Annotation.prototype.delete = function () {
 		// Send deletion request to the backend.
 		requestHandler.deleteAnnotation(this.id, globalStateManager.currentFile.projname, globalStateManager.currentFile.filename, function (data) {
 
-			console.log('Delete response received from backend.', data);
+			vo('Delete response received from backend.', deepCopy(data));
 
 			if (data.hasOwnProperty('success') && data['success'] === true) {
 
@@ -125,7 +125,7 @@ Annotation.prototype.hideDialog = function () {
 	modal.modal('hide');
 };
 
-// Populates annotation form values from the annotation instance values.
+// Populates annotation form values from the annotation instance values`.
 Annotation.prototype.populateFormFromValues = function() {
 
 	// Populate annotation start date & time fields

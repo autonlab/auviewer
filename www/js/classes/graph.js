@@ -201,11 +201,9 @@ Graph.prototype.remove = function() {
 // Replace the data attached to the dygraph. Block redraw of the dygraph by
 // passing in true for the block_redraw optional parameter.
 Graph.prototype.replacePlottedData = function(data, block_redraw=false) {
-	console.log("Here's the pre-existing dygraph.file_:", deepCopy(this.dygraphInstance.file_));
 	this.dygraphInstance.updateOptions({
 		file: data
 	}, block_redraw);
-	console.log("Here's the post-update dygraph.file_:", deepCopy(this.dygraphInstance.file_));
 };
 
 // Toggle the graph to show.

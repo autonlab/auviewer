@@ -130,18 +130,13 @@ function startAnnotationHighlight (event, g, context) {
 // annotations on the canvas.
 function underlayCallbackHandler(canvas, area, g) {
 
-	if (config.verbose) {
-		console.log("underlayCallbackHandler()")
-	}
+	vo("underlayCallbackHandler()");
 
 	let file = globalStateManager.currentFile;
 
 	let left, right, x, y, width, height;
 
-	// console.log(canvas);
-	// console.log(area);
-	// console.log(g);
-	// console.log(Object.getOwnPropertyNames(g.setIndexByName_));
+	// console.log(canvas, area, g, Object.getOwnPropertyNames(g.setIndexByName_));
 
 	// We need to make multiple passes to render in layers.
 	// Layer 0: Anomalies detected on self graph
@@ -152,9 +147,9 @@ function underlayCallbackHandler(canvas, area, g) {
 		for (let i = 0; i < file.annotations.length; i++) {
 
 			if (
-				(layer == 0 && file.annotations[i].state == 'anomaly' && file.annotations[i].series != null && !Object.getOwnPropertyNames(g.setIndexByName_).includes(file.annotations[i].series)) ||
-				(layer == 1 && file.annotations[i].state == 'anomaly' && !(file.annotations[i].series != null && !Object.getOwnPropertyNames(g.setIndexByName_).includes(file.annotations[i].series))) ||
-				(layer == 2 && (file.annotations[i].state == 'new' || file.annotations[i].state == 'existing'))
+				(layer === 0 && file.annotations[i].state === 'anomaly' && file.annotations[i].series != null && !Object.getOwnPropertyNames(g.setIndexByName_).includes(file.annotations[i].series)) ||
+				(layer === 1 && file.annotations[i].state === 'anomaly' && !(file.annotations[i].series != null && !Object.getOwnPropertyNames(g.setIndexByName_).includes(file.annotations[i].series))) ||
+				(layer === 2 && (file.annotations[i].state === 'new' || file.annotations[i].state === 'existing'))
 			) {
 
 				// // If this annotation does not belong to this series, move on.
@@ -177,11 +172,15 @@ function underlayCallbackHandler(canvas, area, g) {
 					if (useRandomAnomalyColors) {
 						if (!seriesAnomalyColors.hasOwnProperty(file.annotations[i].series)) {
 							seriesAnomalyColors[file.annotations[i].series] = randomColor();
-							console.log(file.annotations[i].series, seriesAnomalyColors[file.annotations[i].series]);
+							vo(file.annotations[i].series, seriesAnomalyColors[file.annotations[i].series]);
 						}
 						canvas.fillStyle = seriesAnomalyColors[file.annotations[i].series];
 					} else {
-						if (file.annotations[i].series != null && !Object.getOwnPropertyNames(g.setIndexByName_).includes(file.annotations[i].series)) {
+						if (i === file.annotationWorkflowCurrentIndex && file.annotations[i].series != null && !Object.getOwnPropertyNames(g.setIndexByName_).includes(file.annotations[i].series)) {
+							canvas.fillStyle = '#53ff65';
+						} else if (i === file.annotationWorkflowCurrentIndex) {
+							canvas.fillStyle = '#00bd1d';
+						} else if (file.annotations[i].series != null && !Object.getOwnPropertyNames(g.setIndexByName_).includes(file.annotations[i].series)) {
 							// Use a lighter color to highlight anomalies from
 							// other series.
 							canvas.fillStyle = '#f5d4ab';
