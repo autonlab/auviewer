@@ -55,31 +55,12 @@ class AnnotationSet:
         
     # Returns a NumPy array of the annotations, or an empty list.
     def getAnnotations(self):
+
+        # If we're in realtime, annotations are not available.
+        if self.fileparent.mode() == 'realtime':
+            return []
         
         return [[a.id, a.xboundleft, a.xboundright, a.yboundtop, a.yboundbottom, a.annotation] for a in self.anndb.query.filter_by(user_id=current_user.id, filepath=self.fileparent.getFilepath()).all()]
-    
-    # Returns the annotations dataset or None if it cannot be retrieved. If the
-    # annotations dataset does not exist in the processed file, it will create
-    # a new one and return it.
-    def getAnnotationsDataset(self):
-    
-        # Get the processed file
-        pf = self.fileparent.getProcessedFile()
-    
-        # Handle case where we cannot retrieve processed file
-        if pf is None:
-            print("Unable to add annotation because processed file could not be retrieved.")
-            return None
-        
-        # Attempt to retrieve the annotations dataset
-        dset = pf.get('annotations')
-        
-        # If the dataset was found, return it
-        if dset is not None:
-            return dset
-
-        # Otherwise, create the annotations dataset and return it
-        return pf.create_dataset("annotations", (0,), maxshape=(None,), dtype=[('xboundleft', 'float64'), ('xboundright', 'float64'), ('yboundtop', 'float64'), ('yboundbottom', 'float64'), ('userid', h5py.special_dtype(vlen=str)), ('seriesid', h5py.special_dtype(vlen=str)), ('label', h5py.special_dtype(vlen=str))])
 
     def updateAnnotation(self, id, xBoundLeft=None, xBoundRight=None, yBoundTop=None, yBoundBottom=None, seriesID='', label=''):
 

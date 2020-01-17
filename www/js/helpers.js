@@ -157,6 +157,11 @@ function createMeshedTimeSeries(superset, subset) {
 
 }
 
+// Returns a deep copy of any JSON-serializable variable.
+function deepCopy(o) {
+	return JSON.parse(JSON.stringify(o));
+}
+
 // Returns a 2-member array with date & time strings that can be provided to an
 // HTML5 input form field of type date & time respectively. Format will be
 // ['2020-12-15', '01:27:36'].
@@ -191,7 +196,7 @@ function offsetToPercentage(g, offsetX) {
 	return w === 0 ? 0 : (x / w);
 }
 
-// This is a specialized and temporoary function that pads a 3-column 2d array /
+// This is a specialized and temporary function that pads a 3-column 2d array /
 // set of data points with an additional, 4th column of null values. It modifies
 // the original array if it is 3 columns; otherwise, nothing is changed.
 // TODO(gus): Remove later; this is temporary.

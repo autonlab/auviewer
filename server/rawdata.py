@@ -4,6 +4,7 @@ from cylib import getSliceParam
 # Represents raw data for a single time series
 class RawData:
     
+    # RawData may operate in file-mode or data-mode. If seriesparent.h5path`
     def __init__(self, seriesparent):
         
         # Set the series parent

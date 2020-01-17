@@ -6,6 +6,10 @@
 {% endblock %}
 
 {% block js %}
+
+<!-- SockerIO for pseudo-realtime connectivity -->
+<script src="js/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I="></script>
+
 <!-- Dygraphs & Synchronizer -->
 <script src="js/dygraph.js"></script>
 <script src="js/synchronizer.js"></script>
@@ -28,100 +32,96 @@
 <script src="js/annotation_event_handlers.js"></script>
 <script src="js/event_handlers.js"></script>
 <script src="js/helpers.js"></script>
+<script src="js/realtime.js"></script>
 
+<!-- App Main -->
 <script src="js/app.js"></script>
 {% endblock %}
 
 {% block content %}
 <div id="controls">
 
-	<h5>Project</h5>
+	<div id="projectAndFileSelection">
 
-	<div class="form-group">
-		<select class="form-control form-control-sm" id="project_selection" onchange="globalStateManager.newMainProject();">
-			<option></option>
-		</select>
-	</div>
+		<h5>Project</h5>
 
-	<h5>File</h5>
+		<div class="form-group">
+			<select class="form-control form-control-sm" id="project_selection" onchange="globalStateManager.newMainProject();">
+				<option></option>
+			</select>
+		</div>
 
-	<div class="form-group">
-		<select class="form-control form-control-sm" id="file_selection" onchange="globalStateManager.newMainFile();">
-		</select>
+		<h5>File</h5>
+
+		<div class="form-group">
+			<select class="form-control form-control-sm" id="file_selection" onchange="globalStateManager.newMainFile();">
+			</select>
+		</div>
+
 	</div>
 
 	<h5>Data Series</h5>
 
 	<div id="series_toggle_controls" class="form-group"></div>
 
-	<h5>Anomaly Detection</h5>
-<!--	<table style="width: 190px; margin-bottom: 16px;">-->
-<!--		<tr>-->
-<!--			<td><label for="alert_gen_series_field">Series</label></td>-->
-<!--			<td>-->
-<!--				<select id="alert_gen_series_field" name="alert_gen_series_field" style="width: 100%;">-->
-<!--					<option></option>-->
-<!--				</select>-->
-<!--			</td>-->
-<!--		</tr>-->
-<!--		<tr><td><label for="alert_gen_threshold_high_field">Threshold<sub>High</sub></label></td><td><input type="text" id="alert_gen_threshold_high_field" style="width: 100%;" /></td></tr>-->
-<!--		<tr><td><label for="alert_gen_threshold_low_field">Threshold<sub>Low</sub></label></td><td><input type="text" id="alert_gen_threshold_low_field" style="width: 100%;" /></td></tr>-->
-<!--		<tr><td><label for="alert_gen_duration_field">Duration</label></td><td><input type="text" id="alert_gen_duration_field" style="width: 100%;" /></td></tr>-->
-<!--		<tr><td style="white-space: nowrap;"><label for="alert_gen_dutycycle_field">Persistence</label></td><td><input type="text" id="alert_gen_dutycycle_field" style="width: 100%;" /></td></tr>-->
-<!--		<tr><td><label for="alert_gen_maxgap_field">Max Gap</label></td><td><input type="text" id="alert_gen_maxgap_field" style="width: 100%;" /></td></tr>-->
-<!--		<tr><td colspan="2">-->
-<!--			<button onclick="generateAlerts();" style="float: right;">Generate</button>-->
-<!--			<button onclick="clearAnomalies();" style="float: right; margin-right: 4px;">Clear</button>-->
-<!--		</td></tr>-->
-<!--	</table>-->
+	<div id="anomalyDetectionPanel">
 
-	<div class="form-group row" style="margin-bottom: 0.3rem">
-		<label for="alert_gen_series_field" class="col-sm-5 col-form-label col-form-label-sm">Series</label>
-		<div class="col-sm-7">
-			<select class="form-control form-control-sm" id="alert_gen_series_field">
-				<option></option>
-			</select>
+		<h5>Anomaly Detection</h5>
+
+		<div class="form-group row" style="margin-bottom: 0.3rem">
+			<label for="alert_gen_series_field" class="col-sm-5 col-form-label col-form-label-sm">Series</label>
+			<div class="col-sm-7">
+				<select class="form-control form-control-sm" id="alert_gen_series_field">
+					<option></option>
+				</select>
+			</div>
 		</div>
-	</div>
-	<div class="form-group row" style="margin-bottom: 0.3rem">
-		<label for="alert_gen_threshold_high_field" class="col-sm-5 col-form-label col-form-label-sm">Threshold<sub>High</sub></label>
-		<div class="col-sm-7">
-			<input class="form-control form-control-sm" type="text" id="alert_gen_threshold_high_field" placeholder="e.g. 200" />
+		<div class="form-group row" style="margin-bottom: 0.3rem">
+			<label for="alert_gen_threshold_high_field" class="col-sm-5 col-form-label col-form-label-sm">Threshold<sub>High</sub></label>
+			<div class="col-sm-7">
+				<input class="form-control form-control-sm" type="text" id="alert_gen_threshold_high_field" placeholder="e.g. 200" />
+			</div>
 		</div>
-	</div>
-	<div class="form-group row" style="margin-bottom: 0.3rem">
-		<label for="alert_gen_threshold_low_field" class="col-sm-5 col-form-label col-form-label-sm">Threshold<sub>Low</sub></label>
-		<div class="col-sm-7">
-			<input class="form-control form-control-sm" type="text" id="alert_gen_threshold_low_field" placeholder="e.g. 70" />
+		<div class="form-group row" style="margin-bottom: 0.3rem">
+			<label for="alert_gen_threshold_low_field" class="col-sm-5 col-form-label col-form-label-sm">Threshold<sub>Low</sub></label>
+			<div class="col-sm-7">
+				<input class="form-control form-control-sm" type="text" id="alert_gen_threshold_low_field" placeholder="e.g. 70" />
+			</div>
 		</div>
-	</div>
-	<div class="form-group row" style="margin-bottom: 0.3rem">
-		<label for="alert_gen_duration_field" class="col-sm-5 col-form-label col-form-label-sm">Duration (s)</label>
-		<div class="col-sm-7">
-			<input class="form-control form-control-sm" type="text" id="alert_gen_duration_field" placeholder="e.g. 60" />
+		<div class="form-group row" style="margin-bottom: 0.3rem">
+			<label for="alert_gen_duration_field" class="col-sm-5 col-form-label col-form-label-sm">Duration (s)</label>
+			<div class="col-sm-7">
+				<input class="form-control form-control-sm" type="text" id="alert_gen_duration_field" placeholder="e.g. 60" />
+			</div>
 		</div>
-	</div>
-	<div class="form-group row" style="margin-bottom: 0.3rem">
-		<label for="alert_gen_dutycycle_field" class="col-sm-5 col-form-label col-form-label-sm" style="white-space: nowrap;">Persistence (%)</label>
-		<div class="col-sm-7">
-			<input class="form-control form-control-sm" type="text" id="alert_gen_dutycycle_field" placeholder="e.g. 70" />
+		<div class="form-group row" style="margin-bottom: 0.3rem">
+			<label for="alert_gen_dutycycle_field" class="col-sm-5 col-form-label col-form-label-sm" style="white-space: nowrap;">Persistence (%)</label>
+			<div class="col-sm-7">
+				<input class="form-control form-control-sm" type="text" id="alert_gen_dutycycle_field" placeholder="e.g. 70" />
+			</div>
 		</div>
-	</div>
-	<div class="form-group row" style="margin-bottom: 0.3rem">
-		<label for="alert_gen_maxgap_field" class="col-sm-5 col-form-label col-form-label-sm">Max Gap (s)</label>
-		<div class="col-sm-7">
-			<input class="form-control form-control-sm" type="text" id="alert_gen_maxgap_field" placeholder="e.g. 60" />
+		<div class="form-group row" style="margin-bottom: 0.3rem">
+			<label for="alert_gen_maxgap_field" class="col-sm-5 col-form-label col-form-label-sm">Max Gap (s)</label>
+			<div class="col-sm-7">
+				<input class="form-control form-control-sm" type="text" id="alert_gen_maxgap_field" placeholder="e.g. 60" />
+			</div>
 		</div>
-	</div>
-	<div class="form-group row">
-		<div class="col-sm-12 text-right">
-			<button onclick="if (confirm('Are you sure you want to clear anomalies?\n\nNote: This will only clear the anomalies from your current browsing session. Memorized anomaly detection will re-run upon reload.')) { globalStateManager.currentFile.clearAnomalies(); }" class="btn btn-secondary btn-sm">Clear</button>
-			<button onclick="globalStateManager.currentFile.detectAnomaliesFromForm();" class="btn btn-primary btn-sm">Generate</button>
+		<div class="form-group row">
+			<div class="col-sm-12 text-right">
+				<button onclick="if (confirm('Are you sure you want to clear anomalies?\n\nNote: This will only clear the anomalies from your current browsing session. Memorized anomaly detection will re-run upon reload.')) { globalStateManager.currentFile.clearAnomalies(); }" class="btn btn-secondary btn-sm">Clear</button>
+				<button onclick="globalStateManager.currentFile.detectAnomaliesFromForm();" class="btn btn-primary btn-sm">Generate</button>
+			</div>
 		</div>
+
 	</div>
 
 <!--			<button onclick="generateAlerts();" style="float: right;">Generate</button>-->
 <!--			<button onclick="clearAnomalies();" style="float: right; margin-right: 4px;">Clear</button>-->
+
+	<div id="control_footer">
+		<p id="enterrealtime" onclick="globalStateManager.enterRealtimeMode();">Switch to Realtime</p>
+		<p id="exitrealtime" onclick="globalStateManager.exitRealtimeMode();">Exit Realtime</p>
+	</div>
 
 </div>
 <div id="graphs">
@@ -199,4 +199,5 @@
 		</div>
 	</div>
 </div>
+
 {% endblock %}

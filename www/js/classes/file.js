@@ -20,6 +20,12 @@ function File(project, filename) {
 	// Holds annotations for the file
 	this.annotations = [];
 
+	// By default, continuous render mode is offline.
+	this.continuousRender = false;
+
+	// Used for realtime-mode to queue incoming new data
+	this.newDataQueue = [];
+
 	// Holds the reference to the graph synchronization object
 	this.sync = null;
 
@@ -43,14 +49,12 @@ function File(project, filename) {
 	// Persist for callback
 	let file = this;
 
-	// Request the initial file payload, and handle the response when it comes.
-	requestHandler.requestInitialFilePayload(this.projname, this.filename, function(data) {
+	// If we're not in realtime-mode, request the initial file payload, and
+	// handle the response when it comes.
+	requestHandler.requestInitialFilePayload(this.projname, this.filename, function (data) {
 
-		// Attach received data to our class instance
-		file.fileData = data;
-
-		// Prepare data received from the backend
-		file.prepareData();
+		// Prepare data received from the backend and attach to class instance
+		file.fileData = file.prepareData(data, data.baseTime);
 
 		// Pad data, if necessary, for each series
 		for (let s of Object.keys(file.fileData.series)) {
@@ -62,33 +66,33 @@ function File(project, filename) {
 		// sorry. I could not document this in any way that would help make it
 		// more understandable, and it is a bit of a labyrinth.
 		groupLoop:
-		for (let group of moveToConfig.groups) {
+			for (let group of moveToConfig.groups) {
 
-			// Check whether all series members of the group are present, and if
-			// not, then skip this group.
-			for (let s of group) {
-				if (!file.fileData.series.hasOwnProperty(s)) {
-					continue groupLoop;
+				// Check whether all series members of the group are present, and if
+				// not, then skip this group.
+				for (let s of group) {
+					if (!file.fileData.series.hasOwnProperty(s)) {
+						continue groupLoop;
+					}
 				}
+
+				// Enumerate the column labels
+				const labels = ['time'];
+				for (let s of group) {
+					labels.push(s + ' Min');
+					labels.push(s + ' Max');
+					labels.push(s);
+				}
+
+				// Add the combined series to the file data.
+				file.fileData.series["Group:\n" + group.join("\n")] = {
+					id: "Group:\n" + group.join("\n"),
+					labels: labels,
+					group: group,
+					data: createMergedTimeSeries(group, file.fileData.series)
+				};
+
 			}
-
-			// Enumerate the column labels
-			const labels = ['time'];
-			for (let s of group) {
-				labels.push(s + ' Min');
-				labels.push(s + ' Max');
-				labels.push(s);
-			}
-
-			// Add the combined series to the file data.
-			file.fileData.series["Group:\n" + group.join("\n")] = {
-				id: "Group:\n" + group.join("\n"),
-				labels: labels,
-				group: group,
-				data: createMergedTimeSeries(group, file.fileData.series)
-			};
-
-		}
 
 		// Attach & render file metadata
 		file.metadata = data.metadata;
@@ -107,7 +111,7 @@ function File(project, filename) {
 
 		// Populate the annotations
 		for (let a of file.fileData.annotations) {
-			file.annotations.push(new Annotation({ valuesArrayFromBackend: a }, 'existing'));
+			file.annotations.push(new Annotation({valuesArrayFromBackend: a}, 'existing'));
 		}
 		globalStateManager.currentFile.triggerRedraw();
 
@@ -141,6 +145,17 @@ function File(project, filename) {
 			}
 		}
 		file.runAnomalyDetectionJobsForSeries(seriesInitiallyDisplaying);
+
+		// If this is a realtime file, subscribe to realtime updates via the
+		// websocket connection.
+		if (file.mode() === 'realtime') {
+
+			socket.emit('subscribe', {
+				project: file.projname,
+				filename: file.filename
+			});
+
+		}
 
 	});
 
@@ -299,6 +314,22 @@ File.prototype.detectAnomaliesFromForm = function() {
 
 };
 
+// Returns the graph class instance for the series name provided if it exists.
+// Otherwise, returns null;
+File.prototype.getGraphForSeries = function(s) {
+	for (let g in this.graphs) {
+		if (this.graphs[g].series === s) {
+			return this.graphs[g];
+		}
+	}
+	return null;
+};
+
+// Returns the outermost zoom window, a two-member array with start & stop time.
+File.prototype.getOutermostZoomWindow = function() {
+	return this.mode() === 'realtime' ? [this.globalXExtremes[1] - (globalStateManager.realtimeTimeWindow*1000), this.globalXExtremes[1]] : this.globalXExtremes;
+};
+
 // Returns a handler function which processes new series data received from the
 // backend.
 File.prototype.getPostloadDataUpdateHandler = function() {
@@ -308,27 +339,9 @@ File.prototype.getPostloadDataUpdateHandler = function() {
 	return function(data) {
 
 		// Validate the response data
-		if (typeof data === 'undefined' || !data || !data.hasOwnProperty('series')) {
+		if (typeof data === 'undefined' || !data || (!data.hasOwnProperty('series') && !data.hasOwnProperty('events'))) {
 			console.log('Invalid response received.');
 			return;
-		}
-
-		// Go through all series received in the response, and pad if necessary.
-		// We do this before iterating through and attaching the data to the
-		// graphs because there is not always a 1:1 relationship between series
-		// and graph instance.
-		//
-		// After padding the data of each series, replace the series data with a
-		// mesh of the series superset (cached) and the current-view series
-		// subset (received in response just now).
-		for (let s in data.series) {
-
-			convertFirstColumnToDate(data.series[s].data, file.fileData.baseTime);
-
-			padDataIfNeeded(data.series[s].data);
-
-			data.series[s].data = createMeshedTimeSeries(file.fileData.series[s].data, data.series[s].data);
-
 		}
 
 		// Temporarily unsynchronize the graphs
@@ -393,83 +406,217 @@ File.prototype.getPostloadDataUpdateHandler = function() {
 
 };
 
-// Convert times to Date objects, and calculate x-axis extremes across all data.
-File.prototype.prepareData = function() {
+// Returns the mode of File, either 'realtime' or 'file'.
+File.prototype.mode = function() {
+	return (this.projname === '__realtime__' && this.filename === '__realtime__') ? 'realtime' : 'file';
+};
+
+// Prepares & returns data by converting times to Date objects and calculating
+// x-axis extremes across all data.
+File.prototype.prepareData = function(data, baseTime) {
 
 	let t0 = performance.now();
 
 	// Get array of series
-	let series = Object.keys(this.fileData.series);
+	let series = Object.keys(data.series);
 
-	// If there are no series, return
-	if (series.length < 1) {
+	// Process series data
+	if (series.length > 0) {
+
+		// Prime the graph extremes if new. Otherwise, convert the existing extremes
+		// to date objects.
+		if (this.globalXExtremes.length === 0) {
+			this.globalXExtremes[0] = new Date((data.series[series[0]].data[0][0] + baseTime) * 1000);
+			this.globalXExtremes[1] = new Date((data.series[series[0]].data[0][0] + baseTime) * 1000);
+		} else {
+			this.globalXExtremes[0] = new Date(this.globalXExtremes[0].valueOf());
+			this.globalXExtremes[1] = new Date(this.globalXExtremes[1].valueOf());
+		}
+
+		// Process series data
+		for (let s of series) {
+
+			// If this series has no data, continue
+			if (data.series[s].data.length < 1) {
+				continue;
+			}
+
+			convertFirstColumnToDate(data['series'][s].data, baseTime);
+
+			// Update global x-minimum if warranted
+			if (data.series[s].data[0][0] < this.globalXExtremes[0]) {
+				this.globalXExtremes[0] = data.series[s].data[0][0];
+			}
+
+			// Update global x-maximumm if warranted
+			if (data.series[s].data[data.series[s].data.length - 1][0] > this.globalXExtremes[1]) {
+				this.globalXExtremes[1] = data.series[s].data[data.series[s].data.length - 1][0];
+			}
+
+		}
+
+	}
+
+	// Process event data
+	if (data.hasOwnProperty('events')) {
+
+		// Get array of event series
+		let events = Object.keys(data.events);
+
+		// Process event data
+		for (let s of events) {
+
+			// If this series has no data, continue
+			if (data.events[s].length < 1) {
+				continue;
+			}
+
+			for (let i in data.events[s]) {
+
+				// Convert the ISO8601-format string into a Date object.
+				data.events[s][i][0] = new Date((data.events[s][i][0] + baseTime) * 1000);
+
+			}
+
+			// Update global x-minimum if warranted
+			if (data.events[s][0][0] < this.globalXExtremes[0]) {
+				this.globalXExtremes[0] = data.events[s][0][0];
+			}
+
+			// Update global x-maximumm if warranted
+			if (data.events[s][data.events[s].length - 1][0] > this.globalXExtremes[1]) {
+				this.globalXExtremes[1] = data.events[s][data.events[s].length - 1][0];
+			}
+
+		}
+
+	}
+
+	// If we have global x-extremes data now
+	if (this.globalXExtremes.length > 0) {
+
+		// When the x-axis extremes have been calculated (as dates), convert them
+		// to milliseconds since epoch, as this is what is specified in the options
+		// reference: http://dygraphs.com/options.html#dateWindow
+		this.globalXExtremes[0] = this.globalXExtremes[0].valueOf();
+		this.globalXExtremes[1] = this.globalXExtremes[1].valueOf();
+
+	}
+
+	let tt = performance.now() - t0;
+	if (config.verbose || tt > config.performanceReportingThresholdMS) { console.log("File.prepareData() took " + Math.round(tt) + "ms."); }
+
+	return data;
+
+};
+
+// Processes new realtime data that has been queued, if present. If there is
+// data to process, then calls itself recursively after a timeout.
+File.prototype.processNewRealtimeData = function() {
+
+	// NOTE: Make this the FIRST thing in the function!
+	// Indicate that continuous render mode is running.
+	this.continuousRender = true;
+
+	// If there is no data in the queue, take us out of continuous render mode.
+	if (!Array.isArray(this.newDataQueue) || this.newDataQueue.length === 0) {
+
+		if (config.verbose) console.log('No data in realtime queue. Aborting continuous render mode.');
+
+		// Indicate that continuous render mode is offline.
+		this.continuousRender = false;
+
+		// Return now to effectively take us out of continuous redraw mode.
 		return;
 	}
 
-	// Prime the graph extremes with the first series, first point
-	this.globalXExtremes[0] = new Date((this.fileData.series[series[0]].data[0][0] + this.fileData.baseTime) * 1000);
-	this.globalXExtremes[1] = new Date((this.fileData.series[series[0]].data[0][0] + this.fileData.baseTime) * 1000);
+	// This function only applies to realtime mode. If we're not in realtime
+	// mode, then return now.
+	if (this.mode() !== 'realtime') {
+		console.log('Error: File.processNewRealtimeData() called while not in realtime mode.');
+		return;
+	}
 
-	// Process series data
-	for (let s of series) {
+	// Start the performance timer
+	let t0 = performance.now();
 
-		// If this series has no data, continue
-		if (this.fileData.series[s].data.length < 1) {
+	// This will hold a local merged set of prepared data
+	let localPreparedMergedData = null;
+
+	// Will hold data pulled from the queue for each loop iteration
+	let data;
+
+	// Iterate through all queued incoming data, prepare it, and merge it together.
+	while (data = this.newDataQueue.shift()) {
+
+		// Validate the response data
+		if (typeof data === 'undefined' || !data || !data.hasOwnProperty('series')) {
+			console.log('Invalid new data response received.');
 			continue;
 		}
 
-		convertFirstColumnToDate(this.fileData.series[s].data, this.fileData.baseTime);
+		if (localPreparedMergedData === null) {
+			localPreparedMergedData = this.prepareData(data, this.fileData.baseTime);
+		} else {
+			let preparedData = this.prepareData(data, this.fileData.baseTime);
+			for (let s of Object.getOwnPropertyNames(preparedData['series'])) {
+				if (localPreparedMergedData['series'].hasOwnProperty(s)) {
+					localPreparedMergedData['series'][s]['data'] = localPreparedMergedData['series'][s]['data'].concat(preparedData['series'][s]['data']);
+				} else {
+					localPreparedMergedData['series'][s] = preparedData['series'][s];
+				}
+			}
 
-		// Update global x-minimum if warranted
-		if (this.fileData.series[s].data[0][0] < this.globalXExtremes[0]) {
-			this.globalXExtremes[0] = this.fileData.series[s].data[0][0];
-		}
-
-		// Update global x-maximumm if warranted
-		if (this.fileData.series[s].data[this.fileData.series[s].data.length-1][0] > this.globalXExtremes[1]) {
-			this.globalXExtremes[1] = this.fileData.series[s].data[this.fileData.series[s].data.length-1][0];
 		}
 
 	}
 
-	// Get array of event series
-	let events = Object.keys(this.fileData.events);
+	// Unsynchronize the graphs
+	this.unsynchronizeGraphs();
 
-	// Process event data
-	for (let s of events) {
+	// Get the new outermost zoom window now after the newly processed data.
+	let dt = this.getOutermostZoomWindow();
 
-		// If this series has no data, continue
-		if (this.fileData.events[s].length < 1) {
-			continue;
-		}
+	// Iterate through the new series
+	for (let s of Object.getOwnPropertyNames(localPreparedMergedData['series'])) {
 
-		for (let i in this.fileData.events[s]) {
+		// If there is a pre-existing equivalent series
+		if (this.fileData['series'].hasOwnProperty(s)) {
 
-			// Convert the ISO8601-format string into a Date object.
-			this.fileData.events[s][i][0] = new Date((this.fileData.events[s][i][0] + this.fileData.baseTime) * 1000);
+			// Merge the new & pre-existing data
+			this.fileData['series'][s]['data'] = this.fileData['series'][s]['data'].concat(localPreparedMergedData['series'][s]['data']);
 
-		}
+			// Trim the array if we've surprisedd config.M data points
+			if (this.fileData['series'][s]['data'].length > config.M) {
+				this.fileData['series'][s]['data'].splice(0, this.fileData['series'][s]['data'].length - config.M)
+			}
 
-		// Update global x-minimum if warranted
-		if (this.fileData.events[s][0][0] < this.globalXExtremes[0]) {
-			this.globalXExtremes[0] = this.fileData.events[s][0][0];
-		}
+			// Re-plot the graph with the new data
+			this.getGraphForSeries(s).dygraphInstance.updateOptions({
+				file: this.fileData['series'][s].data,
+				dateWindow: dt
+			});
 
-		// Update global x-maximumm if warranted
-		if (this.fileData.events[s][this.fileData.events[s].length-1][0] > this.globalXExtremes[1]) {
-			this.globalXExtremes[1] = this.fileData.events[s][this.fileData.events[s].length-1][0];
+		} else {
+
+			// Attach the new data
+			this.fileData['series'][s] = localPreparedMergedData['series'][s];
+
+			// Instantiate the new graph
+			this.graphs[s] = new Graph(s, this);
+
 		}
 
 	}
 
-	// When the x-axis extremes have been calculated (as dates), convert them
-	// to milliseconds since epoch, as this is what is specified in the options
-	// reference: http://dygraphs.com/options.html#dateWindow
-	this.globalXExtremes[0] = this.globalXExtremes[0].valueOf();
-	this.globalXExtremes[1] = this.globalXExtremes[1].valueOf();
+	// Synchronize the graphs
+	this.synchronizeGraphs();
 
-	let t1 = performance.now()
-	console.log("Processing series data took " + Math.round(t1-t0) + "ms.");
+	let tt = performance.now() - t0;
+	if (config.verbose || tt > config.performanceReportingThresholdMS) console.log("Adding new data took " + Math.round(tt) + "ms.");
+
+	// Call recursively.
+	setTimeout(this.processNewRealtimeData.bind(this), 100);
 
 };
 
@@ -510,7 +657,7 @@ File.prototype.renderEventGraphs = function() {
 						'</td>' +
 					'</tr>' +
 					'<tr>' +
-						'<td class="legend"><div></div></td>'
+						'<td class="legend"><div></div></td>' +
 					'</tr>' +
 				'</tbody>' +
 			'</table>';
@@ -572,6 +719,11 @@ File.prototype.renderEventGraphs = function() {
 // Render the file metadata
 File.prototype.renderMetadata = function() {
 
+	// If we have no metadata, take no actions & return now.
+	if (Object.keys(this.metadata).length < 1) {
+		return;
+	}
+
 	let div = document.createElement('DIV');
 	div.id = 'metadata';
 	div.innerHTML = '<h2>Metadata</h2>';
@@ -579,6 +731,27 @@ File.prototype.renderMetadata = function() {
 		div.innerHTML += '<br>'+property+': '+this.metadata[property];
 	}
 	document.getElementById('graphs').appendChild(div);
+
+};
+
+// Reset zoom to outermost view
+File.prototype.resetZoomToOutermost = function() {
+
+	for (let s of Object.keys(this.graphs)) {
+
+		if (this.graphs[s].dygraphInstance !== null) {
+
+			this.graphs[s].dygraphInstance.updateOptions({
+				dateWindow: this.getOutermostZoomWindow()
+			});
+
+			// We only need to trigger this on one graph since they are expected
+			// to be synchronized.
+			break;
+
+		}
+
+	}
 
 };
 
@@ -642,7 +815,7 @@ File.prototype.synchronizeGraphs = function() {
 			dygraphInstances.push(this.graphs[s].dygraphInstance);
 		}
 	}
-	console.log("ZIP", this.eventDygraphInstances);
+
 	if ('eventDygraphInstances' in this) {
 		for (let k of Object.keys(this.eventDygraphInstances)) {
 			dygraphInstances.push(this.eventDygraphInstances[k]);
@@ -654,8 +827,8 @@ File.prototype.synchronizeGraphs = function() {
 		return;
 	}
 
-	// Synchronize all of the graphs, if there are more than one.
-	console.log("Synchronizing graphs.");
+	// Synchronize all of the graphs.
+	if (config.verbose) { console.log("Synchronizing graphs."); }
 	this.sync = Dygraph.synchronize(dygraphInstances, {
 		range: false,
 		selection: true,
@@ -737,7 +910,7 @@ File.prototype.unsynchronizeGraphs = function() {
 
 	if (this.sync != null) {
 
-		console.log("Unsynchronizing graphs.");
+		if (config.verbose) { console.log("Unsynchronizing graphs."); }
 		this.sync.detach();
 		this.sync = null;
 

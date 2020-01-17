@@ -1,5 +1,6 @@
 from flask import Flask, Blueprint, send_from_directory, request, render_template, render_template_string
 from flask_mail import Mail
+from flask_socketio import SocketIO, join_room, leave_room, rooms
 from flask_sqlalchemy import SQLAlchemy
 from flask_user import confirm_email_required, current_user, login_required, UserManager, UserMixin, SQLAlchemyAdapter
 from flask_user.signals import user_sent_invitation, user_registered
@@ -24,6 +25,9 @@ def create_app():
     
     # Instantiate the Flask web application class
     app = Flask(__name__, template_folder='../www/templates')
+
+    # Instantiate SocketIO
+    socketio = SocketIO(app)
     
     # Make the root web path available for templates
     @app.context_processor
@@ -130,15 +134,11 @@ def create_app():
     #     db.session.add(u)
     #     db.session.commit()
 
-    # # Load the project
-    #
-    # project = Project()
-    # project.processFiles()
-    # project.loadProcessedFiles()
-
     # Load projects
-
     projects = load_projects()
+
+    # Instantiate a file for realtime, in-memory usage (probably temporary)
+    rtf = File(None)
 
     @user_registered.connect_via(app)
     def after_registered_hook(sender, user, user_invite):
@@ -150,6 +150,7 @@ def create_app():
     
     # Map our static assets to be served
     app.register_blueprint(Blueprint('css', __name__, static_url_path=config.rootWebPath+'/css', static_folder='../www/css'))
+    app.register_blueprint(Blueprint('fonts', __name__, static_url_path=config.rootWebPath+'/fonts', static_folder='../www/fonts'))
     app.register_blueprint(Blueprint('js', __name__, static_url_path=config.rootWebPath+'/js', static_folder='../www/js'))
     
     ### NON-SECURE AREAS (NO LOGIN REQUIRED) ###
@@ -370,17 +371,24 @@ def create_app():
             # Parse parameters
             projname = request.args.get('project')
             filename = request.args.get('file')
-            
-            # Get the project
-            try:
-                project = projects[projname]
-            except:
-                print("Project could not be retrieved:", projname)
-                return json.dumps({})
-    
-            # Get the file
-            file = project.getFile(filename)
-    
+
+            # If the user is in realtime mode, select the realtime file.
+            if projname == '__realtime__' and filename == '__realtime__':
+
+                file = rtf
+
+            else:
+
+                # Get the project
+                try:
+                    project = projects[projname]
+                except:
+                    print("Project could not be retrieved:", projname)
+                    return json.dumps({})
+
+                # Get the file
+                file = project.getFile(filename)
+
             # If we did not find the file, return empty output
             if not isinstance(file, File):
                 return ''
@@ -475,7 +483,59 @@ def create_app():
         return json.dumps({
             'success': file.annotationSet.updateAnnotation(id, xBoundLeft, xBoundRight, yBoundTop, yBoundBottom, seriesID, label)
         })
-    
+
+    @socketio.on('add_data')
+    def handle_add_data(json):
+
+        if config.verbose:
+            print('received socketio: add_data')
+            print('msg data:', json)
+
+        try:
+
+            updates = rtf.addSeriesData(json)
+
+            # Broadcast the new data to subscribers
+            socketio.emit('new_data', updates, room='__realtime____^^____realtime__')
+
+        except Exception as e:
+
+            # TODO(gus): Report an error to user in a websocket response
+            raise e
+
+    @socketio.on('subscribe')
+    def handle_subscribe(json):
+
+        if config.verbose:
+            print('received socketio: subscribe')
+            print('msg data:', json)
+
+        try:
+
+            # Subscribe the user to realtime updates
+            subscribe_to_realtime_updates(json['project'], json['filename'])
+
+        except Exception as e:
+
+            # TODO(gus): Report an error to user in a websocket response
+            raise e
+
+    @socketio.on('unsubscribe')
+    def handle_unsubscribe():
+
+        if config.verbose:
+            print('received socketio: unsubscribe')
+
+        try:
+
+            # Subscribe the user to realtime updates
+            unsubscribe_from_realtime_updates()
+
+        except Exception as e:
+
+            # TODO(gus): Report an error to user in a websocket response
+            raise e
+
     ### HELPERS ###
     
     # Returns the named request parameter as a float or None if the parameter is
@@ -487,7 +547,7 @@ def create_app():
         else:
             return default
         
-    return app
+    return (app, socketio)
 
 def load_projects():
 
@@ -508,9 +568,40 @@ def load_projects():
         projects[s].loadProcessedFiles()
 
     return projects
+
+def subscribe_to_realtime_updates(project, file):
+
+    # NOTE: It is not really necessary to track which project & file the user is
+    # subscribed to since, currently, it is only possible to subscribe to the
+    # realtime file (__realtime__, __realtime__). However, it was trivial to add
+    # this and it enables future expansion to have more than one realtime file.
+
+    # Unsubscribe the user from any rooms exception own sid
+    unsubscribe_from_realtime_updates()
+
+    # Name of new room to subscribe to
+    room = project + '__^^__' + file
+
+    # Subscribe the user to the new room (project)
+    join_room(room)
+
+    print('User', request.sid, 'has been subscribed to', room)
+
+def unsubscribe_from_realtime_updates():
+
+    # Get the user's sid
+    sid = request.sid
+
+    # Unsubscribe the user from any rooms exception own sid
+    for r in rooms():
+        if r != sid:
+            leave_room(r)
+            print('User', request.sid, 'has been unsubscribed from', r)
     
 
 # Start development web server
 if __name__ == '__main__':
-    app = create_app()
-    app.run(host='0.0.0.0', port=8001, debug=True, use_reloader=False)
+
+    (app, socketio) = create_app()
+    # app.run(host='0.0.0.0', port=8001, debug=True, use_reloader=False)
+    socketio.run(app, host='0.0.0.0', port=8001, debug=True, use_reloader=False)

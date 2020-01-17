@@ -3,7 +3,12 @@
 let config = {
 
 	// Enable verbose debug output
-	verbose: true,
+	verbose: false,
+
+	// Maximum data points to hold per data series for realtime mode
+	M: 3000,
+
+	performanceReportingThresholdMS: 100,
 
 	// Function for assembling paths. Do not modify unless necessary.
 	// buildDir: function(subpath) { return this.serverProtocol+this.serverAddress+':'+this.serverPort+this.rootWebPath+subpath; },

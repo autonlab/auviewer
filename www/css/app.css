@@ -1,3 +1,19 @@
+/*body.realtime > #controls {*/
+/*    display: none !important;*/
+/*}*/
+
+/*body.realtime > #graphs {*/
+/*    padding-left: 0 !important;*/
+/*}*/
+
+body.realtime > #controls > #projectAndFileSelection, body.realtime > #controls > #anomalyDetectionPanel {
+    display: none !important;
+}
+body.realtime #realtimeTitle {
+    /*display: initial !important;*/
+    display: inline !important;
+}
+
 #controls {
     position: fixed;
     top: 64px;
@@ -74,6 +90,35 @@
     /*height: 50px;*/
     width: 100%;
     /*margin-bottom: -50px;*/
+}
+
+#control_footer {
+    width: 100%;
+    clear: both;
+    text-align: center;
+    margin-top: 30px;
+}
+
+#control_footer > p#enterrealtime, #control_footer > p#exitrealtime {
+    cursor: pointer;
+    color: #888;
+    font-size: 80%;
+}
+
+body:not(.realtime) > #controls > #control_footer > p#enterrealtime {
+    display: block;
+}
+
+body:not(.realtime) > #controls > #control_footer > p#exitrealtime {
+    display: none !important;
+}
+
+body.realtime > #controls > #control_footer > p#enterrealtime {
+    display: none !important;
+}
+
+body.realtime > #controls > #control_footer > p#exitrealtime {
+    display: block;
 }
 
 /* Annotations */

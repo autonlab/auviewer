@@ -6,10 +6,7 @@ These event handlers rely on binding to either file or graph class instance.
 
 // Handle double-click for restoring the original zoom.
 function handleDoubleClick(event, g, context) {
-	let dw = 'file' in this ? this.file.globalXExtremes : this.globalXExtremes;
-	g.updateOptions({
-		dateWindow: dw
-	});
+	('file' in this ? this.file.resetZoomToOutermost() : this.resetZoomToOutermost());
 }
 
 // Handle mouse-down for pan & zoom

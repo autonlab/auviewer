@@ -521,7 +521,7 @@ function synchronizeGraphs() {
 
 	// Synchronize all of the graphs, if there are more than one.
 	if (Object.keys(dygraphInstances).length > 1 && sync == null) {
-		console.log("Synchronizing graphs.");
+		if (config.verbose) { console.log("Synchronizing graphs."); }
 		sync = Dygraph.synchronize(Object.values(dygraphInstances), {
 			range: false,
 			selection: true,
@@ -543,7 +543,7 @@ function triggerRedraw() {
 function unsynchronizeGraphs() {
 	if (sync != null) {
 
-		console.log("Unsynchronizing graphs.");
+		if (config.verbose) { console.log("Unsynchronizing graphs."); }
 		sync.detach();
 		sync = null;
 

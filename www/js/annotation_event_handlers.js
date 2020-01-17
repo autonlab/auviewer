@@ -130,6 +130,10 @@ function startAnnotationHighlight (event, g, context) {
 // annotations on the canvas.
 function underlayCallbackHandler(canvas, area, g) {
 
+	if (config.verbose) {
+		console.log("underlayCallbackHandler()")
+	}
+
 	let file = globalStateManager.currentFile;
 
 	let left, right, x, y, width, height;

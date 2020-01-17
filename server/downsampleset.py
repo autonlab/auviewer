@@ -121,12 +121,12 @@ class DownsampleSet:
         #   - Datagroup has two non-empty datasets, "datetime" and "value";
         #   - The two datasets are of equal length;
         #   - There exists a file for storing processed data.
-        if (len(self.seriesparent.rawTimeOffsets) < 1 or len(self.seriesparent.rawValues) < 1) or len(self.seriesparent.rawTimeOffsets) != len(self.seriesparent.rawValues) or not hasattr(self.seriesparent.fileparent, 'pf'):
+        if (len(self.seriesparent.rawTimes) < 1 or len(self.seriesparent.rawValues) < 1) or len(self.seriesparent.rawTimes) != len(self.seriesparent.rawValues) or not hasattr(self.seriesparent.fileparent, 'pf'):
             return
 
         # Get an array of the downsamples to build (each element of the array
         # is a number of intervals to divide the data set into).
-        ndtb = numDownsamplesToBuild(self.seriesparent.rawTimeOffsets, config.M, config.stepMultiplier)
+        ndtb = numDownsamplesToBuild(self.seriesparent.rawTimes, config.M, config.stepMultiplier)
 
         # If we do not need to build any downsamples, return now.
         if ndtb < 1:
@@ -144,7 +144,7 @@ class DownsampleSet:
             # Build the downsample
             if i == -1:
                 print("This pass from raw.")
-                downsample = buildDownsampleFromRaw(self.seriesparent.rawTimeOffsets, self.seriesparent.rawValues, self.getNumIntervalsByIndex(i, ndtb))
+                downsample = buildDownsampleFromRaw(self.seriesparent.rawTimes, self.seriesparent.rawValues, self.getNumIntervalsByIndex(i, ndtb))
             else:
                 downsample = buildNextDownsampleUp(previousDownsample, self.getTimePerIntervalByIndex(i + 1, ndtb), config.stepMultiplier)
 

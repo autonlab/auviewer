@@ -202,6 +202,39 @@ function downsamplePlotter(e) {
 let requestHandler = new RequestHandler();
 let globalStateManager = new GlobalStateManager();
 
+// Setup the websocket connection
+let socket = io();
+socket.on('connect', function() {
+    console.log('Connected to pseudo-realtime connection.')
+});
+
+socket.on('new_data', function(data) {
+
+	// Log the received data
+	if (config.verbose) {
+		console.log('rcvd new_data:', JSON.parse(JSON.stringify(data)));
+	}
+
+	// Grab the current file
+	let currentFile = globalStateManager.currentFile;
+
+	// If we're not in realtime mode, we cannot process incoming realtime data.
+	if (!currentFile || !(currentFile.projname === '__realtime__' && currentFile.filename === '__realtime__')) {
+		console.log('Received new realtime data, but not in realtime mode. Ignoring.');
+		return;
+	}
+
+	// Add the new data
+	//currentFile.getPostloadDataUpdateHandler()(data);
+	currentFile.newDataQueue.push(data);
+
+	// Kick-off continuous render mode if we're not already in it.
+	if (!currentFile.continuousRender) {
+		currentFile.processNewRealtimeData();
+	}
+
+});
+
 // Attach event handlers to the annotation modal
 $('#annotationModal button.saveButton').click(function() {
 	$('#annotationModal').data('callingAnnotation').save();

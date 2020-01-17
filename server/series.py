@@ -1,4 +1,6 @@
+from collections import deque
 import numpy as np
+import config
 from rawdata import RawData
 from downsampleset import DownsampleSet
 from cylib import generateThresholdAlerts
@@ -25,18 +27,42 @@ class Series:
         # Holds a reference to the file parent which contains the series
         self.fileparent = fileparent
         
-        # Initialize raw data to None
-        self.rawTimeOffsets = None
-        self.rawValues = None
+        # Initialize raw data in memory
+        self.initializeRawDataInMemory()
 
         # # Pull raw data for the series into memory
         # self.pullRawDataIntoMemory()
         
-        # Holds the raw data set
-        self.rd = RawData(self)
+        if self.fileparent.mode() == 'file':
 
-        # Holds the downsample set
-        self.dss = DownsampleSet(self)
+            # Holds the raw data set
+            self.rd = RawData(self)
+
+            # Holds the downsample set
+            self.dss = DownsampleSet(self)
+
+    # Add data to the series. The data is assumed to occur after any existing
+    # data. The data parameter should be a dict of lists as follows:
+    #
+    #   {
+    #     'times': [ t1, t2, ... , tn ],
+    #     'values': [ v1, v2, ... , vn ]
+    #   }
+    def addData(self, data):
+
+        if not isinstance(data, dict) or not isinstance(data['times'], list) or not isinstance(data['values'], list):
+            print('HERE', type(data), type(data['times']), type(data['values']), data)
+            raise Exception('Invalid seriesData parameter received for series.addData().')
+
+        # Add the new times & values.
+        # TODO(gus): Once connected, check whether this is most efficient way to
+        # join lists.
+        # self.rawTimes = self.rawTimes + data['times']
+        # self.rawValues = self.rawValues + data['values']
+        self.rawTimes.extend(data['times'])
+        self.rawValues.extend(data['values'])
+
+        return
         
     def generateThresholdAlerts(self, thresholdlow, thresholdhigh, mode, duration, persistence, maxgap):
         
@@ -44,10 +70,10 @@ class Series:
         self.pullRawDataIntoMemory()
         
         # Run through the data and generate alerts
-        alerts = generateThresholdAlerts(self.rawTimeOffsets, self.rawValues, thresholdlow, thresholdhigh, mode, duration, persistence, maxgap)
+        alerts = generateThresholdAlerts(self.rawTimes, self.rawValues, thresholdlow, thresholdhigh, mode, duration, persistence, maxgap)
 
         # Remove raw data for the series fromm memory
-        self.removeRawDataFromMemory()
+        self.initializeRawDataInMemory()
         
         return alerts
 
@@ -56,26 +82,39 @@ class Series:
     
         print("Assembling full output for " + self.id + ".")
     
-        # Attempt to retrieve the full downsample output
-        downsampleFullOutput = self.dss.getFullOutput()
-        
-        # Set data either to the retrieved downsample or to the raw data
-        if downsampleFullOutput is not None:
-            
-            print("(downsampled output)")
-            
-            data = downsampleFullOutput.tolist()
-            output_type = 'downsample'
-            
-        else:
-            
-            print("(raw data output)")
+        if self.fileparent.mode() == 'realtime':
 
-            # Get reference to the series datastream from the HDF5 file
-            dataset = self.fileparent.f.get('/'.join(self.h5path))[()]
-            nones = [None] * self.rd.len
-            data = [list(i) for i in zip(dataset['time'], nones, nones, dataset['value'].astype(np.float64))]
+            nones = [None] * len(self.rawTimes)
+            data = [list(i) for i in zip(self.rawTimes, nones, nones, self.rawValues)]
             output_type = 'real'
+
+        elif self.fileparent.mode() == 'file':
+
+            # Attempt to retrieve the full downsample output
+            downsampleFullOutput = self.dss.getFullOutput()
+
+            # Set data either to the retrieved downsample or to the raw data
+            if downsampleFullOutput is not None:
+
+                print("(downsampled output)")
+
+                data = downsampleFullOutput.tolist()
+                output_type = 'downsample'
+
+            else:
+
+                print("(raw data output)")
+
+                # Get reference to the series datastream from the HDF5 file
+                dataset = self.fileparent.f.get('/'.join(self.h5path))[()]
+                nones = [None] * self.rd.len
+                data = [list(i) for i in zip(dataset['time'], nones, nones, dataset['value'].astype(np.float64))]
+                output_type = 'real'
+
+        else:
+
+            # Having reached this point, the mode is invalid.
+            raise Exception('Invalid mode found for fileparent in series.getFullOutput():', self.fileparent.mode())
 
         print("Completed assembly of full output for " + self.id + ".")
 
@@ -92,6 +131,10 @@ class Series:
     def getRangedOutput(self, starttime, stoptime):
 
         print("Assembling ranged output for " + self.id + ".")
+
+        # Getting ranged output is not supported in realtime-mode.
+        if self.fileparent.mode() == 'realtime':
+            raise Exception('series.getRangedOutput() is not available in realtime-mode.')
 
         # Get the appropriate downsample for this time range
         ds = self.dss.getRangedOutput(starttime, stoptime)
@@ -137,7 +180,7 @@ class Series:
         print("MEM AFT-DSPRC: " + str(p.memory_full_info().uss / 1024 / 1024) + " MB")
         
         # Remove raw data for the series fromm memory
-        self.removeRawDataFromMemory()
+        self.initializeRawDataInMemory()
 
         print("MEM AFT-REMVD: " + str(p.memory_full_info().uss / 1024 / 1024) + " MB")
 
@@ -150,18 +193,27 @@ class Series:
 
         print("Reading raw series data into memory for " + self.id + ".")
         start = time.time()
+        
+        # If we're in realtime mode, this procedure is not applicable.
+        if self.fileparent.mode() == 'realtime':
+            print("Reading raw series n/a since we're in mem mode. Returning.")
+            return
 
         # Get reference to the series datastream from the HDF5 file
         dataset = self.fileparent.f.get('/'.join(self.h5path))[()]
 
-        self.rawTimeOffsets = dataset['time']
+        self.rawTimes = dataset['time']
         self.rawValues = dataset['value'].astype(np.float64)
 
         end = time.time()
-        print("Finished reading raw series data into memory for " + self.id + " (" + str(self.rawTimeOffsets.shape[0]) + " points). Took " + str(round(end - start, 5)) + "s.")
-        
-    def removeRawDataFromMemory(self):
+        print("Finished reading raw series data into memory for " + self.id + " (" + str(self.rawTimes.shape[0]) + " points). Took " + str(round(end - start, 5)) + "s.")
+
+    # Initializes the raw data stored for the series in memory and thereby
+    # removes it from memory.
+    def initializeRawDataInMemory(self):
     
-        # Initialize raw data to None
-        self.rawTimeOffsets = None
-        self.rawValues = None
+        # Initialize raw data
+        # self.rawTimes = []
+        # self.rawValues = []
+        self.rawTimes = deque(maxlen=config.M)
+        self.rawValues = deque(maxlen=config.M)

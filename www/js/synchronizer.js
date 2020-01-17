@@ -133,16 +133,20 @@ var synchronize = function(/* dygraphs..., opts */) {
 
   return {
     detach: function() {
+      // NOTE(gus): 1/16/2020 I'm adding a block_redraw to the updates below so
+      // unsync does not cause a redraw. Doing this because to improve
+      // performance and because I cannot think of a time when AUView would not
+      // be triggering its own redraw after an unsync.
       for (var i = 0; i < dygraphs.length; i++) {
         var g = dygraphs[i];
         if (opts.zoom) {
-          g.updateOptions({drawCallback: prevCallbacks[i].drawCallback});
+          g.updateOptions({drawCallback: prevCallbacks[i].drawCallback}, true);
         }
         if (opts.selection) {
           g.updateOptions({
             highlightCallback: prevCallbacks[i].highlightCallback,
             unhighlightCallback: prevCallbacks[i].unhighlightCallback
-          });
+          }, true);
         }
       }
       // release references & make subsequent calls throw.

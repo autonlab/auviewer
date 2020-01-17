@@ -5,3 +5,7 @@ conda activate medview
 conda install -y flask cython h5py psutil simplejson
 pip install htmlmin Flask-User==0.6.21
 pip uninstall --yes Flask-User
+
+# Packages for realtime functionality
+pip install -y "python-socketio[client]"
+pip install -y flask-socketio

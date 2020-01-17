@@ -1,5 +1,8 @@
 # This file holds configuration parameters for the medview application.
 
+# Output verbosity
+verbose = False
+
 # A root directory from which the web application is served. Should begin with a
 # slash and end without a slask (in other words, end with a directory name). If
 # there is no root directory, rootWebPath should be empty string. You must also

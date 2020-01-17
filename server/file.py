@@ -8,12 +8,16 @@ from series import Series
 from annotationset import AnnotationSet
 from exceptions import ProcessedFileExists
 
-# File represents a single patient data file.
+# File represents a single patient data file. File may operate in file- or
+# realtime-mode. In file-mode, all data is written to & read from a file. In
+# realtime-mode, no file is dealt with and instead everything is kept in memory.
+# If no filename parameter is passed to the constructor, File will operate in
+# realtime-mode.
 class File:
 
-    def __init__(self, projparent, filename):
+    def __init__(self, projparent, filename=''):
 
-        print("\n------------------------------------------------\nACCESSING FILE: " + projparent.originals_dir + '/' + filename + "\n------------------------------------------------\n")
+        print("\n------------------------------------------------\nACCESSING FILE: " + ((projparent.originals_dir + '/') if projparent is not None else '') + filename + "\n------------------------------------------------\n")
 
         # Holds a reference to the project parent which contains the file
         self.projparent = projparent
@@ -21,28 +25,93 @@ class File:
         # Holds the filename
         self.filename = filename
 
-        # Holds the filename of the processed data file (may not exist yet)
-        self.processedFilename = os.path.splitext(self.filename)[0] + '_processed.h5'
-
-        # Will hold the numeric series from the file
+        # Will hold the data series from the file
         self.series = []
         
         # Instantiate the AnnotationSet class for the file
         self.annotationSet = AnnotationSet(self)
 
-        # Open the original file
-        self.openOriginalFile()
+        if self.mode() == 'file':
 
-        # Attempt to open the processed data file. Set the newlyProcessData
-        # property accordingly. If the processed file is not present, we need
-        # to newly process data.
-        self.newlyProcessData = not self.openProcessedFile()
+            # Holds the filename of the processed data file (may not exist yet)
+            self.processedFilename = os.path.splitext(self.filename)[0] + '_processed.h5'
 
-        # If we need to newly process data, do so now.
-        if self.newlyProcessData:
-            self.process()
-        else:
-            self.load()
+            # Open the original file
+            self.openOriginalFile()
+
+            # Attempt to open the processed data file. Set the newlyProcessData
+            # property accordingly. If the processed file is not present, we need
+            # to newly process data.
+            self.newlyProcessData = not self.openProcessedFile()
+
+            # If we need to newly process data, do so now. Currently, if we process
+            # data, we do not load data (so File will be unusable for reading data
+            # after it finishes processing a file). This may be changed in future.
+            if self.newlyProcessData:
+
+                self.process()
+
+            else:
+
+                self.loadSeriesFromFile()
+
+    # Takes new data to add to one or more data series for the file (currently
+    # works only in realtime-mode). The new data is assumed to occur after any
+    # existing data. The parameter, seriesData, should be a dict of dicts of
+    # lists as follows:
+    #
+    #   {
+    #     'seriesName': {
+    #       'times': [ t1, t2, ... , tn ],
+    #       'values': [ v1, v2, ... , vn ]
+    #     }, ...
+    #   }
+    #
+    # Returns updated file data for transmission to realtime subscribers.
+    def addSeriesData(self, seriesData):
+
+        if config.verbose:
+            print('Adding series data.', seriesData)
+
+        if self.mode() != 'realtime':
+            raise Exception('Can only addSeriesData() while in mem-mode.')
+
+        if not isinstance(seriesData, dict):
+            raise Exception('Invalid seriesData parameter received for addSeriesData().')
+
+        # This will hold the update data to return
+        update = {
+            'series': {}
+        }
+
+        for s in seriesData:
+
+            if not isinstance(seriesData[s], dict):
+                raise Exception('Invalid seriesData[s] parameter received for addSeriesData().')
+
+            # Retrieve or create the series
+            series = self.getSeriesOrCreate(s)
+
+            # If that failed, raise an exception
+            if series is None:
+                raise Exception('Attempting to create or retrieve series failed:', s)
+
+            # Add the new series data
+            series.addData(seriesData[s])
+
+            nones = [None] * len(seriesData[s]['times'])
+
+            update['series'][s] = {
+                "id": s,
+                "labels": ['Date/Offset', 'Min', 'Max', s],
+                "data": [list(i) for i in zip(seriesData[s]['times'], nones, nones, seriesData[s]['values'])],
+                "output_type": 'real'
+            }
+
+        if config.verbose:
+            print('addSeriesData() returning', update)
+
+        return update
 
     # Creates & opens a new HDF5 data file for storing processed data.
     def createProcessedFile(self):
@@ -74,6 +143,10 @@ class File:
         start = time.time()
         
         events = {}
+
+        # If we're in realtime-mode, we have no events to return, so return now.
+        if self.mode() == 'realtime':
+            return events
         
         try:
         
@@ -137,7 +210,7 @@ class File:
         outputObject = {
             # 'annotations': self.annotationSet.getAnnotations().tolist(),
             'annotations': self.annotationSet.getAnnotations(),
-            'baseTime': 0 if 'baseTime' not in self.f['meta'].attrs else self.f['meta'].attrs['baseTime'],
+            'baseTime': 0 if self.mode() == 'realtime' or 'baseTime' not in self.f['meta'].attrs else self.f['meta'].attrs['baseTime'],
             'events': self.getEvents(),
             'metadata': self.getMetadata(),
             'series': {}
@@ -155,8 +228,12 @@ class File:
     # Returns a dict of file metadata.
     def getMetadata(self):
         metadata = {}
-        for property in self.f.attrs:
-            metadata[property] = self.f.attrs[property]
+
+        # Metadata is currently only available in realtime mode.
+        if self.mode() == 'file':
+            for property in self.f.attrs:
+                metadata[property] = self.f.attrs[property]
+
         return metadata
     
     # Returns a reference to the processed data file, or None if there is none.
@@ -182,6 +259,24 @@ class File:
                 return s
         return None
 
+    # Retreves or creates & returns the series corresponding to the provided
+    # series ID.
+    def getSeriesOrCreate(self, seriesid):
+
+        # Attempt to retrieve the series
+        series = self.getSeries(seriesid)
+
+        # Otherwise, create the series
+        if series is None:
+
+            # Create new series
+            self.series.append(Series([seriesid], self))
+
+            # Retrieve the newly-created series
+            series = self.getSeries(seriesid)
+
+        return series
+
     # Produces JSON output for a given list of series in the file at a specified
     # time range.
     def getSeriesRangedOutput(self, seriesids, start, stop):
@@ -202,15 +297,10 @@ class File:
 
         # Return the output object
         return outputObject
-    
-    # Loads the necessary data into memory for an already-processed data file.
-    def load(self):
-    
-        # Load data series into memory from file (does not load data though)
-        self.loadSeriesFromFile()
         
-    # Sets up classes for all series from file (but does not load series data
-    # into memory).
+    # Loads the necessary data into memory for an already-processed data file
+    # (does not load data though).Sets up classes for all series from file but
+    # does not load series data into memory).
     def loadSeriesFromFile(self):
         
         print('Loading series from file.')
@@ -224,6 +314,10 @@ class File:
                 self.series.append(Series(['waveforms', name, 'data'], self))
             
         print('Completed loading series from file.')
+
+    # Returns the mode in which File is operating, either "file" or "realtime".
+    def mode(self):
+        return 'file' if self.filename != '' else 'realtime'
 
     # Opens the HDF5 file. Returns boolean whether able to open.
     def openOriginalFile(self):

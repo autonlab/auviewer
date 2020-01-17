@@ -21,8 +21,8 @@ function Graph(series, file) {
 
 	// Set this.isGroup (indicates whether this graph represents a group of
 	// series) and this.group (holds series names belonging to the group, or
-	// empty array if not a group)
-	if (this.file.fileData.series[this.series].hasOwnProperty('group') && this.file.fileData.series[this.series].group.length > 0) {
+	// empty array if not a group))
+	if (this.file.fileData['series'][this.series].hasOwnProperty('group') && this.file.fileData.series[this.series].group.length > 0) {
 		this.isGroup = true;
 		this.group = this.file.fileData.series[this.series].group;
 	} else {
@@ -51,7 +51,7 @@ Graph.prototype.build = function() {
 					'</td>' +
 				'</tr>' +
 				'<tr>' +
-					'<td class="legend"><div></div></td>'
+					'<td class="legend"><div></div></td>' +
 				'</tr>' +
 			'</tbody>' +
 		'</table>';
@@ -82,8 +82,9 @@ Graph.prototype.build = function() {
 	// poorly).
 	$(this.graphDomElement).data('graphClassInstance', this);
 
-	// Instantiate the dygraph
-	if (moveToConfig.defaultSeries.includes(this.series)) {
+	// Instantiate the dygraph if it is configured to appear by default, or if
+	// we're in realtime mode.
+	if (this.file.mode() === 'realtime' || moveToConfig.defaultSeries.includes(this.series)) {
 		this.instantiateDygraph();
 	} else {
 		this.hideDOMElements();
@@ -104,7 +105,7 @@ Graph.prototype.instantiateDygraph = function() {
 
 	// Determine if there is already a graph showing. If so, adopt its x-range.
 	// If not, use global x extremes.
-	let timeWindow = this.file.globalXExtremes;
+	let timeWindow = this.file.getOutermostZoomWindow();
 	for (let s of Object.keys(this.file.graphs)) {
 		if (this.file.graphs[s].dygraphInstance !== null) {
 			timeWindow = this.file.graphs[s].dygraphInstance.xAxisRange();
@@ -197,10 +198,14 @@ Graph.prototype.remove = function() {
 
 };
 
-Graph.prototype.replacePlottedData = function(data) {
+// Replace the data attached to the dygraph. Block redraw of the dygraph by
+// passing in true for the block_redraw optional parameter.
+Graph.prototype.replacePlottedData = function(data, block_redraw=false) {
+	console.log("Here's the pre-existing dygraph.file_:", deepCopy(this.dygraphInstance.file_));
 	this.dygraphInstance.updateOptions({
 		file: data
-	});
+	}, block_redraw);
+	console.log("Here's the post-update dygraph.file_:", deepCopy(this.dygraphInstance.file_));
 };
 
 // Toggle the graph to show.
