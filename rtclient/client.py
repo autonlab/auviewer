@@ -23,18 +23,6 @@ def message(data):
 
 sio.connect('http://localhost:8001')
 
-# # Send new data to server
-# sio.emit('add_data', {
-#     'Sample': {
-#         'times': [5, 10, 15, 20],
-#         'values': [99.2, 98.5, 97.6, 94]
-#     },
-#     'HR.HR': {
-#         'times': [7, 9, 12, 16],
-#         'values': [85, 91, 99, 120]
-#     }
-# })
-
 n = 0
 
 # Oscillations per second
@@ -49,25 +37,6 @@ a = 1
 while True:
 
     t = n * interval
-
-    # sio.emit('add_data', {
-    #     'Sample': {
-    #         'times': [
-    #             t,
-    #             t+(1/5*interval),
-    #             t+(2/5*interval),
-    #             t+(3/5*interval),
-    #             t+(4/5*interval)
-    #         ],
-    #         'values': [
-    #             a*math.sin(f*t),
-    #             a*math.sin(f*(t+(1/5*interval))),
-    #             a*math.sin(f*(t+(2/5*interval))),
-    #             a*math.sin(f*(t+(3/5*interval))),
-    #             a*math.sin(f*(t+(4/5*interval)))
-    #         ]
-    #     }
-    # })
 
     sio.emit('add_data', {
         'Signal 1': {
@@ -89,17 +58,11 @@ while True:
         'Signal 2': {
             'times': [
                 t,
-                t + (1 / 2 * interval)#,
-                # t + (2 / 5 * interval),
-                # t + (3 / 5 * interval),
-                # t + (4 / 5 * interval)
+                t + (1 / 2 * interval)
             ],
             'values': [
                 a * math.sin(f/2 * t),
-                a * math.sin(f/2 * (t + (1 / 2 * interval)))#,
-                # a * math.sin(f*1.2 * (t + (2 / 5 * interval))),
-                # a * math.sin(f*1.2 * (t + (3 / 5 * interval))),
-                # a * math.sin(f*1.2 * (t + (4 / 5 * interval)))
+                a * math.sin(f/2 * (t + (1 / 2 * interval)))
             ]
         },
         'Signal 3': {
@@ -135,17 +98,11 @@ while True:
         'Signal 5': {
             'times': [
                 t,
-                t + (1 / 2 * interval)  # ,
-                # t + (2 / 5 * interval),
-                # t + (3 / 5 * interval),
-                # t + (4 / 5 * interval)
+                t + (1 / 2 * interval)
             ],
             'values': [
                 a * math.sin(f / 2 * t),
-                a * math.sin(f / 2 * (t + (1 / 2 * interval)))  # ,
-                # a * math.sin(f*1.2 * (t + (2 / 5 * interval))),
-                # a * math.sin(f*1.2 * (t + (3 / 5 * interval))),
-                # a * math.sin(f*1.2 * (t + (4 / 5 * interval)))
+                a * math.sin(f / 2 * (t + (1 / 2 * interval)))
             ]
         },
         'Signal 6': {
@@ -181,17 +138,11 @@ while True:
         'Signal 8': {
             'times': [
                 t,
-                t + (1 / 2 * interval)  # ,
-                # t + (2 / 5 * interval),
-                # t + (3 / 5 * interval),
-                # t + (4 / 5 * interval)
+                t + (1 / 2 * interval)
             ],
             'values': [
                 a * math.sin(f / 2 * t),
-                a * math.sin(f / 2 * (t + (1 / 2 * interval)))  # ,
-                # a * math.sin(f*1.2 * (t + (2 / 5 * interval))),
-                # a * math.sin(f*1.2 * (t + (3 / 5 * interval))),
-                # a * math.sin(f*1.2 * (t + (4 / 5 * interval)))
+                a * math.sin(f / 2 * (t + (1 / 2 * interval)))
             ]
         },
         'Signal 9': {
