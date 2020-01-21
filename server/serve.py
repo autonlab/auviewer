@@ -285,28 +285,11 @@ def create_app():
         projname = request.args.get('project')
         filename = request.args.get('file')
         series = request.args.get('series')
-        thresholdlow = request.args.get('thresholdlow', type=float)
-        thresholdhigh = request.args.get('thresholdhigh', type=float)
+        thresholdlow = request.args.get('thresholdlow', type=float) if request.args.get('thresholdlow') != '' else None
+        thresholdhigh = request.args.get('thresholdhigh', type=float) if request.args.get('thresholdhigh') != '' else None
         duration = request.args.get('duration', type=float)
         persistence = request.args.get('persistence', type=float)/100
         maxgap = request.args.get('maxgap', type=float)
-    
-        # Generate the mode parameter (see generateThresholdAlerts function
-        # description for details on this parameter).
-        if request.args.get('thresholdhigh') == '':
-            mode = 0
-            thresholdhigh = 0
-        elif request.args.get('thresholdlow') == '':
-            mode = 1
-            thresholdlow = 0
-        elif request.args.get('thresholdlow') == '' and request.args.get('thresholdhigh') == '':
-            # It is invalid for no threshold to be supplied.
-            # TODO(gus): Add more generalized parameter checking that covers this,
-            # and get rid of this case here.
-            print("INVALID MODE")
-            return ''
-        else:
-            mode = 2
 
         # Try to get the project
         try:
@@ -327,7 +310,7 @@ def create_app():
             print("File could not be retrieved:", filename)
             return ''
     
-        return json.dumps(file.detectAnomalies(series, thresholdlow, thresholdhigh, mode, duration, persistence, maxgap), ignore_nan=True)
+        return json.dumps(file.detectAnomalies(series, thresholdlow, thresholdhigh, duration, persistence, maxgap), ignore_nan=True)
 
     @app.route(config.rootWebPath + '/get_files')
     @login_required

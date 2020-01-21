@@ -55,11 +55,17 @@ class Project:
 
         return response
 
+    # Loads the file corresponding to the provided filename, adds it to the list
+    # of loaded project files, and returns the File instance.
+    def loadProcessedFile(self, filename):
+
+        self.files.append(File(self, filename))
+        return self.files[len(self.files)-1]
+
     def loadProcessedFiles(self):
 
         for f in self.getProcessedFileList():
-            file = File(self, f)
-            self.files.append(file)
+            self.loadProcessedFile(f)
 
     # Iterates through all unprocessed files and processes each one. Supports
     # multi-process batch processing in a "pretty good" way that relies on the

@@ -29,7 +29,11 @@ class File:
         self.series = []
         
         # Instantiate the AnnotationSet class for the file
-        self.annotationSet = AnnotationSet(self)
+        try:
+            self.annotationSet = AnnotationSet(self)
+        except:
+            # An exception here likely means we're in serverless mode. Ignore.
+            pass
 
         if self.mode() == 'file':
 
@@ -129,11 +133,26 @@ class File:
             print("There was an exception while h5py was creating the processed file. Raising ProcessedFileExists exception.")
             raise ProcessedFileExists
         
-    def detectAnomalies(self, seriesid, thresholdlow, thresholdhigh, mode, duration, persistence, maxgap):
+    def detectAnomalies(self, series, thresholdlow=None, thresholdhigh=None, duration=300, persistence=.7, maxgap=300):
+
+        # Determine the mode (see generateThresholdAlerts function description
+        # for details on this parameter).
+        if thresholdlow is None and thresholdhigh is None:
+            # We must have at least one of thresholdlow or thresholdhigh.
+            print("Error: We need at least one of threshold low or threshold high in order to perform anomaly detection.")
+            return []
+        if thresholdhigh is None:
+            mode = 0
+            thresholdhigh = 0
+        elif thresholdlow is None:
+            mode = 1
+            thresholdlow = 0
+        else:
+            mode = 2
 
         # Find the series
         for s in self.series:
-            if s.id == seriesid:
+            if s.id == series:
                 return s.generateThresholdAlerts(thresholdlow, thresholdhigh, mode, duration, persistence, maxgap).tolist()
 
     # Returns all event series
@@ -258,6 +277,14 @@ class File:
             if s.id == seriesid:
                 return s
         return None
+
+    # Returns a list of series names available in the file.
+    def getSeriesNames(self):
+
+        seriesNames = []
+        for s in self.series:
+            seriesNames.append(s.id)
+        return seriesNames
 
     # Retreves or creates & returns the series corresponding to the provided
     # series ID.
