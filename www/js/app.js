@@ -14,17 +14,17 @@ let moveToConfig = {
 			series: 'numerics/HR/data',
 			tlow: 58,
 			thigh: 110,
-			dur: 300,
+			dur: 10,
 			duty: 70,
-			maxgap: 300
+			maxgap: 1800
 		},
 		{
 			series: 'numerics/HR.HR/data',
 			tlow: 58,
 			thigh: 110,
-			dur: 300,
+			dur: 10,
 			duty: 70,
-			maxgap: 300
+			maxgap: 1800
 		},
 		{
 			series: 'numerics/rRR/data',
