@@ -56,11 +56,17 @@ class Project:
         return response
 
     # Loads the file corresponding to the provided filename, adds it to the list
-    # of loaded project files, and returns the File instance.
+    # of loaded project files, and returns the File instance. If opening the
+    # file fails, None object will be returned.
     def loadProcessedFile(self, filename):
 
-        self.files.append(File(self, filename))
-        return self.files[len(self.files)-1]
+        try:
+            self.files.append(File(self, filename))
+            return self.files[len(self.files) - 1]
+
+        except Exception as e:
+            print("Opening/instantiating file " + filename + " failed with the following exception.\n", e)
+            return None
 
     def loadProcessedFiles(self):
 

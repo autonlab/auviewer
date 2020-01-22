@@ -346,18 +346,11 @@ class File:
     def mode(self):
         return 'file' if self.filename != '' else 'realtime'
 
-    # Opens the HDF5 file. Returns boolean whether able to open.
+    # Opens the HDF5 file.
     def openOriginalFile(self):
 
         # Open the HDF5 file
-        try:
-            self.f = h5py.File(self.getFilepath(), 'r')
-        except Exception as e:
-            print("Unable to open the original data file " + self.getFilepath() + ".\n", e)
-            return False
-
-        # If an exception was not raised, that means the file was opened
-        return True
+        self.f = h5py.File(self.getFilepath(), 'r')
         
     # Opens the processed HDF5 data file. Returns boolean whether able to open.
     def openProcessedFile(self):
