@@ -1,3 +1,6 @@
+from os import getlogin
+import os.path
+
 # This file holds configuration parameters for the medview application.
 
 # Output verbosity
@@ -20,12 +23,17 @@ M = 3000
 # is 3K intervals, the second 6K, the third 12K, and so forth.
 stepMultiplier = 2
 
+if getlogin() == 'tracir':
+    medFilesDir = '/home/tracir/TRACIR/medfiles/'
+else:
+    medFilesDir = '/zfsauton/data/public/gwelter/AUView/'
+
 # Original patient data files (which should be preserved and unaltered) go here.
-originalsDir = '/zfsauton/data/public/gwelter/AUView/originals/'
+originalsDir = os.path.join(medFilesDir, 'originals/')
 # originalsDir = '/Users/gus/Code/medfiles/originals/'
 
 # Processed (i.e. downsampled) patient data files go here.
-processedFilesDir = '/zfsauton/data/public/gwelter/AUView/processed/'
+processedFilesDir = os.path.join(medFilesDir, 'processed/')
 # processedFilesDir = '/Users/gus/Code/medfiles/processed/'
 
 # Flask application configuration
