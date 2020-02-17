@@ -107,6 +107,16 @@ Annotation.prototype.deleteLocal = function() {
 
 };
 
+// Returns JS Date object corresponding to end date.
+Annotation.prototype.getEndDate = function() {
+	return new Date((this.end + globalStateManager.currentFile.fileData.baseTime) * 1000);
+};
+
+// Returns JS Date object corresponding to start date.
+Annotation.prototype.getStartDate = function() {
+	return new Date((this.begin + globalStateManager.currentFile.fileData.baseTime) * 1000);
+};
+
 // Returns the index of the object in the annotations array, or -1 if not found.
 Annotation.prototype.getIndex = function () {
 	let file = globalStateManager.currentFile;
@@ -129,14 +139,14 @@ Annotation.prototype.hideDialog = function () {
 Annotation.prototype.populateFormFromValues = function() {
 
 	// Populate annotation start date & time fields
-	let annotationStartDate = new Date((this.begin + globalStateManager.currentFile.fileData.baseTime) * 1000);
+	let annotationStartDate = this.getStartDate();
 	let annotationStartDateStrings = getHTML5DateTimeStringsFromDate(annotationStartDate);
 	document.getElementById('annotationStartDate').value = annotationStartDateStrings[0];
 	document.getElementById('annotationStartTime').value = annotationStartDateStrings[1];
 
 
 	// Populate annotation end date & time fields
-	let annotationEndDate = new Date((this.end + globalStateManager.currentFile.fileData.baseTime) * 1000);
+	let annotationEndDate = this.getEndDate();
 	let annotationEndDateStrings = getHTML5DateTimeStringsFromDate(annotationEndDate);
 	document.getElementById('annotationEndDate').value = annotationEndDateStrings[0];
 	document.getElementById('annotationEndTime').value = annotationEndDateStrings[1];

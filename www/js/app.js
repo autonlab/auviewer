@@ -58,6 +58,36 @@ let moveToConfig = {
 			maxgap: 300
 		},
 		{
+			series: 'numerics/NBPs/data',
+			tlow: 90,
+			thigh: 165,
+			dur: 300,
+			duty: 70,
+			maxgap: 300
+		},
+		{
+			series: 'numerics/NBPm/data',
+			tlow: 65,
+			dur: 300,
+			duty: 70,
+			maxgap: 300
+		},
+		{
+			series: 'numerics/ART.Systolic/data',
+			tlow: 90,
+			thigh: 165,
+			dur: 300,
+			duty: 70,
+			maxgap: 300
+		},
+		{
+			series: 'numerics/ART.Mean/data',
+			tlow: 65,
+			dur: 300,
+			duty: 70,
+			maxgap: 300
+		},
+		{
 			series: 'numerics/SPO2-%/data',
 			tlow: 90,
 			dur: 300,
@@ -101,6 +131,9 @@ let moveToConfig = {
 		'numerics/NBP.NBPd/data': bpRange,
 		'numerics/NBP.NBPm/data': bpRange,
 		'numerics/NBP.NBPs/data': bpRange,
+		'numerics/NBP.NBP-D/data': bpRange,
+		'numerics/NBP.NBP-M/data': bpRange,
+		'numerics/NBP.NBP-S/data': bpRange,
 		'numerics/NBP.Pulse/data': pulseRange,
 		'numerics/RR.RR/data': [0, 50],
 		'numerics/SpO₂.Pulse/data': pulseRange,
@@ -140,8 +173,8 @@ function downsamplePlotter(e) {
 	let area = e.plotArea;
 
 	// Line properties
-	cnv.strokeStyle = '#171717';//'#5253FF';
-	cnv.fillStyle = '#171717';//'#5253FF';
+	cnv.strokeStyle = this.config.color; //'#171717';//'#5253FF';
+	cnv.fillStyle = this.config.color; //'#171717';//'#5253FF';
 	cnv.lineWidth = 1;
 
 	// Plot each series, whether it be an individual series or a group of them.
@@ -201,6 +234,7 @@ function downsamplePlotter(e) {
 
 let requestHandler = new RequestHandler();
 let globalStateManager = new GlobalStateManager();
+let templateSystem = new TemplateSystem(defProjConf, defIntfcsConfig);
 
 // Setup the websocket connection
 let socket = io();

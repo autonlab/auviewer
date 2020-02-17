@@ -10,6 +10,9 @@ function Graph(series, file) {
 	// Holds the series name of the graph
 	this.series = series;
 
+	// Load the series config
+	this.config = templateSystem.getSeriesTemplate(this.file.projname, this.series);
+
 	// Holds the dom element of the instantiated legend
 	this.legendDomElement = null;
 
@@ -40,6 +43,7 @@ Graph.prototype.build = function() {
 	// Create the graph wrapper dom element
 	this.graphWrapperDomElement = document.createElement('DIV');
 	this.graphWrapperDomElement.className = 'graph_wrapper';
+	this.graphWrapperDomElement.style.height = this.config.graphHeight;
 
 	this.graphWrapperDomElement.innerHTML =
 		'<table>' +
@@ -145,11 +149,11 @@ Graph.prototype.instantiateDygraph = function() {
 				independentTicks: true
 			}
 		},
-		clickCallback: clickCallbackHandler,
-		colors: ['#171717'],//'#5253FF'],
+		clickCallback: handleClick,
+		colors: [this.config.color],//'#5253FF'],
 		dateWindow: timeWindow,
 		//drawPoints: true,
-		gridLineColor: 'rgb(232,122,128)',
+		gridLineColor: this.config.gridColor,
 		interactionModel: {
 			'mousedown': handleMouseDown.bind(this),
 			'mousemove': handleMouseMove.bind(this),
@@ -159,13 +163,13 @@ Graph.prototype.instantiateDygraph = function() {
 		},
 		labels: this.file.fileData.series[this.series].labels,
 		labelsDiv: this.legendDomElement,
-		plotter: downsamplePlotter,
+		plotter: downsamplePlotter.bind(this),
 		/*series: {
 		  'Min': { plotter: downsamplePlotter },
 		  'Max': { plotter: downsamplePlotter }
 		},*/
 		//title: this.series,
-		underlayCallback: underlayCallbackHandler,
+		underlayCallback: handleUnderlayRedraw.bind(this),
 		valueRange: yAxisRange
 	});
 

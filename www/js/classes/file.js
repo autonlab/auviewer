@@ -8,6 +8,9 @@ function File(project, filename) {
 	// Holds the filelname
 	this.filename = filename;
 
+	// Load the project config
+	this.config = templateSystem.getProjectTemplate(project);
+
 	// Holds the file metadata
 	this.metadata = {};
 
@@ -24,8 +27,8 @@ function File(project, filename) {
 	// annotation workflow, or -1 if user is not currently in the workflow.
 	this.annotationWorkflowCurrentIndex = -1;
 
-	// By default, continuous render mode is offline.
-	this.continuousRender = false;
+	// Indicates user is at the i'th anomaly, during the annotation workflow.
+	this.annotationWorkflowAnomalyNumber = 0;
 
 	// Used for realtime-mode to queue incoming new data
 	this.newDataQueue = [];
@@ -164,6 +167,114 @@ function File(project, filename) {
 	});
 
 }
+
+// Go to the next annotation in the workflow.
+File.prototype.annotationWorkflowNext = function() {
+
+	// Iterate through next subsequent annotations until we hit another anomaly
+	// or hit the end of the array.
+	while(this.annotationWorkflowCurrentIndex++ || true) {
+
+		// If we hit the end of the array, we've completed the annotation workflow.
+		if (this.annotationWorkflowCurrentIndex >= this.annotations.length) {
+			this.annotationWorkflowCurrentIndex = -1;
+			this.resetZoomToOutermost();
+
+			this.annotationWorkflowAnomalyNumber = 0;
+			document.getElementById("annotationWorkflowSubtext").innerText = '';
+
+			return;
+		}
+
+		// If we reach another anomaly, stop there.
+		if (this.annotations[this.annotationWorkflowCurrentIndex].state === 'anomaly') {
+			break;
+		}
+
+	}
+
+	// Update indicator number
+	this.annotationWorkflowAnomalyNumber++;
+
+	// Update annotation display to reflect the newly set parameters.
+	this.annotationWorkflowUpdateCurrent();
+
+};
+
+// Go to the previous annotation in the workflow.
+File.prototype.annotationWorkflowPrevious = function() {
+
+	// Iterate through next subsequent annotations until we hit another anomaly
+	// or hit the end of the array.
+	while(this.annotationWorkflowCurrentIndex-- || true) {
+
+		// If we hit the end of the array, we've completed the annotation workflow.
+		if (this.annotationWorkflowCurrentIndex < 0) {
+			this.annotationWorkflowCurrentIndex = -1;
+			this.resetZoomToOutermost();
+
+			this.annotationWorkflowAnomalyNumber = 0;
+			document.getElementById("annotationWorkflowSubtext").innerText = '';
+
+			return;
+		}
+
+		// If we reach another anomaly, stop there.
+		if (this.annotations[this.annotationWorkflowCurrentIndex].state === 'anomaly') {
+			break;
+		}
+
+	}
+
+	// Update indicator number
+	this.annotationWorkflowAnomalyNumber--;
+
+	// Update annotation display to reflect the newly set parameters.
+	this.annotationWorkflowUpdateCurrent();
+
+};
+
+// Update current annotation display for the workflow according to
+// this.annotationWorkflowCurrentIndex and this.annotationWorkflowAnomalyNumber.
+File.prototype.annotationWorkflowUpdateCurrent = function() {
+
+	// Grab our annotation
+	let annotation = this.annotations[this.annotationWorkflowCurrentIndex];
+
+	// Update annotation counter display
+	let prefix = '<tr><th>';
+	let between = '</th><td>';
+	let postfix = '</td></tr>';
+
+	document.getElementById("annotationWorkflowSubtext").innerHTML =
+		'<p style="font-style: italic; margin-bottom: 2px;">Current Anomaly</p>' +
+		'<table><tbody>' +
+		prefix+'Anomaly #:'+between+this.annotationWorkflowAnomalyNumber+postfix +
+		prefix+'Series:'+between+annotation.series+postfix +
+		prefix+'Begin:'+between+annotation.getStartDate().toLocaleString()+postfix +
+		prefix+'End:'+between+annotation.getEndDate().toLocaleString()+postfix +
+		'</tbody></table>';
+
+	// Calculate the zoom window
+
+	// Total zoom window time to display
+	let zwTotal = 6 * 60 * 60;
+
+	// Total gap = total zoom window less the anomaly duration
+	let zwTotalGap = zwTotal - (annotation.end - annotation.begin);
+
+	// Gap on either side
+	let zwGapSingleSide = zwTotalGap / 2;
+
+	// Compute the zoom window begin & end
+	let zwBegin = (annotation.begin - zwGapSingleSide + this.fileData.baseTime)*1000;
+	let zwEnd = (annotation.end + zwGapSingleSide + this.fileData.baseTime)*1000;
+
+	// Zoom to the designated window
+	this.zoomTo([zwBegin, zwEnd]);
+	this.updateCurrentViewData();
+
+};
 
 // Removes all detected anomalies
 File.prototype.clearAnomalies = function() {
@@ -433,91 +544,6 @@ File.prototype.mode = function() {
 	return (this.projname === '__realtime__' && this.filename === '__realtime__') ? 'realtime' : 'file';
 };
 
-File.prototype.annotationWorkflowNext = function() {
-
-	// Iterate through next subsequent annotations until we hit another anomaly
-	// or hit the end of the array.
-	while(this.annotationWorkflowCurrentIndex++) {
-
-		// If we hit the end of the array, we've completed the annotation workflow.
-		if (this.annotationWorkflowCurrentIndex >= this.annotations.length) {
-			this.annotationWorkflowCurrentIndex = -1;
-			this.resetZoomToOutermost();
-			return;
-		}
-
-		// If we reach another anomaly, stop there.
-		if (this.annotations[this.annotationWorkflowCurrentIndex].state === 'anomaly') {
-			break;
-		}
-
-	}
-
-	// Grab our annotation
-	let annotation = this.annotations[this.annotationWorkflowCurrentIndex];
-	console.log(this.annotationWorkflowCurrentIndex, this.fileData.baseTime, annotation)
-	// Calculate the zoom window
-
-	// Total zoom window time to display
-	let zwTotal = 6 * 60 * 60;
-
-	// Total gap = total zoom window less the anomaly duration
-	let zwTotalGap = zwTotal - (annotation.end - annotation.begin);
-
-	// Gap on either side
-	let zwGapSingleSide = zwTotalGap / 2;
-
-	// Zoom window begin & end
-	let zwBegin = (annotation.begin - zwGapSingleSide + this.fileData.baseTime)*1000;
-	let zwEnd = (annotation.end + zwGapSingleSide + this.fileData.baseTime)*1000;
-	console.log(zwBegin, zwEnd);
-	this.zoomTo([zwBegin, zwEnd]);
-};
-
-File.prototype.annotationWorkflowPrevious = function() {
-	console.log("A")
-	// Iterate through next subsequent annotations until we hit another anomaly
-	// or hit the end of the array.
-	while(this.annotationWorkflowCurrentIndex-- || true) {
-console.log("B")
-		// If we hit the end of the array, we've completed the annotation workflow.
-		if (this.annotationWorkflowCurrentIndex < 0) {
-			console.log("C")
-			this.annotationWorkflowCurrentIndex = -1;
-			this.resetZoomToOutermost();
-			console.log("WHY NOOOOT")
-			return;
-		}
-		console.log("D")
-		// If we reach another anomaly, stop there.
-		if (this.annotations[this.annotationWorkflowCurrentIndex].state === 'anomaly') {
-			break;
-		}
-
-	}
-	console.log("HERE", this.annotationWorkflowCurrentIndex)
-
-	// Grab our annotation
-	let annotation = this.annotations[this.annotationWorkflowCurrentIndex];
-	console.log(this.annotationWorkflowCurrentIndex, this.fileData.baseTime, annotation)
-	// Calculate the zoom window
-
-	// Total zoom window time to display
-	let zwTotal = 6 * 60 * 60;
-
-	// Total gap = total zoom window less the anomaly duration
-	let zwTotalGap = zwTotal - (annotation.end - annotation.begin);
-
-	// Gap on either side
-	let zwGapSingleSide = zwTotalGap / 2;
-
-	// Zoom window begin & end
-	let zwBegin = (annotation.begin - zwGapSingleSide + this.fileData.baseTime)*1000;
-	let zwEnd = (annotation.end + zwGapSingleSide + this.fileData.baseTime)*1000;
-	console.log(zwBegin, zwEnd);
-	this.zoomTo([zwBegin, zwEnd]);
-};
-
 // Prepares & returns data by converting times to Date objects and calculating
 // x-axis extremes across all data.
 File.prototype.prepareData = function(data, baseTime) {
@@ -611,7 +637,7 @@ File.prototype.prepareData = function(data, baseTime) {
 	}
 
 	let tt = performance.now() - t0;
-	if (config.verbose || tt > config.performanceReportingThresholdMS) { console.log("File.prepareData() took " + Math.round(tt) + "ms."); }
+	if (globalAppConfig.verbose || tt > globalAppConfig.performanceReportingThresholdMS) { console.log("File.prepareData() took " + Math.round(tt) + "ms."); }
 
 	return data;
 
@@ -621,17 +647,10 @@ File.prototype.prepareData = function(data, baseTime) {
 // data to process, then calls itself recursively after a timeout.
 File.prototype.processNewRealtimeData = function() {
 
-	// NOTE: Make this the FIRST thing in the function!
-	// Indicate that continuous render mode is running.
-	this.continuousRender = true;
-
 	// If there is no data in the queue, take us out of continuous render mode.
 	if (!Array.isArray(this.newDataQueue) || this.newDataQueue.length === 0) {
 
 		vo('No data in realtime queue. Aborting continuous render mode.');
-
-		// Indicate that continuous render mode is offline.
-		this.continuousRender = false;
 
 		// Return now to effectively take us out of continuous redraw mode.
 		return;
@@ -693,9 +712,9 @@ File.prototype.processNewRealtimeData = function() {
 			// Merge the new & pre-existing data
 			this.fileData['series'][s]['data'] = this.fileData['series'][s]['data'].concat(localPreparedMergedData['series'][s]['data']);
 
-			// Trim the array if we've surprisedd config.M data points
-			if (this.fileData['series'][s]['data'].length > config.M) {
-				this.fileData['series'][s]['data'].splice(0, this.fileData['series'][s]['data'].length - config.M)
+			// Trim the array if we've surprisedd globalAppConfig.M data points
+			if (this.fileData['series'][s]['data'].length > globalAppConfig.M) {
+				this.fileData['series'][s]['data'].splice(0, this.fileData['series'][s]['data'].length - globalAppConfig.M)
 			}
 
 			// Re-plot the graph with the new data
@@ -720,7 +739,7 @@ File.prototype.processNewRealtimeData = function() {
 	this.synchronizeGraphs();
 
 	let tt = performance.now() - t0;
-	if (config.verbose || tt > config.performanceReportingThresholdMS) console.log("Adding new data took " + Math.round(tt) + "ms.");
+	if (globalAppConfig.verbose || tt > globalAppConfig.performanceReportingThresholdMS) console.log("Adding new data took " + Math.round(tt) + "ms.");
 
 	// Call recursively.
 	setTimeout(this.processNewRealtimeData.bind(this), 100);
@@ -843,9 +862,7 @@ File.prototype.renderMetadata = function() {
 
 // Reset zoom to outermost view
 File.prototype.resetZoomToOutermost = function() {
-
 	this.zoomTo(this.getOutermostZoomWindow());
-
 };
 
 // Runs pre-defined anomaly detection jobs for one or more series. The series
@@ -1003,7 +1020,7 @@ File.prototype.unsynchronizeGraphs = function() {
 
 	if (this.sync != null) {
 
-		if (config.verbose) { console.log("Unsynchronizing graphs."); }
+		if (globalAppConfig.verbose) { console.log("Unsynchronizing graphs."); }
 		this.sync.detach();
 		this.sync = null;
 

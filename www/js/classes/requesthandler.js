@@ -5,7 +5,7 @@ function RequestHandler() {}
 
 RequestHandler.prototype.createAnnotation = function(projname, filename, xBoundLeft, xBoundRight, seriesID, label, callback) {
 
-	this._newRequest(callback, config.createAnnotationURL, {
+	this._newRequest(callback, globalAppConfig.createAnnotationURL, {
 		project: projname,
 		file: filename,
 		xl: xBoundLeft,
@@ -19,7 +19,7 @@ RequestHandler.prototype.createAnnotation = function(projname, filename, xBoundL
 };
 
 RequestHandler.prototype.deleteAnnotation = function(id, projname, filename, callback) {
-	this._newRequest(callback, config.deleteAnnotationURL, {
+	this._newRequest(callback, globalAppConfig.deleteAnnotationURL, {
 		id: id,
 		project: projname,
 		file: filename
@@ -28,7 +28,7 @@ RequestHandler.prototype.deleteAnnotation = function(id, projname, filename, cal
 
 RequestHandler.prototype.requestAnomalyDetection = function(projname, filename, seriesID, tlow, thigh, duration, persistence, maxgap, callback) {
 
-	this._newRequest(callback, config.detectAnomaliesURL, {
+	this._newRequest(callback, globalAppConfig.detectAnomaliesURL, {
 		project: projname,
 		file: filename,
 		series: seriesID,
@@ -42,24 +42,24 @@ RequestHandler.prototype.requestAnomalyDetection = function(projname, filename, 
 };
 
 RequestHandler.prototype.requestInitialFilePayload = function(projname, filename, callback) {
-	this._newRequest(callback, config.initialFilePayloadURL, {
+	this._newRequest(callback, globalAppConfig.initialFilePayloadURL, {
 		project: projname,
 		file: filename
 	});
 };
 
-RequestHandler.prototype.requestFileList = function(projname, callback) {
-	this._newRequest(callback, config.getFilesURL, {
+RequestHandler.prototype.requestInitialProjectPayload = function(projname, callback) {
+	this._newRequest(callback, globalAppConfig.initialProjectPayloadURL, {
 		project: projname
 	});
 };
 
 RequestHandler.prototype.requestProjectsList = function(callback) {
-	this._newRequest(callback, config.getProjectsURL, {});
+	this._newRequest(callback, globalAppConfig.getProjectsURL, {});
 };
 
 RequestHandler.prototype.requestSeriesRangedData = function(projname, filename, series, startTime, stopTime, callback) {
-	this._newRequest(callback, config.seriesRangedDataURL, {
+	this._newRequest(callback, globalAppConfig.seriesRangedDataURL, {
 		project: projname,
 		file: filename,
 		s: series,
@@ -70,7 +70,7 @@ RequestHandler.prototype.requestSeriesRangedData = function(projname, filename, 
 
 RequestHandler.prototype.updateAnnotation = function(id, projname, filename, xBoundLeft, xBoundRight, seriesID, label, callback) {
 
-	this._newRequest(callback, config.updateAnnotationURL, {
+	this._newRequest(callback, globalAppConfig.updateAnnotationURL, {
 		id: id,
 		project: projname,
 		file: filename,
@@ -110,7 +110,7 @@ RequestHandler.prototype._newRequest = function(callback, path, params) {
 				let t0 = performance.now();
 				callback(data);
 				let tt = performance.now() - t0;
-				if (config.verbose || tt > config.performanceReportingThresholdMS) { console.log("Request callback took " + Math.round(tt) + "ms:", path, params); }
+				if (globalAppConfig.verbose || tt > globalAppConfig.performanceReportingThresholdMS) { console.log("Request callback took " + Math.round(tt) + "ms:", path, params); }
 			} else {
 				console.log("Important: Callback not provided to request handler.");
 			}

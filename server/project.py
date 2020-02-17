@@ -9,12 +9,21 @@ class Project:
     def __init__(self, project_name):
 
         self.name = project_name
+        
+        # Set the project root directory
+        self.project_dir = os.path.join(config.projectsDir, self.name)
+        
+        # Set the project templates directory
+        self.templates_dir = os.path.join(self.project_dir, 'templates')
+        
+        # Set the project interface templates directory
+        self.interface_templates_dir = os.path.join(self.templates_dir, 'interfaces')
 
         # Set the project original files directory
-        self.originals_dir = os.path.join(config.originalsDir, self.name)
+        self.originals_dir = os.path.join(self.project_dir, 'originals')
         
         # Set the project processed files directory
-        self.processed_dir = os.path.join(config.processedFilesDir, self.name)
+        self.processed_dir = os.path.join(self.project_dir, 'processed')
         
         # Holds references to the files that belong to the project
         self.files = []
@@ -28,6 +37,31 @@ class Project:
 
         # Having reached this point, we cannot find the file
         return None
+    
+    def getInitialPayloadOutput(self):
+        
+        print("Assembling initial project payload output for project", self.name)
+        
+        outputObject = {
+            'name': self.name,
+            'files': self.getProcessedFileList(),
+            'project_template': self.getProjectTemplate(),
+            'interface_templates': self.getInterfaceTemplates()
+        }
+        
+        # Return the output object
+        return outputObject
+
+    # Returns string containing the interface templates JSON, or None if it does
+    # not exist.
+    def getInterfaceTemplates(self):
+    
+        try:
+            with open(os.path.join(self.templates_dir, 'interface_templates.json'), 'r') as f:
+                return f.read()
+    
+        except:
+            return None
 
     def getProcessedFileList(self):
 
@@ -41,6 +75,17 @@ class Project:
         response.sort()
 
         return response
+    
+    # Returns string containing the project template JSON, or None if it does
+    # not exist.
+    def getProjectTemplate(self):
+    
+        try:
+            with open(os.path.join(self.templates_dir, 'project_template.json'), 'r') as f:
+                return f.read()
+            
+        except:
+            return None
 
     def getUnprocessedFileList(self):
 

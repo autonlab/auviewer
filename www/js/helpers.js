@@ -177,6 +177,40 @@ function getHTML5DateTimeStringsFromDate(d) {
 	return [ds, ts];
 }
 
+/**
+ * Simple object check. Taken from @Salakar's SO answer at:
+ * https://stackoverflow.com/questions/27936772/how-to-deep-merge-instead-of-shallow-merge
+ * @param item
+ * @returns {boolean}
+ */
+function isObject(item) {
+  return (item && typeof item === 'object' && !Array.isArray(item));
+}
+
+/**
+ * Deep merge two objects. Taken from @Salakar's SO answer at:
+ * https://stackoverflow.com/questions/27936772/how-to-deep-merge-instead-of-shallow-merge
+ * @param target
+ * @param ...sources
+ */
+function mergeDeep(target, ...sources) {
+  if (!sources.length) return target;
+  const source = sources.shift();
+
+  if (isObject(target) && isObject(source)) {
+    for (const key in source) {
+      if (isObject(source[key])) {
+        if (!target[key]) Object.assign(target, { [key]: {} });
+        mergeDeep(target[key], source[key]);
+      } else {
+        Object.assign(target, { [key]: source[key] });
+      }
+    }
+  }
+
+  return mergeDeep(target, ...sources);
+}
+
 // Take the offset of a mouse event on the dygraph canvas and
 // convert it to a percentages from the left.
 function offsetToPercentage(g, offsetX) {
@@ -218,9 +252,31 @@ function padDataIfNeeded(data) {
 
 }
 
+// Verifies that an object has a nested hierarchy of properties. For example,
+// given props = ['a', 'b', 'c'], the function will return true if the given
+// object has obj['a']['b']['c'] and false otherwise.
+function verifyObjectPropertyChain(obj, props) {
+
+	if (!Array.isArray(props)) {
+		console.log("Error: verifyObjectPropertyChain provided props that are not array:", props);
+		return;
+	}
+	if (typeof obj !== 'object' || obj === null) {
+		console.log("Error: verifyObjectPropertyChain provided obj that is not object:", obj);
+	}
+
+	if (props.length < 1) {
+		return true;
+	} else if (obj.hasOwnProperty(props[0])) {
+		return verifyObjectPropertyChain(obj[props[0]], props.slice(1));
+	} else {
+		return false;
+	}
+}
+
 // Prints a message to console if verbose output is enabled
 function vo() {
-	if (config.verbose) {
+	if (globalAppConfig.verbose) {
 		console.log.apply(null, arguments)
 	}
 }

@@ -312,9 +312,9 @@ def create_app():
     
         return json.dumps(file.detectAnomalies(series, thresholdlow, thresholdhigh, duration, persistence, maxgap), ignore_nan=True)
 
-    @app.route(config.rootWebPath + '/get_files')
+    @app.route(config.rootWebPath + '/initial_project_payload')
     @login_required
-    def get_files():
+    def initial_project_payload():
         
         # Parse parameters
         projname = request.args.get('project')
@@ -330,7 +330,10 @@ def create_app():
             print("Project could not be retrieved:", projname)
             return json.dumps([])
 
-        return json.dumps(project.getProcessedFileList())
+        output = project.getInitialPayloadOutput()
+        json_output = json.dumps(output)
+
+        return json_output
 
     @app.route(config.rootWebPath + '/get_projects')
     @login_required
@@ -535,14 +538,11 @@ def create_app():
 def load_projects():
 
     # Get list of subdirectories
-    print(config.originalsDir)
-    print(os.listdir(config.originalsDir))
-    subdirectories = [subdir for subdir in os.listdir(config.originalsDir) if os.path.isdir(os.path.join(config.originalsDir, subdir))]
-    print(subdirectories)
+    project_subdirectories = [subdir for subdir in os.listdir(config.projectsDir) if subdir != 'originals' and subdir != 'processed' and os.path.isdir(os.path.join(config.projectsDir, subdir))]
     
     projects = {}
 
-    for s in subdirectories:
+    for s in project_subdirectories:
 
         print("\n\n#### LOADING PROJECT "+s+" ####\n\n")
 

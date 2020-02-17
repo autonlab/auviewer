@@ -98,11 +98,11 @@ For downsampled values, *min* & *max* will be defined and *value* will be null; 
 
 If multiple series are requested, there may be a mix of series with downsampled values and series with real values. However, a given series will not have multiple types of values.
 
-### /get_files
+### /initial_project_payload
 
 #### Request
 
-http://[medview]/get_files
+http://[medview]/initial_project_payload
 
 #### Response
 

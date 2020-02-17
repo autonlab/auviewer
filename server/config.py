@@ -24,17 +24,9 @@ M = 3000
 stepMultiplier = 2
 
 if getlogin() == 'tracir':
-    medFilesDir = '/home/tracir/TRACIR/medfiles/'
+    projectsDir = '/home/tracir/TRACIR/medfiles/'
 else:
-    medFilesDir = '/zfsauton/data/public/gwelter/AUView/'
-
-# Original patient data files (which should be preserved and unaltered) go here.
-originalsDir = os.path.join(medFilesDir, 'originals/')
-# originalsDir = '/Users/gus/Code/medfiles/originals/'
-
-# Processed (i.e. downsampled) patient data files go here.
-processedFilesDir = os.path.join(medFilesDir, 'processed/')
-# processedFilesDir = '/Users/gus/Code/medfiles/processed/'
+    projectsDir = '/zfsauton/data/public/gwelter/AUView/'
 
 # Flask application configuration
 class FlaskConfigClass(object):

@@ -94,15 +94,18 @@ GlobalStateManager.prototype.newMainProject = function() {
 	this.currentProject = new Project(projectselect.options[projectselect.selectedIndex].value);
 
 	// Request the list of files for the project
-	requestHandler.requestFileList(this.currentProject.name, function(data) {
+	requestHandler.requestInitialProjectPayload(this.currentProject.name, function(data) {
+
+		// Provide the projects template assets to TemplateSystem
+		templateSystem.provideProjectTemplates(data['name'], data['project_template'], data['interface_templates']);
 
 		let fileSelect = document.getElementById('file_selection');
 
-		for (let i in data) {
+		for (let i in data['files']) {
 
 			let opt = document.createElement('OPTION');
-			opt.setAttribute('value', data[i]);
-			opt.innerText = data[i];
+			opt.setAttribute('value', data['files'][i]);
+			opt.innerText = data['files'][i];
 			fileSelect.appendChild(opt);
 
 		}
