@@ -178,7 +178,7 @@ function convertToDateObjsAndUpdateExtremes(data) {
 // sampled data series. Plotting is not documented, so the best reference for
 // plotting with dygraphs is to review http://dygraphs.com/tests/plotters.html
 // and its source code.
-function downsamplePlotter(e) {
+function handlePlotting(e) {
 
 	/*// We only want to run the plotter for the first series.
 	if (e.seriesIndex !== 1) return;
@@ -415,7 +415,7 @@ function instantiateDygraph(series, dataset) {
 		},
 		labels: dataset.labels,
 		labelsDiv: legendDomElements[series],
-		plotter: downsamplePlotter,
+		plotter: handlePlotting,
 		title: series
 	});
 

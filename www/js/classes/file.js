@@ -30,8 +30,12 @@ function File(project, filename) {
 	// Indicates user is at the i'th anomaly, during the annotation workflow.
 	this.annotationWorkflowAnomalyNumber = 0;
 
-	// Used for realtime-mode to queue incoming new data
-	this.newDataQueue = [];
+	// Used for realtime-mode to buffer incoming new data
+	this.newDataBuffer = null;
+
+	// This flag indicates whether we're currently in continuous render mode
+	// (see File.prototype.renderBufferedRealtimeData).
+	this.continuousRender = false;
 
 	// Holds the reference to the graph synchronization object
 	this.sync = null;
@@ -73,7 +77,7 @@ function File(project, filename) {
 		// sorry. I could not document this in any way that would help make it
 		// more understandable, and it is a bit of a labyrinth.
 		groupLoop:
-			for (let group of moveToConfig.groups) {
+			for (let group of file.config.groups) {
 
 				// Check whether all series members of the group are present, and if
 				// not, then skip this group.
@@ -101,26 +105,52 @@ function File(project, filename) {
 
 			}
 
-		// Attach & render file metadata
-		file.metadata = data.metadata;
-		file.renderMetadata();
+		window.requestAnimationFrame(
 
-		// Instantiate event graphs
-		file.renderEventGraphs();
+			(function() {
 
-		// Instantiate series graphs
-		for (let s of Object.keys(file.fileData.series)) {
-			file.graphs[s] = new Graph(s, file);
-		}
+				let t0 = performance.now();
 
-		// Synchronize the graphs
-		file.synchronizeGraphs();
+				// Attach & render file metadata
+				this.metadata = data.metadata;
+				this.renderMetadata();
 
-		// Populate the annotations
-		for (let a of file.fileData.annotations) {
-			file.annotations.push(new Annotation({valuesArrayFromBackend: a}, 'existing'));
-		}
-		globalStateManager.currentFile.triggerRedraw();
+				// Instantiate event graphs
+				this.renderEventGraphs();
+
+				// Instantiate series graphs
+				for (let s of Object.keys(this.fileData.series)) {
+					this.graphs[s] = new Graph(s, file);
+				}
+
+				// Synchronize the graphs
+				this.synchronizeGraphs();
+
+				// Populate the annotations
+				if (Array.isArray(this.fileData.annotations) && this.fileData.annotations.length > 0) {
+					for (let a of this.fileData.annotations) {
+						this.annotations.push(new Annotation({valuesArrayFromBackend: a}, 'existing'));
+					}
+					globalStateManager.currentFile.triggerRedraw();
+				}
+
+				// If this is a realtime file, subscribe to realtime updates via the
+				// websocket connection.
+				if (this.mode() === 'realtime') {
+
+					socket.emit('subscribe', {
+						project: this.projname,
+						filename: this.filename
+					});
+
+				}
+
+				let tt = performance.now() - t0;
+				if (globalAppConfig.verbose || tt > globalAppConfig.performanceReportingThresholdMS) { console.log("Initial file graph building took " + Math.round(tt) + "ms.", this.projname, this.filename); }
+
+			}).bind(file)
+
+		);
 
 		// Populate the alert generation dropdown
 		let alertGenSeriesDropdown = document.getElementById('alert_gen_series_field');
@@ -152,17 +182,6 @@ function File(project, filename) {
 			}
 		}
 		file.runAnomalyDetectionJobsForSeries(seriesInitiallyDisplaying);
-
-		// If this is a realtime file, subscribe to realtime updates via the
-		// websocket connection.
-		if (file.mode() === 'realtime') {
-
-			socket.emit('subscribe', {
-				project: file.projname,
-				filename: file.filename
-			});
-
-		}
 
 	});
 
@@ -398,15 +417,19 @@ File.prototype.detectAnomalies = function(series, thresholdlow, thresholdhigh, d
 
 	requestHandler.requestAnomalyDetection(globalStateManager.currentFile.projname, globalStateManager.currentFile.filename, series, thresholdlow, thresholdhigh, duration, persistence, maxgap, function (data) {
 
-		for (let a of data) {
-			file.annotations.push(new Annotation({ series: series, begin: a[0], end: a[1] }, 'anomaly'));
-		}
+		if (Array.isArray(a) && a.length > 0) {
 
-		file.triggerRedraw();
+			for (let a of data) {
+				file.annotations.push(new Annotation({series: series, begin: a[0], end: a[1]}, 'anomaly'));
+			}
 
-		// Call callback if provided
-		if (callback !== null && typeof callback === 'function') {
-			callback();
+			file.triggerRedraw();
+
+			// Call callback if provided
+			if (callback !== null && typeof callback === 'function') {
+				callback();
+			}
+
 		}
 
 	});
@@ -441,7 +464,10 @@ File.prototype.getGraphForSeries = function(s) {
 };
 
 // Returns the outermost zoom window, a two-member array with start & stop time.
-File.prototype.getOutermostZoomWindow = function() {
+File.prototype.getOutermostZoomWindow = function(type='') {
+	if (type==='lead') {
+		return [this.globalXExtremes[1] - (10*1000), this.globalXExtremes[1]];
+	}
 	return this.mode() === 'realtime' ? [this.globalXExtremes[1] - (globalStateManager.realtimeTimeWindow*1000), this.globalXExtremes[1]] : this.globalXExtremes;
 };
 
@@ -643,106 +669,136 @@ File.prototype.prepareData = function(data, baseTime) {
 
 };
 
-// Processes new realtime data that has been queued, if present. If there is
-// data to process, then calls itself recursively after a timeout.
-File.prototype.processNewRealtimeData = function() {
+//Processes newly received realtime data.
+File.prototype.processNewRealtimeData = function(newData) {
 
-	// If there is no data in the queue, take us out of continuous render mode.
-	if (!Array.isArray(this.newDataQueue) || this.newDataQueue.length === 0) {
-
-		vo('No data in realtime queue. Aborting continuous render mode.');
-
-		// Return now to effectively take us out of continuous redraw mode.
-		return;
-	}
-
-	// This function only applies to realtime mode. If we're not in realtime
-	// mode, then return now.
+	// Validations
 	if (this.mode() !== 'realtime') {
-		console.log('Error: File.processNewRealtimeData() called while not in realtime mode.');
+		// This function only applies to realtime mode. If we're not in realtime
+		// mode, then return now.
+		console.log('Error: File.prototype.processNewRealtimeData() called while not in realtime mode.');
+		return;
+	} else if (typeof newData === 'undefined' || !newData || !newData.hasOwnProperty('series')) {
+		// Validate the new data
+		console.log('Error: File.prototype.processNewRealtimeData called with invalid data parameter.', newData);
 		return;
 	}
 
-	// Start the performance timer
-	let t0 = performance.now();
+	// Initialize buffer if needed
+	if (this.newDataBuffer === null) {
+		this.newDataBuffer = { 'series': {} };
+	}
 
-	// This will hold a local merged set of prepared data
-	let localPreparedMergedData = null;
-
-	// Will hold data pulled from the queue for each loop iteration
-	let data;
-
-	// Iterate through all queued incoming data, prepare it, and merge it together.
-	while (data = this.newDataQueue.shift()) {
-
-		// Validate the response data
-		if (typeof data === 'undefined' || !data || !data.hasOwnProperty('series')) {
-			console.log('Invalid new data response received.');
-			continue;
+	// Add new data to buffer
+	let preparedData = this.prepareData(newData, this.fileData.baseTime);
+	for (let s of Object.getOwnPropertyNames(preparedData['series'])) {
+		if (this.newDataBuffer['series'].hasOwnProperty(s)) {
+			// If the series is already in the buffer, concatenate the new data
+			// with the currently-buffered series data.
+			this.newDataBuffer['series'][s]['data'] = this.newDataBuffer['series'][s]['data'].concat(preparedData['series'][s]['data']);
+		} else {
+			this.newDataBuffer['series'][s] = preparedData['series'][s];
 		}
 
-		if (localPreparedMergedData === null) {
-			localPreparedMergedData = this.prepareData(data, this.fileData.baseTime);
-		} else {
-			let preparedData = this.prepareData(data, this.fileData.baseTime);
-			for (let s of Object.getOwnPropertyNames(preparedData['series'])) {
-				if (localPreparedMergedData['series'].hasOwnProperty(s)) {
-					localPreparedMergedData['series'][s]['data'] = localPreparedMergedData['series'][s]['data'].concat(preparedData['series'][s]['data']);
+		// Trim the data if we've surpassed globalAppConfig.M data points
+		if (this.newDataBuffer['series'][s]['data'].length > globalAppConfig.M) {
+			this.newDataBuffer['series'][s]['data'].splice(0, this.newDataBuffer['series'][s]['data'].length - globalAppConfig.M)
+		}
+
+	}
+
+	// If we're not in continuous render mode, put us into continuous render
+	// mode and call the renderer.
+	if (this.continuousRender === false) {
+		vo('Initiating continuous render mode.');
+		this.continuousRender = true;
+		this.renderBufferedRealtimeData();
+	}
+
+};
+
+// Renders new buffered realtime data recursively & continuously until there is
+// no more data data in the buffer.
+File.prototype.renderBufferedRealtimeData = function() {
+
+	window.requestAnimationFrame(
+
+		(function() {
+
+			// If the new data buffer is empty, take us out of continuous render
+			// mode and return.
+			if (this.newDataBuffer === null) {
+				vo('No data in realtime buffer. Aborting continuous render mode.');
+				this.continuousRender = false;
+				return;
+			}
+
+			vo('Re-rendering realtime data.');
+
+			// Grab the current buffer for local use, and then clear
+			const buffer = this.newDataBuffer;
+			this.newDataBuffer = null;
+
+			// Start the performance timer
+			let t0 = performance.now();
+
+			// Unsynchronize the graphs
+			this.unsynchronizeGraphs();
+
+			// Get the new outermost zoom window now after the newly processed data.
+			let dt = this.getOutermostZoomWindow();
+			let ldt = this.getOutermostZoomWindow('lead');
+
+			// Iterate through the new series
+			for (let s of Object.getOwnPropertyNames(buffer['series'])) {
+
+				// If there is a pre-existing equivalent series
+				if (this.fileData['series'].hasOwnProperty(s)) {
+
+					// Set the series data to the buffered dataset
+					this.fileData['series'][s]['data'] = this.fileData['series'][s]['data'].concat(buffer['series'][s]['data']);
+
+					// Trim the data if we've surpassed globalAppConfig.M data points
+					if (this.fileData['series'][s]['data'].length > globalAppConfig.M) {
+						this.fileData['series'][s]['data'].splice(0, this.fileData['series'][s]['data'].length - globalAppConfig.M)
+					}
+
+					// Re-plot the graph with the new data
+					this.getGraphForSeries(s).dygraphInstance.updateOptions({
+						file: this.fileData['series'][s]['data'],
+						dateWindow: dt
+					});
+
+					// Also re-plot the leading graph display with the new data
+					this.getGraphForSeries(s).rightDygraphInstance.updateOptions({
+						file: this.fileData['series'][s]['data'],
+						dateWindow: ldt
+					});
+
 				} else {
-					localPreparedMergedData['series'][s] = preparedData['series'][s];
+
+					// Attach the new data
+					this.fileData['series'][s] = buffer['series'][s];
+
+					// Instantiate the new graph
+					this.graphs[s] = new Graph(s, this);
+
 				}
+
 			}
 
-		}
+			// Synchronize the graphs
+			this.synchronizeGraphs();
 
-	}
+			let tt = performance.now() - t0;
+			if (globalAppConfig.verbose || tt > globalAppConfig.performanceReportingThresholdMS) console.log("Re-rendering realtime data took " + Math.round(tt) + "ms.");
 
-	// Unsynchronize the graphs
-	this.unsynchronizeGraphs();
+		}).bind(this)
 
-	// Get the new outermost zoom window now after the newly processed data.
-	let dt = this.getOutermostZoomWindow();
-
-	// Iterate through the new series
-	for (let s of Object.getOwnPropertyNames(localPreparedMergedData['series'])) {
-
-		// If there is a pre-existing equivalent series
-		if (this.fileData['series'].hasOwnProperty(s)) {
-
-			// Merge the new & pre-existing data
-			this.fileData['series'][s]['data'] = this.fileData['series'][s]['data'].concat(localPreparedMergedData['series'][s]['data']);
-
-			// Trim the array if we've surprisedd globalAppConfig.M data points
-			if (this.fileData['series'][s]['data'].length > globalAppConfig.M) {
-				this.fileData['series'][s]['data'].splice(0, this.fileData['series'][s]['data'].length - globalAppConfig.M)
-			}
-
-			// Re-plot the graph with the new data
-			this.getGraphForSeries(s).dygraphInstance.updateOptions({
-				file: this.fileData['series'][s].data,
-				dateWindow: dt
-			});
-
-		} else {
-
-			// Attach the new data
-			this.fileData['series'][s] = localPreparedMergedData['series'][s];
-
-			// Instantiate the new graph
-			this.graphs[s] = new Graph(s, this);
-
-		}
-
-	}
-
-	// Synchronize the graphs
-	this.synchronizeGraphs();
-
-	let tt = performance.now() - t0;
-	if (globalAppConfig.verbose || tt > globalAppConfig.performanceReportingThresholdMS) console.log("Adding new data took " + Math.round(tt) + "ms.");
+	);
 
 	// Call recursively.
-	setTimeout(this.processNewRealtimeData.bind(this), 100);
+	setTimeout(this.renderBufferedRealtimeData.bind(this),  100);
 
 };
 
@@ -880,20 +936,20 @@ File.prototype.runAnomalyDetectionJobsForSeries = function(series) {
 	let adi = 0;
 	let recursiveDetectionFunc = function() {
 
-		if (adi < moveToConfig.anomalyDetection.length) {
+		if (adi < file.config.anomalyDetection.length) {
 
 			let i = adi++;
 
 			// If the series was initially displaying, run the pre-defined
 			// anomaly detection for it.
-			if (moveToConfig.anomalyDetection[i].hasOwnProperty('series') && series.includes(moveToConfig.anomalyDetection[i].series)) {
+			if (file.config.anomalyDetection[i].hasOwnProperty('series') && series.includes(file.config.anomalyDetection[i].series)) {
 				file.detectAnomalies(
-					moveToConfig.anomalyDetection[i].hasOwnProperty('series') ? moveToConfig.anomalyDetection[i].series : null,
-					moveToConfig.anomalyDetection[i].hasOwnProperty('tlow') ? moveToConfig.anomalyDetection[i].tlow : null,
-					moveToConfig.anomalyDetection[i].hasOwnProperty('thigh') ? moveToConfig.anomalyDetection[i].thigh : null,
-					moveToConfig.anomalyDetection[i].hasOwnProperty('dur') ? moveToConfig.anomalyDetection[i].dur : null,
-					moveToConfig.anomalyDetection[i].hasOwnProperty('duty') ? moveToConfig.anomalyDetection[i].duty : null,
-					moveToConfig.anomalyDetection[i].hasOwnProperty('maxgap') ? moveToConfig.anomalyDetection[i].maxgap : null,
+					file.config.anomalyDetection[i].hasOwnProperty('series') ? file.config.anomalyDetection[i].series : null,
+					file.config.anomalyDetection[i].hasOwnProperty('tlow') ? file.config.anomalyDetection[i].tlow : null,
+					file.config.anomalyDetection[i].hasOwnProperty('thigh') ? file.config.anomalyDetection[i].thigh : null,
+					file.config.anomalyDetection[i].hasOwnProperty('dur') ? file.config.anomalyDetection[i].dur : null,
+					file.config.anomalyDetection[i].hasOwnProperty('duty') ? file.config.anomalyDetection[i].duty : null,
+					file.config.anomalyDetection[i].hasOwnProperty('maxgap') ? file.config.anomalyDetection[i].maxgap : null,
 					recursiveDetectionFunc);
 			} else {
 				// Even if this anomaly detection was not processed because
@@ -1030,7 +1086,7 @@ File.prototype.unsynchronizeGraphs = function() {
 
 // TODO: Update description, get rid of resetZoomToOutermost
 File.prototype.zoomTo = function(timeWindow) {
-
+	console.log('here');
 	for (let s of Object.keys(this.graphs)) {
 
 		if (this.graphs[s].dygraphInstance !== null) {
@@ -1046,5 +1102,16 @@ File.prototype.zoomTo = function(timeWindow) {
 		}
 
 	}
+
+	// TODO(Gus): This is super-dooper hard-coded.
+	// for (let s of Object.keys(this.graphs)) {
+	// 	console.log('here');
+	// 	if (this.graphs[s].dygraphInstance !== null) {
+	// 		console.log(this.graphs[s].rightDygraphInstance);
+	// 		this.graphs[s].rightDygraphInstance.updateOptions({
+	// 			dateWindow: this.getOutermostZoomWindow('lead')
+	// 		});
+	// 	}
+	// }
 
 };

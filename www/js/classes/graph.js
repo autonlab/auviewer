@@ -10,8 +10,13 @@ function Graph(series, file) {
 	// Holds the series name of the graph
 	this.series = series;
 
+	let t0 = performance.now();
+
 	// Load the series config
 	this.config = templateSystem.getSeriesTemplate(this.file.projname, this.series);
+
+	let t1 = performance.now();
+	console.log("A: " + Math.round(t1-t0) + "ms");
 
 	// Holds the dom element of the instantiated legend
 	this.legendDomElement = null;
@@ -33,8 +38,14 @@ function Graph(series, file) {
 		this.group = [];
 	}
 
+	let t2 = performance.now();
+	console.log("B: " + Math.round(t2-t1) + "ms");
+
 	// Build the graph
 	this.build();
+
+	let t3 = performance.now();
+	console.log("C: " + Math.round(t3-t2) + "ms");
 
 }
 
@@ -51,7 +62,11 @@ Graph.prototype.build = function() {
 				'<tr>' +
 					'<td class="graph_title">'+this.series+'</td>' +
 					'<td rowspan="2">' +
-						'<div class="graph"></div>' +
+						'<div class="graph">' +
+							'<table style="width:100%;height:100%;"><tbody><tr>' +
+							'<td style="width:75%;"><div class="innerLeft" style="width: 100%; height: 100%;"></div></td>' +
+							'<td style="width:25%; border-left: 1px solid #888;"><div class="innerRight" style="width: 100%; height: 100%;"></div></td>' +
+						'</tr></tbody></table></div>' +
 					'</td>' +
 				'</tr>' +
 				'<tr>' +
@@ -64,7 +79,8 @@ Graph.prototype.build = function() {
 
 	// Grab references to the legend & graph elements so they can be used later.
 	this.legendDomElement = this.graphWrapperDomElement.querySelector('.legend > div');
-	this.graphDomElement = this.graphWrapperDomElement.querySelector('.graph');
+	this.graphDomElement = this.graphWrapperDomElement.querySelector('.graph .innerLeft');
+	this.rightGraphDomElement = this.graphWrapperDomElement.querySelector('.graph .innerRight');
 
 	// let titleDomElement = document.createElement('DIV');
 	// titleDomElement.className = 'graph_title';
@@ -88,14 +104,17 @@ Graph.prototype.build = function() {
 
 	// Instantiate the dygraph if it is configured to appear by default, or if
 	// we're in realtime mode.
-	if (this.file.mode() === 'realtime' || moveToConfig.defaultSeries.includes(this.series)) {
+	if (this.file.mode() === 'realtime' || this.file.config.defaultSeries.includes(this.series)) {
+		let t0 = performance.now();
 		this.instantiateDygraph();
+		console.log("instantiate: " + Math.round(performance.now()-t0) + "ms");
+
 	} else {
 		this.hideDOMElements();
 	}
 
 	// Add the control for the graph
-	this.file.graphSelectionMenu.add(this.series, moveToConfig.defaultSeries.includes(this.series));
+	this.file.graphSelectionMenu.add(this.series, this.file.config.defaultSeries.includes(this.series));
 
 };
 
@@ -123,22 +142,22 @@ Graph.prototype.instantiateDygraph = function() {
 	let yAxisRange = [null, null];
 	if (this.isGroup) {
 		for (let s of this.group) {
-			if (moveToConfig.ranges.hasOwnProperty(s)) {
-				if (yAxisRange[0] === null || yAxisRange[0] > moveToConfig.ranges[s][0]) {
-					yAxisRange[0] = moveToConfig.ranges[s][0];
+			if (this.config.hasOwnProperty('range')) {
+				if (yAxisRange[0] === null || yAxisRange[0] > this.config.range[0]) {
+					yAxisRange[0] = this.config.range[0];
 				}
-				if (yAxisRange[1] === null || yAxisRange[1] < moveToConfig.ranges[s][1]) {
-					yAxisRange[1] = moveToConfig.ranges[s][1];
+				if (yAxisRange[1] === null || yAxisRange[1] < this.config.range[1]) {
+					yAxisRange[1] = this.config.range[1];
 				}
 			}
 		}
 	}
-	else if (moveToConfig.ranges.hasOwnProperty(this.series)) {
-		yAxisRange = moveToConfig.ranges[this.series];
+	else if (this.config.hasOwnProperty('range')) {
+		yAxisRange = this.config.range;
 	}
 
 	// Create the dygraph
-	this.dygraphInstance = new Dygraph(this.graphDomElement, this.file.fileData.series[this.series].data, {
+	this.dygraphInstance = new Dygraph(this.graphDomElement, this.file.fileData.series[this.series].data.concat(this.file.fileData.series[this.series].data, this.file.fileData.series[this.series].data, this.file.fileData.series[this.series].data, this.file.fileData.series[this.series].data, this.file.fileData.series[this.series].data, this.file.fileData.series[this.series].data, this.file.fileData.series[this.series].data, this.file.fileData.series[this.series].data), {
 		axes: {
 			x: {
 				pixelsPerLabel: 70,
@@ -150,9 +169,9 @@ Graph.prototype.instantiateDygraph = function() {
 			}
 		},
 		clickCallback: handleClick,
-		colors: [this.config.color],//'#5253FF'],
+		colors: [this.config.lineColor],//'#5253FF'],
 		dateWindow: timeWindow,
-		//drawPoints: true,
+		// drawPoints: true,
 		gridLineColor: this.config.gridColor,
 		interactionModel: {
 			'mousedown': handleMouseDown.bind(this),
@@ -163,13 +182,50 @@ Graph.prototype.instantiateDygraph = function() {
 		},
 		labels: this.file.fileData.series[this.series].labels,
 		labelsDiv: this.legendDomElement,
-		plotter: downsamplePlotter.bind(this),
+		plotter: handlePlotting.bind(this),
 		/*series: {
-		  'Min': { plotter: downsamplePlotter },
-		  'Max': { plotter: downsamplePlotter }
+		  'Min': { plotter: handlePlotting },
+		  'Max': { plotter: handlePlotting }
 		},*/
 		//title: this.series,
 		underlayCallback: handleUnderlayRedraw.bind(this),
+		valueRange: yAxisRange
+	});
+
+	this.rightDygraphInstance = new Dygraph(this.rightGraphDomElement, this.file.fileData.series[this.series].data, {
+		axes: {
+			x: {
+				pixelsPerLabel: 70,
+				independentTicks: true
+			},
+			y: {
+				// pixelsPerLabel: 14,
+				pixelsPerLabel: 14,
+				independentTicks: true,
+				drawAxis: false
+			}
+		},
+		//clickCallback: handleClick,
+		colors: [this.config.lineColor],//'#5253FF'],
+		dateWindow: this.file.getOutermostZoomWindow('lead'),
+		// drawPoints: true,
+		gridLineColor: this.config.gridColor,
+		/*interactionModel: {
+			'mousedown': handleMouseDown.bind(this),
+			'mousemove': handleMouseMove.bind(this),
+			'mouseup': handleMouseUp.bind(this),
+			'dblclick': handleDoubleClick.bind(this),
+			'mousewheel': handleMouseWheel.bind(this)
+		},*/
+		labels: this.file.fileData.series[this.series].labels,
+		labelsDiv: this.legendDomElement,
+		plotter: handlePlotting.bind(this),
+		/*series: {
+		  'Min': { plotter: handlePlotting },
+		  'Max': { plotter: handlePlotting }
+		},*/
+		//title: this.series,
+		//underlayCallback: handleUnderlayRedraw.bind(this),
 		valueRange: yAxisRange
 	});
 

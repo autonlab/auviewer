@@ -233,6 +233,134 @@ function handleMouseWheel(event, g, context) {
 
 }
 
+// This function is a plotter that plugs into dygraphs in order to plot a down-
+// sampled data series. Plotting is not documented, so the best reference for
+// plotting with dygraphs is to review http://dygraphs.com/tests/plotters.html
+// and its source code.
+function handlePlotting(e) {
+
+	/*// We only want to run the plotter for the first series.
+	if (e.seriesIndex !== 1) return;
+
+	// We require two series for min & max.
+	if (e.seriesCount != 3) {
+	  throw "The medview plotter expects three y-values per series for downsample min, downsample max, and real value.";
+	}*/
+
+	// This is the official dygraphs way to plot all the series at once, per
+	// source code of dygraphs.com/tests/plotters.html.
+	if (e.seriesIndex !== 0) {
+		return
+	}
+
+	// This is a reference to a proxy for the canvas element of the graph
+	let cnv = e.drawingContext;
+
+	// Holds positioning & dimensions (x, y, w, h) of the plot area, needed for
+	// plotting points.
+	let area = e.plotArea;
+
+	// Line properties
+	cnv.lineWidth = 1;
+
+	// Plot each series, whether it be an individual series or a group of them.
+	//console.log(e.allSeriesPoints);
+	for (let i = 0; i + 2 < e.allSeriesPoints.length; i += 3) {
+		
+		// SERIES LINE - Plot line for the raw data column for the series, which
+		// will be the third column of this series' set of three columns.
+		if (this.config['drawLine'] && e.allSeriesPoints[i+2].length > 2) {
+
+			cnv.strokeStyle = this.config['lineColor'];
+			cnv.fillStyle = this.config['lineColor'];
+
+			cnv.beginPath();
+
+			let j = 0;
+
+			// Get to the first non-NaN point and move there.
+			for (; j < e.allSeriesPoints[i+2].length; j++) {
+				if (!isNaN(e.allSeriesPoints[i+2][j].y)) {
+					cnv.moveTo(e.allSeriesPoints[i+2][j].x * area.w + area.x, e.allSeriesPoints[i+2][j].y * area.h + area.y);
+					break;
+				}
+			}
+
+			// Iterate through rest of points and draw line.
+			for (; j < e.allSeriesPoints[i+2].length; j++) {
+				if (!isNaN(e.allSeriesPoints[i+2][j].y)) {
+					cnv.lineTo(e.allSeriesPoints[i+2][j].x * area.w + area.x, e.allSeriesPoints[i+2][j].y * area.h + area.y);
+				}
+			}
+
+			// Draw the line on the canvas
+			cnv.stroke();
+
+		}
+
+		// SERIES DOTS - Plot dots for the raw data column for the series, which
+		// will be thethird column of this series' set of three columns.
+		if (this.config['drawDots']) {
+
+			cnv.strokeStyle = this.config['dotColor'];
+			cnv.fillStyle = this.config['dotColor'];
+
+			for (let j = 0; j < e.allSeriesPoints[i + 2].length; j++) {
+
+				if (isNaN(e.allSeriesPoints[i + 2][j].y)) {
+					continue;
+				}
+
+				// cnv.fillRect(e.allSeriesPoints[i+2][j].x * area.w + area.x, e.allSeriesPoints[i+2][j].y * area.h + area.y, 2, 2)
+				cnv.beginPath();
+				cnv.arc(e.allSeriesPoints[i + 2][j].x * area.w + area.x, e.allSeriesPoints[i + 2][j].y * area.h + area.y, 1, 0, 2 * Math.PI);
+				cnv.fill();
+
+			}
+
+		}
+
+		// SERIES MIN-MAX - Plot the downsample min & max columns for the series,
+		// which will be the first & second columns of this series' set of three
+		// columns.
+		cnv.strokeStyle = this.config['lineColor'];
+		cnv.fillStyle = this.config['lineColor'];
+		for (let j = 0; j < e.allSeriesPoints[i].length; j++) {
+
+			if (isNaN(e.allSeriesPoints[i][j].y) || isNaN(e.allSeriesPoints[i+1][j].y)) {
+				continue;
+			}
+
+			// There may be intervals wherein min==max, and to handle these, we must use a different drawing method.
+			if (e.allSeriesPoints[i][j].y === e.allSeriesPoints[i+1][j].y) {
+
+				cnv.fillRect(e.allSeriesPoints[i][j].x * area.w + area.x, e.allSeriesPoints[i][j].y * area.h + area.y, 1, 1)
+				/*cnv.beginPath();
+				cnv.arc(e.allSeriesPoints[i][j].x * area.w + area.x, e.allSeriesPoints[i][j].y * area.h + area.y, 2, 0, 2*Math.PI);
+				cnv.fill();*/
+
+			} else {
+
+				// Begin a path (this instantiates a path object but does not draw it
+				cnv.beginPath();
+
+				// Start stroke at the min value
+				cnv.moveTo(e.allSeriesPoints[i][j].x * area.w + area.x, e.allSeriesPoints[i][j].y * area.h + area.y);
+
+				// End stroke at the max value
+				cnv.lineTo(e.allSeriesPoints[i+1][j].x * area.w + area.x, e.allSeriesPoints[i+1][j].y * area.h + area.y);
+
+				// Draw the line on the canvas
+				cnv.stroke();
+
+			}
+
+		}
+
+	}
+
+}
+
 // This is the callback function provided to dygraphs which draws the
 // annotations on the canvas.
 function handleUnderlayRedraw(canvas, area, g) {
@@ -274,37 +402,29 @@ function handleUnderlayRedraw(canvas, area, g) {
 				width = Math.max(1, right - left);
 				height = area.h;
 
-				// Draw the annotation highlight.
+				// Prepare styling for the section highlight.
 				if (file.annotations[i].state === 'anomaly') {
-					if (0){//useRandomAnomalyColors) {
-						if (!seriesAnomalyColors.hasOwnProperty(file.annotations[i].series)) {
-							seriesAnomalyColors[file.annotations[i].series] = randomColor();
-							vo(file.annotations[i].series, seriesAnomalyColors[file.annotations[i].series]);
-						}
-						canvas.fillStyle = seriesAnomalyColors[file.annotations[i].series];
+
+					if (i === file.annotationWorkflowCurrentIndex && file.annotations[i].series != null && !Object.getOwnPropertyNames(g.setIndexByName_).includes(file.annotations[i].series)) {
+						// Current workflow anomaly from another series.
+						canvas.fillStyle = this.config.otherCurrentWorkflowAnomalyColor;
+					} else if (i === file.annotationWorkflowCurrentIndex) {
+						// Current workflow anomaly that belongs to this series.
+						canvas.fillStyle = this.config.ownCurrentWorkflowAnomalyColor;
+					} else if (file.annotations[i].series != null && !Object.getOwnPropertyNames(g.setIndexByName_).includes(file.annotations[i].series)) {
+						// Anomaly from another series.
+						canvas.fillStyle = this.config.otherAnomalyColor;
 					} else {
-						if (i === file.annotationWorkflowCurrentIndex && file.annotations[i].series != null && !Object.getOwnPropertyNames(g.setIndexByName_).includes(file.annotations[i].series)) {
-							//canvas.fillStyle = '#53ff65';
-							canvas.fillStyle = this.config.otherCurrentWorkflowAnomalyColor;
-						} else if (i === file.annotationWorkflowCurrentIndex) {
-							//canvas.fillStyle = '#00bd1d';
-							canvas.fillStyle = this.config.ownCurrentWorkflowAnomalyColor;
-						} else if (file.annotations[i].series != null && !Object.getOwnPropertyNames(g.setIndexByName_).includes(file.annotations[i].series)) {
-							// Use a lighter color to highlight anomalies from
-							// other series.
-							//canvas.fillStyle = '#f5d4ab';
-							canvas.fillStyle = this.config.otherAnomalyColor;
-						} else {
-							// If the anomaly belongs to this series, use a
-							// the darker orange.
-							//canvas.fillStyle = '#f7a438';
-							canvas.fillStyle = this.config.ownAnomalyColor;
-						}
+						// Anomaly that belongs to this series.
+						canvas.fillStyle = this.config.ownAnomalyColor;
 					}
+
 				} else {
-					//canvas.fillStyle = "rgba(0,72,182,0.73)";
+					// Anomaly
 					canvas.fillStyle = this.config.ownAnnotationColor;
 				}
+
+				// Draw the section highlight.
 				canvas.fillRect(x, y, width, height);
 				file.annotations[i].offsetXLeft = x;
 				file.annotations[i].offsetXRight = x + width;

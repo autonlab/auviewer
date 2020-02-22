@@ -4,7 +4,7 @@ import os.path
 # This file holds configuration parameters for the medview application.
 
 # Output verbosity
-verbose = False
+verbose = True
 
 # A root directory from which the web application is served. Should begin with a
 # slash and end without a slask (in other words, end with a directory name). If
@@ -23,10 +23,32 @@ M = 3000
 # is 3K intervals, the second 6K, the third 12K, and so forth.
 stepMultiplier = 2
 
+# AUView root data directory should have following structure:
+#   [root]
+#   - global_templates
+#   - - global_default_interface_templates.json (optional)
+#   - - global_default_project_template.json (optional)
+#   - projects
+#   - - [project_name]
+#   - - - originals
+#   - - - - [original hdf5 files]
+#   - - - processed
+#   - - - - [empty initially, will be used by AUView to store processed files]
+#   - - - templates
+#   - - - - project_template.json (optional)
+#   - - - - interface_templates.json (optional)
+
+# AUView Data Root
 if getlogin() == 'tracir':
-    projectsDir = '/home/tracir/TRACIR/medfiles/'
+    auvDataRoot = '/home/tracir/TRACIR/medfiles/'
 else:
-    projectsDir = '/zfsauton/data/public/gwelter/AUView/'
+    auvDataRoot = '/zfsauton/data/public/gwelter/AUView/'
+
+# File locations
+projectsDir = os.path.join(auvDataRoot, 'projects/')
+globalTemplatesDir = os.path.join(auvDataRoot, 'global_templates/')
+globalDefaultProjectTemplateFile = os.path.join(globalTemplatesDir, 'global_default_project_template.json')
+globalDefaultInterfaceTemplatesFile = os.path.join(globalTemplatesDir, 'global_default_interface_templates.json')
 
 # Flask application configuration
 class FlaskConfigClass(object):

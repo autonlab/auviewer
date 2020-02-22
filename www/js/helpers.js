@@ -257,21 +257,22 @@ function padDataIfNeeded(data) {
 // object has obj['a']['b']['c'] and false otherwise.
 function verifyObjectPropertyChain(obj, props) {
 
-	if (!Array.isArray(props)) {
-		console.log("Error: verifyObjectPropertyChain provided props that are not array:", props);
-		return;
-	}
-	if (typeof obj !== 'object' || obj === null) {
-		console.log("Error: verifyObjectPropertyChain provided obj that is not object:", obj);
-	}
-
-	if (props.length < 1) {
+	if (!Array.isArray(props) || props.length < 1) {
 		return true;
-	} else if (obj.hasOwnProperty(props[0])) {
+	} else if (Array.isArray(obj) && props[0] === '[]') {
+		let ret = true;
+		for (const arrObj of obj) {
+			if (!verifyObjectPropertyChain(arrObj, props.slice(1))) {
+				ret = false;
+			}
+		}
+		return ret;
+	} else if (typeof obj === 'object' && obj !== null && obj.hasOwnProperty(props[0])) {
 		return verifyObjectPropertyChain(obj[props[0]], props.slice(1));
 	} else {
 		return false;
 	}
+
 }
 
 // Prints a message to console if verbose output is enabled

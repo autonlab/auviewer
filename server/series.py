@@ -6,6 +6,7 @@ from downsampleset import DownsampleSet
 from cylib import generateThresholdAlerts
 import time
 import psutil
+from threading import Lock
 
 # Represents a single time series of data.
 class Series:
@@ -40,6 +41,10 @@ class Series:
 
             # Holds the downsample set
             self.dss = DownsampleSet(self)
+            
+        elif self.fileparent.mode() == 'realtime':
+            
+            self.dequeLock = Lock()
 
     # Add data to the series. The data is assumed to occur after any existing
     # data. The data parameter should be a dict of lists as follows:
@@ -59,8 +64,9 @@ class Series:
         # join lists.
         # self.rawTimes = self.rawTimes + data['times']
         # self.rawValues = self.rawValues + data['values']
-        self.rawTimes.extend(data['times'])
-        self.rawValues.extend(data['values'])
+        with self.dequeLock:
+            self.rawTimes.extend(data['times'])
+            self.rawValues.extend(data['values'])
 
         return
         
@@ -84,8 +90,9 @@ class Series:
     
         if self.fileparent.mode() == 'realtime':
 
-            nones = [None] * len(self.rawTimes)
-            data = [list(i) for i in zip(self.rawTimes, nones, nones, self.rawValues)]
+            with self.dequeLock:
+                nones = [None] * len(self.rawTimes)
+                data = [list(i) for i in zip(self.rawTimes, nones, nones, self.rawValues)]
             output_type = 'real'
 
         elif self.fileparent.mode() == 'file':

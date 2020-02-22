@@ -10,7 +10,7 @@ function GlobalStateManager() {
 	this.currentFile = null;
 
 	// Length of time to display for realtime graphs, in seconds
-	this.realtimeTimeWindow = 60;
+	this.realtimeTimeWindow = 600;
 
 }
 
@@ -97,7 +97,11 @@ GlobalStateManager.prototype.newMainProject = function() {
 	requestHandler.requestInitialProjectPayload(this.currentProject.name, function(data) {
 
 		// Provide the projects template assets to TemplateSystem
-		templateSystem.provideProjectTemplates(data['name'], data['project_template'], data['interface_templates']);
+		console.log(data['project_template'], data['interface_templates'])
+		templateSystem.provideProjectTemplates(data['name'],
+			(data.hasOwnProperty('project_template') && data['project_template'] ? JSON.parse(data['project_template']) : {}) || {},
+			(data.hasOwnProperty('interface_templates') && data['interface_templates'] ? JSON.parse(data['interface_templates']) : {}) || {}
+		);
 
 		let fileSelect = document.getElementById('file_selection');
 

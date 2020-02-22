@@ -19,7 +19,7 @@ import os
 # Chrome JS engine will throw an error when trying to parse them. Simplejson
 # package, with ignore_nan=True, will implicitly convert NaN values into null
 # values. Find "ignore_nan" here: https://simplejson.readthedocs.io/en/latest/
-import simplejson as json
+import simplejson
 
 def create_app():
     
@@ -218,7 +218,7 @@ def create_app():
         except:
     
             print("Project could not be retrieved:", projname)
-            return json.dumps({
+            return simplejson.dumps({
                 'success': False
             })
 
@@ -228,12 +228,12 @@ def create_app():
         # If we did not find the file, return empty output
         if not isinstance(file, File):
             print("File could not be retrieved:", filename)
-            return json.dumps({
+            return simplejson.dumps({
                 'success': False
             })
 
         # Write the annotation
-        return json.dumps({
+        return simplejson.dumps({
             'success': True,
             'id': file.annotationSet.createAnnotation(xBoundLeft, xBoundRight, yBoundTop, yBoundBottom, seriesID, label)
         })
@@ -256,7 +256,7 @@ def create_app():
         except:
     
             print("Project could not be retrieved:", projname)
-            return json.dumps({
+            return simplejson.dumps({
                 'success': False
             })
 
@@ -266,12 +266,12 @@ def create_app():
         # If we did not find the file, return empty output
         if not isinstance(file, File):
             print("File could not be retrieved:", filename)
-            return json.dumps({
+            return simplejson.dumps({
                 'success': False
             })
         
         # Delete the annotation
-        return json.dumps({
+        return simplejson.dumps({
             'success': file.annotationSet.deleteAnnotation(id)
         })
 
@@ -300,7 +300,7 @@ def create_app():
         except:
 
             print("Project could not be retrieved:", projname)
-            return json.dumps([])
+            return simplejson.dumps([])
     
         # Get the file
         file = project.getFile(filename)
@@ -310,7 +310,7 @@ def create_app():
             print("File could not be retrieved:", filename)
             return ''
     
-        return json.dumps(file.detectAnomalies(series, thresholdlow, thresholdhigh, duration, persistence, maxgap), ignore_nan=True)
+        return simplejson.dumps(file.detectAnomalies(series, thresholdlow, thresholdhigh, duration, persistence, maxgap), ignore_nan=True)
 
     @app.route(config.rootWebPath + '/initial_project_payload')
     @login_required
@@ -328,10 +328,10 @@ def create_app():
         except:
     
             print("Project could not be retrieved:", projname)
-            return json.dumps([])
+            return simplejson.dumps([])
 
         output = project.getInitialPayloadOutput()
-        json_output = json.dumps(output)
+        json_output = simplejson.dumps(output)
 
         return json_output
 
@@ -339,7 +339,7 @@ def create_app():
     @login_required
     def get_projects():
 
-        return json.dumps(list(projects.keys()))
+        return simplejson.dumps(list(projects.keys()))
     
     @app.route(config.rootWebPath+'/')
     @app.route(config.rootWebPath+'/index.html')
@@ -370,7 +370,7 @@ def create_app():
                     project = projects[projname]
                 except:
                     print("Project could not be retrieved:", projname)
-                    return json.dumps({})
+                    return simplejson.dumps({})
 
                 # Get the file
                 file = project.getFile(filename)
@@ -382,7 +382,7 @@ def create_app():
             # Return the full (zoomed-out but downsampled if appropriate) datasets for
             # all data series.
             output = file.getInitialPayloadOutput()
-            json_output = json.dumps(output, ignore_nan=True)
+            json_output = simplejson.dumps(output, ignore_nan=True)
             
             return json_output
     
@@ -413,7 +413,7 @@ def create_app():
             except:
     
                 print("Project could not be retrieved:", projname)
-                return json.dumps({})
+                return simplejson.dumps({})
 
             # Get the file
             file = project.getFile(filename)
@@ -423,7 +423,7 @@ def create_app():
                 return ''
 
             output = file.getSeriesRangedOutput(series, start, stop)
-            json_output = json.dumps(output, ignore_nan=True)
+            json_output = simplejson.dumps(output, ignore_nan=True)
 
             return json_output
 
@@ -451,7 +451,7 @@ def create_app():
         except:
     
             print("Project could not be retrieved:", projname)
-            return json.dumps({
+            return simplejson.dumps({
                 'success': False
             })
 
@@ -461,12 +461,12 @@ def create_app():
         # If we did not find the file, return empty output
         if not isinstance(file, File):
             print("File could not be retrieved:", filename)
-            return json.dumps({
+            return simplejson.dumps({
                 'success': False
             })
 
         # Write the annotation
-        return json.dumps({
+        return simplejson.dumps({
             'success': file.annotationSet.updateAnnotation(id, xBoundLeft, xBoundRight, yBoundTop, yBoundBottom, seriesID, label)
         })
 
@@ -488,6 +488,61 @@ def create_app():
 
             # TODO(gus): Report an error to user in a websocket response
             raise e
+
+    @socketio.on('initial_payload')
+    def initial_payload():
+
+        builtin_default_project_template = {}
+        builtin_default_interface_templates = {}
+        global_default_project_template = {}
+        global_default_interface_templates = {}
+
+        try:
+            with open('../www/js/builtin_templates/builtin_default_project_template.json', 'r') as f:
+                builtin_default_project_template = f.read()
+        except:
+            pass
+        try:
+            with open('../www/js/builtin_templates/builtin_default_interface_templates.json', 'r') as f:
+                builtin_default_interface_templates = f.read()
+        except:
+            pass
+        try:
+            with open(config.globalDefaultProjectTemplateFile, 'r') as f:
+                global_default_project_template = f.read()
+        except:
+            pass
+        try:
+            with open(config.globalDefaultInterfaceTemplatesFile, 'r') as f:
+                global_default_interface_templates = f.read()
+        except:
+            pass
+
+        response = {
+            'builtin_default_project_template': builtin_default_project_template,
+            'builtin_default_interface_templates': builtin_default_interface_templates,
+            'global_default_project_template': global_default_project_template,
+            'global_default_interface_templates': global_default_interface_templates
+        }
+
+        socketio.emit('initial_payload', response)
+        
+    @socketio.on('push_template')
+    def handle_push_template(json):
+        
+        if config.verbose:
+            print('received socketio: push_template')
+            print('msg data:', json)
+            
+        # Verify we have the template in the dict
+        if 'template' not in json:
+            print('Error: handle_push_template did not receive template (data.template not found):', json)
+
+        # JSONify the template if not already
+        if not isinstance(json['template'], str):
+            json['template'] = simplejson.dumps(json['template'])
+            
+        socketio.emit('push_template', json, broadcast=True)
 
     @socketio.on('subscribe')
     def handle_subscribe(json):
