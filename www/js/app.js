@@ -7,7 +7,7 @@ let templateSystem = new TemplateSystem();
 // Setup the websocket connection
 let socket = io();
 socket.on('connect', function() {
-    console.log('Connected to realtime connection.');
+	console.log('Connected to realtime connection.');
 
 	// Request initial payload (builtin & global templates)
 	socket.emit('initial_payload');

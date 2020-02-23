@@ -492,10 +492,10 @@ def create_app():
     @socketio.on('initial_payload')
     def initial_payload():
 
-        builtin_default_project_template = {}
-        builtin_default_interface_templates = {}
-        global_default_project_template = {}
-        global_default_interface_templates = {}
+        builtin_default_project_template = json.dumps({})
+        builtin_default_interface_templates = json.dumps({})
+        global_default_project_template = json.dumps({})
+        global_default_interface_templates = json.dumps({})
 
         try:
             with open('../www/js/builtin_templates/builtin_default_project_template.json', 'r') as f:
