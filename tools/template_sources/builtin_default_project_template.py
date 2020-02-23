@@ -127,14 +127,16 @@ template = {
 		'numerics/SpO₂T.SpO₂T/data',
 		'numerics/SPO2-%/data',
 		'CVP/data',
-		'ArtWave/data'
+		'ArtWave/data',
+		"Group:\nSignal 3\nSignal 4\nSignal 5"
 	],
 
 	'groups': [
 		['numerics/AR1-D/data', 'numerics/AR1-S/data', 'numerics/AR1-M/data'],
 		['numerics/ART.Diastolic/data', 'numerics/ART.Systolic/data', 'numerics/ART.Mean/data'],
 		['numerics/NBP.NBPd/data', 'numerics/NBP.NBPm/data', 'numerics/NBP.NBPs/data'],
-		['numerics/NBP-D/data', 'numerics/NBP-M/data', 'numerics/NBP-S/data']
+		['numerics/NBP-D/data', 'numerics/NBP-M/data', 'numerics/NBP-S/data'],
+		['Signal 3', 'Signal 4', 'Signal 5']
 	],
 
 	# The TemplateSystem only expects the default project template to have a

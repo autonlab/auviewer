@@ -60,7 +60,7 @@ Graph.prototype.build = function() {
 		'<table>' +
 			'<tbody>' +
 				'<tr>' +
-					'<td class="graph_title">'+this.series+'</td>' +
+					'<td class="graph_title">'+this.series.replace(/(?:\r\n|\r|\n)/g, '<br>')+'</td>' +
 					'<td rowspan="2">' +
 						'<div class="graph">' +
 							'<table style="width:100%;height:100%;"><tbody><tr>' +
@@ -104,7 +104,7 @@ Graph.prototype.build = function() {
 
 	// Instantiate the dygraph if it is configured to appear by default, or if
 	// we're in realtime mode.
-	if (this.file.mode() === 'realtime' || this.file.config.defaultSeries.includes(this.series)) {
+	if (this.file.config.defaultSeries.includes(this.series)) {
 		let t0 = performance.now();
 		this.instantiateDygraph();
 		console.log("instantiate: " + Math.round(performance.now()-t0) + "ms");

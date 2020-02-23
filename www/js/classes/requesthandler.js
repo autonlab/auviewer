@@ -103,14 +103,14 @@ RequestHandler.prototype._newRequest = function(callback, path, params) {
 				data = JSON.parse(this.responseText);
 			}
 
-			vo("Response received to " + path, data);
+			globalAppConfig.verbose && console.log("Response received to " + path, data);
 
 			// Call the callback with data
 			if (typeof callback === 'function') {
 				let t0 = performance.now();
 				callback(data);
 				let tt = performance.now() - t0;
-				if (globalAppConfig.verbose || tt > globalAppConfig.performanceReportingThresholdMS) { console.log("Request callback took " + Math.round(tt) + "ms:", path, params); }
+				globalAppConfig.verbose && tt > globalAppConfig.performanceReportingThresholdMS && console.log("Request callback took " + Math.round(tt) + "ms:", path, params);
 			} else {
 				console.log("Important: Callback not provided to request handler.");
 			}

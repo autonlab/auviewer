@@ -44,7 +44,8 @@ GlobalStateManager.prototype.enterRealtimeMode = function() {
 	// Add the realtime class name to body
 	document.getElementsByTagName('body')[0].className = 'realtime';
 
-	// Reset & unload current main project
+	// Load the realtime main project
+	//this.newMainProject('__realtime__');
 	this.resetMainProject();
 
 	// Load the realtime file in the viewer
@@ -84,14 +85,17 @@ GlobalStateManager.prototype.newMainFile = function(project='', filename='') {
 };
 
 // Switches to a newly selected project in the main viewer.
-GlobalStateManager.prototype.newMainProject = function() {
+GlobalStateManager.prototype.newMainProject = function(project_name='') {
 
 	// Clear main project from the viewer
 	this.clearMainProject();
 
-	// Load newly selected project
+	// Pull project name from input field if not provided as parameter
 	let projectselect = document.getElementById('project_selection');
-	this.currentProject = new Project(projectselect.options[projectselect.selectedIndex].value);
+	project_name = project_name || projectselect.options[projectselect.selectedIndex].value;
+
+	// Load new project
+	this.currentProject = new Project(project_name);
 
 	// Request the list of files for the project
 	requestHandler.requestInitialProjectPayload(this.currentProject.name, function(data) {

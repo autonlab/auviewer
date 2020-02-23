@@ -68,7 +68,7 @@ Annotation.prototype.delete = function () {
 		// Send deletion request to the backend.
 		requestHandler.deleteAnnotation(this.id, globalStateManager.currentFile.projname, globalStateManager.currentFile.filename, function (data) {
 
-			vo('Delete response received from backend.', deepCopy(data));
+			globalAppConfig.verbose && console.log('Delete response received from backend.', deepCopy(data));
 
 			if (data.hasOwnProperty('success') && data['success'] === true) {
 
@@ -255,7 +255,7 @@ Annotation.prototype.save = function () {
 
 			if (data.hasOwnProperty('success') && data.success === true) {
 
-				vo("Annotation has been written.");
+				globalAppConfig.verbose && console.log("Annotation has been written.");
 
 				// Set ID received from backend
 				annotation.id = data.id;
@@ -265,7 +265,7 @@ Annotation.prototype.save = function () {
 
 			} else {
 
-				vo("Annotation creation failed.");
+				globalAppConfig.verbose && console.log("Annotation creation failed.");
 
 				// If this was a new annotation, delete the local copy.
 				// Otherwise (if it was a detected anomaly), leave it be.
@@ -286,11 +286,11 @@ Annotation.prototype.save = function () {
 
 			if (data.hasOwnProperty('success') && data.success === true) {
 
-				vo("Annotation has been updated.");
+				globalAppConfig.verbose && console.log("Annotation has been updated.");
 
 			} else {
 
-				 vo("Annotation updated failed.");
+				 globalAppConfig.verbose && console.log("Annotation updated failed.");
 				 this.deleteLocal();
 
 			}

@@ -72,38 +72,38 @@ function File(project, filename) {
 			padDataIfNeeded(file.fileData.series[s].data);
 		}
 
+		// Create any defined group series which has at least one member series
+		// presently available.
+		//
 		// For each project-defined group, create a new, collated data set.
 		// NOTE: If you're trying to understand this code in the future, I'm
 		// sorry. I could not document this in any way that would help make it
 		// more understandable, and it is a bit of a labyrinth.
-		groupLoop:
-			for (let group of file.config.groups) {
+		for (let group of file.config.groups) {
 
-				// Check whether all series members of the group are present, and if
-				// not, then skip this group.
-				for (let s of group) {
-					if (!file.fileData.series.hasOwnProperty(s)) {
-						continue groupLoop;
-					}
+			// // Check whether all series members of the group are present, and if
+			// // not, then skip this group.
+			// for (let s of group) {
+			// 	if (!this.fileData.series.hasOwnProperty(s)) {
+			// 		continue groupLoop;
+			// 	}
+			// }
+
+			// Verify at least one series member of the group is present.
+			let atLeastOneSeriesPresent = false;
+			for (let s of group) {
+				if (file.fileData['series'].hasOwnProperty(s)) {
+					atLeastOneSeriesPresent = true;
+					break;
 				}
-
-				// Enumerate the column labels
-				const labels = ['time'];
-				for (let s of group) {
-					labels.push(s + ' Min');
-					labels.push(s + ' Max');
-					labels.push(s);
-				}
-
-				// Add the combined series to the file data.
-				file.fileData.series["Group:\n" + group.join("\n")] = {
-					id: "Group:\n" + group.join("\n"),
-					labels: labels,
-					group: group,
-					data: createMergedTimeSeries(group, file.fileData.series)
-				};
-
 			}
+			if (atLeastOneSeriesPresent === false) {
+				continue;
+			}
+
+			file.createGroupSeries(group, createMergedTimeSeries(group, file.fileData.series));
+
+		}
 
 		window.requestAnimationFrame(
 
@@ -146,7 +146,7 @@ function File(project, filename) {
 				}
 
 				let tt = performance.now() - t0;
-				if (globalAppConfig.verbose || tt > globalAppConfig.performanceReportingThresholdMS) { console.log("Initial file graph building took " + Math.round(tt) + "ms.", this.projname, this.filename); }
+				globalAppConfig.verbose && tt > globalAppConfig.performanceReportingThresholdMS && console.log("Initial file graph building took " + Math.round(tt) + "ms.", this.projname, this.filename);
 
 			}).bind(file)
 
@@ -313,6 +313,29 @@ File.prototype.clearAnomalies = function() {
 
 };
 
+// Creates a group series in the class's attached file data with a mesh of the
+// member series data.
+File.prototype.createGroupSeries = function(group, mergedGroupData) {
+
+	// Enumerate the column labels
+	let labels = ['time'];
+	for (let s of group) {
+		labels.push(s + ' Min');
+		labels.push(s + ' Max');
+		labels.push(s);
+	}
+
+	// Add the new combined series to the file data if it does not
+	// already exist.
+	this.fileData.series[getGroupName(group)] = {
+		id: "Group:\n" + group.join("\n"),
+		labels: labels,
+		group: group,
+		data: mergedGroupData
+	};
+
+};
+
 File.prototype.destroy = function() {
 
 	// Destroy graph synchronization state management
@@ -340,7 +363,7 @@ File.prototype.destroy = function() {
 // error.
 File.prototype.detectAnomalies = function(series, thresholdlow, thresholdhigh, duration, persistence, maxgap, callback=null) {
 
-	vo("Anomaly detection called.");
+	globalAppConfig.verbose && console.log("Anomaly detection called.");
 
 	// In case any of our numerical parameters are numerical 0, convert them to
 	// strings now so we can effectively do parameter checking.
@@ -434,7 +457,7 @@ File.prototype.detectAnomalies = function(series, thresholdlow, thresholdhigh, d
 
 	});
 
-    vo("Anomaly detection request sent.");
+    globalAppConfig.verbose && console.log("Anomaly detection request sent.");
 
 };
 
@@ -527,7 +550,7 @@ File.prototype.getPostloadDataUpdateHandler = function() {
 						// backend response. If not, continue on to the next graph.
 						for (let s of file.graphs[g].group) {
 							if (!data.series.hasOwnProperty(s)) {
-								vo("Did not receive data for series " + s + ". Skipping group " + g + ".");
+								globalAppConfig.verbose && console.log("Did not receive data for series " + s + ". Skipping group " + g + ".");
 								continue graphLoop;
 							}
 						}
@@ -663,7 +686,7 @@ File.prototype.prepareData = function(data, baseTime) {
 	}
 
 	let tt = performance.now() - t0;
-	if (globalAppConfig.verbose || tt > globalAppConfig.performanceReportingThresholdMS) { console.log("File.prepareData() took " + Math.round(tt) + "ms."); }
+	globalAppConfig.verbose && tt > globalAppConfig.performanceReportingThresholdMS && console.log("File.prepareData() took " + Math.round(tt) + "ms.");
 
 	return data;
 
@@ -710,7 +733,7 @@ File.prototype.processNewRealtimeData = function(newData) {
 	// If we're not in continuous render mode, put us into continuous render
 	// mode and call the renderer.
 	if (this.continuousRender === false) {
-		vo('Initiating continuous render mode.');
+		globalAppConfig.verbose && console.log('Initiating continuous render mode.');
 		this.continuousRender = true;
 		this.renderBufferedRealtimeData();
 	}
@@ -728,12 +751,12 @@ File.prototype.renderBufferedRealtimeData = function() {
 			// If the new data buffer is empty, take us out of continuous render
 			// mode and return.
 			if (this.newDataBuffer === null) {
-				vo('No data in realtime buffer. Aborting continuous render mode.');
+				globalAppConfig.verbose && console.log('No data in realtime buffer. Aborting continuous render mode.');
 				this.continuousRender = false;
 				return;
 			}
 
-			vo('Re-rendering realtime data.');
+			globalAppConfig.verbose && console.log('Re-rendering realtime data.');
 
 			// Grab the current buffer for local use, and then clear
 			const buffer = this.newDataBuffer;
@@ -755,7 +778,7 @@ File.prototype.renderBufferedRealtimeData = function() {
 				// If there is a pre-existing equivalent series
 				if (this.fileData['series'].hasOwnProperty(s)) {
 
-					// Set the series data to the buffered dataset
+					// Add the buffered data to the series data
 					this.fileData['series'][s]['data'] = this.fileData['series'][s]['data'].concat(buffer['series'][s]['data']);
 
 					// Trim the data if we've surpassed globalAppConfig.M data points
@@ -763,17 +786,25 @@ File.prototype.renderBufferedRealtimeData = function() {
 						this.fileData['series'][s]['data'].splice(0, this.fileData['series'][s]['data'].length - globalAppConfig.M)
 					}
 
-					// Re-plot the graph with the new data
-					this.getGraphForSeries(s).dygraphInstance.updateOptions({
-						file: this.fileData['series'][s]['data'],
-						dateWindow: dt
-					});
+					// Grab the graph class instance
+					let g = this.getGraphForSeries(s);
 
-					// Also re-plot the leading graph display with the new data
-					this.getGraphForSeries(s).rightDygraphInstance.updateOptions({
-						file: this.fileData['series'][s]['data'],
-						dateWindow: ldt
-					});
+					// If the graph for this series is showing, redraw with new data.
+					if (g.isShowing()) {
+
+						// Re-plot the graph with the new data
+						g.dygraphInstance.updateOptions({
+							file: this.fileData['series'][s]['data'],
+							dateWindow: dt
+						});
+
+						// Also re-plot the leading graph display with the new data
+						g.rightDygraphInstance.updateOptions({
+							file: this.fileData['series'][s]['data'],
+							dateWindow: ldt
+						});
+
+					}
 
 				} else {
 
@@ -787,18 +818,86 @@ File.prototype.renderBufferedRealtimeData = function() {
 
 			}
 
+			// Iterate through group series
+			for (let group of this.config.groups) {
+
+				// If this group has no new data in the realtime buffer, skip it.
+				let atLeastOneSeriesPresent = false;
+				for (let s of group) {
+					if (buffer['series'].hasOwnProperty(s)) {
+						atLeastOneSeriesPresent = true;
+						break;
+					}
+				}
+				if (atLeastOneSeriesPresent === false) {
+					// Skip this group
+					continue;
+				}
+
+				// Having reached this point, we know this group has new
+				// buffered realtime data available.
+
+				// Grab the group name
+				const groupName = getGroupName(group);
+
+				// If the group already exists, update it with the new data.
+				if (this.fileData['series'].hasOwnProperty(groupName)) {
+
+					// Add the buffered data to the series data
+					this.fileData['series'][groupName]['data'] = this.fileData['series'][groupName]['data'].concat(createMergedTimeSeries(group, buffer['series']))
+
+					// Trim the data if we've surpassed globalAppConfig.M data points
+					if (this.fileData['series'][groupName]['data'].length > globalAppConfig.M) {
+						this.fileData['series'][groupName]['data'].splice(0, this.fileData['series'][groupName]['data'].length - globalAppConfig.M)
+					}
+
+					// Grab the graph class instance
+					let g = this.getGraphForSeries(groupName);
+
+					// If the graph for this series is showing, redraw with new data.
+					if (g.isShowing()) {
+
+						// Re-plot the graph with the new data
+						g.dygraphInstance.updateOptions({
+							file: this.fileData['series'][groupName]['data'],
+							dateWindow: dt
+						});
+
+						// Also re-plot the leading graph display with the new data
+						g.rightDygraphInstance.updateOptions({
+							file: this.fileData['series'][groupName]['data'],
+							dateWindow: ldt
+						});
+
+					}
+
+				}
+
+				// If the group does not exist yet, create it.
+				else {
+
+					// Create the new group (which also attaches the new data).
+					this.createGroupSeries(group, createMergedTimeSeries(group, buffer['series']));
+
+					// Instantiate the new group graph
+					this.graphs[groupName] = new Graph(groupName, this);
+
+				}
+
+			}
+
 			// Synchronize the graphs
 			this.synchronizeGraphs();
 
 			let tt = performance.now() - t0;
-			if (globalAppConfig.verbose || tt > globalAppConfig.performanceReportingThresholdMS) console.log("Re-rendering realtime data took " + Math.round(tt) + "ms.");
+			globalAppConfig.verbose && tt > globalAppConfig.performanceReportingThresholdMS && console.log("Re-rendering realtime data took " + Math.round(tt) + "ms.");
+
+			// Call recursively.
+			setTimeout(this.renderBufferedRealtimeData.bind(this),  100);
 
 		}).bind(this)
 
 	);
-
-	// Call recursively.
-	setTimeout(this.renderBufferedRealtimeData.bind(this),  100);
 
 };
 
@@ -994,7 +1093,7 @@ File.prototype.synchronizeGraphs = function() {
 	}
 
 	// Synchronize all of the graphs.
-	vo("Synchronizing graphs.");
+	globalAppConfig.verbose && console.log("Synchronizing graphs.");
 	this.sync = Dygraph.synchronize(dygraphInstances, {
 		range: false,
 		selection: true,
@@ -1076,7 +1175,7 @@ File.prototype.unsynchronizeGraphs = function() {
 
 	if (this.sync != null) {
 
-		if (globalAppConfig.verbose) { console.log("Unsynchronizing graphs."); }
+		globalAppConfig.verbose && console.log("Unsynchronizing graphs.");
 		this.sync.detach();
 		this.sync = null;
 

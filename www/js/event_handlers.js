@@ -365,7 +365,7 @@ function handlePlotting(e) {
 // annotations on the canvas.
 function handleUnderlayRedraw(canvas, area, g) {
 
-	//vo("handleUnderlayRedraw()");
+	//globalAppConfig.verbose && console.log("handleUnderlayRedraw()");
 
 	let file = globalStateManager.currentFile;
 

@@ -14,7 +14,7 @@ socket.on('connect', function() {
 });
 
 socket.on('initial_payload', function(data) {
-	vo('SocketIO initial_payload received.');
+	globalAppConfig.verbose && console.log('SocketIO initial_payload received.');
 	templateSystem.provideBuiltinTemplates(
 		(data.hasOwnProperty('builtin_default_project_template') && data['builtin_default_project_template'] ? JSON.parse(data['builtin_default_project_template']) : {}) || {},
 		(data.hasOwnProperty('builtin_default_interface_templates') && data['builtin_default_interface_templates'] ? JSON.parse(data['builtin_default_interface_templates']) : {}) || {},
@@ -28,7 +28,7 @@ socket.on('initial_payload', function(data) {
 socket.on('new_data', function(data) {
 
 	// Log the received data
-	vo('rcvd socketio new_data:', deepCopy(data));
+	globalAppConfig.verbose && console.log('rcvd socketio new_data:', deepCopy(data));
 
 	// Grab the current file
 	let currentFile = globalStateManager.currentFile;
@@ -47,7 +47,7 @@ socket.on('new_data', function(data) {
 socket.on('push_template', function(data) {
 
 	// Log the received data
-	vo('rcvd socketio push_template:', deepCopy(data));
+	globalAppConfig.verbose && console.log('rcvd socketio push_template:', deepCopy(data));
 
 	// Check for expected data format
 

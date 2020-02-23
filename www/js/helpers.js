@@ -13,10 +13,18 @@ function convertFirstColumnToDate(data, baseTime) {
 // pulling data from data.
 function createMergedTimeSeries(groupSeries, data) {
 
-	// Verify that all series members of the group are present.
+	// // Verify that all series members of the group are present.
+	// for (let s of groupSeries) {
+	// 	if (!data.hasOwnProperty(s)) {
+	// 		return
+	// 	}
+	// }
+
+	// For any member series that is not present, create an empty array
+	// representing its data.
 	for (let s of groupSeries) {
 		if (!data.hasOwnProperty(s)) {
-			return
+			data[s] = [];
 		}
 	}
 
@@ -162,6 +170,11 @@ function deepCopy(o) {
 	return JSON.parse(JSON.stringify(o));
 }
 
+// Get group name string representing a merged series of graphs.
+function getGroupName(group) {
+	return "Group:\n" + group.join("\n");
+}
+
 // Returns a 2-member array with date & time strings that can be provided to an
 // HTML5 input form field of type date & time respectively. Format will be
 // ['2020-12-15', '01:27:36'].
@@ -273,13 +286,6 @@ function verifyObjectPropertyChain(obj, props) {
 		return false;
 	}
 
-}
-
-// Prints a message to console if verbose output is enabled
-function vo() {
-	if (globalAppConfig.verbose) {
-		console.log.apply(null, arguments)
-	}
 }
 
 // Adjusts x inward by zoomInPercentage%

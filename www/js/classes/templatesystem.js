@@ -66,7 +66,7 @@ TemplateSystem.prototype.generateProjectTemplate = function(projectName) {
 	}
 	this.cached_templates[projectName]['project_template'] = project_template;
 
-	vo("TemplateSystem.generateProjectTemplate() returning", project_template);
+	globalAppConfig.verbose && console.log("TemplateSystem.generateProjectTemplate() returning", project_template);
 
 	return project_template;
 
@@ -122,7 +122,7 @@ TemplateSystem.prototype.generateSeriesTemplate = function(projectName, seriesNa
 	}
 	this.cached_templates[projectName]['series'][seriesName] = series_template;
 
-	vo("TemplateSystem.getSeriesTemplate("+seriesName+") returning", deepCopy(series_template));
+	globalAppConfig.verbose && console.log("TemplateSystem.getSeriesTemplate("+seriesName+") returning", deepCopy(series_template));
 
 	return series_template;
 
@@ -143,7 +143,7 @@ TemplateSystem.prototype.provideBuiltinTemplates = function(builtin_default_proj
 	this.builtin_default_project_template = builtin_default_project_template || {};
 	this.builtin_default_series_template = (verifyObjectPropertyChain(builtin_default_project_template, ['series', 'default']) ? builtin_default_project_template['series']['default'] : {}) || {};
 	this.builtin_default_interface_templates = builtin_default_interface_templates || {};
-	vo('TemplateSystem.provideBuiltinTemplates set builtin default project, series, and interface templates:', this.builtin_default_project_template, this.builtin_default_series_template, this.builtin_default_interface_templates);
+	globalAppConfig.verbose && console.log('TemplateSystem.provideBuiltinTemplates set builtin default project, series, and interface templates:', this.builtin_default_project_template, this.builtin_default_series_template, this.builtin_default_interface_templates);
 };
 
 // Provide global templates.
@@ -151,7 +151,7 @@ TemplateSystem.prototype.provideGlobalTemplates = function(global_default_projec
 	this.global_default_project_template = global_default_project_template || {};
 	this.global_default_series_template = (verifyObjectPropertyChain(global_default_project_template, ['series', 'default']) ? global_default_project_template['series']['default'] : {}) || {};
 	this.global_default_interface_templates = global_default_interface_templates || {};
-	vo('TemplateSystem.provideGlobalTemplates set global default project, series, and interface templates:', this.global_default_project_template, this.global_default_series_template, this.global_default_interface_templates);
+	globalAppConfig.verbose && console.log('TemplateSystem.provideGlobalTemplates set global default project, series, and interface templates:', this.global_default_project_template, this.global_default_series_template, this.global_default_interface_templates);
 };
 
 // Provide a project's template and interface templates to TemplateSystem in the
@@ -175,7 +175,7 @@ TemplateSystem.prototype.provideProjectTemplates = function(name, project_templa
 TemplateSystem.prototype.providePushTemplate = function(template, project='', intfc='') {
 
 	// Log the request
-	vo('TemplateSystem.providePushTemplate received project:', project, 'intfc:', intfc, 'template:', deepCopy(template));
+	globalAppConfig.verbose && console.log('TemplateSystem.providePushTemplate received project:', project, 'intfc:', intfc, 'template:', deepCopy(template));
 
 	// TODO(gus): Add template structure check
 
@@ -210,6 +210,6 @@ TemplateSystem.prototype.providePushTemplate = function(template, project='', in
 	}
 
 	// Log the new dynamic templates.
-	vo('After push template add:', deepCopy(this.dynamic));
+	globalAppConfig.verbose && console.log('After push template add:', deepCopy(this.dynamic));
 
 };

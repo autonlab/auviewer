@@ -205,7 +205,7 @@ while True:
             n = n + 1
         
             time.sleep(interval)
-            #input("Press enter for next...")
+            # input("Press enter for next...")
             
     elif choice == 'q':
         quit()
