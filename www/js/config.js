@@ -3,7 +3,7 @@
 let globalAppConfig = {
 
 	// Enable verbose debug output
-	verbose: true,
+	verbose: false,
 
 	// Maximum data points to hold per data series for realtime mode
 	M: 3000,

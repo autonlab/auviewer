@@ -148,40 +148,40 @@ function File(project, filename) {
 				let tt = performance.now() - t0;
 				globalAppConfig.verbose && tt > globalAppConfig.performanceReportingThresholdMS && console.log("Initial file graph building took " + Math.round(tt) + "ms.", this.projname, this.filename);
 
+				// Populate the alert generation dropdown
+				let alertGenSeriesDropdown = document.getElementById('alert_gen_series_field');
+				for (let i = 0; i < alertGenSeriesDropdown.length; i++) {
+					alertGenSeriesDropdown.remove(i);
+				}
+				let opt = document.createElement('option');
+				alertGenSeriesDropdown.add(opt);
+				for (let s of Object.keys(this.fileData.series)) {
+					let opt = document.createElement('option');
+					opt.text = s;
+					opt.value = s;
+					alertGenSeriesDropdown.add(opt);
+				}
+
+				// Process pre-defined anomaly detection for all currently-displaying
+				// series. We gather all displaying series before starting to send the
+				// anomaly detection requests because we don't want to conflict with a
+				// the on-display anomaly detection that will happen when a user toggles
+				// a hidden series to display.
+				let seriesInitiallyDisplaying = [];
+				for (let s of Object.keys(this.graphs)) {
+					if (this.graphs[s].isShowing()) {
+						if (this.graphs[s].isGroup) {
+							seriesInitiallyDisplaying.push.apply(this.graphs[s].group);
+						} else {
+							seriesInitiallyDisplaying.push(this.graphs[s].series);
+						}
+					}
+				}
+				this.runAnomalyDetectionJobsForSeries(seriesInitiallyDisplaying);
+
 			}).bind(file)
 
 		);
-
-		// Populate the alert generation dropdown
-		let alertGenSeriesDropdown = document.getElementById('alert_gen_series_field');
-		for (let i = 0; i < alertGenSeriesDropdown.length; i++) {
-			alertGenSeriesDropdown.remove(i);
-		}
-		let opt = document.createElement('option');
-		alertGenSeriesDropdown.add(opt);
-		for (let s of Object.keys(file.fileData.series)) {
-			let opt = document.createElement('option');
-			opt.text = s;
-			opt.value = s;
-			alertGenSeriesDropdown.add(opt);
-		}
-
-		// Process pre-defined anomaly detection for all currently-displaying
-		// series. We gather all displaying series before starting to send the
-		// anomaly detection requests because we don't want to conflict with a
-		// the on-display anomaly detection that will happen when a user toggles
-		// a hidden series to display.
-		let seriesInitiallyDisplaying = [];
-		for (let s of Object.keys(file.graphs)) {
-			if (file.graphs[s].isShowing()) {
-				if (file.graphs[s].isGroup) {
-					seriesInitiallyDisplaying.push.apply(file.graphs[s].series);
-				} else {
-					seriesInitiallyDisplaying.push(file.graphs[s].series);
-				}
-			}
-		}
-		file.runAnomalyDetectionJobsForSeries(seriesInitiallyDisplaying);
 
 	});
 
@@ -440,7 +440,7 @@ File.prototype.detectAnomalies = function(series, thresholdlow, thresholdhigh, d
 
 	requestHandler.requestAnomalyDetection(globalStateManager.currentFile.projname, globalStateManager.currentFile.filename, series, thresholdlow, thresholdhigh, duration, persistence, maxgap, function (data) {
 
-		if (Array.isArray(a) && a.length > 0) {
+		if (Array.isArray(data) && data.length > 0) {
 
 			for (let a of data) {
 				file.annotations.push(new Annotation({series: series, begin: a[0], end: a[1]}, 'anomaly'));
@@ -1185,7 +1185,7 @@ File.prototype.unsynchronizeGraphs = function() {
 
 // TODO: Update description, get rid of resetZoomToOutermost
 File.prototype.zoomTo = function(timeWindow) {
-	console.log('here');
+
 	for (let s of Object.keys(this.graphs)) {
 
 		if (this.graphs[s].dygraphInstance !== null) {
@@ -1201,16 +1201,5 @@ File.prototype.zoomTo = function(timeWindow) {
 		}
 
 	}
-
-	// TODO(Gus): This is super-dooper hard-coded.
-	// for (let s of Object.keys(this.graphs)) {
-	// 	console.log('here');
-	// 	if (this.graphs[s].dygraphInstance !== null) {
-	// 		console.log(this.graphs[s].rightDygraphInstance);
-	// 		this.graphs[s].rightDygraphInstance.updateOptions({
-	// 			dateWindow: this.getOutermostZoomWindow('lead')
-	// 		});
-	// 	}
-	// }
 
 };
