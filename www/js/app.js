@@ -83,13 +83,22 @@ $('#annotationModal button.deleteButton').click(function() {
 // Request the list of files for the project
 requestHandler.requestProjectsList(function(data) {
 
+	templateSystem.provideBuiltinTemplates(
+		(data.hasOwnProperty('builtin_default_project_template') && data['builtin_default_project_template'] ? JSON.parse(data['builtin_default_project_template']) : {}) || {},
+		(data.hasOwnProperty('builtin_default_interface_templates') && data['builtin_default_interface_templates'] ? JSON.parse(data['builtin_default_interface_templates']) : {}) || {},
+	);
+	templateSystem.provideGlobalTemplates(
+		(data.hasOwnProperty('global_default_project_template') && data['global_default_project_template'] ? JSON.parse(data['global_default_project_template']) : {}) || {},
+		(data.hasOwnProperty('global_default_interface_templates') && data['global_default_interface_templates'] ? JSON.parse(data['global_default_interface_templates']) : {}) || {},
+	);
+
 	let projectSelect = document.getElementById('project_selection');
 
-	for (let i in data) {
+	for (let i in data['projects']) {
 
 		let opt = document.createElement('OPTION');
-		opt.setAttribute('value', data[i]);
-		opt.innerText = data[i];
+		opt.setAttribute('value', data['projects'][i]);
+		opt.innerText = data['projects'][i];
 		projectSelect.appendChild(opt);
 
 	}

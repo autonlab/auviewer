@@ -33,8 +33,7 @@ def create_app():
     @app.context_processor
     def inject_dict_for_all_templates():
         return {
-            # If root path is empty, set to '/' for the browser
-            'rootWebPath': config.rootWebPath or '/'
+            'rootWebPath': config.rootWebPath
         }
 
     # Minify HTML when possible
@@ -338,8 +337,44 @@ def create_app():
     @app.route(config.rootWebPath + '/get_projects')
     @login_required
     def get_projects():
+        
+        #TODO(gus): This is hacked together temporarily. Move to permanent home.
+    
+        builtin_default_project_template = simplejson.dumps({})
+        builtin_default_interface_templates = simplejson.dumps({})
+        global_default_project_template = simplejson.dumps({})
+        global_default_interface_templates = simplejson.dumps({})
+    
+        try:
+            with open('../www/js/builtin_templates/builtin_default_project_template.json', 'r') as f:
+                builtin_default_project_template = f.read()
+        except:
+            pass
+        try:
+            with open('../www/js/builtin_templates/builtin_default_interface_templates.json', 'r') as f:
+                builtin_default_interface_templates = f.read()
+        except:
+            pass
+        try:
+            with open(config.globalDefaultProjectTemplateFile, 'r') as f:
+                global_default_project_template = f.read()
+        except:
+            pass
+        try:
+            with open(config.globalDefaultInterfaceTemplatesFile, 'r') as f:
+                global_default_interface_templates = f.read()
+        except:
+            pass
+    
+        response = {
+            'projects': list(projects.keys()),
+            'builtin_default_project_template': builtin_default_project_template,
+            'builtin_default_interface_templates': builtin_default_interface_templates,
+            'global_default_project_template': global_default_project_template,
+            'global_default_interface_templates': global_default_interface_templates
+        }
 
-        return simplejson.dumps(list(projects.keys()))
+        return simplejson.dumps(response)
     
     @app.route(config.rootWebPath+'/')
     @app.route(config.rootWebPath+'/index.html')

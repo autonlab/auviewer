@@ -1,40 +1,40 @@
 {% extends 'base.html' %}
 
 {% block css %}
-<link rel='stylesheet' href='{{ rootWebPath }}css/third-party/dygraph.css'/>
-<link rel='stylesheet' href='{{ rootWebPath }}css/app.css'/>
+<link rel='stylesheet' href='{{ rootWebPath }}/css/third-party/dygraph.css'/>
+<link rel='stylesheet' href='{{ rootWebPath }}/css/app.css'/>
 {% endblock %}
 
 {% block js %}
 <!-- SockerIO for pseudo-realtime connectivity -->
-<script src="{{ rootWebPath }}js/third-party/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I="></script>
+<script src="{{ rootWebPath }}/js/third-party/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I="></script>
 
 <!-- Dygraphs & Synchronizer -->
-<script src="{{ rootWebPath }}js/third-party/dygraph.js"></script>
-<script src="{{ rootWebPath }}js/third-party/synchronizer.js"></script>
+<script src="{{ rootWebPath }}/js/third-party/dygraph.js"></script>
+<script src="{{ rootWebPath }}/js/third-party/synchronizer.js"></script>
 
 <!-- Random color generator -->
-<script src="{{ rootWebPath }}js/third-party/random_color.js"></script>
+<script src="{{ rootWebPath }}/js/third-party/random_color.js"></script>
 
 <!-- Config -->
-<script src="{{ rootWebPath }}js/config.js"></script>
+<script src="{{ rootWebPath }}/js/config.js"></script>
 
 <!-- Classes -->
-<script src="{{ rootWebPath }}js/classes/annotation.js"></script>
-<script src="{{ rootWebPath }}js/classes/file.js"></script>
-<script src="{{ rootWebPath }}js/classes/globalstatemanager.js"></script>
-<script src="{{ rootWebPath }}js/classes/graph.js"></script>
-<script src="{{ rootWebPath }}js/classes/graphselectionmenu.js"></script>
-<script src="{{ rootWebPath }}js/classes/project.js"></script>
-<script src="{{ rootWebPath }}js/classes/requesthandler.js"></script>
-<script src="{{ rootWebPath }}js/classes/templatesystem.js"></script>
+<script src="{{ rootWebPath }}/js/classes/annotation.js"></script>
+<script src="{{ rootWebPath }}/js/classes/file.js"></script>
+<script src="{{ rootWebPath }}/js/classes/globalstatemanager.js"></script>
+<script src="{{ rootWebPath }}/js/classes/graph.js"></script>
+<script src="{{ rootWebPath }}/js/classes/graphselectionmenu.js"></script>
+<script src="{{ rootWebPath }}/js/classes/project.js"></script>
+<script src="{{ rootWebPath }}/js/classes/requesthandler.js"></script>
+<script src="{{ rootWebPath }}/js/classes/templatesystem.js"></script>
 
 <!-- Function Libraries -->
-<script src="{{ rootWebPath }}js/event_handlers.js"></script>
-<script src="{{ rootWebPath }}js/helpers.js"></script>
+<script src="{{ rootWebPath }}/js/event_handlers.js"></script>
+<script src="{{ rootWebPath }}/js/helpers.js"></script>
 
 <!-- App Main -->
-<script src="{{ rootWebPath }}js/app.js"></script>
+<script src="{{ rootWebPath }}/js/app.js"></script>
 {% endblock %}
 
 {% block content %}

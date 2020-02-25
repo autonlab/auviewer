@@ -120,6 +120,7 @@ class Project:
 
         for f in self.getProcessedFileList():
             self.loadProcessedFile(f)
+            break
 
     # Iterates through all unprocessed files and processes each one. Supports
     # multi-process batch processing in a "pretty good" way that relies on the
