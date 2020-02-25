@@ -59,6 +59,26 @@
 
 	</div>
 
+	<h5>Zoom Control</h5>
+	<div style="width: 100%; margin-bottom: 10px;">
+		<div style="width: 100%; text-align: center; margin-bottom: 4px;">
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(21600000);">6hr</button>
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(7200000);">2hr</button>
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(3600000);">1hr</button>
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(600000);">10m</button>
+		</div>
+		<div style="width: 100%; text-align: center; margin-bottom: 4px;">
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(60000);">1m</button>
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(10000);">10s</button>
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(1000);">1s</button>
+		</div>
+		<div style="width: 100%; text-align: center;">
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.resetZoomToOutermost();">All</button>
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomBy(0, .1);">-</button>
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomBy(1, .1);">+</button>
+		</div>
+	</div>
+
 	<h5>Annotation Workflow</h5>
 	<span class="clickable" onclick="globalStateManager.currentFile.annotationWorkflowPrevious();">&lt; Prev</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="clickable" onclick="globalStateManager.currentFile.annotationWorkflowNext();">Next &gt;</span>
 	<div id="annotationWorkflowSubtext"></div>

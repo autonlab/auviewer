@@ -28,6 +28,9 @@ class Project:
         # Holds references to the files that belong to the project
         self.files = []
         
+    def getAvailableFilesList(self):
+        return [f.filename for f in self.files]
+    
     def getFile(self, filename):
 
         # TODO(gus): Convert this to a hash table
@@ -44,7 +47,7 @@ class Project:
         
         outputObject = {
             'name': self.name,
-            'files': self.getProcessedFileList(),
+            'files': self.getAvailableFilesList(),
             'project_template': self.getProjectTemplate(),
             'interface_templates': self.getInterfaceTemplates()
         }
@@ -117,6 +120,7 @@ class Project:
 
         for f in self.getProcessedFileList():
             self.loadProcessedFile(f)
+            break
 
     # Iterates through all unprocessed files and processes each one. Supports
     # multi-process batch processing in a "pretty good" way that relies on the

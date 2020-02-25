@@ -153,10 +153,10 @@ template = {
 			# vertical line demarcation for events e.g. blood draw
 
 			'graphHeight': '150px',
-			'drawLine': True,
-			'drawDots': False,
+			'drawLine': False,
+			'drawDots': True,
 			'lineColor': '#171717',
-			'dotColor': 'orange',
+			'dotColor': '#171717',
 			'gridColor': 'rgb(232,122,128)',
 			'ownAnomalyColor': '#f7a438',
 			'otherAnomalyColor': '#f5d4ab',

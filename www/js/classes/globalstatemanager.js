@@ -101,7 +101,6 @@ GlobalStateManager.prototype.newMainProject = function(project_name='') {
 	requestHandler.requestInitialProjectPayload(this.currentProject.name, function(data) {
 
 		// Provide the projects template assets to TemplateSystem
-		console.log(data['project_template'], data['interface_templates'])
 		templateSystem.provideProjectTemplates(data['name'],
 			(data.hasOwnProperty('project_template') && data['project_template'] ? JSON.parse(data['project_template']) : {}) || {},
 			(data.hasOwnProperty('interface_templates') && data['interface_templates'] ? JSON.parse(data['interface_templates']) : {}) || {}

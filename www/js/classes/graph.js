@@ -10,13 +10,8 @@ function Graph(series, file) {
 	// Holds the series name of the graph
 	this.series = series;
 
-	let t0 = performance.now();
-
 	// Load the series config
 	this.config = templateSystem.getSeriesTemplate(this.file.projname, this.series);
-
-	let t1 = performance.now();
-	console.log("A: " + Math.round(t1-t0) + "ms");
 
 	// Holds the dom element of the instantiated legend
 	this.legendDomElement = null;
@@ -38,14 +33,8 @@ function Graph(series, file) {
 		this.group = [];
 	}
 
-	let t2 = performance.now();
-	console.log("B: " + Math.round(t2-t1) + "ms");
-
 	// Build the graph
 	this.build();
-
-	let t3 = performance.now();
-	console.log("C: " + Math.round(t3-t2) + "ms");
 
 }
 

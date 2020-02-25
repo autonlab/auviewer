@@ -291,7 +291,6 @@ File.prototype.annotationWorkflowUpdateCurrent = function() {
 
 	// Zoom to the designated window
 	this.zoomTo([zwBegin, zwEnd]);
-	this.updateCurrentViewData();
 
 };
 
@@ -481,6 +480,16 @@ File.prototype.getGraphForSeries = function(s) {
 	for (let g in this.graphs) {
 		if (this.graphs[g].series === s) {
 			return this.graphs[g];
+		}
+	}
+	return null;
+};
+
+// Return the first showing graph, or null.
+File.prototype.getFirstShowingGraph = function() {
+	for (let s of Object.keys(this.graphs)) {
+		if (this.graphs[s].dygraphInstance !== null) {
+			return this.graphs[s];
 		}
 	}
 	return null;
@@ -1017,7 +1026,7 @@ File.prototype.renderMetadata = function() {
 
 // Reset zoom to outermost view
 File.prototype.resetZoomToOutermost = function() {
-	this.zoomTo(this.getOutermostZoomWindow());
+	this.zoomTo(this.getOutermostZoomWindow(), true);
 };
 
 // Runs pre-defined anomaly detection jobs for one or more series. The series
@@ -1122,6 +1131,8 @@ File.prototype.triggerRedraw = function() {
 // NOTE: There is an identically-named function on both File and Graph classes.
 File.prototype.updateCurrentViewData = function() {
 
+	console.log('refreshing view data');
+
 	// Holds the array of series IDs for which we will request updated data.
 	let series = [];
 
@@ -1183,23 +1194,93 @@ File.prototype.unsynchronizeGraphs = function() {
 
 };
 
-// TODO: Update description, get rid of resetZoomToOutermost
-File.prototype.zoomTo = function(timeWindow) {
+// Zoom in or out by a percentage. dir parameter should be 0 for out, 1 for in.
+// pct parameter should be float representing percentage by which to zoom
+// (i.e. pct==.1 means 10%).
+File.prototype.zoomBy = function(dir, pct) {
 
-	for (let s of Object.keys(this.graphs)) {
+	// Parameter check for dir
+	if (dir !== 0 && dir !== 1) {
+		return;
+	}
 
-		if (this.graphs[s].dygraphInstance !== null) {
+	// Grab the first showing graph
+	const g = this.getFirstShowingGraph();
 
-			this.graphs[s].dygraphInstance.updateOptions({
-				dateWindow: timeWindow
-			});
+	// If none is showing, we can do nothing so return.
+	if (g === null) {
+		return;
+	}
 
-			// We only need to trigger this on one graph since they are expected
-			// to be synchronized.
-			break;
+	// Get the current time range
+	const ctr = g.dygraphInstance.xAxisRange();
 
+	// Get the current timespan
+	const cts = ctr[1] - ctr[0];
+
+	// Calculate new timespan depending on whether we're zooming in or out
+	const nts = dir === 0 ? Math.floor(cts+cts*pct) : Math.floor(cts-cts*pct);
+
+	// Zoom to the new time span if new timespan is valid
+	if (nts >= 1) {
+		this.zoomTo(nts)
+	} else {
+		console.log("Cannot zoom " + (dir === 1 ? 'in' : 'out') + " by " + pct + ".")
+	}
+
+};
+
+// Zoom to either a given time window (e.g. timeWindow=[t1,t2]) or a time span
+// in milliseconds(e.g. timeWindow=1000 for 1s)
+File.prototype.zoomTo = function(timeWindow, suppressDataRefresh=false) {
+
+	// Grab the first showing graph
+	const g = this.getFirstShowingGraph();
+
+	// If none is showing, we can do nothing so return.
+	if (g === null) {
+		return;
+	}
+
+	// If we've been provided a timespan, convert it to and call self with range.
+	if (!Array.isArray(timeWindow)) {
+
+		// Get the current time range
+		const ctr = g.dygraphInstance.xAxisRange();
+
+		// Calculate midpoint of the current range
+		const midpoint = ctr[1] - (ctr[1]-ctr[0])/2;
+
+		// Calculate half of timespan
+		const tshalf = timeWindow/2;
+
+		// Calculate new time range
+		const ntr = [Math.floor(midpoint-tshalf), Math.floor(midpoint+tshalf)];
+
+		// Sanity check -- if they're already zoomed into this leve, we're done.
+		if (ctr[0] === ntr[0] && ctr[1] === ntr[1]) {
+			return;
 		}
 
+		console.log(ctr, midpoint, tshalf, ntr);
+
+		// Call self with new time range
+		this.zoomTo(ntr, suppressDataRefresh);
+
+		// We're done here.
+		return;
+
+	}
+
+	// Given a time range, update a single graph to the time range. We only need
+	// to trigger this on one graph since they are expected to be synchronized.
+	g.dygraphInstance.updateOptions({
+		dateWindow: timeWindow
+	});
+
+	// Refresh data from the server for this zoom window, unless suppressed
+	if (suppressDataRefresh !== true) {
+		this.updateCurrentViewData();
 	}
 
 };
