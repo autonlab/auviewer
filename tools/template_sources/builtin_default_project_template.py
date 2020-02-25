@@ -152,7 +152,7 @@ template = {
 			# dots and/or lines
 			# vertical line demarcation for events e.g. blood draw
 
-			'graphHeight': '150px',
+			'graphHeight': '120px',
 			'drawLine': False,
 			'drawDots': True,
 			'lineColor': '#171717',

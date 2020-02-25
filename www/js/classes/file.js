@@ -808,10 +808,12 @@ File.prototype.renderBufferedRealtimeData = function() {
 						});
 
 						// Also re-plot the leading graph display with the new data
-						g.rightDygraphInstance.updateOptions({
-							file: this.fileData['series'][s]['data'],
-							dateWindow: ldt
-						});
+						if (g.rightDygraphInstance) {
+							g.rightDygraphInstance.updateOptions({
+								file: this.fileData['series'][s]['data'],
+								dateWindow: ldt
+							});
+						}
 
 					}
 
@@ -873,10 +875,12 @@ File.prototype.renderBufferedRealtimeData = function() {
 						});
 
 						// Also re-plot the leading graph display with the new data
-						g.rightDygraphInstance.updateOptions({
-							file: this.fileData['series'][groupName]['data'],
-							dateWindow: ldt
-						});
+						if (g.rightDygraphInstance) {
+							g.rightDygraphInstance.updateOptions({
+								file: this.fileData['series'][groupName]['data'],
+								dateWindow: ldt
+							});
+						}
 
 					}
 
@@ -1131,8 +1135,6 @@ File.prototype.triggerRedraw = function() {
 // NOTE: There is an identically-named function on both File and Graph classes.
 File.prototype.updateCurrentViewData = function() {
 
-	console.log('refreshing view data');
-
 	// Holds the array of series IDs for which we will request updated data.
 	let series = [];
 
@@ -1261,8 +1263,6 @@ File.prototype.zoomTo = function(timeWindow, suppressDataRefresh=false) {
 		if (ctr[0] === ntr[0] && ctr[1] === ntr[1]) {
 			return;
 		}
-
-		console.log(ctr, midpoint, tshalf, ntr);
 
 		// Call self with new time range
 		this.zoomTo(ntr, suppressDataRefresh);

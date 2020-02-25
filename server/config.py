@@ -39,10 +39,13 @@ stepMultiplier = 2
 #   - - - - interface_templates.json (optional)
 
 # AUView Data Root
+auvDataRoot = '/zfsauton/data/public/gwelter/AUView/'
+
+# User overrides
 if getlogin() == 'tracir':
     auvDataRoot = '/home/tracir/TRACIR/medfiles/'
-else:
-    auvDataRoot = '/zfsauton/data/public/gwelter/AUView/'
+elif getlogin() == 'root': #gpu7
+    rootWebPath = '/auv'
 
 # File locations
 projectsDir = os.path.join(auvDataRoot, 'projects/')

@@ -163,8 +163,6 @@ TemplateSystem.prototype.provideProjectTemplates = function(name, project_templa
 		'interface_templates': interface_templates || {}
 	};
 
-	console.log(this);
-
 };
 
 // Provide a template from a dynamic source (i.e. a template received from a

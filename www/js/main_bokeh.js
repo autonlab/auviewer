@@ -606,7 +606,7 @@ function updateCurrentViewData(graph) {
 
 		}
 
-	}
+	};
 
 	// Send the async request
 	//xt1 = performance.now();

@@ -19,8 +19,9 @@ function Graph(series, file) {
 	// Holds the dom element of the instantiated graph
 	this.graphDomElement = null;
 
-	// Holds the dygraph instance
+	// Holds the dygraph instances
 	this.dygraphInstance = null;
+	this.rightDygraphInstance = null;
 
 	// Set this.isGroup (indicates whether this graph represents a group of
 	// series) and this.group (holds series names belonging to the group, or
@@ -53,8 +54,9 @@ Graph.prototype.build = function() {
 					'<td rowspan="2">' +
 						'<div class="graph">' +
 							'<table style="width:100%;height:100%;"><tbody><tr>' +
-							'<td style="width:75%;"><div class="innerLeft" style="width: 100%; height: 100%;"></div></td>' +
-							'<td style="width:25%; border-left: 1px solid #888;"><div class="innerRight" style="width: 100%; height: 100%;"></div></td>' +
+							// '<td style="width:75%;"><div class="innerLeft" style="width: 100%; height: 100%;"></div></td>' +
+							// '<td style="width:25%; border-left: 1px solid #888;"><div class="innerRight" style="width: 100%; height: 100%;"></div></td>' +
+							'<td style="width:100%;"><div class="innerLeft" style="width: 100%; height: 100%;"></div></td>'
 						'</tr></tbody></table></div>' +
 					'</td>' +
 				'</tr>' +
@@ -94,10 +96,7 @@ Graph.prototype.build = function() {
 	// Instantiate the dygraph if it is configured to appear by default, or if
 	// we're in realtime mode.
 	if (this.file.config.defaultSeries.includes(this.series)) {
-		let t0 = performance.now();
 		this.instantiateDygraph();
-		console.log("instantiate: " + Math.round(performance.now()-t0) + "ms");
-
 	} else {
 		this.hideDOMElements();
 	}
@@ -181,42 +180,46 @@ Graph.prototype.instantiateDygraph = function() {
 		valueRange: yAxisRange
 	});
 
-	this.rightDygraphInstance = new Dygraph(this.rightGraphDomElement, this.file.fileData.series[this.series].data, {
-		axes: {
-			x: {
-				pixelsPerLabel: 70,
-				independentTicks: true
+	if (this.rightGraphDomElement) {
+
+		this.rightDygraphInstance = new Dygraph(this.rightGraphDomElement, this.file.fileData.series[this.series].data, {
+			axes: {
+				x: {
+					pixelsPerLabel: 70,
+					independentTicks: true
+				},
+				y: {
+					// pixelsPerLabel: 14,
+					pixelsPerLabel: 14,
+					independentTicks: true,
+					drawAxis: false
+				}
 			},
-			y: {
-				// pixelsPerLabel: 14,
-				pixelsPerLabel: 14,
-				independentTicks: true,
-				drawAxis: false
-			}
-		},
-		//clickCallback: handleClick,
-		colors: [this.config.lineColor],//'#5253FF'],
-		dateWindow: this.file.getOutermostZoomWindow('lead'),
-		// drawPoints: true,
-		gridLineColor: this.config.gridColor,
-		/*interactionModel: {
-			'mousedown': handleMouseDown.bind(this),
-			'mousemove': handleMouseMove.bind(this),
-			'mouseup': handleMouseUp.bind(this),
-			'dblclick': handleDoubleClick.bind(this),
-			'mousewheel': handleMouseWheel.bind(this)
-		},*/
-		labels: this.file.fileData.series[this.series].labels,
-		labelsDiv: this.legendDomElement,
-		plotter: handlePlotting.bind(this),
-		/*series: {
-		  'Min': { plotter: handlePlotting },
-		  'Max': { plotter: handlePlotting }
-		},*/
-		//title: this.series,
-		//underlayCallback: handleUnderlayRedraw.bind(this),
-		valueRange: yAxisRange
-	});
+			//clickCallback: handleClick,
+			colors: [this.config.lineColor],//'#5253FF'],
+			dateWindow: this.file.getOutermostZoomWindow('lead'),
+			// drawPoints: true,
+			gridLineColor: this.config.gridColor,
+			/*interactionModel: {
+				'mousedown': handleMouseDown.bind(this),
+				'mousemove': handleMouseMove.bind(this),
+				'mouseup': handleMouseUp.bind(this),
+				'dblclick': handleDoubleClick.bind(this),
+				'mousewheel': handleMouseWheel.bind(this)
+			},*/
+			labels: this.file.fileData.series[this.series].labels,
+			labelsDiv: this.legendDomElement,
+			plotter: handlePlotting.bind(this),
+			/*series: {
+			  'Min': { plotter: handlePlotting },
+			  'Max': { plotter: handlePlotting }
+			},*/
+			//title: this.series,
+			//underlayCallback: handleUnderlayRedraw.bind(this),
+			valueRange: yAxisRange
+		});
+
+	}
 
 };
 
