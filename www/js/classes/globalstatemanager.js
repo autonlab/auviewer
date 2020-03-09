@@ -117,6 +117,9 @@ GlobalStateManager.prototype.newMainProject = function(project_name='') {
 
 		}
 
+		// Re-render the select-picker
+		$(fileSelect).selectpicker('refresh');
+
 	});
 
 };

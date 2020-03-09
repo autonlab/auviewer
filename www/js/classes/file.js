@@ -54,9 +54,6 @@ function File(project, filename) {
 	*/
 	this.globalXExtremes = [];
 
-	// Holds an instance of the graph selection menu object for this file
-	this.graphSelectionMenu = new GraphSelectionMenu(this);
-
 	// Persist for callback
 	let file = this;
 
@@ -148,11 +145,16 @@ function File(project, filename) {
 				let tt = performance.now() - t0;
 				globalAppConfig.verbose && tt > globalAppConfig.performanceReportingThresholdMS && console.log("Initial file graph building took " + Math.round(tt) + "ms.", this.projname, this.filename);
 
-				// Populate the alert generation dropdown
+				// Grab the alert generation dropdown
 				let alertGenSeriesDropdown = document.getElementById('alert_gen_series_field');
-				for (let i = 0; i < alertGenSeriesDropdown.length; i++) {
-					alertGenSeriesDropdown.remove(i);
+
+				// Clear the alert generation dropdown
+				// See: https://jsperf.com/innerhtml-vs-removechild/15
+				while (alertGenSeriesDropdown.firstChild) {
+					alertGenSeriesDropdown.removeChild(alertGenSeriesDropdown.firstChild);
 				}
+
+				// Populate the alert generation dropdown
 				let opt = document.createElement('option');
 				alertGenSeriesDropdown.add(opt);
 				for (let s of Object.keys(this.fileData.series)) {
@@ -160,7 +162,11 @@ function File(project, filename) {
 					opt.text = s;
 					opt.value = s;
 					alertGenSeriesDropdown.add(opt);
+					console.log('added', opt.value)
 				}
+
+				// Re-render the select picker
+				$(alertGenSeriesDropdown).selectpicker('refresh');
 
 				// Process pre-defined anomaly detection for all currently-displaying
 				// series. We gather all displaying series before starting to send the
@@ -171,7 +177,7 @@ function File(project, filename) {
 				for (let s of Object.keys(this.graphs)) {
 					if (this.graphs[s].isShowing()) {
 						if (this.graphs[s].isGroup) {
-							seriesInitiallyDisplaying.push.apply(this.graphs[s].group);
+							seriesInitiallyDisplaying.push.apply(seriesInitiallyDisplaying, this.graphs[s].group);
 						} else {
 							seriesInitiallyDisplaying.push(this.graphs[s].series);
 						}
@@ -347,7 +353,6 @@ File.prototype.destroy = function() {
 
 	// Clear relevant DOM tree portions
 	document.getElementById('graphs').innerText = '';
-	document.getElementById('series_toggle_controls').innerText = '';
 
 	// Clear state management data
 	this.graphs = {};
@@ -595,6 +600,21 @@ File.prototype.getPostloadDataUpdateHandler = function() {
 
 	};
 
+};
+
+File.prototype.handleSeriesDisplayControllerUpdate = function() {
+	const options = document.getElementById('series_display_controller').options;
+	for (let opt of options) {
+		let graph = this.getGraphForSeries(opt.value)
+		if (opt.selected === true && graph.isShowing() === false) {
+			console.log('showing', opt.value);
+			graph.show();
+		}
+		else if(opt.selected === false && graph.isShowing() === true) {
+			console.log('hiding', opt.value);
+			graph.remove();
+		}
+	}
 };
 
 // Returns the mode of File, either 'realtime' or 'file'.

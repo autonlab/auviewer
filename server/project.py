@@ -117,9 +117,12 @@ class Project:
             return None
 
     def loadProcessedFiles(self):
-
+        i=0
         for f in self.getProcessedFileList():
             self.loadProcessedFile(f)
+            # i = i + 1
+            # if i == 5:
+            #     break
 
     # Iterates through all unprocessed files and processes each one. Supports
     # multi-process batch processing in a "pretty good" way that relies on the

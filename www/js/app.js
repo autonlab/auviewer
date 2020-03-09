@@ -103,4 +103,37 @@ requestHandler.requestProjectsList(function(data) {
 
 	}
 
+	// Re-render the select picker
+	$(projectSelect).selectpicker('refresh');
+
+});
+
+$('#annotationsListModal').on('show.bs.modal', function (e) {
+
+	// Clear previous annotation list
+	// See: https://jsperf.com/innerhtml-vs-removechild/15
+	const tbody = this.querySelector('tbody');
+	while (tbody.firstChild) {
+		tbody.removeChild(tbody.firstChild);
+	}
+
+	if (globalStateManager.currentFile && globalStateManager.currentFile.hasOwnProperty('annotations')) {
+
+		for (let a of globalStateManager.currentFile.annotations) {
+
+			if (a.state === 'existing') {
+				console.log(a);
+				let tr = document.createElement('tr');
+				tr.innerHTML =
+					'<th scope="row">' + a.id + '</th>' +
+					'<td>' + a.getStartDate().toLocaleString() + '</td>' +
+					'<td>' + a.getEndDate().toLocaleString() + '</td>' +
+					'<td>' + JSON.stringify(a.annotation) + '</td>';
+				tbody.appendChild(tr);
+			}
+
+		}
+
+	}
+
 });

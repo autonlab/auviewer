@@ -56,7 +56,7 @@ Graph.prototype.build = function() {
 							'<table style="width:100%;height:100%;"><tbody><tr>' +
 							// '<td style="width:75%;"><div class="innerLeft" style="width: 100%; height: 100%;"></div></td>' +
 							// '<td style="width:25%; border-left: 1px solid #888;"><div class="innerRight" style="width: 100%; height: 100%;"></div></td>' +
-							'<td style="width:100%;"><div class="innerLeft" style="width: 100%; height: 100%;"></div></td>'
+							'<td style="width:100%;"><div class="innerLeft" style="width: 100%; height: 100%;"></div></td>' +
 						'</tr></tbody></table></div>' +
 					'</td>' +
 				'</tr>' +
@@ -102,7 +102,16 @@ Graph.prototype.build = function() {
 	}
 
 	// Add the control for the graph
-	this.file.graphSelectionMenu.add(this.series, this.file.config.defaultSeries.includes(this.series));
+	const seriesDisplayControl = document.getElementById('series_display_controller');
+
+	let opt = document.createElement('option');
+	opt.text = this.series;
+	opt.value = this.series;
+	opt.selected = (this.file.config.defaultSeries.includes(this.series) !== false);
+	seriesDisplayControl.add(opt);
+
+	// Re-render the select picker
+	$(seriesDisplayControl).selectpicker('refresh');
 
 };
 

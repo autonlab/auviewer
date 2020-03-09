@@ -14,13 +14,23 @@
     width: 260px;
     height: calc(100% - 64px);
     padding-left: 8px;
-    /*padding-top: 8px;*/
     overflow-y: auto;
     overflow-x: hidden;
 }
 
-#series_toggle_controls {
-    white-space: nowrap;
+div.bootstrap-select.bs-width-correction > div.dropdown-menu {
+    width: 100%;
+}
+
+div.bootstrap-select > div.dropdown-menu ul.dropdown-menu {
+    font-size: 0.875rem !important;
+}
+
+div.bootstrap-select > div.dropdown-menu a.dropdown-item {
+    padding: 4px 8px;
+}
+
+#seriesDisplayControllerDiv {
     margin-bottom: 24px;
 }
 
