@@ -1,7 +1,34 @@
 import config
 from file import File
 import os
+import time
 from exceptions import ProcessedFileExists
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+
+class FileChangeHandler(FileSystemEventHandler):
+
+    def __init__(self, target_project):
+        self.target_project = target_project
+
+    def on_created(self, event):
+
+        if event.is_directory:
+            return
+
+        # Wait a beat (for both original and processed to be moved)
+        time.sleep(2)
+
+        print("Detected change:", event.src_path)
+
+        # If the file has been loaded, reload it.
+        newfilename = os.path.basename(event.src_path)
+        for f in self.target_project.files:
+            if newfilename == f.orig_filename:
+                print("Reloading", newfilename)
+                self.target_project.files.remove(f)
+                self.target_project.loadProcessedFile(newfilename)
+
 
 class Project:
 
@@ -29,13 +56,13 @@ class Project:
         self.files = []
         
     def getAvailableFilesList(self):
-        return [f.filename for f in self.files]
+        return [f.orig_filename for f in self.files]
     
     def getFile(self, filename):
 
         # TODO(gus): Convert this to a hash table
         for f in self.files:
-            if f.filename == filename:
+            if f.orig_filename == filename:
                 return f
 
         # Having reached this point, we cannot find the file
@@ -106,23 +133,39 @@ class Project:
     # Loads the file corresponding to the provided filename, adds it to the list
     # of loaded project files, and returns the File instance. If opening the
     # file fails, None object will be returned.
-    def loadProcessedFile(self, filename):
+    def loadProcessedFile(self, orig_filename):
 
         try:
-            self.files.append(File(self, filename))
+
+            proc_filename = os.path.splitext(orig_filename)[0] + '_processed.h5'
+
+            self.files.append(File(
+                orig_filename=orig_filename,
+                proc_filename=proc_filename,
+                orig_dir=self.originals_dir,
+                proc_dir=self.processed_dir
+            ))
             return self.files[len(self.files) - 1]
 
         except Exception as e:
-            print("Opening/instantiating file " + filename + " failed with the following exception.\n", e)
+            print("Opening/instantiating original file " + orig_filename + " and processed file " + proc_filename + " failed with the following exception.\n", e)
             return None
 
     def loadProcessedFiles(self):
-        i=0
-        for f in self.getProcessedFileList():
-            self.loadProcessedFile(f)
+
+        # i=0
+        for orig_filename in self.getProcessedFileList():
+            self.loadProcessedFile(orig_filename)
+            # break
             # i = i + 1
             # if i == 5:
             #     break
+
+        # Establish a process to watch for updated versions of any project files
+        file_change_handler = FileChangeHandler(self)
+        observer = Observer()
+        observer.schedule(file_change_handler, self.originals_dir)
+        observer.start()
 
     # Iterates through all unprocessed files and processes each one. Supports
     # multi-process batch processing in a "pretty good" way that relies on the
@@ -131,14 +174,18 @@ class Project:
     def processFiles(self):
         
         # Iterate through the unprocessed files and process each one.
-        for f in self.getUnprocessedFileList():
+        for orig_filename in self.getUnprocessedFileList():
             
             try:
                 
                 # Process the file
-                File(self, f)
-                # file = File(f[0], f[1])
-                # self.files.append(file)
+                proc_filename = os.path.splitext(orig_filename)[0] + '_processed.h5'
+                File(
+                    orig_filename=orig_filename,
+                    proc_filename=proc_filename,
+                    orig_dir=self.originals_dir,
+                    proc_dir=self.processed_dir
+                )
             
             # If the processed file is found to already exist (in the case of
             # multiple running processes), skip this file. This supports multi-

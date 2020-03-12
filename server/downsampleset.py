@@ -22,7 +22,7 @@ class DownsampleSet:
         if self.numDownsamples < 1:
             return None
         
-        return self.seriesparent.fileparent.pf.get('/'.join(self.seriesparent.h5path) + '/' + '0')[()]
+        return self.seriesparent.fileparent.pf.get('/'.join(self.seriesparent.h5pathDownsample) + '/' + '0')[()]
 
     # Returns the number of downsamples available for this series in the
     # processed data file.
@@ -36,7 +36,7 @@ class DownsampleSet:
             raise RuntimeError
 
         # Get reference to the group containing the downsamples
-        grp = self.seriesparent.fileparent.pf.get('/'.join(self.seriesparent.h5path))
+        grp = self.seriesparent.fileparent.pf.get('/'.join(self.seriesparent.h5pathDownsample))
         
         # If no downsamples are available, return 0
         if grp is None:
@@ -91,7 +91,7 @@ class DownsampleSet:
             return
         
         # Get reference to the downsample dataset in the processed file
-        ds = self.seriesparent.fileparent.pf.get('/'.join(self.seriesparent.h5path) + '/' + str(dsi))
+        ds = self.seriesparent.fileparent.pf.get('/'.join(self.seriesparent.h5pathDownsample) + '/' + str(dsi))
         
         # Find the start & stop indices based on the start & stop times.
         startIndex = getSliceParam(ds, 0, starttime)
@@ -164,12 +164,12 @@ class DownsampleSet:
             try:
 
                 # Store the downsample
-                self.seriesparent.fileparent.pf.create_dataset('/'.join(self.seriesparent.h5path) + '/' + str(i%ndtb), data=downsample, compression="gzip", shuffle=True)
+                self.seriesparent.fileparent.pf.create_dataset('/'.join(self.seriesparent.h5pathDownsample) + '/' + str(i%ndtb), data=downsample, compression="gzip", shuffle=True)
                 print("MEM AFT-STRFL: " + str(p.memory_full_info().uss / 1024 / 1024) + " MB")
                 
             except:
                 
-                print("There was an exception while creating the dataset in the processed data file at the path: " + '/'.join(self.seriesparent.h5path) + '/' + str(i%ndtb) + ".")
+                print("There was an exception while creating the dataset in the processed data file at the path: " + '/'.join(self.seriesparent.h5pathDownsample) + '/' + str(i%ndtb) + ".")
 
                 raise
 

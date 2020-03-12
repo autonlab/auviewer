@@ -39,7 +39,8 @@ stepMultiplier = 2
 #   - - - - interface_templates.json (optional)
 
 # AUView Data Root
-auvDataRoot = '/zfsauton/data/public/gwelter/AUView/'
+#auvDataRoot = '/zfsauton/data/public/gwelter/AUView/'
+auvDataRoot = '/home/gwelter/AUView/'
 
 # User overrides
 if getlogin() == 'tracir':

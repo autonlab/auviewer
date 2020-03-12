@@ -7,6 +7,7 @@ from cylib import generateThresholdAlerts
 import time
 import psutil
 from threading import Lock
+from copy import copy
 
 # Represents a single time series of data.
 class Series:
@@ -14,16 +15,25 @@ class Series:
     # Reads a series into memory and builds the downsampling. Type is either
     # 'numeric' or 'waveform'. Fileparent is a reference to the File class
     # instance which contains the Series.
-    def __init__(self, h5path, fileparent):
+    def __init__(self, h5path, timecol, valcol, fileparent):
         
         # The series ID is the dataset path in the HDF5 file
-        self.id = '/'.join(h5path)
+        self.id = '/'.join(h5path) + ('/' + valcol if valcol != 'value' else '')
 
         # Holds the ordered (hierarchical) list of groups and, ultimately,
         # dataset to which the series belongs. So, this is like a folder path,
         # where the first element is the outermost group name and the last
         # element is the dataset name of the series.
         self.h5path = h5path
+
+        # Holds the ordered (hierarchical) list of groups where downsamples will
+        # be stored in the processed file.
+        self.h5pathDownsample = copy(h5path)
+        self.h5pathDownsample.append(valcol)
+
+        # Holds the time & value column names in the HDF dataset
+        self.timecol = timecol
+        self.valcol = valcol
 
         # Holds a reference to the file parent which contains the series
         self.fileparent = fileparent
@@ -46,8 +56,9 @@ class Series:
             
             self.dequeLock = Lock()
 
-    # Add data to the series. The data is assumed to occur after any existing
-    # data. The data parameter should be a dict of lists as follows:
+    # Add data to the series (e.g. for realtime). The data is assumed to occur
+    # after any existing data. The data parameter should be a dict of lists as
+    # follows:
     #
     #   {
     #     'times': [ t1, t2, ... , tn ],
@@ -115,7 +126,7 @@ class Series:
                 # Get reference to the series datastream from the HDF5 file
                 dataset = self.fileparent.f.get('/'.join(self.h5path))[()]
                 nones = [None] * self.rd.len
-                data = [list(i) for i in zip(dataset['time'], nones, nones, dataset['value'].astype(np.float64))]
+                data = [list(i) for i in zip(dataset[self.timecol], nones, nones, dataset[self.valcol].astype(np.float64))]
                 output_type = 'real'
 
         else:
@@ -209,8 +220,8 @@ class Series:
         # Get reference to the series datastream from the HDF5 file
         dataset = self.fileparent.f.get('/'.join(self.h5path))[()]
 
-        self.rawTimes = dataset['time']
-        self.rawValues = dataset['value'].astype(np.float64)
+        self.rawTimes = dataset[self.timecol]
+        self.rawValues = dataset[self.valcol].astype(np.float64)
 
         end = time.time()
         print("Finished reading raw series data into memory for " + self.id + " (" + str(self.rawTimes.shape[0]) + " points). Took " + str(round(end - start, 5)) + "s.")

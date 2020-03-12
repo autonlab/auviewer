@@ -1,14 +1,14 @@
+from file import File
 from flask import Flask, Blueprint, send_from_directory, request, render_template, render_template_string
 from flask_mail import Mail
 from flask_socketio import SocketIO, join_room, leave_room, rooms
 from flask_sqlalchemy import SQLAlchemy
 from flask_user import confirm_email_required, current_user, login_required, UserManager, UserMixin, SQLAlchemyAdapter
 from flask_user.signals import user_sent_invitation, user_registered
-from project import Project
-from file import File
-import config
-from pprint import pprint
 from htmlmin.main import minify
+from pprint import pprint
+from project import Project
+import config
 import dbgw
 import os
 
@@ -137,7 +137,7 @@ def create_app():
     projects = load_projects()
 
     # Instantiate a file for realtime, in-memory usage (probably temporary)
-    rtf = File(None)
+    rtf = File()
 
     @user_registered.connect_via(app)
     def after_registered_hook(sender, user, user_invite):

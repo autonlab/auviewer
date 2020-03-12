@@ -17,7 +17,7 @@ class RawData:
         self.len = dataset.len()
         
         # Holds the timespan of the time series
-        self.timespan = dataset[-1]['time'] - dataset[0]['time']
+        self.timespan = dataset[-1][self.seriesparent.timecol] - dataset[0][self.seriesparent.timecol]
 
     # Returns a slice of the appropriate downsample for the given time range, or
     # nothing if there is no appropriate downsample available (in this case, raw
@@ -37,7 +37,7 @@ class RawData:
         # Assemble the output data
         nones = [None] * (stopIndex - startIndex)
         # data = [list(i) for i in zip(self.rawTimeOffsets[startIndex:stopIndex], nones, nones, self.rawValues[startIndex:stopIndex])]
-        return [list(i) for i in zip(ds[startIndex:stopIndex]['time'], nones, nones, ds[startIndex:stopIndex]['value'].astype(np.float64))]
+        return [list(i) for i in zip(ds[startIndex:stopIndex][self.seriesparent.timecol], nones, nones, ds[startIndex:stopIndex][self.seriesparent.valcol].astype(np.float64))]
         
     def getDatasetReference(self):
         

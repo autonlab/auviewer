@@ -103,7 +103,7 @@ RequestHandler.prototype._newRequest = function(callback, path, params) {
 				data = JSON.parse(this.responseText);
 			}
 
-			globalAppConfig.verbose && console.log("Response received to " + path, data);
+			globalAppConfig.verbose && console.log("Response received to " + path, deepCopy(data));
 
 			// Call the callback with data
 			if (typeof callback === 'function') {

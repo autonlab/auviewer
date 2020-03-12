@@ -7,7 +7,7 @@
 
 # Detect the code base directory
 export MEDVIEW_BASE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"/.. >/dev/null 2>&1 && pwd )"
-echo $MEDVIEW_BASE_DIR
+
 # Set the python path so that code not in the medview/server folder can use the
 # modules contained therein.
 if [[ $PYTHONPATH != *$MEDVIEW_BASE_DIR/server* ]]
