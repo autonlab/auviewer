@@ -7,7 +7,10 @@ template = {
 
 	'anomalyDetection': [],
 
-	# Series to display by default
+	# Whether to display all series by default
+	'defaultSeriesAll': True,
+
+	# Series to display by default, if defaultSeriesAll==False
 	'defaultSeries': [],
 
 	'groups': [],

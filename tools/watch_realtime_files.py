@@ -4,6 +4,7 @@ import h5py as h5
 import numpy as np
 import time
 from file import File
+from helpers import gather_datasets_recursive
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
@@ -32,18 +33,6 @@ class Handler(FileSystemEventHandler):
 
         global Rebuild
         Rebuild = True
-
-def gather_datasets_recursive(obj, path=''):
-
-    if isinstance(obj, h5.Dataset):
-        return [(obj, path)]
-    elif isinstance(obj, h5.File) or isinstance(obj, h5.Group):
-        objects = []
-        for i in obj:
-            objects.extend(gather_datasets_recursive(obj[i], path + '/' + i))
-        return objects
-    else:
-        raise Exception("Unexpected object type in gather_datasets_recursive:", type(obj))
 
 def rebuild(source_path, project_target_path, original_filename, processed_filename):
 
@@ -75,11 +64,14 @@ def rebuild(source_path, project_target_path, original_filename, processed_filen
             # Iteratee through all datasets in the partial file
             for (ds, path) in gather_datasets_recursive(sf):
 
+                # Prepare the path string (path itself is a list)
+                path_string = '/' + '/'.join(path)
+
                 # Add the data to the new original datasets
                 if path in datasets:
-                    datasets[path] = np.concatenate((datasets[path], ds[()]))
+                    datasets[path_string] = np.concatenate((datasets[path_string], ds[()]))
                 else:
-                    datasets[path] = ds[()]
+                    datasets[path_string] = ds[()]
 
     # Once all datasets are prepared, write them to the new original file.
     # For now, put the file in the source path; we'll move it when ready.

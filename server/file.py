@@ -4,6 +4,7 @@ import os.path
 import time
 from annotationset import AnnotationSet
 from exceptions import ProcessedFileExists
+from helpers import gather_datasets_recursive
 from os import remove as rmfile
 from series import Series
 
@@ -343,20 +344,27 @@ class File:
         
         print('Loading series from file.')
 
-        if 'numerics' in self.f.keys():
-            for name in self.f['numerics']:
-                self.loadSeriesFromDataset(['numerics', name, 'data'])
+        # Iteratee through all datasets in the partial file
+        for (ds, path) in gather_datasets_recursive(self.f):
 
-        if 'waveforms' in self.f.keys():
-            for name in self.f['waveforms']:
-                self.loadSeriesFromDataset(['waveforms', name, 'data'])
+            self.loadSeriesFromDataset(path)
+
+        # if 'numerics' in self.f.keys():
+        #     for name in self.f['numerics']:
+        #         self.loadSeriesFromDataset(['numerics', name, 'data'])
+        #
+        # if 'waveforms' in self.f.keys():
+        #     for name in self.f['waveforms']:
+        #         self.loadSeriesFromDataset(['waveforms', name, 'data'])
             
         print('Completed loading series from file.')
 
     # Load all available series from a dataset
     def loadSeriesFromDataset(self, h5path):
 
-        ds = self.f.get('/'.join(h5path))
+        h5path_string = '/'.join(h5path)
+
+        ds = self.f.get(h5path_string)
         cols = ds.dtype.fields.keys()
 
         # Determine the time column name

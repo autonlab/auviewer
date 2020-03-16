@@ -54,6 +54,13 @@ class Project:
         
         # Holds references to the files that belong to the project
         self.files = []
+
+    # Cleanup
+    def __del__(self):
+        try:
+            self.observer.join()
+        except:
+            pass
         
     def getAvailableFilesList(self):
         return [f.orig_filename for f in self.files]
@@ -163,9 +170,9 @@ class Project:
 
         # Establish a process to watch for updated versions of any project files
         file_change_handler = FileChangeHandler(self)
-        observer = Observer()
-        observer.schedule(file_change_handler, self.originals_dir)
-        observer.start()
+        self.observer = Observer()
+        self.observer.schedule(file_change_handler, self.originals_dir)
+        self.observer.start()
 
     # Iterates through all unprocessed files and processes each one. Supports
     # multi-process batch processing in a "pretty good" way that relies on the

@@ -131,6 +131,9 @@ template = {
 		}
 	],
 
+	# Whether to display all series by default
+	'defaultSeriesAll': False,
+
 	# Series to display by default
 	'defaultSeries': [
 		'numerics/HR/data',
