@@ -46,6 +46,7 @@ auvDataRoot = '/home/gwelter/AUView/'
 if getlogin() == 'tracir':
     auvDataRoot = '/home/tracir/TRACIR/medfiles/'
 elif getlogin() == 'root': #gpu7
+    auvDataRoot = '/zfsauton/data/public/gwelter/AUView/'
     rootWebPath = '/auv'
 
 # File locations
