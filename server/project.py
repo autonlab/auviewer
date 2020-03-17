@@ -2,6 +2,7 @@ import config
 from file import File
 import os
 import time
+import traceback
 from exceptions import ProcessedFileExists
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
@@ -155,7 +156,7 @@ class Project:
             return self.files[len(self.files) - 1]
 
         except Exception as e:
-            print("Opening/instantiating original file " + orig_filename + " and processed file " + proc_filename + " failed with the following exception.\n", e)
+            print("Opening/instantiating original file " + orig_filename + " and processed file " + proc_filename + " failed with the following exception.\n", traceback.format_exc())
             return None
 
     def loadProcessedFiles(self):

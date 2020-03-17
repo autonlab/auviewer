@@ -93,9 +93,12 @@ Graph.prototype.build = function() {
 	// poorly).
 	$(this.graphDomElement).data('graphClassInstance', this);
 
+	// Determine whether to show the graph by default
+	const showGraph = this.file.config.defaultSeriesAll === true || this.file.config.defaultSeries.includes(this.series) === true;
+
 	// Instantiate the dygraph if it is configured to appear by default, or if
 	// we're in realtime mode.
-	if (this.file.config.defaultSeries.includes(this.series)) {
+	if (showGraph) {
 		this.instantiateDygraph();
 	} else {
 		this.hideDOMElements();
@@ -107,7 +110,7 @@ Graph.prototype.build = function() {
 	let opt = document.createElement('option');
 	opt.text = this.series;
 	opt.value = this.series;
-	opt.selected = (this.file.config.defaultSeries.includes(this.series) !== false);
+	opt.selected = showGraph;
 	seriesDisplayControl.add(opt);
 
 	// Re-render the select picker

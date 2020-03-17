@@ -60,7 +60,7 @@ class File:
                 self.load()
 
     def __del__(self):
-        print("File deinstantiating. Closing files, if open.")
+        print("Cleaning up closed file.")
         try:
             self.f.close()
         except:
@@ -364,7 +364,15 @@ class File:
 
         h5path_string = '/'.join(h5path)
 
+        # Grab the dataset
         ds = self.f.get(h5path_string)
+
+        # We expect fields to be available
+        if ds.dtype.fields is None:
+            print("Dataset", h5path_string, "has no fields.")
+            return
+
+        # Grab the column names
         cols = ds.dtype.fields.keys()
 
         # Determine the time column name
@@ -373,6 +381,7 @@ class File:
         # If time column not available, print an error & return
         if timecol not in cols:
             print("Did not find a time column in " + self.orig_filename + '.', 'Cols:', cols)
+            return
 
         # Iterate through all remaining columns and instantiate series for each
         for valcol in (c for c in cols if c != timecol):

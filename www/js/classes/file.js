@@ -162,7 +162,6 @@ function File(project, filename) {
 					opt.text = s;
 					opt.value = s;
 					alertGenSeriesDropdown.add(opt);
-					console.log('added', opt.value)
 				}
 
 				// Re-render the select picker
@@ -607,11 +606,11 @@ File.prototype.handleSeriesDisplayControllerUpdate = function() {
 	for (let opt of options) {
 		let graph = this.getGraphForSeries(opt.value)
 		if (opt.selected === true && graph.isShowing() === false) {
-			console.log('showing', opt.value);
+			globalAppConfig.verbose && console.log('Showing', opt.value);
 			graph.show();
 		}
 		else if(opt.selected === false && graph.isShowing() === true) {
-			console.log('hiding', opt.value);
+			globalAppConfig.verbose && console.log('Hiding', opt.value);
 			graph.remove();
 		}
 	}

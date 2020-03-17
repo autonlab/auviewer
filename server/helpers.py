@@ -11,7 +11,6 @@ def gather_datasets_recursive(obj, path=[]):
             this_path = copy(path)
             this_path.append(i)
             objects.extend(gather_datasets_recursive(obj[i], this_path))
-        print('returning ', objects)
         return objects
     else:
         raise Exception("Unexpected object type in gather_datasets_recursive:", type(obj))

@@ -122,7 +122,6 @@ $('#annotationsListModal').on('show.bs.modal', function (e) {
 		for (let a of globalStateManager.currentFile.annotations) {
 
 			if (a.state === 'existing') {
-				console.log(a);
 				let tr = document.createElement('tr');
 				tr.innerHTML =
 					'<th scope="row">' + a.id + '</th>' +
