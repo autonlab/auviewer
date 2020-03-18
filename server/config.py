@@ -23,6 +23,9 @@ M = 3000
 # is 3K intervals, the second 6K, the third 12K, and so forth.
 stepMultiplier = 2
 
+# AUView code root directory
+auvCodeRoot = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+
 # AUView root data directory should have following structure:
 #   [root]
 #   - global_templates

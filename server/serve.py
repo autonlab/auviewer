@@ -148,9 +148,9 @@ def create_app():
         sender.logger.info("USER SENT INVITATION")
     
     # Map our static assets to be served
-    app.register_blueprint(Blueprint('css', __name__, static_url_path=config.rootWebPath+'/css', static_folder='../www/css'))
-    app.register_blueprint(Blueprint('fonts', __name__, static_url_path=config.rootWebPath+'/fonts', static_folder='../www/fonts'))
-    app.register_blueprint(Blueprint('js', __name__, static_url_path=config.rootWebPath+'/js', static_folder='../www/js'))
+    app.register_blueprint(Blueprint('css', __name__, static_url_path=config.rootWebPath+'/css', static_folder=os.path.join(config.auvCodeRoot, 'www/css')))
+    app.register_blueprint(Blueprint('fonts', __name__, static_url_path=config.rootWebPath+'/fonts', static_folder=os.path.join(config.auvCodeRoot, 'www/fonts')))
+    app.register_blueprint(Blueprint('js', __name__, static_url_path=config.rootWebPath+'/js', static_folder=os.path.join(config.auvCodeRoot, 'www/js')))
     
     ### NON-SECURE AREAS (NO LOGIN REQUIRED) ###
     
@@ -346,12 +346,12 @@ def create_app():
         global_default_interface_templates = simplejson.dumps({})
     
         try:
-            with open('../www/js/builtin_templates/builtin_default_project_template.json', 'r') as f:
+            with open(os.path.join(config.auvCodeRoot, 'www/js/builtin_templates/builtin_default_project_template.json'), 'r') as f:
                 builtin_default_project_template = f.read()
         except:
             pass
         try:
-            with open('../www/js/builtin_templates/builtin_default_interface_templates.json', 'r') as f:
+            with open(os.path.join(config.auvCodeRoot, 'www/js/builtin_templates/builtin_default_interface_templates.json'), 'r') as f:
                 builtin_default_interface_templates = f.read()
         except:
             pass

@@ -68,7 +68,7 @@ def rebuild(source_path, project_target_path, original_filename, processed_filen
                 path_string = '/' + '/'.join(path)
 
                 # Add the data to the new original datasets
-                if path in datasets:
+                if path_string in datasets:
                     datasets[path_string] = np.concatenate((datasets[path_string], ds[()]))
                 else:
                     datasets[path_string] = ds[()]
