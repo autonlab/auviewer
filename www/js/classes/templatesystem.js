@@ -122,7 +122,7 @@ TemplateSystem.prototype.generateSeriesTemplate = function(projectName, seriesNa
 	}
 	this.cached_templates[projectName]['series'][seriesName] = series_template;
 
-	globalAppConfig.verbose && console.log("TemplateSystem.getSeriesTemplate("+seriesName+") returning", deepCopy(series_template));
+	// globalAppConfig.verbose && console.log("TemplateSystem.getSeriesTemplate("+seriesName+") returning", deepCopy(series_template));
 
 	return series_template;
 

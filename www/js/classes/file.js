@@ -148,11 +148,11 @@ function File(project, filename) {
 				// Grab the alert generation dropdown
 				let alertGenSeriesDropdown = document.getElementById('alert_gen_series_field');
 
-				// Clear the alert generation dropdown
-				// See: https://jsperf.com/innerhtml-vs-removechild/15
-				while (alertGenSeriesDropdown.firstChild) {
-					alertGenSeriesDropdown.removeChild(alertGenSeriesDropdown.firstChild);
-				}
+				// // Clear the alert generation dropdown
+				// // See: https://jsperf.com/innerhtml-vs-removechild/15
+				// while (alertGenSeriesDropdown.firstChild) {
+				// 	alertGenSeriesDropdown.removeChild(alertGenSeriesDropdown.firstChild);
+				// }
 
 				// Populate the alert generation dropdown
 				let opt = document.createElement('option');
@@ -342,21 +342,49 @@ File.prototype.createGroupSeries = function(group, mergedGroupData) {
 
 File.prototype.destroy = function() {
 
-	// Destroy graph synchronization state management
-	this.unsynchronizeGraphs();
+	window.requestAnimationFrame(
 
-	// Remove each graph
-	for (let s of Object.keys(this.graphs)) {
-		this.graphs[s].remove();
-	}
+		(function() {
 
-	// Clear relevant DOM tree portions
-	document.getElementById('graphs').innerText = '';
+			// Destroy graph synchronization state management
+			this.unsynchronizeGraphs();
 
-	// Clear state management data
-	this.graphs = {};
-	this.fileData = {};
-	this.globalXExtremes = [];
+			// Remove each graph
+			for (let s of Object.keys(this.graphs)) {
+				this.graphs[s].remove();
+			}
+
+			// Clear the graph div
+			// See: https://jsperf.com/innerhtml-vs-removechild/15
+			const graphsDiv = document.getElementById('graphs');
+			while (graphsDiv.firstChild) {
+				graphsDiv.removeChild(graphsDiv.firstChild);
+			}
+
+			// Clear the series display controller dropdown
+			// See: https://jsperf.com/innerhtml-vs-removechild/15
+			const seriesDisplayControllerDropdown = document.getElementById('series_display_controller');
+			while (seriesDisplayControllerDropdown.firstChild) {
+				seriesDisplayControllerDropdown.removeChild(seriesDisplayControllerDropdown.firstChild);
+			}
+			$(seriesDisplayControllerDropdown).selectpicker('refresh');
+
+			// Clear the alert generation dropdown
+			// See: https://jsperf.com/innerhtml-vs-removechild/15
+			const alertGenSeriesDropdown = document.getElementById('alert_gen_series_field');
+			while (alertGenSeriesDropdown.firstChild) {
+				alertGenSeriesDropdown.removeChild(alertGenSeriesDropdown.firstChild);
+			}
+			$(alertGenSeriesDropdown).selectpicker('refresh');
+
+			// Clear state management data
+			this.graphs = {};
+			this.fileData = {};
+			this.globalXExtremes = [];
+
+		}).bind(this)
+
+	);
 
 };
 
@@ -601,6 +629,7 @@ File.prototype.getPostloadDataUpdateHandler = function() {
 
 };
 
+// Handle a series display controller item being selected or deselected.
 File.prototype.handleSeriesDisplayControllerUpdate = function() {
 	const options = document.getElementById('series_display_controller').options;
 	for (let opt of options) {
