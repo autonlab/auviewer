@@ -1,0 +1,5 @@
+#!/bin/bash
+
+rm -rfv build
+rm -rfv dist
+rm -rfv *.egg-info

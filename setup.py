@@ -1,0 +1,54 @@
+from setuptools import setup, find_packages
+import numpy as np
+import os
+from glob import glob
+from Cython.Build import cythonize
+
+from auviewer import __VERSION__
+
+NAME = 'auviewer'
+VERSION = __VERSION__
+
+
+def read(fn):
+    return open(os.path.join(os.path.dirname(__file__), fn)).read()
+
+
+pkg_files = []
+for elem in glob('auviewer/static/**/*', recursive=True):
+    if os.path.isfile(elem): pkg_files.append(elem.replace('auviewer/', ''))
+
+setup(
+    name=NAME,
+    version=VERSION,
+    description='A general-purpous time series exploration tool.',
+    long_description=read('README.md'),
+    author='Gus Welter',
+    author_email='gwelter@andrew.cmu.edu',
+    license='GNU LGPL 3',
+    entry_points={
+        'console_scripts': ['auviewer=auviewer.server:main']
+    },
+	ext_modules=cythonize('auviewer/server/*.pyx', language_level=3),
+    include_dirs=[np.get_include()],
+    package_data={'auviewer': pkg_files},
+    include_package_data=True,
+    install_requires=[
+        'numpy',
+        'pandas',
+        'h5py',
+        'jsbeautifier',
+        'python-socketio',
+
+        'flask',
+        'flask-login',
+        'flask-mail',
+        'flask-socketio',
+        'flask-sqlalchemy',
+        'dbgw',
+        'cython',
+        'htmlmin',
+        'smtplib',
+    ],
+    packages=find_packages()
+)

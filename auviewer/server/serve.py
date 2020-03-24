@@ -22,13 +22,13 @@ import os
 import simplejson
 
 def create_app():
-    
+
     # Instantiate the Flask web application class
     app = Flask(__name__, template_folder='../www/templates')
 
     # Instantiate SocketIO
     socketio = SocketIO(app)
-    
+
     # Make the root web path available for templates
     @app.context_processor
     def inject_dict_for_all_templates():
@@ -42,7 +42,7 @@ def create_app():
         if response.content_type == u'text/html; charset=utf-8':
             response.set_data(minify(response.get_data(as_text=True), remove_comments=True))
         return response
-    
+
     # Apply Flask configuration for Flask-User package
     app.config.from_object('config.FlaskConfigClass')
 
@@ -113,7 +113,7 @@ def create_app():
 
     # Create all database tables
     db.create_all()
-    
+
     dbgw.provide('db', db)
     dbgw.provide('Annotation', Annotation)
 
@@ -146,14 +146,14 @@ def create_app():
     @user_sent_invitation.connect_via(app)
     def after_invitation_hook(sender, **extra):
         sender.logger.info("USER SENT INVITATION")
-    
+
     # Map our static assets to be served
     app.register_blueprint(Blueprint('css', __name__, static_url_path=config.rootWebPath+'/css', static_folder=os.path.join(config.auvCodeRoot, 'www/css')))
     app.register_blueprint(Blueprint('fonts', __name__, static_url_path=config.rootWebPath+'/fonts', static_folder=os.path.join(config.auvCodeRoot, 'www/fonts')))
     app.register_blueprint(Blueprint('js', __name__, static_url_path=config.rootWebPath+'/js', static_folder=os.path.join(config.auvCodeRoot, 'www/js')))
-    
+
     ### NON-SECURE AREAS (NO LOGIN REQUIRED) ###
-    
+
     @app.route(config.rootWebPath+'/anyone')
     def home_page():
         return render_template_string("""
@@ -184,7 +184,7 @@ def create_app():
                 <p><a href="{{ url_for('user.logout') }}">Sign out</a></p>
             {% endblock %}
             """)
-    
+
     ### SECURE AREAS (LOGIN REQUIRED) ###
     ### All methods below should have ###
     ### the @login_required decorator ###
@@ -210,12 +210,12 @@ def create_app():
 
         # Try to get the project
         try:
-    
+
             # Get the project
             project = projects[projname]
 
         except:
-    
+
             print("Project could not be retrieved:", projname)
             return simplejson.dumps({
                 'success': False
@@ -240,7 +240,7 @@ def create_app():
     @app.route(config.rootWebPath + '/delete_annotation')
     @login_required
     def delete_annotation():
-    
+
         # Parse parameters
         id = request.args.get('id')
         projname = request.args.get('project')
@@ -248,12 +248,12 @@ def create_app():
 
         # Try to get the project
         try:
-    
+
             # Get the project
             project = projects[projname]
 
         except:
-    
+
             print("Project could not be retrieved:", projname)
             return simplejson.dumps({
                 'success': False
@@ -268,7 +268,7 @@ def create_app():
             return simplejson.dumps({
                 'success': False
             })
-        
+
         # Delete the annotation
         return simplejson.dumps({
             'success': file.annotationSet.deleteAnnotation(id)
@@ -277,9 +277,9 @@ def create_app():
     @app.route(config.rootWebPath + '/detect_anomalies', methods=['GET'])
     @login_required
     def detect_anomalies():
-    
+
         # TODO(gus): Add checks here
-    
+
         # Parse the series name and alert parameters
         projname = request.args.get('project')
         filename = request.args.get('file')
@@ -300,32 +300,32 @@ def create_app():
 
             print("Project could not be retrieved:", projname)
             return simplejson.dumps([])
-    
+
         # Get the file
         file = project.getFile(filename)
-    
+
         # If we did not find the file, return empty output
         if not isinstance(file, File):
             print("File could not be retrieved:", filename)
             return ''
-    
+
         return simplejson.dumps(file.detectAnomalies(series, thresholdlow, thresholdhigh, duration, persistence, maxgap), ignore_nan=True)
 
     @app.route(config.rootWebPath + '/initial_project_payload')
     @login_required
     def initial_project_payload():
-        
+
         # Parse parameters
         projname = request.args.get('project')
-        
+
         # Try to get the project
         try:
-            
+
             # Get the project
             project = projects[projname]
-            
+
         except:
-    
+
             print("Project could not be retrieved:", projname)
             return simplejson.dumps([])
 
@@ -337,14 +337,14 @@ def create_app():
     @app.route(config.rootWebPath + '/get_projects')
     @login_required
     def get_projects():
-        
+
         #TODO(gus): This is hacked together temporarily. Move to permanent home.
-    
+
         builtin_default_project_template = simplejson.dumps({})
         builtin_default_interface_templates = simplejson.dumps({})
         global_default_project_template = simplejson.dumps({})
         global_default_interface_templates = simplejson.dumps({})
-    
+
         try:
             with open(os.path.join(config.auvCodeRoot, 'www/js/builtin_templates/builtin_default_project_template.json'), 'r') as f:
                 builtin_default_project_template = f.read()
@@ -365,7 +365,7 @@ def create_app():
                 global_default_interface_templates = f.read()
         except:
             pass
-    
+
         response = {
             'projects': list(projects.keys()),
             'builtin_default_project_template': builtin_default_project_template,
@@ -375,20 +375,20 @@ def create_app():
         }
 
         return simplejson.dumps(response)
-    
+
     @app.route(config.rootWebPath+'/')
     @app.route(config.rootWebPath+'/index.html')
     @login_required
     def index():
         #return send_from_directory('../www', 'index.html')
         return render_template('index.html')
-    
+
     @app.route(config.rootWebPath+'/initial_file_payload')
     @login_required
     def initial_file_payload():
-    
+
         if request.method == 'GET' and len(request.args.get('file', default='')) > 0:
-    
+
             # Parse parameters
             projname = request.args.get('project')
             filename = request.args.get('file')
@@ -413,14 +413,14 @@ def create_app():
             # If we did not find the file, return empty output
             if not isinstance(file, File):
                 return ''
-    
+
             # Return the full (zoomed-out but downsampled if appropriate) datasets for
             # all data series.
             output = file.getInitialPayloadOutput()
             json_output = simplejson.dumps(output, ignore_nan=True)
-            
+
             return json_output
-    
+
         else:
             return "Invalid request."
 
@@ -441,12 +441,12 @@ def create_app():
 
             # Try to get the project
             try:
-    
+
                 # Get the project
                 project = projects[projname]
 
             except:
-    
+
                 print("Project could not be retrieved:", projname)
                 return simplejson.dumps({})
 
@@ -479,12 +479,12 @@ def create_app():
 
         # Try to get the project
         try:
-    
+
             # Get the project
             project = projects[projname]
 
         except:
-    
+
             print("Project could not be retrieved:", projname)
             return simplejson.dumps({
                 'success': False
@@ -561,14 +561,14 @@ def create_app():
         }
 
         socketio.emit('initial_payload', response)
-        
+
     @socketio.on('push_template')
     def handle_push_template(json):
-        
+
         if config.verbose:
             print('received socketio: push_template')
             print('msg data:', json)
-            
+
         # Verify we have the template in the dict
         if 'template' not in json:
             print('Error: handle_push_template did not receive template (data.template not found):', json)
@@ -576,7 +576,7 @@ def create_app():
         # JSONify the template if not already
         if not isinstance(json['template'], str):
             json['template'] = simplejson.dumps(json['template'])
-            
+
         socketio.emit('push_template', json, broadcast=True)
 
     @socketio.on('subscribe')
@@ -613,7 +613,7 @@ def create_app():
             raise e
 
     ### HELPERS ###
-    
+
     # Returns the named request parameter as a float or None if the parameter is
     # empty or not present. The default return of None may be overridden.
     def getFloatParamOrNone(name, default=None):
@@ -622,14 +622,14 @@ def create_app():
             return request.args.get(name, type=float)
         else:
             return default
-        
+
     return (app, socketio)
 
 def load_projects():
 
     # Get list of subdirectories
     project_subdirectories = [subdir for subdir in os.listdir(config.projectsDir) if subdir != 'originals' and subdir != 'processed' and os.path.isdir(os.path.join(config.projectsDir, subdir))]
-    
+
     projects = {}
 
     for s in project_subdirectories:
@@ -670,11 +670,12 @@ def unsubscribe_from_realtime_updates():
         if r != sid:
             leave_room(r)
             print('User', request.sid, 'has been unsubscribed from', r)
-    
 
-# Start development web server
-if __name__ == '__main__':
-
+def main():
     (app, socketio) = create_app()
     # app.run(host='0.0.0.0', port=8001, debug=True, use_reloader=False)
     socketio.run(app, host='0.0.0.0', port=8001, debug=True, use_reloader=False)
+
+# Start development web server
+if __name__ == '__main__':
+    main()
