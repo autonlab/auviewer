@@ -6,6 +6,9 @@ import os
 ### This is a tool to batch delete a certain dataset from a directory of files.
 ### Uncomment the code to use it, but use with extreme caution.
 
+def main():
+    print('NO.')
+
 # # Directory to pull h5 files from
 # path = '/zfsauton/data/public/gwelter/processed/'
 #
@@ -39,3 +42,6 @@ import os
 #             print(filename+': After deletion, there was NO dataset.')
 #         else:
 #             print(filename+': After deletion, there WAS a dataset.')
+
+if __name__ == '__main__':
+    main()

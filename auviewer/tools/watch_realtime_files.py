@@ -1,12 +1,14 @@
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(sys.path[0]), 'server'))
+
 import h5py as h5
 import numpy as np
 import time
-from file import File
-from helpers import gather_datasets_recursive
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+
+from ..server.helpers import gather_datasets_recursive
+from ..server.file import File
 
 # Configurable variables
 ORIGINALS_FOLDER_NAME = 'originals'
@@ -105,8 +107,7 @@ def rebuild(source_path, project_target_path, original_filename, processed_filen
 
     print('Moved files to final destinations.')
 
-if __name__ == '__main__':
-
+def main():
     # We expect three command-line arguments
     if len(sys.argv) != 4:
         print("Three command-line arguments expected:")
@@ -143,3 +144,6 @@ if __name__ == '__main__':
         observer.stop()
 
     observer.join()
+
+if __name__ == '__main__':
+    main()

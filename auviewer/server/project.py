@@ -1,11 +1,12 @@
-import config
-from file import File
 import os
 import time
 import traceback
-from exceptions import ProcessedFileExists
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+
+from . import config
+from .file import File
+from .exceptions import ProcessedFileExists
 
 class FileChangeHandler(FileSystemEventHandler):
 
@@ -37,22 +38,22 @@ class Project:
     def __init__(self, project_name):
 
         self.name = project_name
-        
+
         # Set the project root directory
         self.project_dir = os.path.join(config.projectsDir, self.name)
-        
+
         # Set the project templates directory
         self.templates_dir = os.path.join(self.project_dir, 'templates')
-        
+
         # Set the project interface templates directory
         self.interface_templates_dir = os.path.join(self.templates_dir, 'interfaces')
 
         # Set the project original files directory
         self.originals_dir = os.path.join(self.project_dir, 'originals')
-        
+
         # Set the project processed files directory
         self.processed_dir = os.path.join(self.project_dir, 'processed')
-        
+
         # Holds references to the files that belong to the project
         self.files = []
 
@@ -62,10 +63,10 @@ class Project:
             self.observer.join()
         except:
             pass
-        
+
     def getAvailableFilesList(self):
         return [f.orig_filename for f in self.files]
-    
+
     def getFile(self, filename):
 
         # TODO(gus): Convert this to a hash table
@@ -75,29 +76,29 @@ class Project:
 
         # Having reached this point, we cannot find the file
         return None
-    
+
     def getInitialPayloadOutput(self):
-        
+
         print("Assembling initial project payload output for project", self.name)
-        
+
         outputObject = {
             'name': self.name,
             'files': self.getAvailableFilesList(),
             'project_template': self.getProjectTemplate(),
             'interface_templates': self.getInterfaceTemplates()
         }
-        
+
         # Return the output object
         return outputObject
 
     # Returns string containing the interface templates JSON, or None if it does
     # not exist.
     def getInterfaceTemplates(self):
-    
+
         try:
             with open(os.path.join(self.templates_dir, 'interface_templates.json'), 'r') as f:
                 return f.read()
-    
+
         except:
             return None
 
@@ -113,15 +114,15 @@ class Project:
         response.sort()
 
         return response
-    
+
     # Returns string containing the project template JSON, or None if it does
     # not exist.
     def getProjectTemplate(self):
-    
+
         try:
             with open(os.path.join(self.templates_dir, 'project_template.json'), 'r') as f:
                 return f.read()
-            
+
         except:
             return None
 
@@ -180,12 +181,12 @@ class Project:
     # file system to avoid collisions. This is not a guarantee like there could
     # be with inter-process communication.
     def processFiles(self):
-        
+
         # Iterate through the unprocessed files and process each one.
         for orig_filename in self.getUnprocessedFileList():
-            
+
             try:
-                
+
                 # Process the file
                 proc_filename = os.path.splitext(orig_filename)[0] + '_processed.h5'
                 File(
@@ -194,11 +195,11 @@ class Project:
                     orig_dir=self.originals_dir,
                     proc_dir=self.processed_dir
                 )
-            
+
             # If the processed file is found to already exist (in the case of
             # multiple running processes), skip this file. This supports multi-
             # process batch processing, though it does not guarantee against
             # collision since there is no inter-process communication.
             except ProcessedFileExists:
-                
+
                 print("The processed file was found to already exist. Skipping this file.")

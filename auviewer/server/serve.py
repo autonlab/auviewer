@@ -1,4 +1,3 @@
-from file import File
 from flask import Flask, Blueprint, send_from_directory, request, render_template, render_template_string
 from flask_mail import Mail
 from flask_socketio import SocketIO, join_room, leave_room, rooms
@@ -7,9 +6,6 @@ from flask_user import confirm_email_required, current_user, login_required, Use
 from flask_user.signals import user_sent_invitation, user_registered
 from htmlmin.main import minify
 from pprint import pprint
-from project import Project
-import config
-import dbgw
 import os
 
 # Simplejson package is required in order to "ignore" NaN values and implicitly
@@ -21,10 +17,14 @@ import os
 # values. Find "ignore_nan" here: https://simplejson.readthedocs.io/en/latest/
 import simplejson
 
+from . import config, dbgw
+from .file import File
+from .project import Project
+
 def create_app():
 
     # Instantiate the Flask web application class
-    app = Flask(__name__, template_folder='../www/templates')
+    app = Flask(__name__, template_folder=f'{config.auvCodeRoot}/static/www/templates')
 
     # Instantiate SocketIO
     socketio = SocketIO(app)
@@ -44,7 +44,7 @@ def create_app():
         return response
 
     # Apply Flask configuration for Flask-User package
-    app.config.from_object('config.FlaskConfigClass')
+    app.config.from_object(config.FlaskConfigClass)
 
     # Initialize Flask-SQLAlchemy, Flask-Mail, and Flask-Babel
     db = SQLAlchemy(app)
@@ -148,9 +148,9 @@ def create_app():
         sender.logger.info("USER SENT INVITATION")
 
     # Map our static assets to be served
-    app.register_blueprint(Blueprint('css', __name__, static_url_path=config.rootWebPath+'/css', static_folder=os.path.join(config.auvCodeRoot, 'www/css')))
-    app.register_blueprint(Blueprint('fonts', __name__, static_url_path=config.rootWebPath+'/fonts', static_folder=os.path.join(config.auvCodeRoot, 'www/fonts')))
-    app.register_blueprint(Blueprint('js', __name__, static_url_path=config.rootWebPath+'/js', static_folder=os.path.join(config.auvCodeRoot, 'www/js')))
+    app.register_blueprint(Blueprint('css', __name__, static_url_path=config.rootWebPath+'/css', static_folder=os.path.join(config.auvCodeRoot, 'static/www/css')))
+    app.register_blueprint(Blueprint('fonts', __name__, static_url_path=config.rootWebPath+'/fonts', static_folder=os.path.join(config.auvCodeRoot, 'static/www/fonts')))
+    app.register_blueprint(Blueprint('js', __name__, static_url_path=config.rootWebPath+'/js', static_folder=os.path.join(config.auvCodeRoot, 'static/www/js')))
 
     ### NON-SECURE AREAS (NO LOGIN REQUIRED) ###
 
@@ -346,12 +346,12 @@ def create_app():
         global_default_interface_templates = simplejson.dumps({})
 
         try:
-            with open(os.path.join(config.auvCodeRoot, 'www/js/builtin_templates/builtin_default_project_template.json'), 'r') as f:
+            with open(os.path.join(config.auvCodeRoot, 'static/www/js/builtin_templates/builtin_default_project_template.json'), 'r') as f:
                 builtin_default_project_template = f.read()
         except:
             pass
         try:
-            with open(os.path.join(config.auvCodeRoot, 'www/js/builtin_templates/builtin_default_interface_templates.json'), 'r') as f:
+            with open(os.path.join(config.auvCodeRoot, 'static/www/js/builtin_templates/builtin_default_interface_templates.json'), 'r') as f:
                 builtin_default_interface_templates = f.read()
         except:
             pass
@@ -533,12 +533,12 @@ def create_app():
         global_default_interface_templates = simplejson.dumps({})
 
         try:
-            with open('../www/js/builtin_templates/builtin_default_project_template.json', 'r') as f:
+            with open(f'{config.auvCodeRoot}/static/www/js/builtin_templates/builtin_default_project_template.json', 'r') as f:
                 builtin_default_project_template = f.read()
         except:
             pass
         try:
-            with open('../www/js/builtin_templates/builtin_default_interface_templates.json', 'r') as f:
+            with open(f'{config.auvCodeRoot}/static/www/js/builtin_templates/builtin_default_interface_templates.json', 'r') as f:
                 builtin_default_interface_templates = f.read()
         except:
             pass

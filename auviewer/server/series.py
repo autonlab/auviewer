@@ -1,13 +1,14 @@
 from collections import deque
 import numpy as np
-import config
-from rawdata import RawData
-from downsampleset import DownsampleSet
-from cylib import generateThresholdAlerts
 import time
 import psutil
 from threading import Lock
 from copy import copy
+
+from . import config
+from .rawdata import RawData
+from .downsampleset import DownsampleSet
+from .cylib import generateThresholdAlerts
 
 # Represents a single time series of data.
 class Series:
@@ -16,7 +17,7 @@ class Series:
     # 'numeric' or 'waveform'. Fileparent is a reference to the File class
     # instance which contains the Series.
     def __init__(self, h5path, timecol, valcol, fileparent):
-        
+
         # The series ID is the dataset path in the HDF5 file
         self.id = '/'.join(h5path) + ('/' + valcol if valcol != 'value' else '')
 
@@ -37,13 +38,13 @@ class Series:
 
         # Holds a reference to the file parent which contains the series
         self.fileparent = fileparent
-        
+
         # Initialize raw data in memory
         self.initializeRawDataInMemory()
 
         # # Pull raw data for the series into memory
         # self.pullRawDataIntoMemory()
-        
+
         if self.fileparent.mode() == 'file':
 
             # Holds the raw data set
@@ -51,9 +52,9 @@ class Series:
 
             # Holds the downsample set
             self.dss = DownsampleSet(self)
-            
+
         elif self.fileparent.mode() == 'realtime':
-            
+
             self.dequeLock = Lock()
 
     # Add data to the series (e.g. for realtime). The data is assumed to occur
@@ -80,25 +81,25 @@ class Series:
             self.rawValues.extend(data['values'])
 
         return
-        
+
     def generateThresholdAlerts(self, thresholdlow, thresholdhigh, mode, duration, persistence, maxgap):
-        
+
         # Pull raw data for the series into memory
         self.pullRawDataIntoMemory()
-        
+
         # Run through the data and generate alerts
         alerts = generateThresholdAlerts(self.rawTimes, self.rawValues, thresholdlow, thresholdhigh, mode, duration, persistence, maxgap)
 
         # Remove raw data for the series fromm memory
         self.initializeRawDataInMemory()
-        
+
         return alerts
 
     # Produces JSON output for the series at the maximum time range.
     def getFullOutput(self):
-    
+
         print("Assembling full output for " + self.id + ".")
-    
+
         if self.fileparent.mode() == 'realtime':
 
             with self.dequeLock:
@@ -179,9 +180,9 @@ class Series:
 
     # Process and store all downsamples for the series.
     def processAndStore(self):
-    
+
         p = psutil.Process()
-        
+
         print("Processing & storing all downsamples for the series " + self.id)
         start = time.time()
 
@@ -189,14 +190,14 @@ class Series:
 
         # Pull raw data for the series into memory
         self.pullRawDataIntoMemory()
-        
+
         print("MEM AFT-PULLD: "+str(p.memory_full_info().uss/1024/1024)+" MB")
 
         # Build & store to file all downsamples for the series
         self.dss.processAndStore()
 
         print("MEM AFT-DSPRC: " + str(p.memory_full_info().uss / 1024 / 1024) + " MB")
-        
+
         # Remove raw data for the series fromm memory
         self.initializeRawDataInMemory()
 
@@ -211,7 +212,7 @@ class Series:
 
         print("Reading raw series data into memory for " + self.id + ".")
         start = time.time()
-        
+
         # If we're in realtime mode, this procedure is not applicable.
         if self.fileparent.mode() == 'realtime':
             print("Reading raw series n/a since we're in mem mode. Returning.")
@@ -229,7 +230,7 @@ class Series:
     # Initializes the raw data stored for the series in memory and thereby
     # removes it from memory.
     def initializeRawDataInMemory(self):
-    
+
         # Initialize raw data
         # self.rawTimes = []
         # self.rawValues = []

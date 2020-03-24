@@ -1,12 +1,13 @@
 import h5py as h5
-import config
 import os.path
 import time
-from annotationset import AnnotationSet
-from exceptions import ProcessedFileExists
-from helpers import gather_datasets_recursive
 from os import remove as rmfile
-from series import Series
+
+from . import config
+from .annotationset import AnnotationSet
+from .exceptions import ProcessedFileExists
+from .helpers import gather_datasets_recursive
+from .series import Series
 
 # File represents a single patient data file. File may operate in file- or
 # realtime-mode. In file-mode, all data is written to & read from a file. In
@@ -33,7 +34,7 @@ class File:
 
         # Will hold the data series from the file
         self.series = []
-        
+
         # Instantiate the AnnotationSet class for the file
         try:
             self.annotationSet = AnnotationSet(self)
@@ -131,12 +132,12 @@ class File:
 
     # Creates & opens a new HDF5 data file for storing processed data.
     def createProcessedFile(self):
-    
+
         # Verify that the processed file does not already exist
         if os.path.isfile(self.getProcessedFilepath()):
             print("Processed file already exists. Raising ProcessedFileExists exception.")
             raise ProcessedFileExists
-    
+
         # Create the file which will be used to store processed data
         try:
             print("Creating processed file.")
@@ -144,7 +145,7 @@ class File:
         except:
             print("There was an exception while h5 was creating the processed file. Raising ProcessedFileExists exception.")
             raise ProcessedFileExists
-        
+
     def detectAnomalies(self, series, thresholdlow=None, thresholdhigh=None, duration=300, persistence=.7, maxgap=300):
 
         # Determine the mode (see generateThresholdAlerts function description
@@ -169,40 +170,40 @@ class File:
 
     # Returns all event series
     def getEvents(self):
-        
+
         print("Assembling all event series for file " + self.orig_filename + ".")
         start = time.time()
-        
+
         events = {}
 
         # If we're in realtime-mode, we have no events to return, so return now.
         if self.mode() == 'realtime':
             return events
-        
+
         try:
-        
+
             # Prepare references to HDF5 data
             meds = self.f['meds']['all']['data'][()]
             meds_attributes = dict(self.f['meds']['all']['data'].attrs)
             meds_columns = list(meds.dtype.fields.keys())
             meds_columns.remove('time')
             slookup = self.f['meds']['all']['strings'][()]
-            
+
             # Initialize the prepared meds data as a list comprehension with time
             events['meds'] = [[t, ''] for t in meds['time']]
-            
+
             for i in range(len(events['meds'])):
                 for c in meds_columns:
                     if 'Ftype_'+c in meds_attributes and meds_attributes['Ftype_'+c] == 'string':
                         events['meds'][i][1] += ("\n" if len(events['meds'][i][1]) > 0 else '') + c + ': ' + str(slookup[meds[c][i]])
                     else:
                         events['meds'][i][1] += ("\n" if len(events['meds'][i][1]) > 0 else '') + c + ': ' + str(meds[c][i])
-            
+
         except Exception as e:
             print("Error retrieving meds.", e)
-            
+
         try:
-            
+
             # Prepare references to HDF5 data
             ce = self.f['ce']['all']['data'][()]
             ce_attributes = dict(self.f['ce']['all']['data'].attrs)
@@ -219,13 +220,13 @@ class File:
                         events['ce'][i][1] += ("\n" if len(events['ce'][i][1]) > 0 else '') + c + ': ' + str(slookup[ce[c][i]])
                     else:
                         events['ce'][i][1] += ("\n" if len(events['ce'][i][1]) > 0 else '') + c + ': ' + str(ce[c][i])
-            
+
         except Exception as e:
             print("Error retrieving ce.", e)
 
         end = time.time()
         print("Completed assembly of all event series for file " + self.orig_filename + ". Took " + str(round(end - start, 5)) + "s.")
-        
+
         return events
 
     # Returns the complete path to the original data file, including filename.
@@ -255,7 +256,7 @@ class File:
 
         # Return the output object
         return outputObject
-    
+
     # Returns a dict of file metadata.
     def getMetadata(self):
         metadata = {}
@@ -266,10 +267,10 @@ class File:
                 metadata[property] = self.f.attrs[property]
 
         return metadata
-    
+
     # Returns a reference to the processed data file, or None if there is none.
     def getProcessedFile(self):
-        
+
         if not hasattr(self, 'pf') or not self.pf or self.pf is None:
             return None
         else:
@@ -278,11 +279,11 @@ class File:
     # Returns the complete path to the processed data file, including filename.
     def getProcessedFilepath(self):
         return os.path.join(self.proc_dir, self.proc_filename)
-    
+
     # Returns the series instance corresponding to the provided series ID, or
     # None if the series cannot be found.
     def getSeries(self, seriesid):
-        
+
         # TODO(gus): We temporarily have to traverse both nueric and waveform
         # series until this is consolidated.
         for s in self.series:
@@ -336,12 +337,12 @@ class File:
 
         # Return the output object
         return outputObject
-        
+
     # Loads the necessary data into memory for an already-processed data file
     # (does not load data though).Sets up classes for all series from file but
     # does not load series data into memory).
     def load(self):
-        
+
         print('Loading series from file.')
 
         # Iteratee through all datasets in the partial file
@@ -356,7 +357,7 @@ class File:
         # if 'waveforms' in self.f.keys():
         #     for name in self.f['waveforms']:
         #         self.loadSeriesFromDataset(['waveforms', name, 'data'])
-            
+
         print('Completed loading series from file.')
 
     # Load all available series from a dataset
@@ -396,7 +397,7 @@ class File:
 
         # Open the HDF5 file
         self.f = h5.File(self.getFilepath(), 'r')
-        
+
     # Opens the processed HDF5 data file. Returns boolean whether able to open.
     def openProcessedFile(self):
 
@@ -406,28 +407,28 @@ class File:
         except Exception as e:
             print("Unable to open the processed data file " + self.getProcessedFilepath() + ".\n", e)
             return False
-        
+
         # If an exception was not raised, that means the file was opened
         return True
 
     # Process and store all downsamples for all series for the file.
     def process(self):
-        
+
         try:
-    
+
             print("Processing & storing all series for file " + self.orig_filename + ".")
             start = time.time()
 
             # Load data series into memory from file (does not load data though)
             self.load()
-        
+
             # Create the file for storing processed data.
             self.createProcessedFile()
-        
+
             # Process & store numeric series
             for s in self.series:
                 s.processAndStore()
-        
+
             end = time.time()
             print("Completed processing & storing all series for file " + self.orig_filename + ". Took " + str(round((end - start) / 60, 3)) + " minutes).")
 
@@ -448,17 +449,17 @@ class File:
 
             # Quit the program
             quit()
-            
+
         except Exception as e:
-        
+
             print("There was an exception while processing & storing data for " + self.orig_filename + ".")
             print(e)
             print("Deleting partially completed processed file " + self.getProcessedFilepath() + ".")
-            
+
             # Delete the processed data file
             rmfile(self.getProcessedFilepath())
-            
+
             print("File has been removed.")
-            
+
             # Re-aise the exception
             raise

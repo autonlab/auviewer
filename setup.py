@@ -27,7 +27,15 @@ setup(
     author_email='gwelter@andrew.cmu.edu',
     license='GNU LGPL 3',
     entry_points={
-        'console_scripts': ['auviewer=auviewer.server:main']
+        'console_scripts': [
+            'auviewer=auviewer.server.serve:main',
+
+            'auv-clean=auviewer.tools.clean:main',
+            'auv-generate-json-templates=auviewer.tools.generate_json_templates:main',
+            'auv-realtime-client=auviewer.tools.rtclient:main',
+            'auv-use-as-module=auviewer.tools.use_as_module:main',
+            'auv-watch-realtime-files=auviewer.tools.watch_realtime_files:main'
+        ]
     },
 	ext_modules=cythonize('auviewer/server/*.pyx', language_level=3),
     include_dirs=[np.get_include()],
@@ -39,16 +47,15 @@ setup(
         'h5py',
         'jsbeautifier',
         'python-socketio',
+        'watchdog',
 
         'flask',
         'flask-login',
         'flask-mail',
         'flask-socketio',
         'flask-sqlalchemy',
-        'dbgw',
         'cython',
-        'htmlmin',
-        'smtplib',
+        'htmlmin'
     ],
     packages=find_packages()
 )
