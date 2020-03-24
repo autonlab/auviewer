@@ -3,8 +3,10 @@ env/
 .idea/
 *.c
 *.pyc
+*.so
 .vscode/
 build/
 *.egg-info/
 dist/
 data/
+

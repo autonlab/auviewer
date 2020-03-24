@@ -1,10 +1,14 @@
 from os import getlogin
 import os.path
+import json
 
 # This file holds configuration parameters for the medview application.
 
 # Output verbosity
 verbose = True
+
+# AUView Data Root
+auvDataRoot = None
 
 # A root directory from which the web application is served. Should begin with a
 # slash and end without a slask (in other words, end with a directory name). If
@@ -41,23 +45,13 @@ auvCodeRoot = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 #   - - - - project_template.json (optional)
 #   - - - - interface_templates.json (optional)
 
-# AUView Data Root
-#auvDataRoot = '/zfsauton/data/public/gwelter/AUView/'
-auvDataRoot = '/home/gwelter/AUView/'
+cfg = None
 
-# User overrides
-if getlogin() == 'tracir':
-    auvDataRoot = '/home/tracir/TRACIR/medfiles/'
-elif getlogin() == 'root': #gpu7
-    # auvDataRoot = '/Users/awertz/work/medview/data'
-    auvDataRoot = '/zfsauton/data/public/gwelter/AUView/'
-    rootWebPath = '/auv'
-
-# File locations
-projectsDir = os.path.join(auvDataRoot, 'projects/')
-globalTemplatesDir = os.path.join(auvDataRoot, 'global_templates/')
-globalDefaultProjectTemplateFile = os.path.join(globalTemplatesDir, 'global_default_project_template.json')
-globalDefaultInterfaceTemplatesFile = os.path.join(globalTemplatesDir, 'global_default_interface_templates.json')
+# File locations. Updated in load_config.
+projectsDir = 'projects/'
+globalTemplatesDir = 'global_templates/'
+globalDefaultProjectTemplateFile = 'global_default_project_template.json'
+globalDefaultInterfaceTemplatesFile = 'global_default_interface_templates.json'
 
 # Flask application configuration
 class FlaskConfigClass(object):
@@ -69,26 +63,13 @@ class FlaskConfigClass(object):
     # https://code.luasoftware.com/tutorials/flask/things-you-should-know-about-flask-server-name/
     # SERVER_NAME = '127.0.0.1'
 
-    # Secret key used for password hashing
-    SECRET_KEY = 'THISISADEVELOPMENTSECRETKEY!CHANGEMETONEWRANDOMSTRINGFORPRODUCTION!'
-
     # Flask-SQLAlchemy settings
-    SQLALCHEMY_DATABASE_URI = f'sqlite:///{auvDataRoot}/userdb.sqlite'  # File-based SQL database
     SQLALCHEMY_TRACK_MODIFICATIONS = False  # Avoids SQLAlchemy warning
 
     CSRF_ENABLED = True
 
-    # Flask-Mail SMTP server settings
-    MAIL_SERVER = 'smtp.gmail.com'
-    MAIL_PORT = 587
-    MAIL_USE_SSL = False
-    MAIL_USE_TLS = True
-    MAIL_USERNAME = 'fbuqfou29f82012ndnba@gmail.com'
-    MAIL_PASSWORD = '[+A1G:%6yQ7g'
-    MAIL_DEFAULT_SENDER = '"AUView Medical (noreply)" <fbuqfou29f82012ndnba@gmail.com>'
-
     # Flask-User settings
-    USER_APP_NAME = "Auton Universal Viewer - Medical"  # Shown in and email templates and page footers
+    USER_APP_NAME = "AUViewer"  # Shown in and email templates and page footers
     USER_ENABLE_CHANGE_USERNAME = False
     USER_ENABLE_CONFIRM_EMAIL = False
     USER_ENABLE_EMAIL = True
@@ -128,3 +109,25 @@ class FlaskConfigClass(object):
     USER_UNCONFIRMED_EMAIL_ENDPOINT = 'user.login'
     USER_UNAUTHENTICATED_ENDPOINT = 'user.login'
     USER_UNAUTHORIZED_ENDPOINT = 'index'
+
+def load_config(fn):
+    global cfg
+    cfg = json.loads(open(fn, 'r').read())
+
+    global verbose, auvDataRoot, rootWebPath
+    verbose = cfg['verbose']
+    auvDataRoot = cfg['data_path']
+    rootWebPath = cfg['root_web_path']
+
+    global projectsDir, globalTemplatesDir, globalDefaultProjectTemplateFile
+    global globalDefaultInterfaceTemplatesFile
+    projectsDir = os.path.join(
+        auvDataRoot, projectsDir)
+    globalTemplatesDir = os.path.join(
+        auvDataRoot, globalTemplatesDir)
+    globalDefaultProjectTemplateFile = os.path.join(
+        globalTemplatesDir, globalDefaultProjectTemplateFile)
+    globalDefaultInterfaceTemplatesFile = os.path.join(
+        globalTemplatesDir, globalDefaultInterfaceTemplatesFile)
+
+    return cfg

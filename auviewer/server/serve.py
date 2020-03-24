@@ -7,6 +7,7 @@ from flask_user.signals import user_sent_invitation, user_registered
 from htmlmin.main import minify
 from pprint import pprint
 import os
+import argparse
 
 # Simplejson package is required in order to "ignore" NaN values and implicitly
 # convert them into null values. RFC JSON spec left out NaN values, even though
@@ -21,7 +22,8 @@ from . import config, dbgw
 from .file import File
 from .project import Project
 
-def create_app():
+
+def create_app(cfg):
 
     # Instantiate the Flask web application class
     app = Flask(__name__, template_folder=f'{config.auvCodeRoot}/static/www/templates')
@@ -45,6 +47,11 @@ def create_app():
 
     # Apply Flask configuration for Flask-User package
     app.config.from_object(config.FlaskConfigClass)
+    app.config.update({
+        'SECRET_KEY': cfg['secret_key'],
+        'SQLALCHEMY_DATABASE_URI': f'sqlite:///{cfg["data_path"]}/userdb.sqlite',
+        **cfg['mail']
+    })
 
     # Initialize Flask-SQLAlchemy, Flask-Mail, and Flask-Babel
     db = SQLAlchemy(app)
@@ -672,9 +679,18 @@ def unsubscribe_from_realtime_updates():
             print('User', request.sid, 'has been unsubscribed from', r)
 
 def main():
-    (app, socketio) = create_app()
-    # app.run(host='0.0.0.0', port=8001, debug=True, use_reloader=False)
-    socketio.run(app, host='0.0.0.0', port=8001, debug=True, use_reloader=False)
+    parser = argparse.ArgumentParser(description='Auton Lab Universal Viewer')
+    parser.add_argument('config', type=str, help='Configuration file to load.')
+    args = parser.parse_args()
+
+    cfg = config.load_config(args.config)
+
+    (app, socketio) = create_app(cfg)
+    socketio.run(app,
+        host=cfg['host'],
+        port=cfg['port'],
+        debug=cfg['debug'],
+        use_reloader=cfg['reloader'])
 
 # Start development web server
 if __name__ == '__main__':

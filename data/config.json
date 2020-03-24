@@ -1,0 +1,22 @@
+{
+    "host": "localhost",
+    "port": 8001,
+    "debug": true,
+    "reloader": false,
+    "verbose": true,
+
+    "data_path": "/Users/awertz/work/medview/data",
+    "root_web_path": "",
+
+    "secret_key": "THISISADEVELOPMENTSECRETKEY!CHANGEMETONEWRANDOMSTRINGFORPRODUCTION!",
+
+    "mail": {
+        "MAIL_SERVER": "smtp.gmail.com",
+        "MAIL_PORT": 587,
+        "MAIL_USE_SSL": false,
+        "MAIL_USE_TLS": true,
+        "MAIL_USERNAME": "fbuqfou29f82012ndnba@gmail.com",
+        "MAIL_PASSWORD": "[+A1G:%6yQ7g",
+        "MAIL_DEFAULT_SENDER": "\"AUView Medical (noreply)\" <fbuqfou29f82012ndnba@gmail.com>"
+    }
+}
