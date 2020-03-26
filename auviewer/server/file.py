@@ -1,12 +1,12 @@
-import h5py as h5
 import os.path
 import time
 from os import remove as rmfile
 
+import audata
+
 from . import config
 from .annotationset import AnnotationSet
 from .exceptions import ProcessedFileExists
-from .helpers import gather_datasets_recursive
 from .series import Series
 
 # File represents a single patient data file. File may operate in file- or
@@ -141,7 +141,8 @@ class File:
         # Create the file which will be used to store processed data
         try:
             print("Creating processed file.")
-            self.pf = h5.File(self.getProcessedFilepath(), "w-")
+            self.pf = audata.AUFile.new(self.getProcessedFilepath(), overwrite=False)
+            return self.pf
         except:
             print("There was an exception while h5 was creating the processed file. Raising ProcessedFileExists exception.")
             raise ProcessedFileExists
@@ -179,6 +180,9 @@ class File:
         # If we're in realtime-mode, we have no events to return, so return now.
         if self.mode() == 'realtime':
             return events
+
+
+        # ATW: TODO: Update meds and ce storage, probably want to make this more ... general purpose.
 
         try:
 
@@ -242,7 +246,7 @@ class File:
         outputObject = {
             # 'annotations': self.annotationSet.getAnnotations().tolist(),
             'annotations': self.annotationSet.getAnnotations(),
-            'baseTime': 0 if self.mode() == 'realtime' or 'meta' not in self.f or 'baseTime' not in self.f['meta'].attrs else self.f['meta'].attrs['baseTime'],
+            'baseTime': 0, # ATW: Not sure if this is still necessary.
             'events': self.getEvents(),
             'metadata': self.getMetadata(),
             'series': {}
@@ -263,8 +267,8 @@ class File:
 
         # Metadata is currently only available in realtime mode.
         if self.mode() == 'file':
-            for property in self.f.attrs:
-                metadata[property] = self.f.attrs[property]
+            metadata['audata'] = self.f.meta_audata
+            metadata['data'] = self.f.meta_data
 
         return metadata
 
@@ -346,9 +350,9 @@ class File:
         print('Loading series from file.')
 
         # Iteratee through all datasets in the partial file
-        for (ds, path) in gather_datasets_recursive(self.f):
+        for (ds, _) in self.f.recurse():
 
-            self.loadSeriesFromDataset(path)
+            self.loadSeriesFromDataset(ds)
 
         # if 'numerics' in self.f.keys():
         #     for name in self.f['numerics']:
@@ -361,32 +365,39 @@ class File:
         print('Completed loading series from file.')
 
     # Load all available series from a dataset
-    def loadSeriesFromDataset(self, h5path):
+    def loadSeriesFromDataset(self, ds):
 
-        h5path_string = '/'.join(h5path)
+        # Grab the columns.
+        cols = ds.columns
 
-        # Grab the dataset
-        ds = self.f.get(h5path_string)
-
-        # We expect fields to be available
-        if ds.dtype.fields is None:
-            print("Dataset", h5path_string, "has no fields.")
-            return
-
-        # Grab the column names
-        cols = ds.dtype.fields.keys()
-
-        # Determine the time column name
-        timecol = 'timestamp' if 'timestamp' in cols else 'time'
+        # Determine the time column name. Look for a column names 'time', 'timestampe',
+        # or the first time column, in that order.
+        timecol = None
+        if 'time' in cols:
+            timecol = 'time'
+        elif 'timestamp' in cols:
+            timecol = 'timestamp'
+        else:
+            for col in cols:
+                if col['type'] == 'time':
+                    timecol = col
+                    break
 
         # If time column not available, print an error & return
-        if timecol not in cols:
-            print("Did not find a time column in " + self.orig_filename + '.', 'Cols:', cols)
+        if timecol is None:
+            print(f"Did not find a time column in {self.orig_filename}.", 'Cols:', cols)
             return
+        else:
+            print(f'Using time column {ds.name}:{timecol}')
 
         # Iterate through all remaining columns and instantiate series for each
         for valcol in (c for c in cols if c != timecol):
-            self.series.append(Series(h5path, timecol, valcol, self))
+            coltype = cols[valcol]['type']
+            if coltype in ('real', 'integer'):
+                print(f'  - Adding {coltype} series: {ds.name}:{valcol}')
+                self.series.append(Series(ds, timecol, valcol, self))
+            else:
+                print(f'  - Skipping unsupported {coltype} series: {valcol}')
 
     # Returns the mode in which File is operating, either "file" or "realtime".
     def mode(self):
@@ -396,14 +407,14 @@ class File:
     def openOriginalFile(self):
 
         # Open the HDF5 file
-        self.f = h5.File(self.getFilepath(), 'r')
+        self.f = audata.AUFile.open(self.getFilepath())
 
     # Opens the processed HDF5 data file. Returns boolean whether able to open.
     def openProcessedFile(self):
 
         # Open the processed data file
         try:
-            self.pf = h5.File(self.getProcessedFilepath(), "r")
+            self.pf = audata.AUFile.open(self.getProcessedFilepath())
         except Exception as e:
             print("Unable to open the processed data file " + self.getProcessedFilepath() + ".\n", e)
             return False
@@ -423,11 +434,13 @@ class File:
             self.load()
 
             # Create the file for storing processed data.
-            self.createProcessedFile()
+            f = self.createProcessedFile()
 
             # Process & store numeric series
             for s in self.series:
                 s.processAndStore()
+
+            f.flush()
 
             end = time.time()
             print("Completed processing & storing all series for file " + self.orig_filename + ". Took " + str(round((end - start) / 60, 3)) + " minutes).")
@@ -457,7 +470,8 @@ class File:
             print("Deleting partially completed processed file " + self.getProcessedFilepath() + ".")
 
             # Delete the processed data file
-            rmfile(self.getProcessedFilepath())
+            if os.path.isfile(self.getProcessedFilepath()):
+                rmfile(self.getProcessedFilepath())
 
             print("File has been removed.")
 

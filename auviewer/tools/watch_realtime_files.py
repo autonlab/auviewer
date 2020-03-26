@@ -1,13 +1,15 @@
+# ATW: TODO: Untested after audata transition. This will be re-evaluated after the
+# move to bokeh when realtime will be re-enabled.
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(sys.path[0]), 'server'))
 
-import h5py as h5
 import numpy as np
 import time
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
-from ..server.helpers import gather_datasets_recursive
+import audata
+
 from ..server.file import File
 
 # Configurable variables
@@ -61,10 +63,10 @@ def rebuild(source_path, project_target_path, original_filename, processed_filen
     for sfn in files_list:
 
         # Open partial file as read-only
-        with h5.File(os.path.join(source_path, sfn), 'r') as sf:
+        with audata.AUFile.open(os.path.join(source_path, sfn)) as sf:
 
             # Iteratee through all datasets in the partial file
-            for (ds, path) in gather_datasets_recursive(sf):
+            for (ds, path) in sf.recurse():
 
                 # Prepare the path string (path itself is a list)
                 path_string = '/' + '/'.join(path)
@@ -78,9 +80,9 @@ def rebuild(source_path, project_target_path, original_filename, processed_filen
     # Once all datasets are prepared, write them to the new original file.
     # For now, put the file in the source path; we'll move it when ready.
     # with h5.File(os.path.join(project_target_path, ORIGINALS_FOLDER_NAME, original_filename), 'w') as f:
-    with h5.File(os.path.join(source_path, original_filename), 'w') as f:
+    with audata.AUFile.new(os.path.join(source_path, original_filename), overwrite=True) as f:
         for path in datasets:
-            f.create_dataset(path, data=datasets[path], compression='gzip')
+            f[path] = datasets[path]
 
     # Now, create downsamples & generate the processed file. For now, put the
     # processed file in the source path; we'll move it when ready.

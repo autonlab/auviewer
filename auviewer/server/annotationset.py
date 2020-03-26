@@ -1,4 +1,3 @@
-import h5py
 import numpy as np
 from flask_login import current_user
 from pprint import pprint

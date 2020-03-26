@@ -1,4 +1,8 @@
 #!/bin/bash
 
 python setup.py bdist_wheel
-pip install -U dist/*.whl
+
+# Copy the cython library to the source for debugging.
+cp -v build/lib.*/auviewer/server/cylib.*.so auviewer/server/.
+
+#pip install -U dist/*.whl

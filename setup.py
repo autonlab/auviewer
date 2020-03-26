@@ -44,7 +44,7 @@ setup(
     install_requires=[
         'numpy',
         'pandas',
-        'h5py',
+        'audata',
         'jsbeautifier',
         'python-socketio',
         'watchdog',

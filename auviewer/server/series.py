@@ -13,23 +13,22 @@ from .cylib import generateThresholdAlerts
 # Represents a single time series of data.
 class Series:
 
-    # Reads a series into memory and builds the downsampling. Type is either
-    # 'numeric' or 'waveform'. Fileparent is a reference to the File class
-    # instance which contains the Series.
-    def __init__(self, h5path, timecol, valcol, fileparent):
+    # Reads a series into memory and builds the downsampling. Fileparent is a reference
+    # to the File class instance which contains the Series.
+    def __init__(self, ds, timecol, valcol, fileparent):
 
         # The series ID is the dataset path in the HDF5 file
-        self.id = '/'.join(h5path) + ('/' + valcol if valcol != 'value' else '')
+        self.id = f'{ds.name}:{valcol}'
 
         # Holds the ordered (hierarchical) list of groups and, ultimately,
         # dataset to which the series belongs. So, this is like a folder path,
         # where the first element is the outermost group name and the last
         # element is the dataset name of the series.
-        self.h5path = h5path
+        self.h5path = [e for e in ds.name.split('/') if len(e) > 0]
 
         # Holds the ordered (hierarchical) list of groups where downsamples will
         # be stored in the processed file.
-        self.h5pathDownsample = copy(h5path)
+        self.h5pathDownsample = copy(self.h5path)
         self.h5pathDownsample.append(valcol)
 
         # Holds the time & value column names in the HDF dataset
@@ -66,6 +65,9 @@ class Series:
     #     'values': [ v1, v2, ... , vn ]
     #   }
     def addData(self, data):
+
+        # ATW: TODO: Reimplement.
+        raise Exception('Data appending is currently unsupported.')
 
         if not isinstance(data, dict) or not isinstance(data['times'], list) or not isinstance(data['values'], list):
             print('HERE', type(data), type(data['times']), type(data['values']), data)
@@ -117,7 +119,7 @@ class Series:
 
                 print("(downsampled output)")
 
-                data = downsampleFullOutput.tolist()
+                data = downsampleFullOutput.to_records(index=False).tolist()
                 output_type = 'downsample'
 
             else:
@@ -125,9 +127,9 @@ class Series:
                 print("(raw data output)")
 
                 # Get reference to the series datastream from the HDF5 file
-                dataset = self.fileparent.f.get('/'.join(self.h5path))[()]
+                dataset = self.fileparent.f['/'.join(self.h5path)][()]
                 nones = [None] * self.rd.len
-                data = [list(i) for i in zip(dataset[self.timecol], nones, nones, dataset[self.valcol].astype(np.float64))]
+                data = [list(i) for i in zip(dataset[self.timecol].values.astype(np.int64) / 10**9, nones, nones, dataset[self.valcol].values.astype(np.float64))]
                 output_type = 'real'
 
         else:
@@ -219,10 +221,10 @@ class Series:
             return
 
         # Get reference to the series datastream from the HDF5 file
-        dataset = self.fileparent.f.get('/'.join(self.h5path))[()]
+        dataset = self.fileparent.f['/'.join(self.h5path)][()]
 
-        self.rawTimes = dataset[self.timecol]
-        self.rawValues = dataset[self.valcol].astype(np.float64)
+        self.rawTimes = dataset[self.timecol].values.astype(np.int64) / 10**9
+        self.rawValues = dataset[self.valcol].values.astype(np.float64)
 
         end = time.time()
         print("Finished reading raw series data into memory for " + self.id + " (" + str(self.rawTimes.shape[0]) + " points). Took " + str(round(end - start, 5)) + "s.")

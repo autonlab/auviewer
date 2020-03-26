@@ -39,7 +39,7 @@ def buildNextDownsampleUp(np.ndarray[np.float64_t, ndim=2] intervalsOrig, double
     # Will track the stepwise left & right boundary of the new intervals
     cdef double leftboundaryNew = baseOffset
     cdef double rightboundaryNew = leftboundaryNew + timePerIntervalNew
-    
+
     # Holds the index of the current original interval we're working on.
     cdef int cio = 0
 
@@ -129,7 +129,7 @@ def buildNextDownsampleUp(np.ndarray[np.float64_t, ndim=2] intervalsOrig, double
 # Given a series of raw values and a time-per-interval parameter, produces and
 # returns a two-dimension NumPy array of downsample intervals
 def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarray[np.float64_t, ndim=1] rawValues, int numIntervals):
-    
+
     # Calculate the timespan of the entire dataset
     cdef double timespan = rawOffsets[rawOffsets.shape[0]-1] - rawOffsets[0]
 
@@ -158,7 +158,7 @@ def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarr
 
     # Holds the index of the current data point we're working on.
     cdef int cdpi = 0
-    
+
     # Holds the index of the current interval we're working on. We start at -1
     # because the loop will increment the index the first time it runs in order
     # to point to the "first" interval.
@@ -254,7 +254,7 @@ def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndar
 
     # Holds the indices of all raw values which surpass the threshold(s)
     cdef np.ndarray[long, ndim=1] pastThresholdIndices
-    
+
     # Pull the indices of all data points that exceed the threshold.
     # TODO(gus): Is there a more efficient way to do this?
     if mode == 0:
@@ -266,155 +266,155 @@ def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndar
     else:
         print("Invalid mode parameter provided to generateThresholdAlerts.")
         return np.array([])
-    
+
     # Holds generated alerts (start & stop time offsets). We assume there can be
     # a max of len(pastThresholdIndices) alerts and slice it shorter at the end.
     cdef np.ndarray[np.float64_t, ndim=2] alerts = np.zeros((pastThresholdIndices.shape[0], 2))
-    
+
     # Holds the index of the current data point we're working on
     cdef long cdpi = 0
-    
+
     # Holds the index of the next available unwritten alert
     cdef long nuai = 0
-    
+
     # Tracks the left & right boundaries of the current alert sample
     cdef double leftboundary, rightboundary
-    
+
     # Tracks the number of points that exceed the threshold and the total number
     # of sample points for calculation of the sample persistence.
     cdef long numexceed, numtotal
-    
+
     # Holds the sample persistence once calculated
     cdef double sampleduty
-    
+
     for alertSampleBeginIndex in pastThresholdIndices:
-        
+
         cdpi = alertSampleBeginIndex
         leftboundary = rawOffsets[cdpi]
         rightboundary = leftboundary + duration
-        
+
         # Reset sample persistence statistics
         numexceed = 0
         numtotal = 0
-        
+
         # Iterate through raw data indices until we hit the raw data bound or
         # hit the right time boundary for this current alert.
         while cdpi < rawOffsets.shape[0] and rawOffsets[cdpi] < rightboundary:
-            
+
             # Increment the number of total data points
             numtotal = numtotal + 1
-            
+
             # If this data point exceeds the threshold, increment the number of
             # threshold-exceed data points.
             if (mode == 0 and rawValues[cdpi] <= thresholdlow) or \
                 (mode == 1 and rawValues[cdpi] >= thresholdhigh) or \
                 (mode == 2 and (rawValues[cdpi] <= thresholdlow or rawValues[cdpi] >= thresholdhigh)):
                 numexceed = numexceed + 1
-                
+
             # Increment to the next data point
             cdpi = cdpi + 1
-            
+
         # Calculate the sample persistence
         sampleduty = <double>numexceed / <double>numtotal
-        
+
         # If the persistence of the sample exceeds the minimum to qualify for an
         # alert, add this to our alerts.
         if sampleduty >= persistence:
-            
+
             alerts[nuai,0] = leftboundary
             alerts[nuai,1] = rawOffsets[cdpi-1]
-            
+
             # Increment to the next available unwritten alert
             nuai = nuai + 1
-            
+
     # Slice off unused alerts
     alerts = alerts[0:nuai]
-    
+
     # Holds the final, consolidated alerts to be returned
     cdef np.ndarray[np.float64_t, ndim=2] finalalerts = np.zeros((alerts.shape[0], 2))
-    
+
     # Holds the index of the current raw alert
     cdef long crai = 0
-    
+
     # Holds the index of the current final alert
     cdef long cfai = 0
-    
+
     # Holds start & stop times for a candidate final alert
     cdef double candalertbegin, candalertend
-    
+
     # Handle the special case that there is only zero or one alert
     if len(alerts) <= 1:
         return alerts
-    
+
     # Prime the while loop with the first alert as candidate alert
     candalertbegin = alerts[crai,0]
     candalertend = alerts[crai,1]
     crai = crai + 1
-    
+
     while crai < len(alerts):
-        
+
         # For each iteration, we either extend the candidate time and move on,
         # or write out the final alert and start a new candidate.
-    
+
         # If the next alert is less than maxgap from the previous alert, extend
         # the alert window and move on
         if alerts[crai][0] <= candalertend + maxgap:
             candalertend = alerts[crai][1]
-            
+
         # Otherwise, add the current candidate as a final alert and start a
         # new candidate.
         else:
-            
+
             # Write the  candidate alert as a final alert
             finalalerts[cfai,0] = candalertbegin
             finalalerts[cfai,1] = candalertend
             cfai = cfai + 1
-            
+
             # Start a new candidate
             candalertbegin = alerts[crai,0]
             candalertend = alerts[crai,1]
-            
+
         # Increment to the next alert
         crai = crai + 1
-        
+
     # Write the final unwritten candidate as a final alert.
     finalalerts[cfai,0] = candalertbegin
     finalalerts[cfai,1] = candalertend
     cfai = cfai + 1
-    
+
     # Slice off the unused final alerts array elements
     finalalerts = finalalerts[0:cfai]
-    
+
     # print("Alerts:")
     # print(alerts)
     # print("Final Alerts:")
     # print(finalalerts)
-    
+
     return finalalerts
 
 # Returns the index where a provided target value should be inserted in a
 # downsample or raw data series. The side parameter indicates whether to
 # approach from the left or right, where 0 indicates left and non-zero is right.
-def getSliceParam(ds, unsigned short side, double target):
+def getSliceParam(np.ndarray[np.float64_t, ndim=1] vals, unsigned short side, double target):
 
-    cdef long numDataPoints = len(ds)
-    
+    cdef long numDataPoints = len(vals)
+
     cdef int low = 0
-    cdef int high = ds.len()-1
-    
+    cdef int high = numDataPoints - 1
+
     # Will hold the midpoint index
     cdef int mid
-    
+
     # Will be used later for iteration
     cdef int i
-    
+
     while low <= high:
-        
+
         mid = (low + high) / 2
-        
-        if target > ds[mid][0]:
+
+        if target > vals[mid]:
             low = mid + 1
-        elif target < ds[mid][0]:
+        elif target < vals[mid]:
             high = mid - 1
         else:
 
@@ -422,16 +422,16 @@ def getSliceParam(ds, unsigned short side, double target):
 
             # For left slice param, we want leftmost equal value index
             if side == 0:
-                while i > 0 and ds[i][0] == target:
+                while i > 0 and vals[i] == target:
                     i = i - 1
                 return i + 1
-        
+
             # For right slice param, we want 1 + rightmost equal value index
             else:
-                while i < numDataPoints and ds[i][0] == target:
+                while i < numDataPoints and vals[i] == target:
                     i = i + 1
                 return i
-            
+
     return low
 
 # This function calculates the number of downsample levels to build based on the

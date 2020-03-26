@@ -23,7 +23,7 @@ class DownsampleSet:
         if self.numDownsamples < 1:
             return None
 
-        return self.seriesparent.fileparent.pf.get('/'.join(self.seriesparent.h5pathDownsample) + '/' + '0')[()]
+        return self.seriesparent.fileparent.pf['/'.join(self.seriesparent.h5pathDownsample) + '/' + '0'][:]
 
     # Returns the number of downsamples available for this series in the
     # processed data file.
@@ -37,7 +37,7 @@ class DownsampleSet:
             raise RuntimeError
 
         # Get reference to the group containing the downsamples
-        grp = self.seriesparent.fileparent.pf.get('/'.join(self.seriesparent.h5pathDownsample))
+        grp = self.seriesparent.fileparent.pf['/'.join(self.seriesparent.h5pathDownsample)]
 
         # If no downsamples are available, return 0
         if grp is None:
@@ -45,7 +45,7 @@ class DownsampleSet:
 
         # Get the keys present in the group (they should all be strings of
         # integers 0..n where n+1 is the count of downsamples.
-        keys = grp.keys()
+        keys = grp.list()['datasets']
 
         # We start with -1
         maxDownsampleIndex = -1
@@ -92,11 +92,11 @@ class DownsampleSet:
             return
 
         # Get reference to the downsample dataset in the processed file
-        ds = self.seriesparent.fileparent.pf.get('/'.join(self.seriesparent.h5pathDownsample) + '/' + str(dsi))
+        ds = self.seriesparent.fileparent.pf['/'.join(self.seriesparent.h5pathDownsample) + '/' + str(dsi)]
 
         # Find the start & stop indices based on the start & stop times.
-        startIndex = getSliceParam(ds, 0, starttime)
-        stopIndex = getSliceParam(ds, 1, stoptime)
+        startIndex = getSliceParam(ds[:]['0'].values, 0, starttime)
+        stopIndex = getSliceParam(ds[:]['0'].values, 1, stoptime)
 
         # Return the downsample slice
         return ds[startIndex:stopIndex]
@@ -165,7 +165,8 @@ class DownsampleSet:
             try:
 
                 # Store the downsample
-                self.seriesparent.fileparent.pf.create_dataset('/'.join(self.seriesparent.h5pathDownsample) + '/' + str(i%ndtb), data=downsample, compression="gzip", shuffle=True)
+                dds_name = '{}/{}'.format('/'.join(self.seriesparent.h5pathDownsample), i % ndtb)
+                self.seriesparent.fileparent.pf[dds_name] = downsample
                 print("MEM AFT-STRFL: " + str(p.memory_full_info().uss / 1024 / 1024) + " MB")
 
             except:
