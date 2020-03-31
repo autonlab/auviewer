@@ -129,7 +129,7 @@ class Series:
                 # Get reference to the series datastream from the HDF5 file
                 dataset = self.fileparent.f['/'.join(self.h5path)][()]
                 nones = [None] * self.rd.len
-                data = [list(i) for i in zip(dataset[self.timecol].values.astype(np.int64) / 10**9, nones, nones, dataset[self.valcol].values.astype(np.float64))]
+                data = [list(i) for i in zip(dataset[self.timecol].values.astype(np.float64), nones, nones, dataset[self.valcol].values.astype(np.float64))]
                 output_type = 'real'
 
         else:
@@ -223,7 +223,7 @@ class Series:
         # Get reference to the series datastream from the HDF5 file
         dataset = self.fileparent.f['/'.join(self.h5path)][()]
 
-        self.rawTimes = dataset[self.timecol].values.astype(np.int64) / 10**9
+        self.rawTimes = dataset[self.timecol].values.astype(np.float64)
         self.rawValues = dataset[self.valcol].values.astype(np.float64)
 
         end = time.time()

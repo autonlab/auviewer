@@ -63,7 +63,7 @@ def rebuild(source_path, project_target_path, original_filename, processed_filen
     for sfn in files_list:
 
         # Open partial file as read-only
-        with audata.AUFile.open(os.path.join(source_path, sfn)) as sf:
+        with audata.AUFile.open(os.path.join(source_path, sfn), return_datetimes=False) as sf:
 
             # Iteratee through all datasets in the partial file
             for (ds, path) in sf.recurse():
@@ -80,7 +80,7 @@ def rebuild(source_path, project_target_path, original_filename, processed_filen
     # Once all datasets are prepared, write them to the new original file.
     # For now, put the file in the source path; we'll move it when ready.
     # with h5.File(os.path.join(project_target_path, ORIGINALS_FOLDER_NAME, original_filename), 'w') as f:
-    with audata.AUFile.new(os.path.join(source_path, original_filename), overwrite=True) as f:
+    with audata.AUFile.new(os.path.join(source_path, original_filename), overwrite=True, return_datetimes=False) as f:
         for path in datasets:
             f[path] = datasets[path]
 

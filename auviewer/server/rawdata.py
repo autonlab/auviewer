@@ -22,7 +22,7 @@ class RawData:
         # Assumes the underlying data type is a datetime64 stored in nanoseconds.
         # ATW: TODO: Should I make this lazy loaded? Can we get single-column access in audata?
         # ATW: TODO: Also, this should be cached since we support multi-column data now.
-        self.timevals = dataset[:][self.seriesparent.timecol].values.astype(np.int64) / 10**9
+        self.timevals = dataset[:][self.seriesparent.timecol].values.astype(np.float64)
 
         # Holds the timespan of the time series
         self.timespan = self.timevals[-1] - self.timevals[0]

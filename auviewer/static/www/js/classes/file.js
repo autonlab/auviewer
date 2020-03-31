@@ -465,7 +465,7 @@ File.prototype.detectAnomalies = function(series, thresholdlow, thresholdhigh, d
 
 	// Add this job's parameters to the already-executed jobs array
 	this.alreadyExecutedAnomalyDetectionJobs.push([series, parseFloat(thresholdlow), parseFloat(thresholdhigh), parseFloat(duration), parseFloat(persistence), parseFloat(maxgap)]);
-	
+
 	// Persist for callback
 	let file = this;
 
@@ -972,12 +972,15 @@ File.prototype.renderEventGraphs = function() {
 
 	for (let eventtype of ['ce', 'meds']) {
 
-		let eventdata = null;
+		let eventdata = undefined;
 		if (eventtype === 'ce') {
 			eventdata = this.fileData.events.ce;
 		} else if (eventtype === 'meds') {
 			eventdata = this.fileData.events.meds;
 		}
+
+		if (eventdata === undefined)
+			continue;
 
 		// Create our data
 		let graphData = [];

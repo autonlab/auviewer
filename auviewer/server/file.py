@@ -1,6 +1,7 @@
 import os.path
 import time
 from os import remove as rmfile
+import traceback
 
 import audata
 
@@ -141,7 +142,7 @@ class File:
         # Create the file which will be used to store processed data
         try:
             print("Creating processed file.")
-            self.pf = audata.AUFile.new(self.getProcessedFilepath(), overwrite=False)
+            self.pf = audata.AUFile.new(self.getProcessedFilepath(), overwrite=False, return_datetimes=False)
             return self.pf
         except:
             print("There was an exception while h5 was creating the processed file. Raising ProcessedFileExists exception.")
@@ -181,52 +182,31 @@ class File:
         if self.mode() == 'realtime':
             return events
 
-
-        # ATW: TODO: Update meds and ce storage, probably want to make this more ... general purpose.
-
-        try:
-
-            # Prepare references to HDF5 data
-            meds = self.f['meds']['all']['data'][()]
-            meds_attributes = dict(self.f['meds']['all']['data'].attrs)
-            meds_columns = list(meds.dtype.fields.keys())
-            meds_columns.remove('time')
-            slookup = self.f['meds']['all']['strings'][()]
-
-            # Initialize the prepared meds data as a list comprehension with time
-            events['meds'] = [[t, ''] for t in meds['time']]
-
-            for i in range(len(events['meds'])):
-                for c in meds_columns:
-                    if 'Ftype_'+c in meds_attributes and meds_attributes['Ftype_'+c] == 'string':
-                        events['meds'][i][1] += ("\n" if len(events['meds'][i][1]) > 0 else '') + c + ': ' + str(slookup[meds[c][i]])
-                    else:
-                        events['meds'][i][1] += ("\n" if len(events['meds'][i][1]) > 0 else '') + c + ': ' + str(meds[c][i])
-
-        except Exception as e:
-            print("Error retrieving meds.", e)
+        def catcols(row, idcol=None):
+            idx = row[idcol]
+            return (idx, '\n'.join(
+                [f'{row[c]}' for c in row.index \
+                    if (c is not idcol) and (row[c] is not None) and (row[c] != '')]))
 
         try:
 
             # Prepare references to HDF5 data
-            ce = self.f['ce']['all']['data'][()]
-            ce_attributes = dict(self.f['ce']['all']['data'].attrs)
-            ce_columns = list(ce.dtype.fields.keys())
-            ce_columns.remove('date')
-            slookup = self.f['ce']['all']['strings'][()]
+            meds = self.f['ehr/medications'][:]
+            events['meds'] = meds.apply(catcols, 1, idcol='time').tolist()
 
-            # Initialize the prepared ce data as a list comprehension with time
-            events['ce'] = [[t, ''] for t in ce['date']]
+        except Exception:
+            print("Error retrieving meds.")
+            traceback.print_exc()
 
-            for i in range(len(events['ce'])):
-                for c in ce_columns:
-                    if 'Ftype_' + c in ce_attributes and ce_attributes['Ftype_' + c] == 'string':
-                        events['ce'][i][1] += ("\n" if len(events['ce'][i][1]) > 0 else '') + c + ': ' + str(slookup[ce[c][i]])
-                    else:
-                        events['ce'][i][1] += ("\n" if len(events['ce'][i][1]) > 0 else '') + c + ': ' + str(ce[c][i])
+        try:
 
-        except Exception as e:
-            print("Error retrieving ce.", e)
+            # Prepare references to HDF5 data
+            ce = self.f['low_rate'][:]
+            events['ce'] = ce.apply(catcols, 1, idcol='date').tolist()
+
+        except Exception:
+            print("Error retrieving ce.")
+            traceback.print_exc()
 
         end = time.time()
         print("Completed assembly of all event series for file " + self.orig_filename + ". Took " + str(round(end - start, 5)) + "s.")
@@ -379,7 +359,7 @@ class File:
             timecol = 'timestamp'
         else:
             for col in cols:
-                if col['type'] == 'time':
+                if cols[col]['type'] == 'time':
                     timecol = col
                     break
 
@@ -407,16 +387,17 @@ class File:
     def openOriginalFile(self):
 
         # Open the HDF5 file
-        self.f = audata.AUFile.open(self.getFilepath())
+        self.f = audata.AUFile.open(self.getFilepath(), return_datetimes=False)
 
     # Opens the processed HDF5 data file. Returns boolean whether able to open.
     def openProcessedFile(self):
 
         # Open the processed data file
         try:
-            self.pf = audata.AUFile.open(self.getProcessedFilepath())
+            self.pf = audata.AUFile.open(self.getProcessedFilepath(), return_datetimes=False)
         except Exception as e:
             print("Unable to open the processed data file " + self.getProcessedFilepath() + ".\n", e)
+            traceback.print_exc()
             return False
 
         # If an exception was not raised, that means the file was opened
