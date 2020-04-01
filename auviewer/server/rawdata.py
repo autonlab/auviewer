@@ -18,14 +18,11 @@ class RawData:
         # Holds the number of data points in the raw data series
         self.len = dataset.nrow
 
-        # Holds the transformed time column. Otherwise we have to do this conversion very time.
-        # Assumes the underlying data type is a datetime64 stored in nanoseconds.
-        # ATW: TODO: Should I make this lazy loaded? Can we get single-column access in audata?
-        # ATW: TODO: Also, this should be cached since we support multi-column data now.
-        self.timevals = dataset[:][self.seriesparent.timecol].values.astype(np.float64)
+        # Holds all the time values. Loaded lazily.
+        self.timevals = None
 
         # Holds the timespan of the time series
-        self.timespan = self.timevals[-1] - self.timevals[0]
+        self.timespan = np.abs(np.diff(dataset[[-1, 0]][self.seriesparent.timecol].values.astype(np.float64))[0])
 
     # Returns a slice of the appropriate downsample for the given time range, or
     # nothing if there is no appropriate downsample available (in this case, raw
@@ -35,6 +32,14 @@ class RawData:
 
         # Grab a reference to the dataset
         ds = self.getDatasetReference()
+
+        # Holds the transformed time column. Otherwise we have to do this conversion very time.
+        # Assumes the underlying data type is a datetime64 stored in nanoseconds.
+        # ATW: TODO: Can we get single-column access in audata?
+        # ATW: TODO: Also, this should be cached since we support multi-column data now.
+        if self.timevals is None:
+            dataset = self.getDatasetReference()
+            self.timevals = dataset[:][self.seriesparent.timecol].values.astype(np.float64)
 
         # Find the start & stop indices based on the start & stop times.
         # startIndex = np.searchsorted(self.rawTimeOffsets, starttime)
