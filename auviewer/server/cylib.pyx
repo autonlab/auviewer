@@ -395,9 +395,9 @@ def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndar
 # Returns the index where a provided target value should be inserted in a
 # downsample or raw data series. The side parameter indicates whether to
 # approach from the left or right, where 0 indicates left and non-zero is right.
-def getSliceParam(np.ndarray[np.float64_t, ndim=1] vals, unsigned short side, double target):
+def getSliceParam(ds, timecol, unsigned short side, double target):
 
-    cdef long numDataPoints = len(vals)
+    cdef long numDataPoints = ds.nrow
 
     cdef int low = 0
     cdef int high = numDataPoints - 1
@@ -412,9 +412,9 @@ def getSliceParam(np.ndarray[np.float64_t, ndim=1] vals, unsigned short side, do
 
         mid = (low + high) / 2
 
-        if target > vals[mid]:
+        if target > ds[mid][timecol][0]:
             low = mid + 1
-        elif target < vals[mid]:
+        elif target < ds[mid][timecol][0]:
             high = mid - 1
         else:
 
@@ -422,13 +422,13 @@ def getSliceParam(np.ndarray[np.float64_t, ndim=1] vals, unsigned short side, do
 
             # For left slice param, we want leftmost equal value index
             if side == 0:
-                while i > 0 and vals[i] == target:
+                while i > 0 and ds[i][timecol][0] == target:
                     i = i - 1
                 return i + 1
 
             # For right slice param, we want 1 + rightmost equal value index
             else:
-                while i < numDataPoints and vals[i] == target:
+                while i < numDataPoints and ds[i][timecol][0] == target:
                     i = i + 1
                 return i
 

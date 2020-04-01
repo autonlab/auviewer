@@ -1,5 +1,6 @@
 from collections import deque
 import numpy as np
+import pandas as pd
 import time
 import psutil
 from threading import Lock
@@ -160,9 +161,9 @@ class Series:
         # Get the appropriate downsample for this time range
         ds = self.dss.getRangedOutput(starttime, stoptime)
 
-        if isinstance(ds, np.ndarray):
+        if isinstance(ds, pd.DataFrame):
             print("(downsampled output)")
-            data = ds.tolist()
+            data = ds.to_records(index=False).tolist()
             output_type = 'downsample'
 
         else:

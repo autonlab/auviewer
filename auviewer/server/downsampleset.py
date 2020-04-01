@@ -79,7 +79,7 @@ class DownsampleSet:
 
         # If there are no downsamples available, we cannot provide one
         if self.numDownsamples < 1:
-            return
+            return None
 
         # Calculate the timespan of the view window, in seconds
         timespan = stoptime - starttime
@@ -89,14 +89,14 @@ class DownsampleSet:
 
         # If we should be using raw data, return nothing
         if dsi == -1:
-            return
+            return None
 
         # Get reference to the downsample dataset in the processed file
         ds = self.seriesparent.fileparent.pf['/'.join(self.seriesparent.h5pathDownsample) + '/' + str(dsi)]
 
         # Find the start & stop indices based on the start & stop times.
-        startIndex = getSliceParam(ds[:]['0'].values, 0, starttime)
-        stopIndex = getSliceParam(ds[:]['0'].values, 1, stoptime)
+        startIndex = getSliceParam(ds, '0', 0, starttime)
+        stopIndex = getSliceParam(ds, '0', 1, stoptime)
 
         # Return the downsample slice
         return ds[startIndex:stopIndex]

@@ -18,9 +18,6 @@ class RawData:
         # Holds the number of data points in the raw data series
         self.len = dataset.nrow
 
-        # Holds all the time values. Loaded lazily.
-        self.timevals = None
-
         # Holds the timespan of the time series
         self.timespan = np.abs(np.diff(dataset[[-1, 0]][self.seriesparent.timecol].values.astype(np.float64))[0])
 
@@ -33,25 +30,17 @@ class RawData:
         # Grab a reference to the dataset
         ds = self.getDatasetReference()
 
-        # Holds the transformed time column. Otherwise we have to do this conversion very time.
-        # Assumes the underlying data type is a datetime64 stored in nanoseconds.
-        # ATW: TODO: Can we get single-column access in audata?
-        # ATW: TODO: Also, this should be cached since we support multi-column data now.
-        if self.timevals is None:
-            dataset = self.getDatasetReference()
-            self.timevals = dataset[:][self.seriesparent.timecol].values.astype(np.float64)
-
         # Find the start & stop indices based on the start & stop times.
         # startIndex = np.searchsorted(self.rawTimeOffsets, starttime)
         # stopIndex = np.searchsorted(self.rawTimeOffsets, stoptime, side='right')
-        startIndex = getSliceParam(self.timevals, 0, starttime)
-        stopIndex = getSliceParam(self.timevals, 1, stoptime)
+        startIndex = getSliceParam(ds, self.seriesparent.timecol, 0, starttime)
+        stopIndex = getSliceParam(ds, self.seriesparent.timecol, 1, stoptime)
 
         # Assemble the output data
         nones = [None] * (stopIndex - startIndex)
         # data = [list(i) for i in zip(self.rawTimeOffsets[startIndex:stopIndex], nones, nones, self.rawValues[startIndex:stopIndex])]
         ds_slice = ds[startIndex:stopIndex]
-        return [list(i) for i in zip(self.timevals[startIndex:stopIndex], nones, nones, ds_slice[self.seriesparent.valcol].values.astype(np.float64))]
+        return [list(i) for i in zip(ds_slice[self.seriesparent.timecol].values.astype(np.float64), nones, nones, ds_slice[self.seriesparent.valcol].values.astype(np.float64))]
 
     def getDatasetReference(self):
 
