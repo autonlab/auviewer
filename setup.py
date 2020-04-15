@@ -46,8 +46,12 @@ setup(
         'pandas',
         'audata',
         'jsbeautifier',
+        'simplejson',
         'python-socketio',
         'watchdog',
+        'psutil',
+        'passlib',
+        'pycrypto',
 
         'flask',
         'flask-login',
