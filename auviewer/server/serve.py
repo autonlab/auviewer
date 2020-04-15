@@ -2,8 +2,6 @@ from flask import Flask, Blueprint, send_from_directory, request, render_templat
 from flask_mail import Mail
 from flask_socketio import SocketIO, join_room, leave_room, rooms
 from flask_sqlalchemy import SQLAlchemy
-from flask_user import confirm_email_required, current_user, login_required, UserManager, UserMixin, SQLAlchemyAdapter
-from flask_user.signals import user_sent_invitation, user_registered
 from htmlmin.main import minify
 from pprint import pprint
 import os
@@ -21,6 +19,9 @@ import simplejson
 from . import config, dbgw
 from .file import File
 from .project import Project
+
+from ..flask_user import confirm_email_required, current_user, login_required, UserManager, UserMixin, SQLAlchemyAdapter
+from ..flask_user.signals import user_sent_invitation, user_registered
 
 
 def create_app(cfg):
