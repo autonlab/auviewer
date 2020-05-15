@@ -2,11 +2,13 @@ import os.path
 import time
 from os import remove as rmfile
 import traceback
+import pandas as pd
 
 import audata
 
 from . import config
 from .annotationset import AnnotationSet
+from .cylib import generateThresholdAlerts
 from .exceptions import ProcessedFileExists
 from .series import Series
 
@@ -17,9 +19,12 @@ from .series import Series
 # realtime-mode.
 class File:
 
-    def __init__(self, orig_filename='', proc_filename='', orig_dir='', proc_dir=''):
+    def __init__(self, projparent, orig_filename='', proc_filename='', orig_dir='', proc_dir=''):
 
         print("\n------------------------------------------------\nACCESSING FILE: " + os.path.join(orig_dir, orig_filename) + "\n------------------------------------------------\n")
+
+        # Holds reference to the project parent
+        self.projparent = projparent
 
         # Holds the original filename
         self.orig_filename = orig_filename
@@ -148,7 +153,7 @@ class File:
             print("There was an exception while h5 was creating the processed file. Raising ProcessedFileExists exception.")
             raise ProcessedFileExists
 
-    def detectAnomalies(self, series, thresholdlow=None, thresholdhigh=None, duration=300, persistence=.7, maxgap=300):
+    def detectAnomalies(self, type, series, thresholdlow=None, thresholdhigh=None, duration=300, persistence=.7, maxgap=300, series2=None):
 
         # Determine the mode (see generateThresholdAlerts function description
         # for details on this parameter).
@@ -156,6 +161,7 @@ class File:
             # We must have at least one of thresholdlow or thresholdhigh.
             print("Error: We need at least one of threshold low or threshold high in order to perform anomaly detection.")
             return []
+
         if thresholdhigh is None:
             mode = 0
             thresholdhigh = 0
@@ -165,10 +171,72 @@ class File:
         else:
             mode = 2
 
-        # Find the series
-        for s in self.series:
-            if s.id == series:
-                return s.generateThresholdAlerts(thresholdlow, thresholdhigh, mode, duration, persistence, maxgap).tolist()
+        if type == 'anomalydetection':
+
+            # Find the series & run anomaly detection
+            for s in self.series:
+                if s.id == series:
+                    return s.generateThresholdAlerts(thresholdlow, thresholdhigh, mode, duration, persistence, maxgap).tolist()
+
+        elif type == 'correlation':
+
+            # TODO(Gus): TEMP!
+            series2 = '/data/numerics/HR.HR:value'
+            timewindow='10min'
+
+            # The series2 parameter is required for correlation detection.
+            if series2 is None:
+                print("Error: Correlation detection requires series2 parameter.")
+                return []
+
+            # Find the series
+            for s in self.series:
+                if s.id == series:
+                    s1 = s
+                if s.id == series2:
+                    s2 = s
+
+            t1, v1 = s1.pullRawDataIntoMemory(returnValuesOnly=True)
+            t2, v2 = s2.pullRawDataIntoMemory(returnValuesOnly=True)
+
+            s1Data = pd.DataFrame({
+                'time': t1,
+                'val1': v1
+            })
+            s2Data = pd.DataFrame({
+                'time': t2,
+                'val2': v2
+            })
+
+            # Assemble into series 1 & series 2 dataframes
+            # s1Data = pd.concat((t1, v1), axis=1)
+            # s2Data = pd.concat((t2, v2), axis=1)
+            #
+            # # Assert column names
+            # s1Data.columns = ['time', 'val1']
+            # s2Data.columns = ['time', 'val2']
+
+            # Create an inner joined dataset with common time column
+            df = s1Data.merge(s2Data, on='time')
+
+            # Filter out null values
+            df = df[df.notnull()]
+
+            # Create a datetime column
+            df['time_conv'] = pd.to_datetime(df.time, unit='s')
+
+            # Set the index to the datetime column
+            df.set_index('time_conv', inplace=True)
+
+            print(df)
+
+            # Generate the rolling-window correlation
+            corr = df['val1'].rolling(timewindow).corr(other=df['val2'])
+
+            # Now run anomaly detection on the rolling-window correlation
+            alerts = generateThresholdAlerts(df['time'].to_numpy(), corr.to_numpy(), thresholdlow, thresholdhigh, mode, duration, persistence, maxgap).tolist()
+
+            return alerts
 
     # Returns all event series
     def getEvents(self):

@@ -87,6 +87,7 @@ def rebuild(source_path, project_target_path, original_filename, processed_filen
     # Now, create downsamples & generate the processed file. For now, put the
     # processed file in the source path; we'll move it when ready.
     File(
+        projparent=None,
         orig_filename=original_filename,
         proc_filename=processed_filename,
         orig_dir=source_path,

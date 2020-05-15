@@ -210,8 +210,9 @@ class Series:
         print("Completed processing & storing all downsamples for the series " + self.id + ". Took " + str(round((end - start) / 60, 3)) + " minutes.")
 
     # Pulls the raw data for the series from the file into memory (self.rawTimeOffsets
-    # and self.rawValues).
-    def pullRawDataIntoMemory(self):
+    # and self.rawValues). If the returnValuesOnly is set, the function will return
+    # a tuple with the times & values and not hold them in the class instance.
+    def pullRawDataIntoMemory(self, returnValuesOnly=False):
 
         print("Reading raw series data into memory for " + self.id + ".")
         start = time.time()
@@ -224,8 +225,15 @@ class Series:
         # Get reference to the series datastream from the HDF5 file
         dataset = self.fileparent.f['/'.join(self.h5path)][()]
 
-        self.rawTimes = dataset[self.timecol].values.astype(np.float64)
-        self.rawValues = dataset[self.valcol].values.astype(np.float64)
+        rawTimes = dataset[self.timecol].values.astype(np.float64)
+        rawValues = dataset[self.valcol].values.astype(np.float64)
+
+        # Return the values if requested, otherwise attach them to the class instance.
+        if returnValuesOnly:
+            return rawTimes, rawValues
+        else:
+            self.rawTimes = rawTimes
+            self.rawValues = rawValues
 
         end = time.time()
         print("Finished reading raw series data into memory for " + self.id + " (" + str(self.rawTimes.shape[0]) + " points). Took " + str(round(end - start, 5)) + "s.")

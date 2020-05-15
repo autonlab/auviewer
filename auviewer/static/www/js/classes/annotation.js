@@ -4,9 +4,10 @@
 let maxLocalAnnotationID = 0;
 
 // Annotation constructor.
-function Annotation(dataObjOrArray, state) {
+function Annotation(dataObjOrArray, state, forceIDReset=false) {
 
 	// Set default values
+	this.file = null;
 	this.series = null;
 	this.annotation = {};
 	this.begin = 0;
@@ -20,7 +21,7 @@ function Annotation(dataObjOrArray, state) {
 	}
 
 	// Set the local ID if a backend ID was not provided
-	if (!this.hasOwnProperty('id') || this.id.length <= 0) {
+	if (forceIDReset || !this.hasOwnProperty('id') || !this.id) {
 		this.id = "local" + maxLocalAnnotationID++;
 	}
 
@@ -109,12 +110,12 @@ Annotation.prototype.deleteLocal = function() {
 
 // Returns JS Date object corresponding to end date.
 Annotation.prototype.getEndDate = function() {
-	return new Date((this.end + globalStateManager.currentFile.fileData.baseTime) * 1000);
+	return new Date(this.end * 1000);
 };
 
 // Returns JS Date object corresponding to start date.
 Annotation.prototype.getStartDate = function() {
-	return new Date((this.begin + globalStateManager.currentFile.fileData.baseTime) * 1000);
+	return new Date(this.begin * 1000);
 };
 
 // Returns the index of the object in the annotations array, or -1 if not found.
@@ -128,6 +129,46 @@ Annotation.prototype.getIndex = function () {
 	return -1;
 };
 
+// Go to the annotation by centering the graph plot at the annotation. If the
+// annotation belongs to a file other than the currently-loaded file, it will
+// first load the annotation's file.
+Annotation.prototype.goTo = function() {
+
+	let callback = (function() {
+
+		console.log('callback running');
+
+		/* Calculate the zoom window */
+
+		// Total zoom window time to display
+		let zwTotal = 6 * 60 * 60;
+
+		// Total gap = total zoom window less the anomaly duration
+		let zwTotalGap = zwTotal - (this.end - this.begin);
+
+		// Gap on either side
+		let zwGapSingleSide = zwTotalGap / 2;
+
+		// Compute the zoom window begin & end
+		let zwBegin = (this.begin - zwGapSingleSide)*1000;
+		let zwEnd = (this.end + zwGapSingleSide)*1000;
+
+		// Zoom to the designated window
+		globalStateManager.currentFile.zoomTo([zwBegin, zwEnd]);
+
+		console.log('callback finished');
+
+	}).bind(this);
+
+	// Ensure we have the correct file loaded. If a new file is loaded, it will
+	// call callback upon loading. If not, loadFile will return false, and we
+	// will call the callback ourselves.
+	if (!globalStateManager.loadFile(this.file, '', callback)) {
+		callback();
+	}
+
+};
+
 // Hide the new/edit annotation dialog.
 Annotation.prototype.hideDialog = function () {
 	let modal = $('#annotationModal');
@@ -137,6 +178,10 @@ Annotation.prototype.hideDialog = function () {
 
 // Populates annotation form values from the annotation instance values`.
 Annotation.prototype.populateFormFromValues = function() {
+
+	// Populate the file & series names
+	document.getElementById('annotationFile').value = this.file;
+	document.getElementById('annotationSeries').value = this.series;
 
 	// Populate annotation start date & time fields
 	let annotationStartDate = this.getStartDate();
@@ -181,10 +226,10 @@ Annotation.prototype.populateFormFromValues = function() {
 Annotation.prototype.populateValuesFromForm = function() {
 	
 	let annotationStartDate = new Date(document.getElementById('annotationStartDate').value + ' ' + document.getElementById('annotationStartTime').value);
-	let annotationStartOffset = annotationStartDate.getTime()/1000 - globalStateManager.currentFile.fileData.baseTime;
+	let annotationStartOffset = annotationStartDate.getTime()/1000;
 	
 	let annotationEndDate = new Date(document.getElementById('annotationEndDate').value + ' ' + document.getElementById('annotationEndTime').value);
-	let annotationEndOffset = annotationEndDate.getTime()/1000 - globalStateManager.currentFile.fileData.baseTime;
+	let annotationEndOffset = annotationEndDate.getTime()/1000;
 
 	this.begin = annotationStartOffset;
 	this.end = annotationEndOffset;
@@ -198,7 +243,8 @@ Annotation.prototype.populateValuesFromForm = function() {
 };
 
 // Populates annotation instance values from an object. The object may have a
-// property 'values' which is an array of the format provided by the backend.
+// property 'valuesArrayFromBackend' which is an array of the format provided
+// by the backend.
 Annotation.prototype.populateValuesFromObject = function (obj) {
 
 	if (obj.hasOwnProperty('valuesArrayFromBackend')) {
@@ -207,21 +253,26 @@ Annotation.prototype.populateValuesFromObject = function (obj) {
 		if (!obj.valuesArrayFromBackend || !Array.isArray(obj.valuesArrayFromBackend)) {
 			console.log('Error: Array provided to annotator was null or not array.');
 			return;
-		} else if (obj.valuesArrayFromBackend.length !== 6) {
+		} else if (obj.valuesArrayFromBackend.length !== 8) {
 			console.log('Error: Invalid array provided to annotator (size '+obj.valuesArrayFromBackend.length+').');
 			return;
 		}
 
 		// Set values from the array
 		this.id = obj.valuesArrayFromBackend[0];
-		this.begin = obj.valuesArrayFromBackend[1];
-		this.end = obj.valuesArrayFromBackend[2];
-		this.annotation = JSON.parse(obj.valuesArrayFromBackend[5]);
+		this.file = obj.valuesArrayFromBackend[1];
+		this.series = obj.valuesArrayFromBackend[2]
+		this.begin = obj.valuesArrayFromBackend[3];
+		this.end = obj.valuesArrayFromBackend[4];
+		this.annotation = JSON.parse(obj.valuesArrayFromBackend[7]);
 
 	}
 
 	if (obj.hasOwnProperty('id')) {
 		this.id = obj.id;
+	}
+	if (obj.hasOwnProperty('file')) {
+		this.file = obj.file;
 	}
 	if (obj.hasOwnProperty('series')) {
 		this.series = obj.series;
@@ -242,6 +293,9 @@ Annotation.prototype.populateValuesFromObject = function (obj) {
 // saves an existing annotation (if this.state==='existing').
 Annotation.prototype.save = function () {
 
+	// Make a copy of the anomaly in case it's needed later
+	let copyForLater = new Annotation(this, 'anomaly', true);
+
 	// Pull values from form
 	this.populateValuesFromForm();
 
@@ -250,12 +304,19 @@ Annotation.prototype.save = function () {
 
 	if (this.state === 'new' || this.state === 'anomaly') {
 
-		// TODO(gus): Handle null current file, make file determination more robust.
-		requestHandler.createAnnotation(globalStateManager.currentFile.projname, globalStateManager.currentFile.filename, this.begin, this.end, '' /* TODO(gus) */, JSON.stringify(this.annotation), function (data) {
+		// Attempt to create the annotation in the backend
+		requestHandler.createAnnotation(globalStateManager.currentFile.projname, globalStateManager.currentFile.filename, this.begin, this.end, this.series, JSON.stringify(this.annotation), function (data) {
 
 			if (data.hasOwnProperty('success') && data.success === true) {
 
 				globalAppConfig.verbose && console.log("Annotation has been written.");
+
+				// If this annotation was previously an anomly, add a duplicate
+				// of it before we proceed since we're about to convert this one
+				// to an annotation.
+				if (annotation.state === 'anomaly') {
+					globalStateManager.currentFile.annotations.push(copyForLater);
+				}
 
 				// Set ID received from backend
 				annotation.id = data.id;
@@ -282,7 +343,7 @@ Annotation.prototype.save = function () {
 
 	} else if (this.state === 'existing') {
 
-		requestHandler.updateAnnotation(this.id, globalStateManager.currentFile.projname, globalStateManager.currentFile.filename, this.begin, this.end, '', JSON.stringify(this.annotation), function (data) {
+		requestHandler.updateAnnotation(this.id, globalStateManager.currentFile.projname, globalStateManager.currentFile.filename, this.begin, this.end, this.series, JSON.stringify(this.annotation), function (data) {
 
 			if (data.hasOwnProperty('success') && data.success === true) {
 

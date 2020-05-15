@@ -17,7 +17,7 @@ template = {
 
 	'anomalyDetection': [
 		{
-			'series': 'numerics/HR/data',
+			'series': '/data/numerics/HR:value',
 			'tlow': 58,
 			'thigh': 110,
 			'dur': 10,
@@ -25,7 +25,7 @@ template = {
 			'maxgap': 1800
 		},
 		{
-			'series': 'numerics/HR.HR/data',
+			'series': '/data/numerics/HR.HR:value',
 			'tlow': 58,
 			'thigh': 110,
 			'dur': 10,
@@ -33,7 +33,7 @@ template = {
 			'maxgap': 1800
 		},
 		{
-			'series': 'numerics/rRR/data',
+			'series': '/data/numerics/rRR:value',
 			'tlow': 10,
 			'thigh': 29,
 			'dur': 300,
@@ -41,7 +41,7 @@ template = {
 			'maxgap': 300
 		},
 		{
-			'series': 'numerics/RR.RR/data',
+			'series': '/data/numerics/RR.RR:value',
 			'tlow': 10,
 			'thigh': 29,
 			'dur': 300,
@@ -49,7 +49,7 @@ template = {
 			'maxgap': 300
 		},
 		{
-			'series': 'numerics/NBP-S/data',
+			'series': '/data/numerics/NBP-S:value',
 			'tlow': 90,
 			'thigh': 165,
 			'dur': 300,
@@ -57,14 +57,14 @@ template = {
 			'maxgap': 300
 		},
 		{
-			'series': 'numerics/NBP-M/data',
+			'series': '/data/numerics/NBP-M:value',
 			'tlow': 65,
 			'dur': 300,
 			'duty': 70,
 			'maxgap': 300
 		},
 		{
-			'series': 'numerics/NBPs/data',
+			'series': '/data/numerics/NBPs:value',
 			'tlow': 90,
 			'thigh': 165,
 			'dur': 300,
@@ -72,14 +72,14 @@ template = {
 			'maxgap': 300
 		},
 		{
-			'series': 'numerics/NBPm/data',
+			'series': '/data/numerics/NBPm:value',
 			'tlow': 65,
 			'dur': 300,
 			'duty': 70,
 			'maxgap': 300
 		},
 		{
-			'series': 'numerics/AR1-S/data',
+			'series': '/data/numerics/AR1-S:value',
 			'tlow': 90,
 			'thigh': 165,
 			'dur': 300,
@@ -87,14 +87,14 @@ template = {
 			'maxgap': 300
 		},
 		{
-			'series': 'numerics/AR1-M/data',
+			'series': '/data/numerics/AR1-M:value',
 			'tlow': 65,
 			'dur': 300,
 			'duty': 70,
 			'maxgap': 300
 		},
 		{
-			'series': 'numerics/ART.Systolic/data',
+			'series': '/data/numerics/ART.Systolic:value',
 			'tlow': 90,
 			'thigh': 165,
 			'dur': 300,
@@ -102,28 +102,28 @@ template = {
 			'maxgap': 300
 		},
 		{
-			'series': 'numerics/ART.Mean/data',
+			'series': '/data/numerics/ART.Mean:value',
 			'tlow': 65,
 			'dur': 300,
 			'duty': 70,
 			'maxgap': 300
 		},
 		{
-			'series': 'numerics/SpO₂.SpO₂/data',
+			'series': '/data/numerics/SpO₂.SpO₂:value',
 			'tlow': 90,
 			'dur': 300,
 			'duty': 70,
 			'maxgap': 300
 		},
 		{
-			'series': 'numerics/SpO₂T.SpO₂T/data',
+			'series': '/data/numerics/SpO₂T.SpO₂T:value',
 			'tlow': 90,
 			'dur': 300,
 			'duty': 70,
 			'maxgap': 300
 		},
 		{
-			'series': 'numerics/SPO2-%/data',
+			'series': '/data/numerics/SPO2-%:value',
 			'tlow': 90,
 			'dur': 300,
 			'duty': 70,
@@ -136,28 +136,28 @@ template = {
 
 	# Series to display by default
 	'defaultSeries': [
-		'numerics/HR/data',
-		'numerics/HR.HR/data',
-		'numerics/HR.BeatToBeat/data',
-		'numerics/rRR/data',
-		'numerics/RR.RR/data',
-		'numerics/SpO₂.SpO₂/data',
-		'numerics/SpO₂T.SpO₂T/data',
-		'numerics/SPO2-%/data',
-		'CVP/data',
-		'ArtWave/data',
-		"Group:\nnumerics/AR1-D/data\nnumerics/AR1-S/data\nnumerics/AR1-M/data",
-		"Group:\nnumerics/ART.Diastolic/data\nnumerics/ART.Systolic/data\nnumerics/ART.Mean/data",
-		"Group:\nnumerics/NBP.NBPd/data\nnumerics/NBP.NBPm/data\nnumerics/NBP.NBPs/data",
-		"Group:\nnumerics/NBP-D/data\nnumerics/NBP-M/data\nnumerics/NBP-S/data"
+		'/data/numerics/HR:value',
+		'/data/numerics/HR.HR:value',
+		'/data/numerics/HR.BeatToBeat:value',
+		'/data/numerics/rRR:value',
+		'/data/numerics/RR.RR:value',
+		'/data/numerics/SpO₂.SpO₂:value',
+		'/data/numerics/SpO₂T.SpO₂T:value',
+		'/data/numerics/SPO2-%:value',
+		'CVP:value',
+		'ArtWave:value',
+		"Group:\n/data/numerics/AR1-D:value\n/data/numerics/AR1-S:value\n/data/numerics/AR1-M:value",
+		"Group:\n/data/numerics/ART.Diastolic:value\n/data/numerics/ART.Systolic:value\n/data/numerics/ART.Mean:value",
+		"Group:\n/data/numerics/NBP.NBPd:value\n/data/numerics/NBP.NBPm:value\n/data/numerics/NBP.NBPs:value",
+		"Group:\n/data/numerics/NBP-D:value\n/data/numerics/NBP-M:value\n/data/numerics/NBP-S:value"
 		"Group:\nSignal 3\nSignal 4\nSignal 5"
 	],
 
 	'groups': [
-		['numerics/AR1-D/data', 'numerics/AR1-S/data', 'numerics/AR1-M/data'],
-		['numerics/ART.Diastolic/data', 'numerics/ART.Systolic/data', 'numerics/ART.Mean/data'],
-		['numerics/NBP.NBPd/data', 'numerics/NBP.NBPm/data', 'numerics/NBP.NBPs/data'],
-		['numerics/NBP-D/data', 'numerics/NBP-M/data', 'numerics/NBP-S/data'],
+		['/data/numerics/AR1-D:value', '/data/numerics/AR1-S:value', '/data/numerics/AR1-M:value'],
+		['/data/numerics/ART.Diastolic:value', '/data/numerics/ART.Systolic:value', '/data/numerics/ART.Mean:value'],
+		['/data/numerics/NBP.NBPd:value', '/data/numerics/NBP.NBPm:value', '/data/numerics/NBP.NBPs:value'],
+		['/data/numerics/NBP-D:value', '/data/numerics/NBP-M:value', '/data/numerics/NBP-S:value'],
 		['Signal 3', 'Signal 4', 'Signal 5']
 	],
 
@@ -192,31 +192,31 @@ template = {
 		},
 
 		# BP Series
-		'numerics/AR1-D/data': bpSeries,
-		'numerics/AR1-M/data': bpSeries,
-		'numerics/AR1-S/data': bpSeries,
-		'numerics/ART.Diastolic/data': bpSeries,
-		'numerics/ART.Mean/data': bpSeries,
-		'numerics/ART.Systolic/data': bpSeries,
-		'numerics/NBP.NBPd/data': bpSeries,
-		'numerics/NBP.NBPm/data': bpSeries,
-		'numerics/NBP.NBPs/data': bpSeries,
-		'numerics/NBP.NBP-D/data': bpSeries,
-		'numerics/NBP.NBP-M/data': bpSeries,
-		'numerics/NBP.NBP-S/data': bpSeries,
+		'/data/numerics/AR1-D:value': bpSeries,
+		'/data/numerics/AR1-M:value': bpSeries,
+		'/data/numerics/AR1-S:value': bpSeries,
+		'/data/numerics/ART.Diastolic:value': bpSeries,
+		'/data/numerics/ART.Mean:value': bpSeries,
+		'/data/numerics/ART.Systolic:value': bpSeries,
+		'/data/numerics/NBP.NBPd:value': bpSeries,
+		'/data/numerics/NBP.NBPm:value': bpSeries,
+		'/data/numerics/NBP.NBPs:value': bpSeries,
+		'/data/numerics/NBP.NBP-D:value': bpSeries,
+		'/data/numerics/NBP.NBP-M:value': bpSeries,
+		'/data/numerics/NBP.NBP-S:value': bpSeries,
 
 		# Pulse Series
-		'numerics/ART.Pulse/data': pulseSeries,
-		'numerics/NBP.Pulse/data': pulseSeries,
-		'numerics/SpO₂.Pulse/data': pulseSeries,
+		'/data/numerics/ART.Pulse:value': pulseSeries,
+		'/data/numerics/NBP.Pulse:value': pulseSeries,
+		'/data/numerics/SpO₂.Pulse:value': pulseSeries,
 
 		# SPO2 Series
-		'numerics/SpO₂.SpO₂/data': spo2Series,
-		'numerics/SpO₂T.SpO₂T/data': spo2Series,
-		'numerics/SPO2-%/data': spo2Series,
+		'/data/numerics/SpO₂.SpO₂:value': spo2Series,
+		'/data/numerics/SpO₂T.SpO₂T:value': spo2Series,
+		'/data/numerics/SPO2-%:value': spo2Series,
 
 		# Other Series
-		'numerics/RR.RR/data': {
+		'/data/numerics/RR.RR:value': {
 			'range': [0, 50]
 		}
 

@@ -47,7 +47,7 @@
 		<h6>Project</h6>
 
 		<div class="form-group">
-			<select class="form-control form-control-sm selectpicker bs-width-correction" data-title="Select project" id="project_selection" onchange="globalStateManager.newMainProject();">
+			<select class="form-control form-control-sm selectpicker bs-width-correction" data-title="Select project" id="project_selection" onchange="globalStateManager.loadProject();">
 				<option></option>
 			</select>
 		</div>
@@ -55,7 +55,7 @@
 		<h6>File</h6>
 
 		<div class="form-group">
-			<select class="form-control form-control-sm selectpicker bs-width-correction" data-title="Select file" data-live-search="true" id="file_selection" onchange="globalStateManager.newMainFile();">
+			<select class="form-control form-control-sm selectpicker bs-width-correction" data-title="Select file" data-live-search="true" id="file_selection" onchange="globalStateManager.loadFile();">
 			</select>
 		</div>
 
@@ -85,6 +85,7 @@
 	<span class="clickable" onclick="globalStateManager.currentFile.annotationWorkflowPrevious();">&lt; Prev</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="clickable" onclick="globalStateManager.currentFile.annotationWorkflowNext();">Next &gt;</span>
 	<div id="annotationWorkflowSubtext"></div>
 	<button type="button" class="btn btn-sm btn-light" data-toggle="modal" data-target="#annotationsListModal">My Annotations</button>
+	<button type="button" class="btn btn-sm btn-light" data-toggle="modal" data-target="#allAnnotationsListModal">All Annotations</button>
 	<br><br>
 
 	<h6>Data Series</h6>
@@ -97,6 +98,15 @@
 
 		<h6>Anomaly Detection</h6>
 
+		<div class="form-group row" style="margin-bottom: 0.3rem">
+			<label for="alert_gen_type_field" class="col-sm-5 col-form-label col-form-label-sm">Pattern Type</label>
+			<div class="col-sm-7">
+				<select class="form-control form-control-sm" id="alert_gen_type_field">
+					<option value="anomalydetection">Anomaly Detection</option>
+					<option value="correlation">Correlation Pattern</option>
+				</select>
+			</div>
+		</div>
 		<div class="form-group row" style="margin-bottom: 0.3rem">
 			<label for="alert_gen_series_field" class="col-sm-5 col-form-label col-form-label-sm">Series</label>
 			<div class="col-sm-7">
@@ -180,6 +190,15 @@
 <!--						</select>-->
 <!--					</div>-->
 					<div class="form-group">
+						<label for="annotationFile">File</label>
+						<input type="text" id="annotationFile" class="form-control" disabled>
+					</div>
+					<div class="form-group">
+						<label for="annotationSeries">Series</label>
+						<input type="text" id="annotationSeries" class="form-control" disabled>
+					</div>
+					<div class="form-group">
+
 						<label>Confidence</label><br>
 						<div class="form-check form-check-inline">
 							<input class="form-check-input" type="radio" name="annotationConfidence" id="inlineRadio-n3" value="-3">
@@ -216,11 +235,11 @@
 					</div>
 					<div class="form-row">
 						<div class="col">
-							<label for="annotationStart">Start Time</label>
+							<label for="annotationStartTime">Start Time</label>
 							<input type="date" class="form-control" id="annotationStartDate"><input type="time" class="form-control" id="annotationStartTime" step="1">
 						</div>
 						<div class="col">
-							<label for="annotationEnd">End Time</label>
+							<label for="annotationEndTime">End Time</label>
 							<input type="date" class="form-control" id="annotationEndDate"><input type="time" class="form-control" id="annotationEndTime" step="1">
 						</div>
 					</div>
@@ -236,9 +255,9 @@
 </div>
 
 <!-- Annotation List Modal -->
-<div id="annotationsListModal" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
-	<div class="modal-dialog modal-lg">
-		<div class="modal-content">
+<div id="annotationsListModal" class="modal bd-example-modal-lg" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog mw-100 w-75">
+		<div class="modal-content" style="overflow-x: scroll;">
 			<div class="modal-header">
 				<h5 class="modal-title">My Annotations</h5>
 				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -257,6 +276,35 @@
 					</thead>
 					<tbody></tbody>
 				</table>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- All Annotation List Modal -->
+<div id="allAnnotationsListModal" class="modal bd-example-modal-lg" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog mw-100 w-75">
+		<div class="modal-content" style="overflow-x: scroll;">
+			<div class="modal-header">
+				<h5 class="modal-title">All My Annotations</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<table class="table table-sm table-hover">
+					<thead>
+					<tr>
+						<th scope="col">ID</th>
+						<th scope="col">File</th>
+						<th scope="col">Begin</th>
+						<th scope="col">End</th>
+						<th scope="col">Annotation</th>
+					</tr>
+					</thead>
+					<tbody></tbody>
+				</table>
+				<button type="button" class="btn btn-light" onclick="globalStateManager.currentProject.getAnnotations(populateAllAnnotationsModal);">Refresh</button>
 			</div>
 		</div>
 	</div>

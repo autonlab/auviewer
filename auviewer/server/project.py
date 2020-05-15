@@ -3,8 +3,10 @@ import time
 import traceback
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+from flask_login import current_user
 
 from . import config
+from . import dbgw
 from .file import File
 from .exceptions import ProcessedFileExists
 
@@ -57,12 +59,20 @@ class Project:
         # Holds references to the files that belong to the project
         self.files = []
 
+        self.anndb = dbgw.receive('Annotation')
+        self.db = dbgw.receive('db')
+
     # Cleanup
     def __del__(self):
         try:
             self.observer.join()
         except:
             pass
+
+    # Returns a list of user's annotations for all files in the project
+    def getAnnotations(self):
+
+        return [[a.id, os.path.basename(a.filepath), a.series, a.xboundleft, a.xboundright, a.yboundtop, a.yboundbottom, a.annotation] for a in self.anndb.query.filter_by(user_id=current_user.id, project=self.name).all()]
 
     def getAvailableFilesList(self):
         return [f.orig_filename for f in self.files]
@@ -106,9 +116,15 @@ class Project:
 
         response = []
 
-        for filename in os.listdir(self.originals_dir):
-            if filename.endswith(".h5") and os.path.isfile(os.path.join(self.processed_dir, os.path.splitext(filename)[0] + '_processed.h5')):
-                response.append(filename)
+        try:
+
+            for filename in os.listdir(self.originals_dir):
+                if filename.endswith(".h5") and os.path.isfile(os.path.join(self.processed_dir, os.path.splitext(filename)[0] + '_processed.h5')):
+                    response.append(filename)
+
+        except Exception as e:
+
+            print("Listing processed project files failed.", e)
 
         # Sort the list alphabetically
         response.sort()
@@ -130,9 +146,15 @@ class Project:
 
         response = []
 
-        for filename in os.listdir(self.originals_dir):
-            if filename.endswith(".h5") and not os.path.isfile(os.path.join(self.processed_dir, os.path.splitext(filename)[0] + '_processed.h5')):
-                response.append(filename)
+        try:
+
+            for filename in os.listdir(self.originals_dir):
+                if filename.endswith(".h5") and not os.path.isfile(os.path.join(self.processed_dir, os.path.splitext(filename)[0] + '_processed.h5')):
+                    response.append(filename)
+
+        except Exception as e:
+
+            print("Listing unprocessed project files failed.", e)
 
         # Sort the list alphabetically
         response.sort()
@@ -149,6 +171,7 @@ class Project:
             proc_filename = os.path.splitext(orig_filename)[0] + '_processed.h5'
 
             self.files.append(File(
+                projparent=self,
                 orig_filename=orig_filename,
                 proc_filename=proc_filename,
                 orig_dir=self.originals_dir,
@@ -157,6 +180,7 @@ class Project:
             return self.files[len(self.files) - 1]
 
         except Exception as e:
+
             print("Opening/instantiating original file " + orig_filename + " and processed file " + proc_filename + " failed with the following exception.\n", traceback.format_exc())
             return None
 
@@ -171,10 +195,11 @@ class Project:
             #     break
 
         # Establish a process to watch for updated versions of any project files
-        file_change_handler = FileChangeHandler(self)
-        self.observer = Observer()
-        self.observer.schedule(file_change_handler, self.originals_dir)
-        self.observer.start()
+        if os.path.isdir(self.originals_dir):
+            file_change_handler = FileChangeHandler(self)
+            self.observer = Observer()
+            self.observer.schedule(file_change_handler, self.originals_dir)
+            self.observer.start()
 
     # Iterates through all unprocessed files and processes each one. Supports
     # multi-process batch processing in a "pretty good" way that relies on the
@@ -190,6 +215,7 @@ class Project:
                 # Process the file
                 proc_filename = os.path.splitext(orig_filename)[0] + '_processed.h5'
                 File(
+                    projparent=self,
                     orig_filename=orig_filename,
                     proc_filename=proc_filename,
                     orig_dir=self.originals_dir,

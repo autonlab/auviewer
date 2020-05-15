@@ -117,12 +117,28 @@ $('#annotationsListModal').on('show.bs.modal', function (e) {
 		tbody.removeChild(tbody.firstChild);
 	}
 
+	let modal = this;
+
+	let rowClickHandler = function() {
+		$(modal).modal('hide');
+		$(this).data('annotation').goTo();
+	};
+
 	if (globalStateManager.currentFile && globalStateManager.currentFile.hasOwnProperty('annotations')) {
 
 		for (let a of globalStateManager.currentFile.annotations) {
 
 			if (a.state === 'existing') {
+
+				// Create the dom element
 				let tr = document.createElement('tr');
+
+				// Attach the annotation to the dom element for use by the click
+				// handler, then attach the click handler.
+				$(tr).data('annotation', a);
+				tr.addEventListener("click", rowClickHandler);
+
+				// Display content of the row
 				tr.innerHTML =
 					'<th scope="row">' + a.id + '</th>' +
 					'<td>' + a.getStartDate().toLocaleString() + '</td>' +
@@ -132,6 +148,67 @@ $('#annotationsListModal').on('show.bs.modal', function (e) {
 			}
 
 		}
+
+	}
+
+});
+
+function populateAllAnnotationsModal() {
+
+	const modal = document.getElementById('allAnnotationsListModal')
+
+	// Clear previous annotation list
+	// See: https://jsperf.com/innerhtml-vs-removechild/15
+	const tbody = modal.querySelector('tbody');
+	while (tbody.firstChild) {
+		tbody.removeChild(tbody.firstChild);
+	}
+
+	const rowClickHandler = function() {
+		$(modal).modal('hide');
+		$(this).data('annotation').goTo();
+	};
+
+	if (globalStateManager.currentProject && Array.isArray(globalStateManager.currentProject.annotations)) {
+
+		for (let a of globalStateManager.currentProject.annotations) {
+
+			if (a.state === 'existing') {
+
+				// Create the dom element
+				let tr = document.createElement('tr');
+
+				// Attach the annotation to the dom element for use by the click
+				// handler, then attach the click handler.
+				$(tr).data('annotation', a);
+				tr.addEventListener("click", rowClickHandler);
+
+				// Display content of the row
+				tr.innerHTML =
+					'<th scope="row">' + a.id + '</th>' +
+					'<td>' + a.file + '</td>' +
+					'<td>' + a.getStartDate().toLocaleString() + '</td>' +
+					'<td>' + a.getEndDate().toLocaleString() + '</td>' +
+					'<td>' + JSON.stringify(a.annotation) + '</td>';
+				tbody.appendChild(tr);
+			}
+
+		}
+
+	}
+
+}
+
+$('#allAnnotationsListModal').on('show.bs.modal', function (e) {
+
+	if (globalStateManager.currentProject && Array.isArray(globalStateManager.currentProject.annotations)) {
+
+		populateAllAnnotationsModal();
+
+	} else if (globalStateManager.currentProject) {
+
+		// Request project annotations
+		globalStateManager.currentProject.getAnnotations(populateAllAnnotationsModal);
 
 	}
 

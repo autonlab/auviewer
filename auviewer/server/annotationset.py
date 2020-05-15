@@ -1,6 +1,7 @@
-import numpy as np
+import os
+
+from . import config
 from flask_login import current_user
-from pprint import pprint
 
 from . import dbgw
 
@@ -16,9 +17,18 @@ class AnnotationSet:
 
     def createAnnotation(self, xBoundLeft=None, xBoundRight=None, yBoundTop=None, yBoundBottom=None, seriesID='', label=''):
 
+        # We expect the filepath to begin with the projects directory
+        if not self.fileparent.getFilepath().startswith(config.projectsDir):
+            print(
+                "Error on creating annotation. The file path is expected to start with the projects directory. File path:",
+                self.fileparent.getFilepath(), "Projects directory:", config.projectsDir)
+            return
+
         newann = self.anndb(
             user_id=current_user.id,
-            filepath=self.fileparent.getFilepath(),
+            project=self.fileparent.projparent.name,
+            filepath=self.fileparent.getFilepath()[len(config.projectsDir):],
+            series=seriesID,
             xboundleft=xBoundLeft,
             xboundright=xBoundRight,
             yboundtop=yBoundTop,
@@ -41,11 +51,6 @@ class AnnotationSet:
             print("Error/securityissue on annotation deletion: User (id "+str(current_user.id)+") tried to delete an annotation (id "+str(id)+") belonging to another user (id "+str(annotationToDelete.user_id)+").")
             return False
 
-        # Verify the annotation ID belongs to the file it should
-        if annotationToDelete.filepath != self.fileparent.getFilepath():
-            print("Error on annotation deletion: File passed in did not match file of annotation. Annotation ID "+str(id)+", file specified in request '"+self.fileparent.getFilepath()+"', file listed in annotation '"+str(annotationToDelete.filepath)+"'.")
-            return False
-
         # Having reached this point, delete the annotation
         self.db.session.delete(annotationToDelete)
         self.db.session.commit()
@@ -60,7 +65,12 @@ class AnnotationSet:
         if self.fileparent.mode() == 'realtime':
             return []
 
-        return [[a.id, a.xboundleft, a.xboundright, a.yboundtop, a.yboundbottom, a.annotation] for a in self.anndb.query.filter_by(user_id=current_user.id, filepath=self.fileparent.getFilepath()).all()]
+        # We expect the filepath to begin with the projects directory
+        if not self.fileparent.getFilepath().startswith(config.projectsDir):
+            print("Error on getting annotations. The file path is expected to start with the projects directory. File path:", self.fileparent.getFilepath(), "Projects directory:", config.projectsDir)
+            return []
+
+        return [[a.id, os.path.basename(a.filepath), a.series, a.xboundleft, a.xboundright, a.yboundtop, a.yboundbottom, a.annotation] for a in self.anndb.query.filter_by(user_id=current_user.id, project=self.fileparent.projparent.name, filepath=self.fileparent.getFilepath()[len(config.projectsDir):]).all()]
 
     def updateAnnotation(self, id, xBoundLeft=None, xBoundRight=None, yBoundTop=None, yBoundBottom=None, seriesID='', label=''):
 
@@ -78,6 +88,7 @@ class AnnotationSet:
             return False
 
         # Set updated values
+        annotationToUpdate.series = seriesID
         annotationToUpdate.xboundleft=xBoundLeft
         annotationToUpdate.xboundright=xBoundRight
         annotationToUpdate.yboundtop=yBoundTop

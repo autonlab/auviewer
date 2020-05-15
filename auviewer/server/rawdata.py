@@ -19,7 +19,10 @@ class RawData:
         self.len = dataset.nrow
 
         # Holds the timespan of the time series
-        self.timespan = np.abs(np.diff(dataset[[-1, 0]][self.seriesparent.timecol].values.astype(np.float64))[0])
+        if self.len < 2:
+            self.timespan = 0
+        else:
+            self.timespan = np.abs(np.diff(dataset[[-1, 0]][self.seriesparent.timecol].values.astype(np.float64))[0])
 
     # Returns a slice of the appropriate downsample for the given time range, or
     # nothing if there is no appropriate downsample available (in this case, raw

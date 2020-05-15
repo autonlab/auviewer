@@ -15,7 +15,7 @@ function GlobalStateManager() {
 }
 
 // Clear the main file currently loaded in the viewer
-GlobalStateManager.prototype.clearMainFile = function() {
+GlobalStateManager.prototype.clearFile = function() {
 
 	// Clear current file if there is one
 	if (this.currentFile !== null) {
@@ -26,10 +26,10 @@ GlobalStateManager.prototype.clearMainFile = function() {
 };
 
 // Clear the main project currently loaded in the viewer
-GlobalStateManager.prototype.clearMainProject = function() {
+GlobalStateManager.prototype.clearProject = function() {
 
 	// Clear main file from the viewer.
-	this.clearMainFile();
+	this.clearFile();
 
 	// Clear contents of file select
 	document.getElementById('file_selection').innerHTML = '<option></option>';
@@ -45,11 +45,11 @@ GlobalStateManager.prototype.enterRealtimeMode = function() {
 	document.getElementsByTagName('body')[0].className = 'realtime';
 
 	// Load the realtime main project
-	//this.newMainProject('__realtime__');
-	this.resetMainProject();
+	//this.loadProject('__realtime__');
+	this.resetProject();
 
 	// Load the realtime file in the viewer
-	this.newMainFile('__realtime__', '__realtime__')
+	this.loadFile('__realtime__', '__realtime__')
 
 };
 
@@ -59,7 +59,7 @@ GlobalStateManager.prototype.exitRealtimeMode = function () {
 	document.getElementsByTagName('body')[0].className = '';
 
 	// Reset & unload current main project
-	this.resetMainProject();
+	this.resetProject();
 
 	// Unsubscribe from realtime updates
 	socket.emit('unsubscribe');
@@ -68,81 +68,94 @@ GlobalStateManager.prototype.exitRealtimeMode = function () {
 
 // Switches to a newly selected file in the main viewer. If project and filename
 // parameters are provided, they will be used. Otherwise, the project & file
-// dropdown selections will be used.
-GlobalStateManager.prototype.newMainFile = function(project='', filename='') {
+// dropdown selections will be used. If a callback is provided, it will be
+// passed to the File constructor and called when the file is fully loaded.
+GlobalStateManager.prototype.loadFile = function(filename='', project='', callback=null) {
+
+	// If empty variables were provided, grab the dropdown selections
+	if (project === '') {
+		let projselect = document.getElementById('project_selection');
+		project = projselect.options[projselect.selectedIndex].value;
+	}
+	if (filename === '') {
+		let fileselect = document.getElementById('file_selection');
+		filename = fileselect.options[fileselect.selectedIndex].value;
+	}
+
+	// If this file is already loaded, we need not take further action
+	if (this.currentProject && project === this.currentProject.name && this.currentFile && filename === this.currentFile.filename) {
+		return false;
+	}
 
 	// Clear main file from the viewer
-	this.clearMainFile();
+	this.clearFile();
 
-	// Load newly selected file
-	if (project === '' && filename === '') {
-		let fileselect = document.getElementById('file_selection');
-		this.currentFile = new File(this.currentProject.name, fileselect.options[fileselect.selectedIndex].value);
-	} else {
-		this.currentFile = new File(project, filename);
-	}
+	// Load the project
+	this.loadProject(project);
+
+	// Change the selection & re-render the select-picker
+	let fs = $('#file_selection');
+	fs.val(filename);
+	fs.selectpicker('refresh');
+
+	// Load the file
+	this.currentFile = new File(project, filename, callback);
+
+	return true;
 
 };
 
 // Switches to a newly selected project in the main viewer.
-GlobalStateManager.prototype.newMainProject = function(project_name='') {
+GlobalStateManager.prototype.loadProject = function(project='') {
+
+	// If empty project variable was provided, grab the dropdown selection
+	if (project === '') {
+		let projselect = document.getElementById('project_selection');
+		project = projselect.options[projselect.selectedIndex].value;
+	}
+
+	// If the project is already loaded, we need not take further action
+	if (this.currentProject && project === this.currentProject.name) {
+		return false;
+	}
 
 	// Clear main project from the viewer
-	this.clearMainProject();
+	this.clearProject();
 
-	// Pull project name from input field if not provided as parameter
-	let projectselect = document.getElementById('project_selection');
-	project_name = project_name || projectselect.options[projectselect.selectedIndex].value;
+	// Change the selection & re-render the select-picker
+	let ps = $('#project_selection');
+	ps.val(project);
+	ps.selectpicker('refresh');
 
 	// Load new project
-	this.currentProject = new Project(project_name);
+	this.currentProject = new Project(project);
 
-	// Request the list of files for the project
-	requestHandler.requestInitialProjectPayload(this.currentProject.name, function(data) {
-
-		// Provide the projects template assets to TemplateSystem
-		templateSystem.provideProjectTemplates(data['name'],
-			(data.hasOwnProperty('project_template') && data['project_template'] ? JSON.parse(data['project_template']) : {}) || {},
-			(data.hasOwnProperty('interface_templates') && data['interface_templates'] ? JSON.parse(data['interface_templates']) : {}) || {}
-		);
-
-		let fileSelect = document.getElementById('file_selection');
-
-		for (let i in data['files']) {
-
-			let opt = document.createElement('OPTION');
-			opt.setAttribute('value', data['files'][i]);
-			opt.innerText = data['files'][i];
-			fileSelect.appendChild(opt);
-
-		}
-
-		// Re-render the select-picker
-		$(fileSelect).selectpicker('refresh');
-
-	});
+	return true;
 
 };
 
 // Reset file select & clear currently loaded file from the main viewer.
-GlobalStateManager.prototype.resetMainFile = function() {
+GlobalStateManager.prototype.resetFile = function() {
 
 	// Clear main file from the viewer
-	this.clearMainFile();
+	this.clearFile();
 
 	// Set the file selection to the initial/default value.
 	document.getElementById('file_selection').selectedIndex = 0;
 
+	// Re-render the select-picker
+	$('#file_selection').selectpicker('refresh');
+
 };
 
 // Reset project select & clear currently loaded project from the main viewer.
-GlobalStateManager.prototype.resetMainProject = function() {
+GlobalStateManager.prototype.resetProject = function() {
 
 	// Reset main file
-	this.resetMainFile();
+	this.resetFile();
 
 	// Clear main project from the viewer
-	this.clearMainProject();
+	this.clearProject();
 
 	// Set the project selection to the initial/default value.
 	document.getElementById('project_selection').selectedIndex = 0;

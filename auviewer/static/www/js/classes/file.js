@@ -1,6 +1,6 @@
 'use strict';
 
-function File(project, filename) {
+function File(project, filename, callback=null) {
 
 	// Holds the project name
 	this.projname = project;
@@ -184,6 +184,12 @@ function File(project, filename) {
 				}
 				this.runAnomalyDetectionJobsForSeries(seriesInitiallyDisplaying);
 
+				// If a callback was requested (provided to the File class
+				// initializer), call it.
+				if (callback) {
+					callback();
+				}
+
 			}).bind(file)
 
 		);
@@ -279,23 +285,8 @@ File.prototype.annotationWorkflowUpdateCurrent = function() {
 		prefix+'End:'+between+annotation.getEndDate().toLocaleString()+postfix +
 		'</tbody></table>';
 
-	// Calculate the zoom window
-
-	// Total zoom window time to display
-	let zwTotal = 6 * 60 * 60;
-
-	// Total gap = total zoom window less the anomaly duration
-	let zwTotalGap = zwTotal - (annotation.end - annotation.begin);
-
-	// Gap on either side
-	let zwGapSingleSide = zwTotalGap / 2;
-
-	// Compute the zoom window begin & end
-	let zwBegin = (annotation.begin - zwGapSingleSide + this.fileData.baseTime)*1000;
-	let zwEnd = (annotation.end + zwGapSingleSide + this.fileData.baseTime)*1000;
-
-	// Zoom to the designated window
-	this.zoomTo([zwBegin, zwEnd]);
+	// Go to the annotation in the graph
+	annotation.goTo();
 
 };
 
@@ -392,7 +383,7 @@ File.prototype.destroy = function() {
 // if provided, will be called either after the response has been received from
 // the server and processed or upon a return resulting from a missing-parameter
 // error.
-File.prototype.detectAnomalies = function(series, thresholdlow, thresholdhigh, duration, persistence, maxgap, callback=null) {
+File.prototype.detectAnomalies = function(type, series, thresholdlow, thresholdhigh, duration, persistence, maxgap, callback=null) {
 
 	globalAppConfig.verbose && console.log("Anomaly detection called.");
 
@@ -469,12 +460,17 @@ File.prototype.detectAnomalies = function(series, thresholdlow, thresholdhigh, d
 	// Persist for callback
 	let file = this;
 
-	requestHandler.requestAnomalyDetection(globalStateManager.currentFile.projname, globalStateManager.currentFile.filename, series, thresholdlow, thresholdhigh, duration, persistence, maxgap, function (data) {
+	requestHandler.requestAnomalyDetection(globalStateManager.currentFile.projname, globalStateManager.currentFile.filename, type, series, thresholdlow, thresholdhigh, duration, persistence, maxgap, function (data) {
 
 		if (Array.isArray(data) && data.length > 0) {
 
 			for (let a of data) {
-				file.annotations.push(new Annotation({series: series, begin: a[0], end: a[1]}, 'anomaly'));
+				file.annotations.push(new Annotation({
+					file: globalStateManager.currentFile.filename,
+					series: series,
+					begin: a[0],
+					end: a[1]
+				}, 'anomaly'));
 			}
 
 			file.triggerRedraw();
@@ -495,6 +491,7 @@ File.prototype.detectAnomalies = function(series, thresholdlow, thresholdhigh, d
 // Run anomaly detection with the user-input form values.
 File.prototype.detectAnomaliesFromForm = function() {
 
+	let type = document.getElementById("alert_gen_type_field").value;
 	let series = document.getElementById("alert_gen_series_field").value;
 	let thresholdlow = document.getElementById("alert_gen_threshold_low_field").value;
 	let thresholdhigh = document.getElementById("alert_gen_threshold_high_field").value;
@@ -502,7 +499,7 @@ File.prototype.detectAnomaliesFromForm = function() {
 	let persistence = document.getElementById("alert_gen_dutycycle_field").value;
 	let maxgap = document.getElementById("alert_gen_maxgap_field").value;
 
-	this.detectAnomalies(series, thresholdlow, thresholdhigh, duration, persistence, maxgap);
+	this.detectAnomalies(type, series, thresholdlow, thresholdhigh, duration, persistence, maxgap);
 
 };
 
@@ -1107,6 +1104,7 @@ File.prototype.runAnomalyDetectionJobsForSeries = function(series) {
 			// anomaly detection for it.
 			if (file.config.anomalyDetection[i].hasOwnProperty('series') && series.includes(file.config.anomalyDetection[i].series)) {
 				file.detectAnomalies(
+					'anomalydetection',
 					file.config.anomalyDetection[i].hasOwnProperty('series') ? file.config.anomalyDetection[i].series : null,
 					file.config.anomalyDetection[i].hasOwnProperty('tlow') ? file.config.anomalyDetection[i].tlow : null,
 					file.config.anomalyDetection[i].hasOwnProperty('thigh') ? file.config.anomalyDetection[i].thigh : null,

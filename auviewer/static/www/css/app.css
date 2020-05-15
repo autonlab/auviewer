@@ -136,6 +136,10 @@ body.realtime > #controls > #control_footer > p#exitrealtime {
 
 /* Annotations */
 
+#allAnnotationsListModal tr:hover, #annotationsListModal tr:hover {
+    cursor: pointer;
+}
+
 #annotationStartDate, #annotationStartTime, #annotationEndDate, #annotationEndTime {
     width: 75%;
     margin-bottom: 3px;

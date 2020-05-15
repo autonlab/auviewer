@@ -26,11 +26,12 @@ RequestHandler.prototype.deleteAnnotation = function(id, projname, filename, cal
 	});
 };
 
-RequestHandler.prototype.requestAnomalyDetection = function(projname, filename, seriesID, tlow, thigh, duration, persistence, maxgap, callback) {
+RequestHandler.prototype.requestAnomalyDetection = function(projname, filename, type, seriesID, tlow, thigh, duration, persistence, maxgap, callback) {
 
 	this._newRequest(callback, globalAppConfig.detectAnomaliesURL, {
 		project: projname,
 		file: filename,
+		type: type,
 		series: seriesID,
 		thresholdlow: tlow,
 		thresholdhigh: thigh,
@@ -52,6 +53,12 @@ RequestHandler.prototype.requestInitialProjectPayload = function(projname, callb
 	this._newRequest(callback, globalAppConfig.initialProjectPayloadURL, {
 		project: projname
 	});
+};
+
+RequestHandler.prototype.requestProjectAnnotations = function(projname, callback) {
+	this._newRequest(callback, globalAppConfig.getProjectAnnotationsURL, {
+		project: projname
+	})
 };
 
 RequestHandler.prototype.requestProjectsList = function(callback) {

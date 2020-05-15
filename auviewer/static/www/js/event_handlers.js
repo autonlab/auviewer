@@ -14,8 +14,14 @@ function handleAnnotationHighlightEnd (event, g, context, fileOrGraph) {
 	let from = g.toDataXCoord(left)/1000 - ('file' in fileOrGraph ? fileOrGraph.file.fileData.baseTime : fileOrGraph.fileData.baseTime);
 	let to = g.toDataXCoord(right)/1000 - ('file' in fileOrGraph ? fileOrGraph.file.fileData.baseTime : fileOrGraph.fileData.baseTime);
 
+	// Get a reference to the graph instance. Dygraphs implements the click
+	// callback poorly, so we have to get it in a convoluted way.
+	let graph = $(event.path[2]).data('graphClassInstance');
+
 	// Create a new annotation
 	let annotation = new Annotation({
+		file: globalStateManager.currentFile.filename,
+		series: (Array.isArray(graph.series) ? graph.series.join(', ') : graph.series),
 		begin: from,
 		end: to
 	}, 'new');
@@ -116,6 +122,7 @@ function handleClick(e, x) {
 		if (e.offsetX >= file.annotations[i].offsetXLeft && e.offsetX <= file.annotations[i].offsetXRight) {
 			if (
 				!file.annotations[i].series ||
+				file.annotations[i].state !== 'anomaly' ||
 				(!graph.isGroup && file.annotations[i].series === graph.series) ||
 				(graph.isGroup && graph.series.includes(file.annotations[i].series))
 			) {
@@ -223,7 +230,7 @@ function handleMouseWheel(event, g, context) {
 		if (g.updateDataTimer != null) {
 			clearTimeout(g.updateDataTimer);
 		}
-		g.updateDataTimer = setTimeout(function(){ g.updateDataTimer = null; file.updateCurrentViewData(); }, 200);
+		g.updateDataTimer = setTimeout(function(){ g.updateDataTimer = null; file.updateCurrentViewData(); }, 300);
 
 
 		//updateCurrentViewData(g);

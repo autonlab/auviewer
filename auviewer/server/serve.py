@@ -65,7 +65,9 @@ def create_app(cfg):
         id = db.Column(db.Integer(), primary_key=True)
 
         user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+        project = db.Column(db.String(255), nullable=False)
         filepath = db.Column(db.String(255), nullable=False)
+        series = db.Column(db.String(255), nullable=False)
         xboundleft = db.Column(db.Float, nullable=True)
         xboundright = db.Column(db.Float, nullable=True)
         yboundtop = db.Column(db.Float, nullable=True)
@@ -145,7 +147,7 @@ def create_app(cfg):
     projects = load_projects()
 
     # Instantiate a file for realtime, in-memory usage (probably temporary)
-    rtf = File()
+    rtf = File(projparent=None)
 
     @user_registered.connect_via(app)
     def after_registered_hook(sender, user, user_invite):
@@ -291,6 +293,7 @@ def create_app(cfg):
         # Parse the series name and alert parameters
         projname = request.args.get('project')
         filename = request.args.get('file')
+        type = request.args.get('type')
         series = request.args.get('series')
         thresholdlow = request.args.get('thresholdlow', type=float) if request.args.get('thresholdlow') != '' else None
         thresholdhigh = request.args.get('thresholdhigh', type=float) if request.args.get('thresholdhigh') != '' else None
@@ -317,7 +320,17 @@ def create_app(cfg):
             print("File could not be retrieved:", filename)
             return ''
 
-        return simplejson.dumps(file.detectAnomalies(series, thresholdlow, thresholdhigh, duration, persistence, maxgap), ignore_nan=True)
+        alerts = file.detectAnomalies(
+            type=type,
+            series=series,
+            thresholdlow=thresholdlow,
+            thresholdhigh=thresholdhigh,
+            duration=duration,
+            persistence=persistence,
+            maxgap=maxgap
+        )
+
+        return simplejson.dumps(alerts, ignore_nan=True)
 
     @app.route(config.rootWebPath + '/initial_project_payload')
     @login_required
@@ -339,6 +352,25 @@ def create_app(cfg):
 
         output = project.getInitialPayloadOutput()
         json_output = simplejson.dumps(output)
+
+        return json_output
+
+    @app.route(config.rootWebPath + '/get_project_annotations')
+    @login_required
+    def get_project_annotations():
+
+        # Parse parameters
+        projname = request.args.get('project')
+
+        # Get the project
+        try:
+            project = projects[projname]
+        except:
+            print("Project could not be retrieved:", projname)
+            return simplejson.dumps({})
+
+        output = project.getAnnotations()
+        json_output = simplejson.dumps(output, ignore_nan=True)
 
         return json_output
 

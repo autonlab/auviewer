@@ -18,6 +18,7 @@ let globalAppConfig = {
 	detectAnomaliesURL: 'detect_anomalies',
 	initialProjectPayloadURL: 'initial_project_payload',
 	getProjectsURL: 'get_projects',
+	getProjectAnnotationsURL: 'get_project_annotations',
 	initialFilePayloadURL: 'initial_file_payload',
 	seriesRangedDataURL: 'series_ranged_data',
 	updateAnnotationURL: 'update_annotation',

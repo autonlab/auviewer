@@ -58,6 +58,7 @@ setup(
         'flask-mail',
         'flask-socketio',
         'flask-sqlalchemy',
+        'flask-wtf',
         'cython',
         'htmlmin'
     ],
