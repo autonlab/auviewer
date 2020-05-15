@@ -1,34 +1,11 @@
-from os import getlogin
 import os.path
 import json
 
 # This file holds configuration parameters for the medview application.
 
 # Output verbosity
+# Overridden by load_config.
 verbose = True
-
-# AUView Data Root
-auvDataRoot = None
-
-# A root directory from which the web application is served. Should begin with a
-# slash and end without a slask (in other words, end with a directory name). If
-# there is no root directory, rootWebPath should be empty string. You must also
-# change the corresponding setting in config.js. Examples:
-# '/approot'
-# '/app/root'
-# ''
-rootWebPath = ''
-
-# Max number of data points to transmit for a given view
-M = 3000
-
-# The number to multiply by numDownsamples each time in building downsample
-# levels. For example, if M=3000 and stepMultipler=2, the first downsample
-# is 3K intervals, the second 6K, the third 12K, and so forth.
-stepMultiplier = 2
-
-# AUView code root directory
-auvCodeRoot = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
 # AUView root data directory should have following structure:
 #   [root]
@@ -44,6 +21,33 @@ auvCodeRoot = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 #   - - - templates
 #   - - - - project_template.json (optional)
 #   - - - - interface_templates.json (optional)
+# Overridden by load_config.
+auvDataRoot = None
+
+# A root directory from which the web application is served. Should begin with a
+# slash and end without a slask (in other words, end with a directory name). If
+# there is no root directory, rootWebPath should be empty string. You must also
+# change the corresponding setting in config.js. Examples:
+# '/approot'
+# '/app/root'
+# ''
+# Overridden by load_config.
+rootWebPath = ''
+
+# Password encryption key.
+# Overridden by load_config.
+SECRET_KEY = ''
+
+# Max number of data points to transmit for a given view
+M = 3000
+
+# The number to multiply by numDownsamples each time in building downsample
+# levels. For example, if M=3000 and stepMultipler=2, the first downsample
+# is 3K intervals, the second 6K, the third 12K, and so forth.
+stepMultiplier = 2
+
+# AUView code root directory
+auvCodeRoot = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
 cfg = None
 
@@ -80,19 +84,33 @@ class FlaskConfigClass(object):
 
     # Override default Flask-User URLs with root web path prefix. For documentation,
     # see "URLs" section of https://flask-user.readthedocs.io/en/v0.6/customization.html.
-    USER_CHANGE_PASSWORD_URL = rootWebPath+'/user/change-password'
-    USER_CHANGE_USERNAME_URL = rootWebPath+'/user/change-username'
-    USER_CONFIRM_EMAIL_URL = rootWebPath+'/user/confirm-email/<token>'
-    USER_EMAIL_ACTION_URL = rootWebPath+'/user/email/<id>/<action>'
-    USER_FORGOT_PASSWORD_URL = rootWebPath+'/user/forgot-password'
-    USER_INVITE_URL = rootWebPath+'/user/invite'
-    USER_LOGIN_URL = rootWebPath+'/user/login'
-    USER_LOGOUT_URL = rootWebPath+'/user/logout'
-    USER_MANAGE_EMAILS_URL = rootWebPath+'/user/manage-emails'
-    USER_PROFILE_URL = rootWebPath+'/user/profile'
-    USER_REGISTER_URL = rootWebPath+'/user/register'
-    USER_RESEND_CONFIRM_EMAIL_URL = rootWebPath+'/user/resend-confirm-email'
-    USER_RESET_PASSWORD_URL = rootWebPath+'/user/reset-password/<token>'
+    # These are overridden in serve.py (create_app).
+    # USER_CHANGE_PASSWORD_URL = rootWebPath+'/user/change-password'
+    # USER_CHANGE_USERNAME_URL = rootWebPath+'/user/change-username'
+    # USER_CONFIRM_EMAIL_URL = rootWebPath+'/user/confirm-email/<token>'
+    # USER_EMAIL_ACTION_URL = rootWebPath+'/user/email/<id>/<action>'
+    # USER_FORGOT_PASSWORD_URL = rootWebPath+'/user/forgot-password'
+    # USER_INVITE_URL = rootWebPath+'/user/invite'
+    # USER_LOGIN_URL = rootWebPath+'/user/login'
+    # USER_LOGOUT_URL = rootWebPath+'/user/logout'
+    # USER_MANAGE_EMAILS_URL = rootWebPath+'/user/manage-emails'
+    # USER_PROFILE_URL = rootWebPath+'/user/profile'
+    # USER_REGISTER_URL = rootWebPath+'/user/register'
+    # USER_RESEND_CONFIRM_EMAIL_URL = rootWebPath+'/user/resend-confirm-email'
+    # USER_RESET_PASSWORD_URL = rootWebPath+'/user/reset-password/<token>'
+    USER_CHANGE_PASSWORD_URL = '/user/change-password'
+    USER_CHANGE_USERNAME_URL = '/user/change-username'
+    USER_CONFIRM_EMAIL_URL = '/user/confirm-email/<token>'
+    USER_EMAIL_ACTION_URL = '/user/email/<id>/<action>'
+    USER_FORGOT_PASSWORD_URL = '/user/forgot-password'
+    USER_INVITE_URL = '/user/invite'
+    USER_LOGIN_URL = '/user/login'
+    USER_LOGOUT_URL = '/user/logout'
+    USER_MANAGE_EMAILS_URL = '/user/manage-emails'
+    USER_PROFILE_URL = '/user/profile'
+    USER_REGISTER_URL = '/user/register'
+    USER_RESEND_CONFIRM_EMAIL_URL = '/user/resend-confirm-email'
+    USER_RESET_PASSWORD_URL = '/user/reset-password/<token>'
 
     # Override default Flask-User endpoints. For documentation, see "Endpoints"
     # section of https://flask-user.readthedocs.io/en/v0.6/customization.html.
@@ -111,23 +129,20 @@ class FlaskConfigClass(object):
     USER_UNAUTHORIZED_ENDPOINT = 'index'
 
 def load_config(fn):
+
     global cfg
     cfg = json.loads(open(fn, 'r').read())
 
-    global verbose, auvDataRoot, rootWebPath
+    global verbose, auvDataRoot, rootWebPath, SECRET_KEY
     verbose = cfg['verbose']
     auvDataRoot = cfg['data_path']
     rootWebPath = cfg['root_web_path']
+    SECRET_KEY = cfg['secret_key']
 
-    global projectsDir, globalTemplatesDir, globalDefaultProjectTemplateFile
-    global globalDefaultInterfaceTemplatesFile
-    projectsDir = os.path.join(
-        auvDataRoot, projectsDir)
-    globalTemplatesDir = os.path.join(
-        auvDataRoot, globalTemplatesDir)
-    globalDefaultProjectTemplateFile = os.path.join(
-        globalTemplatesDir, globalDefaultProjectTemplateFile)
-    globalDefaultInterfaceTemplatesFile = os.path.join(
-        globalTemplatesDir, globalDefaultInterfaceTemplatesFile)
+    global projectsDir, globalTemplatesDir, globalDefaultProjectTemplateFile, globalDefaultInterfaceTemplatesFile
+    projectsDir = os.path.join(auvDataRoot, projectsDir)
+    globalTemplatesDir = os.path.join(auvDataRoot, globalTemplatesDir)
+    globalDefaultProjectTemplateFile = os.path.join(globalTemplatesDir, globalDefaultProjectTemplateFile)
+    globalDefaultInterfaceTemplatesFile = os.path.join(globalTemplatesDir, globalDefaultInterfaceTemplatesFile)
 
     return cfg

@@ -49,9 +49,22 @@ def create_app(cfg):
     # Apply Flask configuration for Flask-User package
     app.config.from_object(config.FlaskConfigClass)
     app.config.update({
-        'SECRET_KEY': cfg['secret_key'],
-        'SQLALCHEMY_DATABASE_URI': f'sqlite:///{cfg["data_path"]}/userdb.sqlite',
-        **cfg['mail']
+        'SECRET_KEY': config.SECRET_KEY,
+        'SQLALCHEMY_DATABASE_URI': f'sqlite:///{config.auvDataRoot}/userdb.sqlite',
+        **cfg['mail'],
+        'USER_CHANGE_PASSWORD_URL': config.rootWebPath + app.config['USER_CHANGE_PASSWORD_URL'],
+        'USER_CHANGE_USERNAME_URL': config.rootWebPath + app.config['USER_CHANGE_USERNAME_URL'],
+        'USER_CONFIRM_EMAIL_URL': config.rootWebPath + app.config['USER_CONFIRM_EMAIL_URL'],
+        'USER_EMAIL_ACTION_URL': config.rootWebPath + app.config['USER_EMAIL_ACTION_URL'],
+        'USER_FORGOT_PASSWORD_URL': config.rootWebPath + app.config['USER_FORGOT_PASSWORD_URL'],
+        'USER_INVITE_URL': config.rootWebPath + app.config['USER_INVITE_URL'],
+        'USER_LOGIN_URL': config.rootWebPath + app.config['USER_LOGIN_URL'],
+        'USER_LOGOUT_URL': config.rootWebPath + app.config['USER_LOGOUT_URL'],
+        'USER_MANAGE_EMAILS_URL': config.rootWebPath + app.config['USER_MANAGE_EMAILS_URL'],
+        'USER_PROFILE_URL': config.rootWebPath + app.config['USER_PROFILE_URL'],
+        'USER_REGISTER_URL': config.rootWebPath + app.config['USER_REGISTER_URL'],
+        'USER_RESEND_CONFIRM_EMAIL_URL': config.rootWebPath + app.config['USER_RESEND_CONFIRM_EMAIL_URL'],
+        'USER_RESET_PASSWORD_URL': config.rootWebPath + app.config['USER_RESET_PASSWORD_URL']
     })
 
     # Initialize Flask-SQLAlchemy, Flask-Mail, and Flask-Babel
@@ -712,6 +725,7 @@ def unsubscribe_from_realtime_updates():
             print('User', request.sid, 'has been unsubscribed from', r)
 
 def main():
+
     parser = argparse.ArgumentParser(description='Auton Lab Universal Viewer')
     parser.add_argument('config', type=str, help='Configuration file to load.')
     args = parser.parse_args()
