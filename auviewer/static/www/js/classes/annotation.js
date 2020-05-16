@@ -178,6 +178,9 @@ Annotation.prototype.hideDialog = function () {
 
 // Populates annotation form values from the annotation instance values`.
 Annotation.prototype.populateFormFromValues = function() {
+	
+	// Populate the annotation ID
+	document.getElementById('annotationID').innerText = this.id;
 
 	// Populate the file & series names
 	document.getElementById('annotationFile').value = this.file;
@@ -385,6 +388,7 @@ Annotation.prototype.showDialog = function () {
 
 		// Set modal title, button labels, show/hide button(s)
 		$('#annotationModalTitle').text('New Annotation');
+		$('#annotationIDContainer').hide();
 		$('#annotationModal button.saveButton').text('Create');
 		$('#annotationModal button.deleteButton').hide();
 
@@ -394,6 +398,7 @@ Annotation.prototype.showDialog = function () {
 
 		// Set modal title, button labels, show/hide button(s)
 		$('#annotationModalTitle').text('Edit Annotation');
+		$('#annotationIDContainer').show();
 		$('#annotationModal button.saveButton').text('Save');
 		$('#annotationModal button.deleteButton').show();
 
@@ -403,6 +408,7 @@ Annotation.prototype.showDialog = function () {
 
 		// Set modal title, button labels, show/hide button(s)
 		$('#annotationModalTitle').text('New Annotation from Anomaly');
+		$('#annotationIDContainer').hide();
 		$('#annotationModal button.saveButton').text('Create');
 		$('#annotationModal button.deleteButton').hide();
 
