@@ -308,7 +308,7 @@ Annotation.prototype.save = function () {
 	if (this.state === 'new' || this.state === 'anomaly') {
 
 		// Attempt to create the annotation in the backend
-		requestHandler.createAnnotation(globalStateManager.currentFile.projname, globalStateManager.currentFile.filename, this.begin, this.end, this.series, JSON.stringify(this.annotation), function (data) {
+		requestHandler.createAnnotation(globalStateManager.currentFile.projname, globalStateManager.currentFile.filename, this.begin, this.end, this.series, JSON.stringify(this.annotation), (function (data) {
 
 			if (data.hasOwnProperty('success') && data.success === true) {
 
@@ -331,6 +331,8 @@ Annotation.prototype.save = function () {
 
 				globalAppConfig.verbose && console.log("Annotation creation failed.");
 
+				alert('Annotation creation failed.');
+
 				// If this was a new annotation, delete the local copy.
 				// Otherwise (if it was a detected anomaly), leave it be.
 				if (this.state === 'new') {
@@ -342,7 +344,7 @@ Annotation.prototype.save = function () {
 			// Trigger a redraw to show any changes to the annotation
 			globalStateManager.currentFile.triggerRedraw();
 
-		});
+		}).bind(this));
 
 	} else if (this.state === 'existing') {
 
@@ -354,8 +356,8 @@ Annotation.prototype.save = function () {
 
 			} else {
 
-				 globalAppConfig.verbose && console.log("Annotation updated failed.");
-				 this.deleteLocal();
+				globalAppConfig.verbose && console.log("Annotation updated failed.");
+				alert('Annotation update failed.');
 
 			}
 

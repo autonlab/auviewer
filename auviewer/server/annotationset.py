@@ -82,11 +82,6 @@ class AnnotationSet:
             print("Error/securityissue on annotation update: User (id " + str(current_user.id) + ") tried to update an annotation (id " + str(id) + ") belonging to another user (id " + str(annotationToUpdate.user_id) + ").")
             return False
 
-        # Verify the annotation ID belongs to the file it should
-        if annotationToUpdate.filepath != self.fileparent.getFilepath():
-            print("Error on annotation update: File passed in did not match file of annotation. Annotation ID " + str(id) + ", file specified in request '" + self.fileparent.getFilepath() + "', file listed in annotation '" + str(annotationToUpdate.filepath) + "'.")
-            return False
-
         # Set updated values
         annotationToUpdate.series = seriesID
         annotationToUpdate.xboundleft=xBoundLeft
