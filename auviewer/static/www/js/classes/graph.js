@@ -50,7 +50,7 @@ Graph.prototype.build = function() {
 		'<table>' +
 			'<tbody>' +
 				'<tr>' +
-					'<td class="graph_title">'+this.series.replace(/(?:\r\n|\r|\n)/g, '<br>')+'</td>' +
+					'<td class="graph_title">'+simpleSeriesName(this.series)+'<p class="graph_subtitle">'+this.series.replace(/(?:\r\n|\r|\n)/g, '<br>')+'</p></td>' +
 					'<td rowspan="2">' +
 						'<div class="graph">' +
 							'<table style="width:100%;height:100%;"><tbody><tr>' +
@@ -107,11 +107,26 @@ Graph.prototype.build = function() {
 	// Add the control for the graph
 	const seriesDisplayControl = document.getElementById('series_display_controller');
 
+	// Determine the label of the options group to which this should belong
+	let ogname = this.series.split('/');
+	ogname.pop();
+	ogname = ogname.join('/');
+	const single_quote_escaped_ogname = ogname.replace(/'/g, "\'");
+	let og = seriesDisplayControl.querySelector("optgroup[label='"+single_quote_escaped_ogname+"']");
+
+	// If the options group does not already exist, create it
+	if (!og) {
+		og = document.createElement('optgroup');
+		og.label = ogname;
+		seriesDisplayControl.add(og)
+	}
+
+	// Now create the option to add to the series control selector
 	let opt = document.createElement('option');
-	opt.text = this.series;
+	opt.text = this.series.split('/').pop();
 	opt.value = this.series;
 	opt.selected = showGraph;
-	seriesDisplayControl.add(opt);
+	og.appendChild(opt);
 
 	// Re-render the select picker
 	$(seriesDisplayControl).selectpicker('refresh');

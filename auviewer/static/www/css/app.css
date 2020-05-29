@@ -6,6 +6,10 @@
 
 /* Main */
 
+body {
+    overscroll-behavior: none;
+}
+
 #controls {
     position: fixed;
     top: 64px;
@@ -36,7 +40,7 @@ div.bootstrap-select > div.dropdown-menu a.dropdown-item {
 
 #graphs {
     box-sizing: border-box;
-    padding-left: 260px;
+    padding-left: 270px;
     width: 99%;
     height: 100%;
 }
@@ -77,10 +81,25 @@ div.bootstrap-select > div.dropdown-menu a.dropdown-item {
     font-weight: bold;
 }
 
+.graph_wrapper > table > tbody > tr > td.graph_title > .graph_subtitle {
+    font-weight: normal;
+    font-size: .8em;
+    margin-top: 8px;
+    word-wrap: break-word;
+}
+
 .graph_wrapper > table > tbody > tr > td.legend {
     vertical-align: top;
     /*height: 120px;*/
     padding-top: 4px;
+}
+
+.graph_wrapper > table > tbody > tr > td.legend > div {
+    position: fixed;
+    background-color: white;
+    filter: drop-shadow(-2px 2px 2px #ccc);
+    border: 1px solid #aaa;
+    padding: 2px 4px;
 }
 
 .graph {

@@ -407,7 +407,7 @@ function handleUnderlayRedraw(canvas, area, g) {
 				x = left;
 				y = area.y;
 				width = Math.max(1, right - left);
-				height = area.h;
+				height = shortHighlights ? area.h/5*.85 : area.h;
 
 				// Prepare styling for the section highlight.
 				if (file.annotations[i].state === 'anomaly') {
@@ -421,28 +421,32 @@ function handleUnderlayRedraw(canvas, area, g) {
 					} else if (file.annotations[i].series != null && !Object.getOwnPropertyNames(g.setIndexByName_).includes(file.annotations[i].series)) {
 						// Anomaly from another series.
 						canvas.fillStyle = this.config.otherAnomalyColor;
+						// canvas.fillStyle = 'rgba(179,80,0,0.35)';
 					} else {
 						// Anomaly that belongs to this series.
 						canvas.fillStyle = this.config.ownAnomalyColor;
+						// canvas.fillStyle = 'rgba(179,80,0,0.35)';
 					}
 
 				} else {
 					// Anomaly
 					canvas.fillStyle = this.config.ownAnnotationColor;
+					// canvas.fillStyle = 'rgba(0,72,182,1)';
 				}
 
 				// Draw the section highlight.
 				canvas.fillRect(x, y, width, height);
+
+				// Set offsets for later click detection
 				file.annotations[i].offsetXLeft = x;
 				file.annotations[i].offsetXRight = x + width;
 
 				// Draw annotation label text
 				if (file.annotations[i].annotation.confidence) {
 					canvas.font = "12px Arial";
-					//canvas.fillStyle = "#fff";
 					canvas.fillStyle = this.config.ownAnnotationLabelColor;
 					canvas.textAlign = "center";
-					canvas.fillText(file.annotations[i].annotation.confidence, x + (width / 2), area.y + (area.h * .1));
+					canvas.fillText(file.annotations[i].annotation.confidence, x + (width / 2), y+3+height/2/*area.y + (area.h * .1)*/);
 				}
 
 			}

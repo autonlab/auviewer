@@ -1,6 +1,6 @@
 'use strict';
 
-function Project(projname) {
+function Project(projname, callback=null) {
 
 	// Holds the project name
 	this.name = projname;
@@ -30,6 +30,12 @@ function Project(projname) {
 
 		// Re-render the select-picker
 		$(fileSelect).selectpicker('refresh');
+
+		// If a callback was requested (provided to the File class
+		// initializer), call it.
+		if (callback) {
+			callback();
+		}
 
 	});
 

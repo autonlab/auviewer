@@ -61,6 +61,12 @@
 
 	</div>
 
+	<h6>Plot</h6>
+
+	<div id="seriesDisplayControllerDiv">
+		<select id="series_display_controller" class="form-control form-control-sm selectpicker" multiple data-selected-text-format="static" data-actions-box="true" data-title="Click to add/remove series" data-select-all-text="Show All" data-deselect-all-text="Hide All" data-live-search="true" onchange="globalStateManager.currentFile.handleSeriesDisplayControllerUpdate();"></select>
+	</div>
+
 	<h6>Zoom Control</h6>
 	<div style="width: 100%; margin-bottom: 10px;">
 		<div style="width: 100%; text-align: center; margin-bottom: 4px;">
@@ -88,21 +94,17 @@
 	<button type="button" class="btn btn-sm btn-light" data-toggle="modal" data-target="#allAnnotationsListModal">All Annotations</button>
 	<br><br>
 
-	<h6>Data Series</h6>
-
-	<div id="seriesDisplayControllerDiv">
-		<select id="series_display_controller" class="form-control form-control-sm selectpicker bs-width-correction" multiple data-selected-text-format="static" data-actions-box="true" data-title="Control series display" data-header="Select series to show" data-select-all-text="Show All" data-deselect-all-text="Hide All" data-live-search="true" onchange="globalStateManager.currentFile.handleSeriesDisplayControllerUpdate();"></select>
-	</div>
-
 	<div id="anomalyDetectionPanel">
 
-		<h6>Anomaly Detection</h6>
+		<h6>Exceedance Detection</h6>
+
+		<span style="font-size: 0.9em;"><i class="fa fa-plus-circle"></i>New</span>
 
 		<div class="form-group row" style="margin-bottom: 0.3rem">
 			<label for="alert_gen_type_field" class="col-sm-5 col-form-label col-form-label-sm">Pattern Type</label>
 			<div class="col-sm-7">
 				<select class="form-control form-control-sm" id="alert_gen_type_field">
-					<option value="anomalydetection">Anomaly Detection</option>
+					<option value="anomalydetection">Exceedance Detection</option>
 					<option value="correlation">Correlation Pattern</option>
 				</select>
 			</div>
@@ -152,6 +154,9 @@
 		</div>
 
 	</div>
+
+	<h6>Temporary Options</h6>
+	<input id="flh_temp_option" type="checkbox" onclick="shortHighlights=!this.checked; if(globalStateManager.currentFile) { globalStateManager.currentFile.triggerRedraw(); }"> <label for="flh_temp_option">Full-Length Highlights</label>
 
 	<div id="control_footer">
 

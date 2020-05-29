@@ -345,29 +345,6 @@ def create_app(cfg):
 
         return simplejson.dumps(alerts, ignore_nan=True)
 
-    @app.route(config.rootWebPath + '/initial_project_payload')
-    @login_required
-    def initial_project_payload():
-
-        # Parse parameters
-        projname = request.args.get('project')
-
-        # Try to get the project
-        try:
-
-            # Get the project
-            project = projects[projname]
-
-        except:
-
-            print("Project could not be retrieved:", projname)
-            return simplejson.dumps([])
-
-        output = project.getInitialPayloadOutput()
-        json_output = simplejson.dumps(output)
-
-        return json_output
-
     @app.route(config.rootWebPath + '/get_project_annotations')
     @login_required
     def get_project_annotations():
@@ -387,9 +364,9 @@ def create_app(cfg):
 
         return json_output
 
-    @app.route(config.rootWebPath + '/get_projects')
+    @app.route(config.rootWebPath + '/initial_payload')
     @login_required
-    def get_projects():
+    def initial_payload():
 
         #TODO(gus): This is hacked together temporarily. Move to permanent home.
 
@@ -476,6 +453,29 @@ def create_app(cfg):
 
         else:
             return "Invalid request."
+
+    @app.route(config.rootWebPath + '/initial_project_payload')
+    @login_required
+    def initial_project_payload():
+
+        # Parse parameters
+        projname = request.args.get('project')
+
+        # Try to get the project
+        try:
+
+            # Get the project
+            project = projects[projname]
+
+        except:
+
+            print("Project could not be retrieved:", projname)
+            return simplejson.dumps([])
+
+        output = project.getInitialPayloadOutput()
+        json_output = simplejson.dumps(output)
+
+        return json_output
 
     @app.route(config.rootWebPath + '/series_ranged_data', methods=['GET'])
     @login_required
@@ -576,44 +576,6 @@ def create_app(cfg):
 
             # TODO(gus): Report an error to user in a websocket response
             raise e
-
-    @socketio.on('initial_payload')
-    def initial_payload():
-
-        builtin_default_project_template = simplejson.dumps({})
-        builtin_default_interface_templates = simplejson.dumps({})
-        global_default_project_template = simplejson.dumps({})
-        global_default_interface_templates = simplejson.dumps({})
-
-        try:
-            with open(f'{config.auvCodeRoot}/static/www/js/builtin_templates/builtin_default_project_template.json', 'r') as f:
-                builtin_default_project_template = f.read()
-        except:
-            pass
-        try:
-            with open(f'{config.auvCodeRoot}/static/www/js/builtin_templates/builtin_default_interface_templates.json', 'r') as f:
-                builtin_default_interface_templates = f.read()
-        except:
-            pass
-        try:
-            with open(config.globalDefaultProjectTemplateFile, 'r') as f:
-                global_default_project_template = f.read()
-        except:
-            pass
-        try:
-            with open(config.globalDefaultInterfaceTemplatesFile, 'r') as f:
-                global_default_interface_templates = f.read()
-        except:
-            pass
-
-        response = {
-            'builtin_default_project_template': builtin_default_project_template,
-            'builtin_default_interface_templates': builtin_default_interface_templates,
-            'global_default_project_template': global_default_project_template,
-            'global_default_interface_templates': global_default_interface_templates
-        }
-
-        socketio.emit('initial_payload', response)
 
     @socketio.on('push_template')
     def handle_push_template(json):

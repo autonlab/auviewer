@@ -5,7 +5,7 @@
     "reloader": false,
     "verbose": true,
 
-    "data_path": "/Users/awertz/work/medview/data",
+    "data_path": "/zfsauton/data/public/gwelter/AUView",
     "root_web_path": "",
 
     "secret_key": "THISISADEVELOPMENTSECRETKEY!CHANGEMETONEWRANDOMSTRINGFORPRODUCTION!",

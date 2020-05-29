@@ -12,6 +12,9 @@ function GlobalStateManager() {
 	// Length of time to display for realtime graphs, in seconds
 	this.realtimeTimeWindow = 600;
 
+	// Variable used to storage a file pending load
+	this.filePendingLoad = null;
+
 }
 
 // Clear the main file currently loaded in the viewer
@@ -22,6 +25,9 @@ GlobalStateManager.prototype.clearFile = function() {
 		this.currentFile.destroy();
 		this.currentFile = null;
 	}
+
+	// Clear the hash parameters
+	window.location.hash = '';
 
 };
 
@@ -36,6 +42,9 @@ GlobalStateManager.prototype.clearProject = function() {
 
 	// Set current project to null
 	this.currentProject = null;
+
+	// Clear the hash parameters
+	window.location.hash = '';
 
 };
 
@@ -73,13 +82,27 @@ GlobalStateManager.prototype.exitRealtimeMode = function () {
 GlobalStateManager.prototype.loadFile = function(filename='', project='', callback=null) {
 
 	// If empty variables were provided, grab the dropdown selections
-	if (project === '') {
+	if (!project) {
 		let projselect = document.getElementById('project_selection');
 		project = projselect.options[projselect.selectedIndex].value;
 	}
-	if (filename === '') {
-		let fileselect = document.getElementById('file_selection');
-		filename = fileselect.options[fileselect.selectedIndex].value;
+	if (!filename) {
+
+		// If there's a file pending load, use that. Otherwise, use file-select.
+		if (this.filePendingLoad) {
+			filename = this.filePendingLoad;
+			this.filePendingLoad = null;
+		} else {
+			let fileselect = document.getElementById('file_selection');
+			filename = fileselect.options[fileselect.selectedIndex].value;
+		}
+
+	}
+
+	// If the filename is still empty at this point, clear the file & we're done.
+	if (!filename) {
+		this.clearFile();
+		return;
 	}
 
 	// If this file is already loaded, we need not take further action
@@ -90,8 +113,13 @@ GlobalStateManager.prototype.loadFile = function(filename='', project='', callba
 	// Clear main file from the viewer
 	this.clearFile();
 
-	// Load the project
-	this.loadProject(project);
+	// If the project needs to be loaded first, load the project with this
+	// function as a callback.
+	if (!this.currentProject || project !== this.currentProject.name) {
+		this.filePendingLoad = filename;
+		this.loadProject(project, this.loadFile.bind(this));
+		return;
+	}
 
 	// Change the selection & re-render the select-picker
 	let fs = $('#file_selection');
@@ -101,12 +129,15 @@ GlobalStateManager.prototype.loadFile = function(filename='', project='', callba
 	// Load the file
 	this.currentFile = new File(project, filename, callback);
 
+	// Set hash parameters
+	window.location.hash = "project="+project+"&file="+filename;
+
 	return true;
 
 };
 
 // Switches to a newly selected project in the main viewer.
-GlobalStateManager.prototype.loadProject = function(project='') {
+GlobalStateManager.prototype.loadProject = function(project='', callback=null) {
 
 	// If empty project variable was provided, grab the dropdown selection
 	if (project === '') {
@@ -128,7 +159,7 @@ GlobalStateManager.prototype.loadProject = function(project='') {
 	ps.selectpicker('refresh');
 
 	// Load new project
-	this.currentProject = new Project(project);
+	this.currentProject = new Project(project, callback);
 
 	return true;
 

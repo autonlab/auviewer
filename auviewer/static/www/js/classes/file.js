@@ -61,6 +61,13 @@ function File(project, filename, callback=null) {
 	// handle the response when it comes.
 	requestHandler.requestInitialFilePayload(this.projname, this.filename, function (data) {
 
+		// If the payload is empty, something has gone wrong. Clear the file,
+		// and we're done.
+		if (Object.keys(data).length === 0) {
+			globalStateManager.clearFile();
+			return;
+		}
+
 		// Prepare data received from the backend and attach to class instance
 		file.fileData = file.prepareData(data, data.baseTime);
 
@@ -143,7 +150,7 @@ function File(project, filename, callback=null) {
 				}
 
 				let tt = performance.now() - t0;
-				globalAppConfig.verbose && tt > globalAppConfig.performanceReportingThresholdMS && console.log("Initial file graph building took " + Math.round(tt) + "ms.", this.projname, this.filename);
+				globalAppConfig.performance && tt > globalAppConfig.performanceReportingThresholdGeneral && console.log("Initial file graph building took " + Math.round(tt) + "ms.", this.projname, this.filename);
 
 				// Grab the alert generation dropdown
 				let alertGenSeriesDropdown = document.getElementById('alert_gen_series_field');
@@ -630,14 +637,15 @@ File.prototype.getPostloadDataUpdateHandler = function() {
 File.prototype.handleSeriesDisplayControllerUpdate = function() {
 	const options = document.getElementById('series_display_controller').options;
 	for (let opt of options) {
-		let graph = this.getGraphForSeries(opt.value)
-		if (opt.selected === true && graph.isShowing() === false) {
-			globalAppConfig.verbose && console.log('Showing', opt.value);
-			graph.show();
-		}
-		else if(opt.selected === false && graph.isShowing() === true) {
-			globalAppConfig.verbose && console.log('Hiding', opt.value);
-			graph.remove();
+		if (opt.value) {
+			let graph = this.getGraphForSeries(opt.value);
+			if (opt.selected === true && graph.isShowing() === false) {
+				globalAppConfig.verbose && console.log('Showing', opt.value);
+				graph.show();
+			} else if (opt.selected === false && graph.isShowing() === true) {
+				globalAppConfig.verbose && console.log('Hiding', opt.value);
+				graph.remove();
+			}
 		}
 	}
 };
@@ -740,7 +748,7 @@ File.prototype.prepareData = function(data, baseTime) {
 	}
 
 	let tt = performance.now() - t0;
-	globalAppConfig.verbose && tt > globalAppConfig.performanceReportingThresholdMS && console.log("File.prepareData() took " + Math.round(tt) + "ms.");
+	globalAppConfig.performance && tt > globalAppConfig.performanceReportingThresholdGeneral && console.log("File.prepareData() took " + Math.round(tt) + "ms.");
 
 	return data;
 
@@ -948,7 +956,7 @@ File.prototype.renderBufferedRealtimeData = function() {
 			this.synchronizeGraphs();
 
 			let tt = performance.now() - t0;
-			globalAppConfig.verbose && tt > globalAppConfig.performanceReportingThresholdMS && console.log("Re-rendering realtime data took " + Math.round(tt) + "ms.");
+			globalAppConfig.performance && tt > globalAppConfig.performanceReportingThresholdGeneral && console.log("Re-rendering realtime data took " + Math.round(tt) + "ms.");
 
 			// Call recursively.
 			setTimeout(this.renderBufferedRealtimeData.bind(this),  100);

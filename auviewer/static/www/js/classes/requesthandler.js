@@ -49,6 +49,10 @@ RequestHandler.prototype.requestInitialFilePayload = function(projname, filename
 	});
 };
 
+RequestHandler.prototype.requestInitialPayload = function(callback) {
+	this._newRequest(callback, globalAppConfig.initialPayloadURL, {});
+};
+
 RequestHandler.prototype.requestInitialProjectPayload = function(projname, callback) {
 	this._newRequest(callback, globalAppConfig.initialProjectPayloadURL, {
 		project: projname
@@ -59,10 +63,6 @@ RequestHandler.prototype.requestProjectAnnotations = function(projname, callback
 	this._newRequest(callback, globalAppConfig.getProjectAnnotationsURL, {
 		project: projname
 	})
-};
-
-RequestHandler.prototype.requestProjectsList = function(callback) {
-	this._newRequest(callback, globalAppConfig.getProjectsURL, {});
 };
 
 RequestHandler.prototype.requestSeriesRangedData = function(projname, filename, series, startTime, stopTime, callback) {
@@ -117,7 +117,7 @@ RequestHandler.prototype._newRequest = function(callback, path, params) {
 				let t0 = performance.now();
 				callback(data);
 				let tt = performance.now() - t0;
-				globalAppConfig.verbose && tt > globalAppConfig.performanceReportingThresholdMS && console.log("Request callback took " + Math.round(tt) + "ms:", path, params);
+				globalAppConfig.performance && tt > globalAppConfig.performanceReportingThresholdGeneral && console.log("Request callback took " + Math.round(tt) + "ms:", path, params);
 			} else {
 				console.log("Important: Callback not provided to request handler.");
 			}

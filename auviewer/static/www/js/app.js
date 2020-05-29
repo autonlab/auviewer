@@ -1,5 +1,27 @@
 'use strict';
 
+// Verify we're serving Chrome browser
+if (navigator.userAgent.indexOf("Chrome") === -1) {
+
+	const body = document.getElementsByTagName("BODY")[0];
+
+	// Clear all body elements
+	// See: https://jsperf.com/innerhtml-vs-removechild/15
+	while (body.firstChild) {
+		body.removeChild(body.firstChild);
+	}
+
+	// Add user notice
+	body.innerHTML =
+		'<!-- Browser warning -->\n' +
+		'<div style="position: absolute; z-index: 9999999999; width: 100%; height: 100%; background-color: white; display: flex; justify-content: center; align-items: center;">\n' +
+		'\t<div style="width: 100%; text-align: center;">\n' +
+		'\t\t<h1>Please use Chrome to view this web app.</h1><h6>Unfortunately, the charting library we use at this time is incompatible with other browsers.</h6>\n' +
+		'\t</div>\n' +
+		'</div>';
+
+}
+
 let requestHandler = new RequestHandler();
 let globalStateManager = new GlobalStateManager();
 let templateSystem = new TemplateSystem();
@@ -8,21 +30,6 @@ let templateSystem = new TemplateSystem();
 let socket = io();
 socket.on('connect', function() {
 	console.log('Connected to realtime connection.');
-
-	// Request initial payload (builtin & global templates)
-	socket.emit('initial_payload');
-});
-
-socket.on('initial_payload', function(data) {
-	globalAppConfig.verbose && console.log('SocketIO initial_payload received.');
-	templateSystem.provideBuiltinTemplates(
-		(data.hasOwnProperty('builtin_default_project_template') && data['builtin_default_project_template'] ? JSON.parse(data['builtin_default_project_template']) : {}) || {},
-		(data.hasOwnProperty('builtin_default_interface_templates') && data['builtin_default_interface_templates'] ? JSON.parse(data['builtin_default_interface_templates']) : {}) || {},
-	);
-	templateSystem.provideGlobalTemplates(
-		(data.hasOwnProperty('global_default_project_template') && data['global_default_project_template'] ? JSON.parse(data['global_default_project_template']) : {}) || {},
-		(data.hasOwnProperty('global_default_interface_templates') && data['global_default_interface_templates'] ? JSON.parse(data['global_default_interface_templates']) : {}) || {},
-	);
 });
 
 socket.on('new_data', function(data) {
@@ -78,34 +85,6 @@ $('#annotationModal button.deleteButton').click(function() {
 	if (confirm("Are you sure you want to delete this annotation?")) {
 		$('#annotationModal').data('callingAnnotation').delete();
 	}
-});
-
-// Request the list of files for the project
-requestHandler.requestProjectsList(function(data) {
-
-	templateSystem.provideBuiltinTemplates(
-		(data.hasOwnProperty('builtin_default_project_template') && data['builtin_default_project_template'] ? JSON.parse(data['builtin_default_project_template']) : {}) || {},
-		(data.hasOwnProperty('builtin_default_interface_templates') && data['builtin_default_interface_templates'] ? JSON.parse(data['builtin_default_interface_templates']) : {}) || {},
-	);
-	templateSystem.provideGlobalTemplates(
-		(data.hasOwnProperty('global_default_project_template') && data['global_default_project_template'] ? JSON.parse(data['global_default_project_template']) : {}) || {},
-		(data.hasOwnProperty('global_default_interface_templates') && data['global_default_interface_templates'] ? JSON.parse(data['global_default_interface_templates']) : {}) || {},
-	);
-
-	let projectSelect = document.getElementById('project_selection');
-
-	for (let i in data['projects']) {
-
-		let opt = document.createElement('OPTION');
-		opt.setAttribute('value', data['projects'][i]);
-		opt.innerText = data['projects'][i];
-		projectSelect.appendChild(opt);
-
-	}
-
-	// Re-render the select picker
-	$(projectSelect).selectpicker('refresh');
-
 });
 
 $('#annotationsListModal').on('show.bs.modal', function (e) {
@@ -213,3 +192,47 @@ $('#allAnnotationsListModal').on('show.bs.modal', function (e) {
 	}
 
 });
+
+// Request the list of files for the project
+requestHandler.requestInitialPayload(function(data) {
+
+	templateSystem.provideBuiltinTemplates(
+		(data.hasOwnProperty('builtin_default_project_template') && data['builtin_default_project_template'] ? JSON.parse(data['builtin_default_project_template']) : {}) || {},
+		(data.hasOwnProperty('builtin_default_interface_templates') && data['builtin_default_interface_templates'] ? JSON.parse(data['builtin_default_interface_templates']) : {}) || {},
+	);
+	templateSystem.provideGlobalTemplates(
+		(data.hasOwnProperty('global_default_project_template') && data['global_default_project_template'] ? JSON.parse(data['global_default_project_template']) : {}) || {},
+		(data.hasOwnProperty('global_default_interface_templates') && data['global_default_interface_templates'] ? JSON.parse(data['global_default_interface_templates']) : {}) || {},
+	);
+
+	let projectSelect = document.getElementById('project_selection');
+
+	for (let i in data['projects']) {
+
+		let opt = document.createElement('OPTION');
+		opt.setAttribute('value', data['projects'][i]);
+		opt.innerText = data['projects'][i];
+		projectSelect.appendChild(opt);
+
+	}
+
+	// Re-render the select picker
+	$(projectSelect).selectpicker('refresh');
+
+	// Detect hash variables
+	var hash = window.location.hash.substr(1);
+	var result = hash.split('&').reduce(function (result, item) {
+	    var parts = item.split('=');
+	    result[parts[0]] = parts[1];
+	    return result;
+	}, {});
+
+	// Handle initial hash variables
+	if (result.hasOwnProperty('project') && result.hasOwnProperty('file')) {
+		globalStateManager.loadFile(result['file'], result['project'])
+	}
+
+});
+
+// TODO: Temp
+let shortHighlights = true;

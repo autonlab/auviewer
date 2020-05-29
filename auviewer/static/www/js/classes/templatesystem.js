@@ -140,28 +140,62 @@ TemplateSystem.prototype.getSeriesTemplate = function(projectName, seriesName) {
 
 // Provide builtin templates.
 TemplateSystem.prototype.provideBuiltinTemplates = function(builtin_default_project_template, builtin_default_interface_templates) {
+
+	globalAppConfig.verbose && console.log("TemplateSystem.provideBuiltinTemplates starting.");
+
+	let t0 = performance.now();
+
 	this.builtin_default_project_template = builtin_default_project_template || {};
 	this.builtin_default_series_template = (verifyObjectPropertyChain(builtin_default_project_template, ['series', 'default']) ? builtin_default_project_template['series']['default'] : {}) || {};
 	this.builtin_default_interface_templates = builtin_default_interface_templates || {};
 	globalAppConfig.verbose && console.log('TemplateSystem.provideBuiltinTemplates set builtin default project, series, and interface templates:', this.builtin_default_project_template, this.builtin_default_series_template, this.builtin_default_interface_templates);
+
+	let tt = performance.now() - t0;
+
+	globalAppConfig.performance && tt > globalAppConfig.performanceReportingThresholdTemplateSystem && console.log("TemplateSystem.provideBuiltinTemplates() took " + Math.round(tt) + "ms.");
+
+	globalAppConfig.verbose && console.log("TemplateSystem.provideBuiltinTemplates ended.");
 };
 
 // Provide global templates.
 TemplateSystem.prototype.provideGlobalTemplates = function(global_default_project_template, global_default_interface_templates) {
+
+	globalAppConfig.verbose && console.log("TemplateSystem.provideGlobalTemplates starting.");
+
+	let t0 = performance.now();
+
 	this.global_default_project_template = global_default_project_template || {};
 	this.global_default_series_template = (verifyObjectPropertyChain(global_default_project_template, ['series', 'default']) ? global_default_project_template['series']['default'] : {}) || {};
 	this.global_default_interface_templates = global_default_interface_templates || {};
 	globalAppConfig.verbose && console.log('TemplateSystem.provideGlobalTemplates set global default project, series, and interface templates:', this.global_default_project_template, this.global_default_series_template, this.global_default_interface_templates);
+
+	let tt = performance.now() - t0;
+
+	globalAppConfig.performance && tt > globalAppConfig.performanceReportingThresholdTemplateSystem && console.log("TemplateSystem.provideGlobalTemplates() took " + Math.round(tt) + "ms.");
+
+	globalAppConfig.verbose && console.log("TemplateSystem.provideGlobalTemplates ended.");
+
 };
 
 // Provide a project's template and interface templates to TemplateSystem in the
 // form of unparsed JSON strings.
 TemplateSystem.prototype.provideProjectTemplates = function(name, project_template, interface_templates) {
 
+	globalAppConfig.verbose && console.log("TemplateSystem.provideProjectTemplates starting.");
+
+	let t0 = performance.now();
+
 	this.project_templates[name] = {
 		'project_template': project_template || {},
 		'interface_templates': interface_templates || {}
 	};
+	globalAppConfig.verbose && console.log('TemplateSystem.provideProjectTemplates set project "'+name+'" template:', this.project_templates[name]);
+
+	let tt = performance.now() - t0;
+
+	globalAppConfig.performance && tt > globalAppConfig.performanceReportingThresholdTemplateSystem && console.log("TemplateSystem.provideProjectTempaltes() took " + Math.round(tt) + "ms.");
+
+	globalAppConfig.verbose && console.log("TemplateSystem.provideProjectTemplates ended.");
 
 };
 

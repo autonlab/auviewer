@@ -150,15 +150,13 @@ template = {
 		"Group:\n/data/numerics/ART.Diastolic:value\n/data/numerics/ART.Systolic:value\n/data/numerics/ART.Mean:value",
 		"Group:\n/data/numerics/NBP.NBPd:value\n/data/numerics/NBP.NBPm:value\n/data/numerics/NBP.NBPs:value",
 		"Group:\n/data/numerics/NBP-D:value\n/data/numerics/NBP-M:value\n/data/numerics/NBP-S:value"
-		"Group:\nSignal 3\nSignal 4\nSignal 5"
 	],
 
 	'groups': [
 		['/data/numerics/AR1-D:value', '/data/numerics/AR1-S:value', '/data/numerics/AR1-M:value'],
 		['/data/numerics/ART.Diastolic:value', '/data/numerics/ART.Systolic:value', '/data/numerics/ART.Mean:value'],
 		['/data/numerics/NBP.NBPd:value', '/data/numerics/NBP.NBPm:value', '/data/numerics/NBP.NBPs:value'],
-		['/data/numerics/NBP-D:value', '/data/numerics/NBP-M:value', '/data/numerics/NBP-S:value'],
-		['Signal 3', 'Signal 4', 'Signal 5']
+		['/data/numerics/NBP-D:value', '/data/numerics/NBP-M:value', '/data/numerics/NBP-S:value']
 	],
 
 	# The TemplateSystem only expects the default project template to have a

@@ -265,6 +265,24 @@ function padDataIfNeeded(data) {
 
 }
 
+// Returns a simplified name of the series, with the path components removed and
+// the column removed. E.g. /path/to/series:col becomes series:col. If the col
+// name is "value", it is omitted.
+function simpleSeriesName(fullname) {
+
+	let s = fullname.split('/');
+	let simplifiedTitle = s[s.length-1];
+
+	// If the simplified title is "seriesname:value", simplify further to remove :value.
+	s = simplifiedTitle.split(':');
+	if (s.length === 2 && s[1] === "value") {
+		simplifiedTitle = s[0];
+	}
+
+	return simplifiedTitle
+
+}
+
 // Verifies that an object has a nested hierarchy of properties. For example,
 // given props = ['a', 'b', 'c'], the function will return true if the given
 // object has obj['a']['b']['c'] and false otherwise.
