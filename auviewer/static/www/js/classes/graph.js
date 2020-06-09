@@ -53,7 +53,6 @@ function Graph(seriesOrGroupName, file) {
 	}
 
 	// Assemble the alt text
-	console.log(this.file.fileData);
 	this.altText = "";
 	for (let sn of this.group) {
 		if (this.altText) {

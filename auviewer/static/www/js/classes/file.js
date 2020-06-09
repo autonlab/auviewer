@@ -83,7 +83,6 @@ function File(project, filename, callback=null) {
 		// NOTE: If you're trying to understand this code in the future, I'm
 		// sorry. I could not document this in any way that would help make it
 		// more understandable, and it is a bit of a labyrinth.
-		console.log(file.template);
 		for (let g of Object.getOwnPropertyNames(file.template.groups)) {
 
 			const group = file.template.groups[g];
