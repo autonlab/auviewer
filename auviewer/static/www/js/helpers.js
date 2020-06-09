@@ -10,7 +10,8 @@ function convertFirstColumnToDate(data, baseTime) {
 }
 
 // Creates a merged time series dataset of the series specified by groupSeries,
-// pulling data from data.
+// pulling data from data. Assumes the datasets are in chronological order and
+// that rows are distinct (i.e. there are not repeated times & values).
 function createMergedTimeSeries(groupSeries, data) {
 
 	// // Verify that all series members of the group are present.
@@ -53,7 +54,7 @@ function createMergedTimeSeries(groupSeries, data) {
 		seriesIndexWithEarliest = 0;
 		for (let i = 1; i < groupSeries.length; i++) {
 			if (iterationIndexPointers[seriesIndexWithEarliest] >= data[groupSeries[seriesIndexWithEarliest]].data.length ||
-				(iterationIndexPointers[i] < data[groupSeries[i]].data.length && data[groupSeries[i]].data[iterationIndexPointers[i]][0] < data[groupSeries[seriesIndexWithEarliest]].data[iterationIndexPointers[seriesIndexWithEarliest]][0])) {
+				(iterationIndexPointers[i] < data[groupSeries[i]].data.length && data[groupSeries[i]].data[iterationIndexPointers[i]][0].valueOf() < data[groupSeries[seriesIndexWithEarliest]].data[iterationIndexPointers[seriesIndexWithEarliest]][0].valueOf())) {
 				seriesIndexWithEarliest = i;
 			}
 		}
@@ -79,7 +80,7 @@ function createMergedTimeSeries(groupSeries, data) {
 		// pointers.
 		for (let i = seriesIndexWithEarliest + 1; i < groupSeries.length; i++) {
 
-			if (iterationIndexPointers[i] < data[groupSeries[i]].data.length && data[groupSeries[i]].data[iterationIndexPointers[i]][0] === newRow[0]) {
+			if (iterationIndexPointers[i] < data[groupSeries[i]].data.length && data[groupSeries[i]].data[iterationIndexPointers[i]][0].valueOf() === newRow[0].valueOf()) {
 				newRow[3*i + 1] = data[groupSeries[i]].data[iterationIndexPointers[i]][1];
 				newRow[3*i + 2] = data[groupSeries[i]].data[iterationIndexPointers[i]][2];
 				newRow[3*i + 3] = data[groupSeries[i]].data[iterationIndexPointers[i]][3];
@@ -168,11 +169,6 @@ function createMeshedTimeSeries(superset, subset) {
 // Returns a deep copy of any JSON-serializable variable.
 function deepCopy(o) {
 	return JSON.parse(JSON.stringify(o));
-}
-
-// Get group name string representing a merged series of graphs.
-function getGroupName(group) {
-	return "Group:\n" + group.join("\n");
 }
 
 // Returns a 2-member array with date & time strings that can be provided to an

@@ -43,6 +43,7 @@ div.bootstrap-select > div.dropdown-menu a.dropdown-item {
     padding-left: 270px;
     width: 99%;
     height: 100%;
+    margin-bottom: 100px;
 }
 
 #metadata {
@@ -91,15 +92,16 @@ div.bootstrap-select > div.dropdown-menu a.dropdown-item {
 .graph_wrapper > table > tbody > tr > td.legend {
     vertical-align: top;
     /*height: 120px;*/
-    padding-top: 4px;
+    padding-top: 4px;;
 }
 
 .graph_wrapper > table > tbody > tr > td.legend > div {
-    position: fixed;
+    position: relative;
     background-color: white;
     filter: drop-shadow(-2px 2px 2px #ccc);
     border: 1px solid #aaa;
     padding: 2px 4px;
+    word-wrap: break-word;
 }
 
 .graph {

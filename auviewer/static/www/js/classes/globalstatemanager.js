@@ -15,6 +15,9 @@ function GlobalStateManager() {
 	// Variable used to storage a file pending load
 	this.filePendingLoad = null;
 
+	// Holds incrementing graph identifier
+	this.nextGraphIdentifier = 0
+
 }
 
 // Clear the main file currently loaded in the viewer
@@ -73,6 +76,11 @@ GlobalStateManager.prototype.exitRealtimeMode = function () {
 	// Unsubscribe from realtime updates
 	socket.emit('unsubscribe');
 
+};
+
+// Returns a new unique graph identifier
+GlobalStateManager.prototype.getGraphIdentifier = function() {
+	return this.nextGraphIdentifier++;
 };
 
 // Switches to a newly selected file in the main viewer. If project and filename

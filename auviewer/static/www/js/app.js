@@ -20,6 +20,8 @@ if (navigator.userAgent.indexOf("Chrome") === -1) {
 		'\t</div>\n' +
 		'</div>';
 
+	throw new Error("Please use Chrome browser to view this web app. Unfortunately, the charting library we use at this time is incompatible with other browsers.");
+
 }
 
 let requestHandler = new RequestHandler();

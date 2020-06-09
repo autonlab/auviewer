@@ -9,7 +9,7 @@ function File(project, filename, callback=null) {
 	this.filename = filename;
 
 	// Load the project config
-	this.config = templateSystem.getProjectTemplate(project);
+	this.template = templateSystem.getProjectTemplate(project);
 
 	// Holds the file metadata
 	this.metadata = {};
@@ -83,19 +83,14 @@ function File(project, filename, callback=null) {
 		// NOTE: If you're trying to understand this code in the future, I'm
 		// sorry. I could not document this in any way that would help make it
 		// more understandable, and it is a bit of a labyrinth.
-		for (let group of file.config.groups) {
+		console.log(file.template);
+		for (let g of Object.getOwnPropertyNames(file.template.groups)) {
 
-			// // Check whether all series members of the group are present, and if
-			// // not, then skip this group.
-			// for (let s of group) {
-			// 	if (!this.fileData.series.hasOwnProperty(s)) {
-			// 		continue groupLoop;
-			// 	}
-			// }
+			const group = file.template.groups[g];
 
 			// Verify at least one series member of the group is present.
 			let atLeastOneSeriesPresent = false;
-			for (let s of group) {
+			for (let s of group['members']) {
 				if (file.fileData['series'].hasOwnProperty(s)) {
 					atLeastOneSeriesPresent = true;
 					break;
@@ -105,7 +100,7 @@ function File(project, filename, callback=null) {
 				continue;
 			}
 
-			file.createGroupSeries(group, createMergedTimeSeries(group, file.fileData.series));
+			file.createGroupSeries(g, group['members'], createMergedTimeSeries(group['members'], file.fileData.series));
 
 		}
 
@@ -185,7 +180,7 @@ function File(project, filename, callback=null) {
 						if (this.graphs[s].isGroup) {
 							seriesInitiallyDisplaying.push.apply(seriesInitiallyDisplaying, this.graphs[s].group);
 						} else {
-							seriesInitiallyDisplaying.push(this.graphs[s].series);
+							seriesInitiallyDisplaying.push(this.graphs[s].fullName);
 						}
 					}
 				}
@@ -317,22 +312,22 @@ File.prototype.clearAnomalies = function() {
 
 // Creates a group series in the class's attached file data with a mesh of the
 // member series data.
-File.prototype.createGroupSeries = function(group, mergedGroupData) {
+File.prototype.createGroupSeries = function(groupName, groupMembers, mergedGroupData) {
 
 	// Enumerate the column labels
 	let labels = ['time'];
-	for (let s of group) {
+	for (let s of groupMembers) {
 		labels.push(s + ' Min');
 		labels.push(s + ' Max');
-		labels.push(s);
+		labels.push(simpleSeriesName(s));
 	}
 
 	// Add the new combined series to the file data if it does not
 	// already exist.
-	this.fileData.series[getGroupName(group)] = {
-		id: "Group:\n" + group.join("\n"),
+	this.fileData.series[groupName] = {
+		id: groupName,
 		labels: labels,
-		group: group,
+		group: groupMembers,
 		data: mergedGroupData
 	};
 
@@ -514,7 +509,7 @@ File.prototype.detectAnomaliesFromForm = function() {
 // Otherwise, returns null;
 File.prototype.getGraphForSeries = function(s) {
 	for (let g in this.graphs) {
-		if (this.graphs[g].series === s) {
+		if (this.graphs[g].fullName === s) {
 			return this.graphs[g];
 		}
 	}
@@ -609,7 +604,7 @@ File.prototype.getPostloadDataUpdateHandler = function() {
 
 						// If this is a graph that represents a single series, then
 						// we grab the series name from the graph instance property.
-						let s = file.graphs[g].series;
+						let s = file.graphs[g].fullName;
 
 						// Verify that we received the series in question in the
 						// backend response.
@@ -883,11 +878,13 @@ File.prototype.renderBufferedRealtimeData = function() {
 			}
 
 			// Iterate through group series
-			for (let group of this.config.groups) {
+			for (let g of Object.getOwnPropertyNames(this.template.groups)) {
+
+				const group = this.template.groups[g];
 
 				// If this group has no new data in the realtime buffer, skip it.
 				let atLeastOneSeriesPresent = false;
-				for (let s of group) {
+				for (let s of group['members']) {
 					if (buffer['series'].hasOwnProperty(s)) {
 						atLeastOneSeriesPresent = true;
 						break;
@@ -901,36 +898,33 @@ File.prototype.renderBufferedRealtimeData = function() {
 				// Having reached this point, we know this group has new
 				// buffered realtime data available.
 
-				// Grab the group name
-				const groupName = getGroupName(group);
-
 				// If the group already exists, update it with the new data.
-				if (this.fileData['series'].hasOwnProperty(groupName)) {
+				if (this.fileData['series'].hasOwnProperty(g)) {
 
 					// Add the buffered data to the series data
-					this.fileData['series'][groupName]['data'] = this.fileData['series'][groupName]['data'].concat(createMergedTimeSeries(group, buffer['series']))
+					this.fileData['series'][g]['data'] = this.fileData['series'][g]['data'].concat(createMergedTimeSeries(group['members'], buffer['series']))
 
 					// Trim the data if we've surpassed globalAppConfig.M data points
-					if (this.fileData['series'][groupName]['data'].length > globalAppConfig.M) {
-						this.fileData['series'][groupName]['data'].splice(0, this.fileData['series'][groupName]['data'].length - globalAppConfig.M)
+					if (this.fileData['series'][g]['data'].length > globalAppConfig.M) {
+						this.fileData['series'][g]['data'].splice(0, this.fileData['series'][g]['data'].length - globalAppConfig.M)
 					}
 
 					// Grab the graph class instance
-					let g = this.getGraphForSeries(groupName);
+					let g = this.getGraphForSeries(g);
 
 					// If the graph for this series is showing, redraw with new data.
 					if (g.isShowing()) {
 
 						// Re-plot the graph with the new data
 						g.dygraphInstance.updateOptions({
-							file: this.fileData['series'][groupName]['data'],
+							file: this.fileData['series'][g]['data'],
 							dateWindow: dt
 						});
 
 						// Also re-plot the leading graph display with the new data
 						if (g.rightDygraphInstance) {
 							g.rightDygraphInstance.updateOptions({
-								file: this.fileData['series'][groupName]['data'],
+								file: this.fileData['series'][g]['data'],
 								dateWindow: ldt
 							});
 						}
@@ -943,10 +937,10 @@ File.prototype.renderBufferedRealtimeData = function() {
 				else {
 
 					// Create the new group (which also attaches the new data).
-					this.createGroupSeries(group, createMergedTimeSeries(group, buffer['series']));
+					this.createGroupSeries(g, group['members'], createMergedTimeSeries(group['members'], buffer['series']));
 
 					// Instantiate the new group graph
-					this.graphs[groupName] = new Graph(groupName, this);
+					this.graphs[g] = new Graph(g, this);
 
 				}
 
@@ -1104,21 +1098,21 @@ File.prototype.runAnomalyDetectionJobsForSeries = function(series) {
 	let adi = 0;
 	let recursiveDetectionFunc = function() {
 
-		if (adi < file.config.anomalyDetection.length) {
+		if (adi < file.template.anomalyDetection.length) {
 
 			let i = adi++;
 
 			// If the series was initially displaying, run the pre-defined
 			// anomaly detection for it.
-			if (file.config.anomalyDetection[i].hasOwnProperty('series') && series.includes(file.config.anomalyDetection[i].series)) {
+			if (file.template.anomalyDetection[i].hasOwnProperty('series') && series.includes(file.template.anomalyDetection[i].series)) {
 				file.detectAnomalies(
 					'anomalydetection',
-					file.config.anomalyDetection[i].hasOwnProperty('series') ? file.config.anomalyDetection[i].series : null,
-					file.config.anomalyDetection[i].hasOwnProperty('tlow') ? file.config.anomalyDetection[i].tlow : null,
-					file.config.anomalyDetection[i].hasOwnProperty('thigh') ? file.config.anomalyDetection[i].thigh : null,
-					file.config.anomalyDetection[i].hasOwnProperty('dur') ? file.config.anomalyDetection[i].dur : null,
-					file.config.anomalyDetection[i].hasOwnProperty('duty') ? file.config.anomalyDetection[i].duty : null,
-					file.config.anomalyDetection[i].hasOwnProperty('maxgap') ? file.config.anomalyDetection[i].maxgap : null,
+					file.template.anomalyDetection[i].hasOwnProperty('series') ? file.template.anomalyDetection[i].series : null,
+					file.template.anomalyDetection[i].hasOwnProperty('tlow') ? file.template.anomalyDetection[i].tlow : null,
+					file.template.anomalyDetection[i].hasOwnProperty('thigh') ? file.template.anomalyDetection[i].thigh : null,
+					file.template.anomalyDetection[i].hasOwnProperty('dur') ? file.template.anomalyDetection[i].dur : null,
+					file.template.anomalyDetection[i].hasOwnProperty('duty') ? file.template.anomalyDetection[i].duty : null,
+					file.template.anomalyDetection[i].hasOwnProperty('maxgap') ? file.template.anomalyDetection[i].maxgap : null,
 					recursiveDetectionFunc);
 			} else {
 				// Even if this anomaly detection was not processed because
@@ -1218,7 +1212,7 @@ File.prototype.updateCurrentViewData = function() {
 
 			} else if (series.indexOf(g) === -1) {
 
-				series.push(this.graphs[g].series);
+				series.push(this.graphs[g].fullName);
 
 			}
 

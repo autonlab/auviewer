@@ -2,16 +2,69 @@
 
 // Graph class constructor. Group is an optional parameter which, if the graph
 // represents a group, should be the array of series names inside the group.
-function Graph(series, file) {
+function Graph(seriesOrGroupName, file) {
 
 	// References the parent File instance
 	this.file = file;
 
-	// Holds the series name of the graph
-	this.series = series;
+	// Generate new local identifier
+	this.localIdentifier = globalStateManager.getGraphIdentifier();
 
-	// Load the series config
-	this.config = templateSystem.getSeriesTemplate(this.file.projname, this.series);
+	// Determine whether this is a group or series
+	const groupTemplate = this.file.template['groups'][seriesOrGroupName];
+	if (groupTemplate) {
+
+		/* This is a group */
+
+		// Group flag true
+		this.isGroup = true;
+
+		// Short name
+		this.shortName = seriesOrGroupName;
+
+		// Full name
+		this.fullName = seriesOrGroupName;
+
+		// Group members
+		this.group = groupTemplate['members']; //this.file.fileData.series[this.series].group;
+
+		// Group template
+		this.template = templateSystem.getGroupTemplate(this.file.projname, this.fullName);
+
+	} else {
+
+		/* This is a series */
+
+		// Group flag false; this is a series
+		this.isGroup = false;
+
+		// Short name
+		this.shortName = simpleSeriesName(seriesOrGroupName);
+
+		// Full name
+		this.fullName = seriesOrGroupName;
+
+		// Group members
+		this.group = [seriesOrGroupName];
+
+		// Series template
+		this.template = templateSystem.getSeriesTemplate(this.file.projname, this.fullName);
+
+	}
+
+	// Assemble the alt text
+	console.log(this.file.fileData);
+	this.altText = "";
+	for (let sn of this.group) {
+		if (this.altText) {
+			this.altText += "\n"
+		}
+		this.altText += sn
+		const units = this.file.fileData.series[sn].units;
+		if (units) {
+			this.altText += " (units: "+units+")";
+		}
+	}
 
 	// Holds the dom element of the instantiated legend
 	this.legendDomElement = null;
@@ -23,17 +76,6 @@ function Graph(series, file) {
 	this.dygraphInstance = null;
 	this.rightDygraphInstance = null;
 
-	// Set this.isGroup (indicates whether this graph represents a group of
-	// series) and this.group (holds series names belonging to the group, or
-	// empty array if not a group))
-	if (this.file.fileData['series'][this.series].hasOwnProperty('group') && this.file.fileData.series[this.series].group.length > 0) {
-		this.isGroup = true;
-		this.group = this.file.fileData.series[this.series].group;
-	} else {
-		this.isGroup = false;
-		this.group = [];
-	}
-
 	// Build the graph
 	this.build();
 
@@ -44,13 +86,13 @@ Graph.prototype.build = function() {
 	// Create the graph wrapper dom element
 	this.graphWrapperDomElement = document.createElement('DIV');
 	this.graphWrapperDomElement.className = 'graph_wrapper';
-	this.graphWrapperDomElement.style.height = this.config.graphHeight;
+	this.graphWrapperDomElement.style.height = this.template.graphHeight;
 
 	this.graphWrapperDomElement.innerHTML =
 		'<table>' +
 			'<tbody>' +
 				'<tr>' +
-					'<td class="graph_title">'+simpleSeriesName(this.series)+'<p class="graph_subtitle">'+this.series.replace(/(?:\r\n|\r|\n)/g, '<br>')+'</p></td>' +
+					'<td class="graph_title" title="'+this.altText+'">'+this.shortName+'</td>' +
 					'<td rowspan="2">' +
 						'<div class="graph">' +
 							'<table style="width:100%;height:100%;"><tbody><tr>' +
@@ -94,7 +136,7 @@ Graph.prototype.build = function() {
 	$(this.graphDomElement).data('graphClassInstance', this);
 
 	// Determine whether to show the graph by default
-	const showGraph = this.file.config.defaultSeriesAll === true || this.file.config.defaultSeries.includes(this.series) === true;
+	const showGraph = this.file.template.defaultSeriesAll === true || this.file.template.defaultSeries.includes(this.fullName) === true;
 
 	// Instantiate the dygraph if it is configured to appear by default, or if
 	// we're in realtime mode.
@@ -108,9 +150,7 @@ Graph.prototype.build = function() {
 	const seriesDisplayControl = document.getElementById('series_display_controller');
 
 	// Determine the label of the options group to which this should belong
-	let ogname = this.series.split('/');
-	ogname.pop();
-	ogname = ogname.join('/');
+	let ogname = this.fullName.split('/').slice(0, -1).join('/');
 	const single_quote_escaped_ogname = ogname.replace(/'/g, "\'");
 	let og = seriesDisplayControl.querySelector("optgroup[label='"+single_quote_escaped_ogname+"']");
 
@@ -123,8 +163,8 @@ Graph.prototype.build = function() {
 
 	// Now create the option to add to the series control selector
 	let opt = document.createElement('option');
-	opt.text = this.series.split('/').pop();
-	opt.value = this.series;
+	opt.text = this.shortName;
+	opt.value = this.fullName;
 	opt.selected = showGraph;
 	og.appendChild(opt);
 
@@ -157,22 +197,22 @@ Graph.prototype.instantiateDygraph = function() {
 	let yAxisRange = [null, null];
 	if (this.isGroup) {
 		for (let s of this.group) {
-			if (this.config.hasOwnProperty('range')) {
-				if (yAxisRange[0] === null || yAxisRange[0] > this.config.range[0]) {
-					yAxisRange[0] = this.config.range[0];
+			if (this.template.hasOwnProperty('range')) {
+				if (yAxisRange[0] === null || yAxisRange[0] > this.template.range[0]) {
+					yAxisRange[0] = this.template.range[0];
 				}
-				if (yAxisRange[1] === null || yAxisRange[1] < this.config.range[1]) {
-					yAxisRange[1] = this.config.range[1];
+				if (yAxisRange[1] === null || yAxisRange[1] < this.template.range[1]) {
+					yAxisRange[1] = this.template.range[1];
 				}
 			}
 		}
 	}
-	else if (this.config.hasOwnProperty('range')) {
-		yAxisRange = this.config.range;
+	else if (this.template.hasOwnProperty('range')) {
+		yAxisRange = this.template.range;
 	}
 
 	// Create the dygraph
-	this.dygraphInstance = new Dygraph(this.graphDomElement, this.file.fileData.series[this.series].data.concat(this.file.fileData.series[this.series].data, this.file.fileData.series[this.series].data, this.file.fileData.series[this.series].data, this.file.fileData.series[this.series].data, this.file.fileData.series[this.series].data, this.file.fileData.series[this.series].data, this.file.fileData.series[this.series].data, this.file.fileData.series[this.series].data), {
+	this.dygraphInstance = new Dygraph(this.graphDomElement, this.file.fileData.series[this.fullName].data, {
 		axes: {
 			x: {
 				pixelsPerLabel: 70,
@@ -184,10 +224,10 @@ Graph.prototype.instantiateDygraph = function() {
 			}
 		},
 		clickCallback: handleClick,
-		colors: [this.config.lineColor],//'#5253FF'],
+		colors: [this.template.lineColor],//'#5253FF'],
 		dateWindow: timeWindow,
 		// drawPoints: true,
-		gridLineColor: this.config.gridColor,
+		gridLineColor: this.template.gridColor,
 		interactionModel: {
 			'mousedown': handleMouseDown.bind(this),
 			'mousemove': handleMouseMove.bind(this),
@@ -195,7 +235,7 @@ Graph.prototype.instantiateDygraph = function() {
 			'dblclick': handleDoubleClick.bind(this),
 			'mousewheel': handleMouseWheel.bind(this)
 		},
-		labels: this.file.fileData.series[this.series].labels,
+		labels: this.file.fileData.series[this.fullName].labels,
 		labelsDiv: this.legendDomElement,
 		plotter: handlePlotting.bind(this),
 		/*series: {
@@ -209,7 +249,7 @@ Graph.prototype.instantiateDygraph = function() {
 
 	if (this.rightGraphDomElement) {
 
-		this.rightDygraphInstance = new Dygraph(this.rightGraphDomElement, this.file.fileData.series[this.series].data, {
+		this.rightDygraphInstance = new Dygraph(this.rightGraphDomElement, this.file.fileData.series[this.fullName].data, {
 			axes: {
 				x: {
 					pixelsPerLabel: 70,
@@ -223,10 +263,10 @@ Graph.prototype.instantiateDygraph = function() {
 				}
 			},
 			//clickCallback: handleClick,
-			colors: [this.config.lineColor],//'#5253FF'],
+			colors: [this.template.lineColor],//'#5253FF'],
 			dateWindow: this.file.getOutermostZoomWindow('lead'),
 			// drawPoints: true,
-			gridLineColor: this.config.gridColor,
+			gridLineColor: this.template.gridColor,
 			/*interactionModel: {
 				'mousedown': handleMouseDown.bind(this),
 				'mousemove': handleMouseMove.bind(this),
@@ -234,7 +274,7 @@ Graph.prototype.instantiateDygraph = function() {
 				'dblclick': handleDoubleClick.bind(this),
 				'mousewheel': handleMouseWheel.bind(this)
 			},*/
-			labels: this.file.fileData.series[this.series].labels,
+			labels: this.file.fileData.series[this.fullName].labels,
 			labelsDiv: this.legendDomElement,
 			plotter: handlePlotting.bind(this),
 			/*series: {
@@ -306,7 +346,7 @@ Graph.prototype.show = function() {
 	if (this.isGroup) {
 		this.file.runAnomalyDetectionJobsForSeries(this.group);
 	} else {
-		this.file.runAnomalyDetectionJobsForSeries(this.series);
+		this.file.runAnomalyDetectionJobsForSeries(this.fullName);
 	}
 
 	// Update the data from the backend for the new series only
@@ -329,7 +369,7 @@ Graph.prototype.updateCurrentViewData = function() {
 	let xRange = this.dygraphInstance.xAxisRange();
 
 	// Assemble the series ID(s) for which we will request updated data.
-	let series = this.isGroup ? this.group : [this.series];
+	let series = this.isGroup ? this.group : [this.fullName];
 
 	// Request the updated view data from the backend.
 	requestHandler.requestSeriesRangedData(this.file.projname, this.file.filename, series, xRange[0]/1000-this.file.fileData.baseTime, xRange[1]/1000-this.file.fileData.baseTime, this.file.getPostloadDataUpdateHandler());

@@ -10,7 +10,7 @@ from . import config
 from .annotationset import AnnotationSet
 from .cylib import generateThresholdAlerts
 from .exceptions import ProcessedFileExists
-from .series import Series
+from .series import Series, simpleSeriesName
 
 # File represents a single patient data file. File may operate in file- or
 # realtime-mode. In file-mode, all data is written to & read from a file. In
@@ -126,7 +126,7 @@ class File:
 
             update['series'][s] = {
                 "id": s,
-                "labels": ['Date/Offset', 'Min', 'Max', s],
+                "labels": ['Date/Offset', 'Min', 'Max', simpleSeriesName(s)],
                 "data": [list(i) for i in zip(seriesData[s]['times'], nones, nones, seriesData[s]['values'])],
                 "output_type": 'real'
             }

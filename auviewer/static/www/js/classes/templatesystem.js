@@ -26,6 +26,62 @@ function TemplateSystem() {
 
 }
 
+// Class-internal helper function to generate, cache, and return group template.
+TemplateSystem.prototype.generateGroupTemplate = function(projectName, groupName) {
+
+	// Holds the series template we will return.
+	let group_template;
+
+	// Attempt to generate a new merged template
+	try {
+
+		group_template = mergeDeep({},
+
+			// The built-in default series template
+			this.builtin_default_series_template,
+
+			// The global default series template
+			this.global_default_series_template,
+
+			// The specific-project default series template
+			(verifyObjectPropertyChain(this.project_templates, [projectName, 'project_template', 'series', 'default']) ? this.project_templates[projectName]['project_template']['series']['default'] : {}),
+
+			// Any system-pushed specific-project default series templates
+			...(verifyObjectPropertyChain(this.dynamic, ['project_templates', projectName, '[]']) ? this.dynamic['project_templates'][projectName].filter(proj => proj.hasOwnProperty('series') && proj['series'].hasOwnProperty('default')).map(proj => proj['series']['default']) : []),
+
+			// The built-in default-project specific-series template
+			(verifyObjectPropertyChain(this.builtin_default_project_template, ['groups', groupName]) ? this.builtin_default_project_template['groups'][groupName] : {}),
+
+			// The global default-project specific-series template
+			(verifyObjectPropertyChain(this.global_default_project_template, ['groups', groupName]) ? this.global_default_project_template['groups'][groupName] : {}),
+
+			// The specific-project specific-series template
+			(verifyObjectPropertyChain(this.project_templates, [projectName, 'project_template', 'groups', groupName]) ? this.project_templates[projectName]['project_template']['groups'][groupName] : {}),
+
+			// Any system-pushed specific-project specific-series templates
+			...(verifyObjectPropertyChain(this.dynamic, ['project_templates', projectName, '[]']) ? this.dynamic['project_templates'][projectName].filter(proj => proj.hasOwnProperty('groups') && proj['groups'].hasOwnProperty(groupName)).map(proj => proj['groups'][groupName]) : [])
+		);
+
+	} catch (err) {
+		console.log("Error merging series template", err);
+		group_template = this.builtin_default_series_template || {};
+	}
+
+	// Cache the newly-generated series template
+	if (!this.cached_templates.hasOwnProperty(projectName)) {
+		this.cached_templates[projectName] = {};
+	}
+	if (!this.cached_templates[projectName].hasOwnProperty('groups')) {
+		this.cached_templates[projectName]['groups'] = {};
+	}
+	this.cached_templates[projectName]['groups'][groupName] = group_template;
+
+	// globalAppConfig.verbose && console.log("TemplateSystem.getSeriesTemplate("+seriesName+") returning", deepCopy(series_template));
+
+	return group_template;
+
+};
+
 // Class-internal helper function to generate, cache, and return project template.
 TemplateSystem.prototype.generateProjectTemplate = function(projectName) {
 
@@ -126,6 +182,11 @@ TemplateSystem.prototype.generateSeriesTemplate = function(projectName, seriesNa
 
 	return series_template;
 
+};
+
+// Returns the final processed/merged template for the group.
+TemplateSystem.prototype.getGroupTemplate = function(projectName, groupName) {
+	return ( verifyObjectPropertyChain(this.cached_templates, [projectName, 'groups', groupName]) ? this.cached_templates[projectName]['groups'][groupName] : this.generateGroupTemplate(projectName, groupName) );
 };
 
 // Returns the final processed/merged template for the project.

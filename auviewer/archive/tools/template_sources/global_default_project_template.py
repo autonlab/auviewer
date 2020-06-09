@@ -10,11 +10,6 @@ spo2Series = {
 
 template = {
 
-	# Not implemented
-	'sidePanel': {
-		'state': 'expanded'
-	},
-
 	'anomalyDetection': [
 		{
 			'series': '/data/numerics/HR:value',
@@ -153,10 +148,22 @@ template = {
 	],
 
 	'groups': [
-		['/data/numerics/AR1-D:value', '/data/numerics/AR1-S:value', '/data/numerics/AR1-M:value'],
-		['/data/numerics/ART.Diastolic:value', '/data/numerics/ART.Systolic:value', '/data/numerics/ART.Mean:value'],
-		['/data/numerics/NBP.NBPd:value', '/data/numerics/NBP.NBPm:value', '/data/numerics/NBP.NBPs:value'],
-		['/data/numerics/NBP-D:value', '/data/numerics/NBP-M:value', '/data/numerics/NBP-S:value']
+		{
+			'name': 'AR1 BP',
+			'members': ['/data/numerics/AR1-D:value', '/data/numerics/AR1-S:value', '/data/numerics/AR1-M:value']
+		},
+		{
+			'name': 'ART BP',
+			'members': ['/data/numerics/ART.Diastolic:value', '/data/numerics/ART.Systolic:value', '/data/numerics/ART.Mean:value']
+		},
+		{
+			'name': 'Non-Invasive BP',
+			'members': ['/data/numerics/NBP.NBPd:value', '/data/numerics/NBP.NBPm:value', '/data/numerics/NBP.NBPs:value']
+		},
+		{
+			'name': 'Non-Invasive BP',
+			'members': ['/data/numerics/NBP-D:value', '/data/numerics/NBP-M:value', '/data/numerics/NBP-S:value']
+		}
 	],
 
 	# The TemplateSystem only expects the default project template to have a

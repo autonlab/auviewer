@@ -18,10 +18,15 @@ function handleAnnotationHighlightEnd (event, g, context, fileOrGraph) {
 	// callback poorly, so we have to get it in a convoluted way.
 	let graph = $(event.path[2]).data('graphClassInstance');
 
+	// Warning if annotating a group
+	if (graph.isGroup) {
+		alert("You are annotating a group of series. Please select the series you wish to annotate from the series dropdown.");
+	}
+
 	// Create a new annotation
 	let annotation = new Annotation({
 		file: globalStateManager.currentFile.filename,
-		series: (Array.isArray(graph.series) ? graph.series.join(', ') : graph.series),
+		series: graph.group[0],
 		begin: from,
 		end: to
 	}, 'new');
@@ -123,8 +128,8 @@ function handleClick(e, x) {
 			if (
 				!file.annotations[i].series ||
 				file.annotations[i].state !== 'anomaly' ||
-				(!graph.isGroup && file.annotations[i].series === graph.series) ||
-				(graph.isGroup && graph.series.includes(file.annotations[i].series))
+				(!graph.isGroup && file.annotations[i].series === graph.fullName) ||
+				(graph.isGroup && graph.group.includes(file.annotations[i].series))
 			) {
 				file.annotations[i].showDialog();
 				break;
@@ -276,10 +281,10 @@ function handlePlotting(e) {
 		
 		// SERIES LINE - Plot line for the raw data column for the series, which
 		// will be the third column of this series' set of three columns.
-		if (this.config['drawLine'] && e.allSeriesPoints[i+2].length > 2) {
+		if (this.template['drawLine'] && e.allSeriesPoints[i+2].length > 2) {
 
-			cnv.strokeStyle = this.config['lineColor'];
-			cnv.fillStyle = this.config['lineColor'];
+			cnv.strokeStyle = this.template['lineColor'];
+			cnv.fillStyle = this.template['lineColor'];
 
 			cnv.beginPath();
 
@@ -307,10 +312,10 @@ function handlePlotting(e) {
 
 		// SERIES DOTS - Plot dots for the raw data column for the series, which
 		// will be thethird column of this series' set of three columns.
-		if (this.config['drawDots']) {
+		if (this.template['drawDots']) {
 
-			cnv.strokeStyle = this.config['dotColor'];
-			cnv.fillStyle = this.config['dotColor'];
+			cnv.strokeStyle = this.template['dotColor'];
+			cnv.fillStyle = this.template['dotColor'];
 
 			for (let j = 0; j < e.allSeriesPoints[i + 2].length; j++) {
 
@@ -330,8 +335,8 @@ function handlePlotting(e) {
 		// SERIES MIN-MAX - Plot the downsample min & max columns for the series,
 		// which will be the first & second columns of this series' set of three
 		// columns.
-		cnv.strokeStyle = this.config['lineColor'];
-		cnv.fillStyle = this.config['lineColor'];
+		cnv.strokeStyle = this.template['lineColor'];
+		cnv.fillStyle = this.template['lineColor'];
 		for (let j = 0; j < e.allSeriesPoints[i].length; j++) {
 
 			if (isNaN(e.allSeriesPoints[i][j].y) || isNaN(e.allSeriesPoints[i+1][j].y)) {
@@ -378,6 +383,9 @@ function handleUnderlayRedraw(canvas, area, g) {
 
 	let left, right, x, y, width, height;
 
+	// Graph class instance
+	const gci = $(g.graphDiv).parent().data('graphClassInstance');
+
 	// console.log(canvas, area, g, Object.getOwnPropertyNames(g.setIndexByName_));
 
 	// We need to make multiple passes to render in layers.
@@ -389,8 +397,8 @@ function handleUnderlayRedraw(canvas, area, g) {
 		for (let i = 0; i < file.annotations.length; i++) {
 
 			if (
-				(layer === 0 && file.annotations[i].state === 'anomaly' && file.annotations[i].series != null && !Object.getOwnPropertyNames(g.setIndexByName_).includes(file.annotations[i].series)) ||
-				(layer === 1 && file.annotations[i].state === 'anomaly' && !(file.annotations[i].series != null && !Object.getOwnPropertyNames(g.setIndexByName_).includes(file.annotations[i].series))) ||
+				(layer === 0 && file.annotations[i].state === 'anomaly' && file.annotations[i].series != null && gci.fullName != file.annotations[i].series) ||
+				(layer === 1 && file.annotations[i].state === 'anomaly' && !(file.annotations[i].series != null && gci.fullName != file.annotations[i].series)) ||
 				(layer === 2 && (file.annotations[i].state === 'new' || file.annotations[i].state === 'existing'))
 			) {
 
@@ -412,26 +420,26 @@ function handleUnderlayRedraw(canvas, area, g) {
 				// Prepare styling for the section highlight.
 				if (file.annotations[i].state === 'anomaly') {
 
-					if (i === file.annotationWorkflowCurrentIndex && file.annotations[i].series != null && !Object.getOwnPropertyNames(g.setIndexByName_).includes(file.annotations[i].series)) {
+					if (i === file.annotationWorkflowCurrentIndex && file.annotations[i].series != null && gci.fullName != file.annotations[i].series) {
 						// Current workflow anomaly from another series.
-						canvas.fillStyle = this.config.otherCurrentWorkflowAnomalyColor;
+						canvas.fillStyle = this.template.otherCurrentWorkflowAnomalyColor;
 					} else if (i === file.annotationWorkflowCurrentIndex) {
 						// Current workflow anomaly that belongs to this series.
-						canvas.fillStyle = this.config.ownCurrentWorkflowAnomalyColor;
-					} else if (file.annotations[i].series != null && !Object.getOwnPropertyNames(g.setIndexByName_).includes(file.annotations[i].series)) {
+						canvas.fillStyle = this.template.ownCurrentWorkflowAnomalyColor;
+					} else if (file.annotations[i].series != null && gci.fullName != file.annotations[i].series) {
 						// Anomaly from another series.
-						canvas.fillStyle = this.config.otherAnomalyColor;
-						// canvas.fillStyle = 'rgba(179,80,0,0.35)';
+						canvas.fillStyle = this.template.otherAnomalyColor;
 					} else {
 						// Anomaly that belongs to this series.
-						canvas.fillStyle = this.config.ownAnomalyColor;
-						// canvas.fillStyle = 'rgba(179,80,0,0.35)';
+						canvas.fillStyle = this.template.ownAnomalyColor;
 					}
 
+				} else if (file.annotations[i].series === gci.fullName) {
+					// Annotation that belongs to this series
+					canvas.fillStyle = this.template.ownAnnotationColor;
 				} else {
-					// Anomaly
-					canvas.fillStyle = this.config.ownAnnotationColor;
-					// canvas.fillStyle = 'rgba(0,72,182,1)';
+					// Annotation from another series
+					canvas.fillStyle = this.template.otherAnnotationColor;
 				}
 
 				// Draw the section highlight.
@@ -444,7 +452,7 @@ function handleUnderlayRedraw(canvas, area, g) {
 				// Draw annotation label text
 				if (file.annotations[i].annotation.confidence) {
 					canvas.font = "12px Arial";
-					canvas.fillStyle = this.config.ownAnnotationLabelColor;
+					canvas.fillStyle = this.template.ownAnnotationLabelColor;
 					canvas.textAlign = "center";
 					canvas.fillText(file.annotations[i].annotation.confidence, x + (width / 2), y+3+height/2/*area.y + (area.h * .1)*/);
 				}

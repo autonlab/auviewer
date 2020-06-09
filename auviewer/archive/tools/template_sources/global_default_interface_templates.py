@@ -4,10 +4,6 @@ template = {
 
 		'name': 'Realtime Interface',
 
-		'sidePanel': {
-			'state': 'collapsed'
-		},
-
 	}
 
 }

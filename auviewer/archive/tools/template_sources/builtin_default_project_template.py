@@ -1,10 +1,5 @@
 template = {
 
-	# Not implemented
-	'sidePanel': {
-		'state': 'expanded'
-	},
-
 	'anomalyDetection': [],
 
 	# Whether to display all series by default

@@ -42,9 +42,6 @@ class Series:
         # Initialize raw data in memory
         self.initializeRawDataInMemory()
 
-        # # Pull raw data for the series into memory
-        # self.pullRawDataIntoMemory()
-
         if self.fileparent.mode() == 'file':
 
             # Holds the raw data set
@@ -52,6 +49,14 @@ class Series:
 
             # Holds the downsample set
             self.dss = DownsampleSet(self)
+
+            # Grab the unit, if available
+            try:
+                self.units = self.fileparent.f['/'.join(self.h5path)].meta['dwc_meta']['unitLabel']
+            except:
+                self.units = ""
+
+            print("Units", self.units)
 
         elif self.fileparent.mode() == 'realtime':
 
@@ -143,9 +148,10 @@ class Series:
         # Return the JSON-ready output object
         return {
             "id": self.id,
-            "labels": ['Date/Offset', 'Min', 'Max', self.id],
+            "labels": ['Date/Offset', 'Min', 'Max', simpleSeriesName(self.id)],
             "data": data,
-            "output_type": output_type
+            "output_type": output_type,
+            "units": self.units
         }
 
     # Produces JSON output for the series over a specified time range, with
@@ -176,9 +182,10 @@ class Series:
         # Return the JSON-ready output object
         return {
             "id": self.id,
-            "labels": ['Date/Offset', 'Min', 'Max', self.id],
+            "labels": ['Date/Offset', 'Min', 'Max', simpleSeriesName(self.id)],
             "data": data,
-            "output_type": output_type
+            "output_type": output_type,
+            "units": self.units
         }
 
     # Process and store all downsamples for the series.
@@ -247,3 +254,10 @@ class Series:
         # self.rawValues = []
         self.rawTimes = deque(maxlen=config.M)
         self.rawValues = deque(maxlen=config.M)
+
+def simpleSeriesName(s):
+    simpleNameComponents = s.split('/')[-1].split(':')
+    if simpleNameComponents[1] == 'value':
+        return simpleNameComponents[0]
+    else:
+        return ':'.join(simpleNameComponents)
