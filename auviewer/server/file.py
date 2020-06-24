@@ -147,7 +147,7 @@ class File:
         # Create the file which will be used to store processed data
         try:
             print("Creating processed file.")
-            self.pf = audata.AUFile.new(self.getProcessedFilepath(), overwrite=False, return_datetimes=False)
+            self.pf = audata.File.new(self.getProcessedFilepath(), overwrite=False, return_datetimes=False)
             return self.pf
         except:
             print("There was an exception while h5 was creating the processed file. Raising ProcessedFileExists exception.")
@@ -455,14 +455,14 @@ class File:
     def openOriginalFile(self):
 
         # Open the HDF5 file
-        self.f = audata.AUFile.open(self.getFilepath(), return_datetimes=False)
+        self.f = audata.File.open(self.getFilepath(), return_datetimes=False)
 
     # Opens the processed HDF5 data file. Returns boolean whether able to open.
     def openProcessedFile(self):
 
         # Open the processed data file
         try:
-            self.pf = audata.AUFile.open(self.getProcessedFilepath(), return_datetimes=False)
+            self.pf = audata.File.open(self.getProcessedFilepath(), return_datetimes=False)
         except Exception as e:
             print("Unable to open the processed data file " + self.getProcessedFilepath() + ".\n", e)
             traceback.print_exc()
