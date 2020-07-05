@@ -57,6 +57,69 @@ function File(project, filename, callback=null) {
 	// Persist for callback
 	let file = this;
 
+	// Will hold a reference to the plot control Webix instance
+	this.plotControl = null;
+
+	// Initialize the plot control Webix config
+	this.plotControlConfig = {
+		view: "window",
+		close: true,
+		head: "Available Graphs &mdash; Show/Hide",
+		move: true,
+		position: function(state) {
+			state.width = 350;
+			state.height = state.maxHeight * 0.8;
+			state.left = 50;
+			state.top = 50;
+		},
+		resize: true,
+		body: {
+			view: "treetable",
+			collapse: true,
+			// autoheight: true,
+			// autowidth: true,
+			filterMode:{ level: false, showSubItems: false },
+			on: {
+				"onItemCheck": function() {
+
+					// Get checked items
+					const tt = this.plotControl.getBody();
+					let checkedItems = tt.getChecked();
+
+					// Remove containers from checked items list
+					for (let i = checkedItems.length-1; i >= 0; i--) {
+						if (tt.isBranch(checkedItems[i])) {
+							checkedItems.splice(i, 1);
+						}
+					}
+
+					// Go through all graphs, and update as necessary
+					for (const s of Object.keys(this.graphs)) {
+						const g = this.graphs[s]
+						if (g.isShowing() && !checkedItems.includes(g.fullName)) {
+							// If the graph is showing but shouldn't be, hide it.
+							g.remove();
+						} else if (!g.isShowing() && checkedItems.includes(g.fullName)) {
+							// If the graph is not showing but should be, show it.
+							g.show();
+						}
+					}
+
+				}.bind(this)
+			},
+			select: false,
+			threeState: true,
+			columns: [
+				{ id: "value", adjust: true, fillspace: true, header: ["Graphs", {content:"textFilter"}], template: "{common.space()}{common.icon()}{common.treecheckbox()}{common.folder()}#value#" }
+			],
+			data: [
+				{ value: "Individual Series Graphs", open: true, data: []},
+				{ value: "Template Graphs", open: true, data: []}
+				// { value: "My Graphs", open: true, data: []}
+			]
+		}
+	};
+
 	// If we're not in realtime-mode, request the initial file payload, and
 	// handle the response when it comes.
 	requestHandler.requestInitialFilePayload(this.projname, this.filename, function (data) {
@@ -167,6 +230,20 @@ function File(project, filename, callback=null) {
 
 				// Re-render the select picker
 				$(alertGenSeriesDropdown).selectpicker('refresh');
+
+				// Instantiate the plot control Webix element
+				this.plotControl = webix.ui(file.plotControlConfig);
+
+				// Check default-shown graphs in the plot control interface
+				const plotControlTreeTable = this.plotControl.getBody();
+				plotControlTreeTable.blockEvent();
+				for (const s of Object.keys(this.graphs)) {
+					const g = this.graphs[s];
+					if (g.isShowing()) {
+						this.plotControl.getBody().checkItem(g.fullName);
+					}
+				}
+				plotControlTreeTable.unblockEvent();
 
 				// Process pre-defined anomaly detection for all currently-displaying
 				// series. We gather all displaying series before starting to send the
@@ -338,6 +415,9 @@ File.prototype.destroy = function() {
 
 		(function() {
 
+			// Close plot control
+			this.plotControl.close();
+
 			// Destroy graph synchronization state management
 			this.unsynchronizeGraphs();
 
@@ -352,14 +432,6 @@ File.prototype.destroy = function() {
 			while (graphsDiv.firstChild) {
 				graphsDiv.removeChild(graphsDiv.firstChild);
 			}
-
-			// Clear the series display controller dropdown
-			// See: https://jsperf.com/innerhtml-vs-removechild/15
-			const seriesDisplayControllerDropdown = document.getElementById('series_display_controller');
-			while (seriesDisplayControllerDropdown.firstChild) {
-				seriesDisplayControllerDropdown.removeChild(seriesDisplayControllerDropdown.firstChild);
-			}
-			$(seriesDisplayControllerDropdown).selectpicker('refresh');
 
 			// Clear the alert generation dropdown
 			// See: https://jsperf.com/innerhtml-vs-removechild/15
@@ -625,23 +697,6 @@ File.prototype.getPostloadDataUpdateHandler = function() {
 
 	};
 
-};
-
-// Handle a series display controller item being selected or deselected.
-File.prototype.handleSeriesDisplayControllerUpdate = function() {
-	const options = document.getElementById('series_display_controller').options;
-	for (let opt of options) {
-		if (opt.value) {
-			let graph = this.getGraphForSeries(opt.value);
-			if (opt.selected === true && graph.isShowing() === false) {
-				globalAppConfig.verbose && console.log('Showing', opt.value);
-				graph.show();
-			} else if (opt.selected === false && graph.isShowing() === true) {
-				globalAppConfig.verbose && console.log('Hiding', opt.value);
-				graph.remove();
-			}
-		}
-	}
 };
 
 // Returns the mode of File, either 'realtime' or 'file'.

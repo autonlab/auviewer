@@ -80,6 +80,39 @@ function Graph(seriesOrGroupName, file) {
 
 }
 
+// Add this graph instance to the plot control interface
+Graph.prototype.addSelfToPlotControl = function() {
+
+	// Get array of the containing folder structure names
+	const folderComponents = this.fullName.split('/').slice(1, -1);
+
+	let currentPlotDataContainer = this.isGroup ? this.file.plotControlConfig.body.data[1].data : this.file.plotControlConfig.body.data[0].data;
+	for (const folder of folderComponents) {
+
+		// Go through and try to find the existing folder
+		let found = false;
+		for (const existingFolder of currentPlotDataContainer) {
+			if (existingFolder.value === folder) {
+				currentPlotDataContainer = existingFolder.data;
+				found = true;
+				break;
+			}
+		}
+
+		// If the folder did not exist, create it
+		if (found === false) {
+			const newDataContainer = { value: folder, data: [] };
+			currentPlotDataContainer.push(newDataContainer);
+			currentPlotDataContainer = newDataContainer.data;
+		}
+
+	}
+
+	// Add this series to the plot control container
+	currentPlotDataContainer.push({ id: this.fullName, value: this.shortName });
+
+};
+
 Graph.prototype.build = function() {
 
 	// Create the graph wrapper dom element
@@ -145,30 +178,8 @@ Graph.prototype.build = function() {
 		this.hideDOMElements();
 	}
 
-	// Add the control for the graph
-	const seriesDisplayControl = document.getElementById('series_display_controller');
-
-	// Determine the label of the options group to which this should belong
-	let ogname = this.fullName.split('/').slice(0, -1).join('/');
-	const single_quote_escaped_ogname = ogname.replace(/'/g, "\'");
-	let og = seriesDisplayControl.querySelector("optgroup[label='"+single_quote_escaped_ogname+"']");
-
-	// If the options group does not already exist, create it
-	if (!og) {
-		og = document.createElement('optgroup');
-		og.label = ogname;
-		seriesDisplayControl.add(og)
-	}
-
-	// Now create the option to add to the series control selector
-	let opt = document.createElement('option');
-	opt.text = this.shortName;
-	opt.value = this.fullName;
-	opt.selected = showGraph;
-	og.appendChild(opt);
-
-	// Re-render the select picker
-	$(seriesDisplayControl).selectpicker('refresh');
+	// Add this graph to the plot control
+	this.addSelfToPlotControl();
 
 };
 

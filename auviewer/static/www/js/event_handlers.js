@@ -415,23 +415,29 @@ function handleUnderlayRedraw(canvas, area, g) {
 				x = left;
 				y = area.y;
 				width = Math.max(1, right - left);
-				height = shortHighlights ? area.h/5*.85 : area.h;
+				height = area.h; //shortHighlights ? area.h/5*.85 : area.h;
+
+				// Determine if the annotation/anomaly series matches this current graph
+				let annotationBelongsToThisGraph = file.annotations[i].series && gci.group.includes(file.annotations[i].series);
 
 				// Prepare styling for the section highlight.
 				if (file.annotations[i].state === 'anomaly') {
 
-					if (i === file.annotationWorkflowCurrentIndex && file.annotations[i].series != null && gci.fullName != file.annotations[i].series) {
-						// Current workflow anomaly from another series.
-						canvas.fillStyle = this.template.otherCurrentWorkflowAnomalyColor;
-					} else if (i === file.annotationWorkflowCurrentIndex) {
+					// Determine if the anomaly is the current workflow anomaly
+					let currentWorkflowAnomaly = i === file.annotationWorkflowCurrentIndex;
+
+					if (currentWorkflowAnomaly && annotationBelongsToThisGraph) {
 						// Current workflow anomaly that belongs to this series.
 						canvas.fillStyle = this.template.ownCurrentWorkflowAnomalyColor;
-					} else if (file.annotations[i].series != null && gci.fullName != file.annotations[i].series) {
-						// Anomaly from another series.
-						canvas.fillStyle = this.template.otherAnomalyColor;
-					} else {
+					} else if (currentWorkflowAnomaly) {
+						// Current workflow anomaly from another series.
+						canvas.fillStyle = this.template.otherCurrentWorkflowAnomalyColor;
+					} else if (annotationBelongsToThisGraph) {
 						// Anomaly that belongs to this series.
 						canvas.fillStyle = this.template.ownAnomalyColor;
+					} else {
+						// Anomaly from another series.
+						canvas.fillStyle = this.template.otherAnomalyColor;
 					}
 
 				} else if (file.annotations[i].series === gci.fullName) {

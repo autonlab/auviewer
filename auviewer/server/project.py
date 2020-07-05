@@ -186,13 +186,13 @@ class Project:
 
     def loadProcessedFiles(self):
 
-        # i=0
+        i=0
         for orig_filename in self.getProcessedFileList():
             self.loadProcessedFile(orig_filename)
             # break
-            # i = i + 1
-            # if i == 5:
-            #     break
+            i = i + 1
+            if i == 5:
+                break
 
         # Establish a process to watch for updated versions of any project files
         if os.path.isdir(self.originals_dir):

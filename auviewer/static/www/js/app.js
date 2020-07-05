@@ -236,5 +236,95 @@ requestHandler.requestInitialPayload(function(data) {
 
 });
 
-// TODO: Temp
-let shortHighlights = true;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var small_film_set = [
+	{ id:1, title:"The Shawshank Redemption", year:1994, votes:678790, rating:9.2, rank:1},
+	{ id:2, title:"The Godfather", year:1972, votes:511495, rating:9.2, rank:2},
+	{ id:3, title:"The Godfather: Part II", year:1974, votes:319352, rating:9.0, rank:3},
+	{ id:4, title:"The Good, the Bad and the Ugly", year:1966, votes:213030, rating:8.9, rank:4},
+	{ id:5, title:"My Fair Lady", year:1964, votes:533848, rating:8.9, rank:5},
+	{ id:6, title:"12 Angry Men", year:1957, votes:164558, rating:8.9, rank:6}
+];
+
+// let xyz = webix.ui({
+// 	view: "window",
+// 	close: true,
+// 	head: "Available Graphs &mdash; Show/Hide",
+// 	left: 50,
+// 	move: true,
+// 	top: 50,
+// 	body: {
+// 		view: "treetable",
+// 		collapse: true,
+// 		autoheight: true,
+// 		autowidth: true,
+// 		filterMode:{ level: false, showSubItems: false },
+// 		select: false,
+// 		threeState: true,
+// 		columns: [
+// 			{ id: "value", adjust: true, fillspace: true, header: ["Graphs", {content:"textFilter"}], minWidth: 350, template: "{common.space()}{common.icon()}{common.treecheckbox()}{common.folder()}#value#" }
+// 		],
+// 		data: [
+// 			{ "value": "The Shawshank Redemption", "data":[
+// 					{ "value": "Part 1"},
+// 					{ "value": "Part 2", "data":[
+// 							{ "value": "Part 1", checked: true}
+// 						]}
+// 				]}
+// 		]
+// 	}
+// });
+//
+// xyz.show();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

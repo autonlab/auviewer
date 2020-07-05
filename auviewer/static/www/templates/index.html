@@ -3,6 +3,7 @@
 {% block css %}
 <link rel="stylesheet" href="{{ rootWebPath }}/css/third-party/bootstrap-select.min.css">
 <link rel='stylesheet' href='{{ rootWebPath }}/css/third-party/dygraph.css'/>
+<link rel='stylesheet' href='{{ rootWebPath }}/css/third-party/webix.min.css'/>
 <link rel='stylesheet' href='{{ rootWebPath }}/css/app.css'/>
 {% endblock %}
 
@@ -15,6 +16,9 @@
 <!-- Dygraphs & Synchronizer -->
 <script src="{{ rootWebPath }}/js/third-party/dygraph.js"></script>
 <script src="{{ rootWebPath }}/js/third-party/synchronizer.js"></script>
+
+<!-- Webix -->
+<script src="{{ rootWebPath }}/js/third-party/webix.min.js"></script>
 
 <!-- Random color generator -->
 <script src="{{ rootWebPath }}/js/third-party/random_color.js"></script>
@@ -62,10 +66,7 @@
 	</div>
 
 	<h6>Plot</h6>
-
-	<div id="seriesDisplayControllerDiv">
-		<select id="series_display_controller" class="form-control form-control-sm selectpicker" multiple data-selected-text-format="static" data-actions-box="true" data-title="Click to add/remove series" data-select-all-text="Show All" data-deselect-all-text="Hide All" data-live-search="true" onchange="globalStateManager.currentFile.handleSeriesDisplayControllerUpdate();"></select>
-	</div>
+	<button type="button" class="btn btn-sm btn-light" style="margin-bottom: 18px;" onclick="globalStateManager.currentFile ? globalStateManager.currentFile.plotControl.show() : null;">Show/Hide Graphs</button><br>
 
 	<h6>Zoom Control</h6>
 	<div style="width: 100%; margin-bottom: 10px;">
@@ -90,8 +91,8 @@
 	<h6>Annotation Workflow</h6>
 	<span class="clickable" onclick="globalStateManager.currentFile.annotationWorkflowPrevious();">&lt; Prev</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="clickable" onclick="globalStateManager.currentFile.annotationWorkflowNext();">Next &gt;</span>
 	<div id="annotationWorkflowSubtext"></div>
-	<button type="button" class="btn btn-sm btn-light" data-toggle="modal" data-target="#annotationsListModal">My Annotations</button>
-	<button type="button" class="btn btn-sm btn-light" data-toggle="modal" data-target="#allAnnotationsListModal">All Annotations</button>
+	<button type="button" class="btn btn-sm btn-light" data-toggle="modal" data-target="#annotationsListModal" style="margin-bottom: 3px;">View File Annotations</button><br>
+	<button type="button" class="btn btn-sm btn-light" data-toggle="modal" data-target="#allAnnotationsListModal">View Project Annotations</button>
 	<br><br>
 
 	<div id="anomalyDetectionPanel">
@@ -154,9 +155,6 @@
 		</div>
 
 	</div>
-
-	<h6>Temporary Options</h6>
-	<input id="flh_temp_option" type="checkbox" onclick="shortHighlights=!this.checked; if(globalStateManager.currentFile) { globalStateManager.currentFile.triggerRedraw(); }"> <label for="flh_temp_option">Full-Length Highlights</label>
 
 	<div id="control_footer">
 
@@ -268,7 +266,7 @@
 	<div class="modal-dialog mw-100 w-75">
 		<div class="modal-content" style="overflow-x: scroll;">
 			<div class="modal-header">
-				<h5 class="modal-title">My Annotations</h5>
+				<h5 class="modal-title">File Annotations</h5>
 				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 					<span aria-hidden="true">&times;</span>
 				</button>
@@ -295,7 +293,7 @@
 	<div class="modal-dialog mw-100 w-75">
 		<div class="modal-content" style="overflow-x: scroll;">
 			<div class="modal-header">
-				<h5 class="modal-title">All My Annotations</h5>
+				<h5 class="modal-title">Annotations for All Project Files</h5>
 				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 					<span aria-hidden="true">&times;</span>
 				</button>

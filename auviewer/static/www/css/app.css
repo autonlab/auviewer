@@ -34,10 +34,6 @@ div.bootstrap-select > div.dropdown-menu a.dropdown-item {
     padding: 4px 8px;
 }
 
-#seriesDisplayControllerDiv {
-    margin-bottom: 24px;
-}
-
 #graphs {
     box-sizing: border-box;
     padding-left: 270px;
