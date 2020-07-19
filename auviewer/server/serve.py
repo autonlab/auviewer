@@ -386,7 +386,6 @@ def create_app(cfg):
         except:
             pass
         try:
-            print("HERE", config.globalDefaultProjectTemplateFile)
             with open(config.globalDefaultProjectTemplateFile, 'r') as f:
                 global_default_project_template = f.read()
         except:

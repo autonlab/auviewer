@@ -127,7 +127,6 @@ function handleClick(e, x) {
 		if (e.offsetX >= file.annotations[i].offsetXLeft && e.offsetX <= file.annotations[i].offsetXRight) {
 			if (
 				!file.annotations[i].series ||
-				file.annotations[i].state !== 'anomaly' ||
 				(!graph.isGroup && file.annotations[i].series === graph.fullName) ||
 				(graph.isGroup && graph.group.includes(file.annotations[i].series))
 			) {
@@ -397,9 +396,17 @@ function handleUnderlayRedraw(canvas, area, g) {
 		for (let i = 0; i < file.annotations.length; i++) {
 
 			if (
-				(layer === 0 && file.annotations[i].state === 'anomaly' && file.annotations[i].series != null && gci.fullName != file.annotations[i].series) ||
-				(layer === 1 && file.annotations[i].state === 'anomaly' && !(file.annotations[i].series != null && gci.fullName != file.annotations[i].series)) ||
-				(layer === 2 && (file.annotations[i].state === 'new' || file.annotations[i].state === 'existing'))
+				// Layer 0 -- other anomalies
+				(layer === 0 && file.annotations[i].state === 'anomaly' && file.annotations[i].series != null && gci.fullName !== file.annotations[i].series) ||
+
+				// Layer 1 -- other annotations
+				(layer === 1 && (file.annotations[i].state === 'new' || file.annotations[i].state === 'existing') && file.annotations[i].series != null && gci.fullName !== file.annotations[i].series) ||
+
+				// Layer 2 -- self anomalies
+				(layer === 2 && file.annotations[i].state === 'anomaly' && !(file.annotations[i].series != null && gci.fullName !== file.annotations[i].series)) ||
+
+				// Layer 3 -- self annotations
+				(layer === 3 && (file.annotations[i].state === 'new' || file.annotations[i].state === 'existing') && !(file.annotations[i].series != null && gci.fullName !== file.annotations[i].series))
 			) {
 
 				// // If this annotation does not belong to this series, move on.

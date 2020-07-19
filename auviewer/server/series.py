@@ -76,7 +76,6 @@ class Series:
         raise Exception('Data appending is currently unsupported.')
 
         if not isinstance(data, dict) or not isinstance(data['times'], list) or not isinstance(data['values'], list):
-            print('HERE', type(data), type(data['times']), type(data['values']), data)
             raise Exception('Invalid seriesData parameter received for series.addData().')
 
         # Add the new times & values.

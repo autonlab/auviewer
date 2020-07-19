@@ -66,6 +66,12 @@ function File(project, filename, callback=null) {
 		close: true,
 		head: "Available Graphs &mdash; Show/Hide",
 		move: true,
+		on: {
+			onShow: function(a, b) {
+				// Auto-focus the search box when showing plot selection window
+				this.getNode().querySelector('input[type=text]').focus();
+			}
+		},
 		position: function(state) {
 			state.width = 350;
 			state.height = state.maxHeight * 0.8;
@@ -78,30 +84,27 @@ function File(project, filename, callback=null) {
 			collapse: true,
 			// autoheight: true,
 			// autowidth: true,
-			filterMode:{ level: false, showSubItems: false },
+			filterMode:{ level: false, showSubItems: true },
 			on: {
 				"onItemCheck": function() {
 
-					// Get checked items
 					const tt = this.plotControl.getBody();
-					let checkedItems = tt.getChecked();
 
-					// Remove containers from checked items list
-					for (let i = checkedItems.length-1; i >= 0; i--) {
-						if (tt.isBranch(checkedItems[i])) {
-							checkedItems.splice(i, 1);
-						}
-					}
-
-					// Go through all graphs, and update as necessary
-					for (const s of Object.keys(this.graphs)) {
-						const g = this.graphs[s]
-						if (g.isShowing() && !checkedItems.includes(g.fullName)) {
-							// If the graph is showing but shouldn't be, hide it.
-							g.remove();
-						} else if (!g.isShowing() && checkedItems.includes(g.fullName)) {
-							// If the graph is not showing but should be, show it.
-							g.show();
+					let id = tt.getFirstId();
+					for (let id = tt.getFirstId(); id; id = tt.getNextId(id)) {
+						if (!tt.isBranch(id)) {
+							const isChecked = tt.isChecked(id);
+							const g = this.getGraphForSeries(id);
+							if (g) {
+								if (g.isShowing() && !isChecked) {
+									// If the graph is showing but shouldn't be, hide it.
+									g.remove();
+								} else if (!g.isShowing() && isChecked) {
+									// If the graph isn't showing but should be, show it.
+									g.show();
+								}
+							}
+							
 						}
 					}
 

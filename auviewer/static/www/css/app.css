@@ -93,6 +93,7 @@ div.bootstrap-select > div.dropdown-menu a.dropdown-item {
 
 .graph_wrapper > table > tbody > tr > td.legend > div {
     position: relative;
+    display: inline-block;
     background-color: white;
     filter: drop-shadow(-2px 2px 2px #ccc);
     border: 1px solid #aaa;
@@ -100,16 +101,14 @@ div.bootstrap-select > div.dropdown-menu a.dropdown-item {
     word-wrap: break-word;
 }
 
+.graph_wrapper > table > tbody > tr > td.legend > div > span {
+    white-space: nowrap;
+}
+
 .graph {
     width: 100%;
     /*height: 120px;*/
     height: 100%;
-}
-
-.legend {
-    /*height: 50px;*/
-    width: 100%;
-    /*margin-bottom: -50px;*/
 }
 
 /* Realtime */
