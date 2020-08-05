@@ -15,7 +15,7 @@ class AnnotationSet:
         self.anndb = dbgw.receive('Annotation')
         self.db=dbgw.receive('db')
 
-    def createAnnotation(self, xBoundLeft=None, xBoundRight=None, yBoundTop=None, yBoundBottom=None, seriesID='', label=''):
+    def createAnnotation(self, left=None, right=None, top=None, bottom=None, seriesID='', label=''):
 
         # We expect the filepath to begin with the projects directory
         if not self.fileparent.getFilepath().startswith(config.projectsDir):
@@ -29,10 +29,10 @@ class AnnotationSet:
             project=self.fileparent.projparent.name,
             filepath=self.fileparent.getFilepath()[len(config.projectsDir):],
             series=seriesID,
-            xboundleft=xBoundLeft,
-            xboundright=xBoundRight,
-            yboundtop=yBoundTop,
-            yboundbottom=yBoundBottom,
+            left=left,
+            right=right,
+            top=top,
+            bottom=bottom,
             annotation=label)
         self.db.session.add(newann)
         self.db.session.commit()
@@ -70,9 +70,9 @@ class AnnotationSet:
             print("Error on getting annotations. The file path is expected to start with the projects directory. File path:", self.fileparent.getFilepath(), "Projects directory:", config.projectsDir)
             return []
 
-        return [[a.id, os.path.basename(a.filepath), a.series, a.xboundleft, a.xboundright, a.yboundtop, a.yboundbottom, a.annotation] for a in self.anndb.query.filter_by(user_id=current_user.id, project=self.fileparent.projparent.name, filepath=self.fileparent.getFilepath()[len(config.projectsDir):]).all()]
+        return [[a.id, os.path.basename(a.filepath), a.series, a.left, a.right, a.top, a.bottom, a.annotation] for a in self.anndb.query.filter_by(user_id=current_user.id, project=self.fileparent.projparent.name, filepath=self.fileparent.getFilepath()[len(config.projectsDir):]).all()]
 
-    def updateAnnotation(self, id, xBoundLeft=None, xBoundRight=None, yBoundTop=None, yBoundBottom=None, seriesID='', label=''):
+    def updateAnnotation(self, id, left=None, right=None, top=None, bottom=None, seriesID='', label=''):
 
         # Get the annotation in question
         annotationToUpdate = self.anndb.query.filter_by(id=id).first()
@@ -84,10 +84,10 @@ class AnnotationSet:
 
         # Set updated values
         annotationToUpdate.series = seriesID
-        annotationToUpdate.xboundleft=xBoundLeft
-        annotationToUpdate.xboundright=xBoundRight
-        annotationToUpdate.yboundtop=yBoundTop
-        annotationToUpdate.yboundbottom=yBoundBottom
+        annotationToUpdate.left=left
+        annotationToUpdate.right=right
+        annotationToUpdate.top=top
+        annotationToUpdate.bottom=bottom
         annotationToUpdate.annotation=label
 
         # Commit the changes

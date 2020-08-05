@@ -4,8 +4,10 @@ from flask_socketio import SocketIO, join_room, leave_room, rooms
 from flask_sqlalchemy import SQLAlchemy
 from htmlmin.main import minify
 from pprint import pprint
+from sqlalchemy.sql import func
 import os
 import argparse
+import datetime
 
 # Simplejson package is required in order to "ignore" NaN values and implicitly
 # convert them into null values. RFC JSON spec left out NaN values, even though
@@ -81,11 +83,60 @@ def create_app(cfg):
         project = db.Column(db.String(255), nullable=False)
         filepath = db.Column(db.String(255), nullable=False)
         series = db.Column(db.String(255), nullable=False)
-        xboundleft = db.Column(db.Float, nullable=True)
-        xboundright = db.Column(db.Float, nullable=True)
-        yboundtop = db.Column(db.Float, nullable=True)
-        yboundbottom = db.Column(db.Float, nullable=True)
+        left = db.Column(db.Float, nullable=True)
+        right = db.Column(db.Float, nullable=True)
+        top = db.Column(db.Float, nullable=True)
+        bottom = db.Column(db.Float, nullable=True)
         annotation = db.Column(db.Text, nullable=False)
+        created_at = db.Column(db.DateTime, nullable=False, server_default=func.now())
+
+    class AnomalyDetectionRun(db.Model):
+
+        __tablename__ = 'anomaly_detection_runs'
+
+        id = db.Column(db.Integer(), primary_key=True)
+
+        project = db.Column(db.String(255), nullable=False)
+        name = db.Column(db.String(255), nullable=False)
+        series = db.Column(db.String(255), nullable=False)
+        parameters = db.Column(db.String(255), nullable=True)
+        created_at = db.Column(db.DateTime, nullable=False, server_default=func.now())
+
+    class AnomalyDetectionRunAnomaly(db.Model):
+
+        __tablename__ = 'anomaly_detection_run_anomalies'
+
+        id = db.Column(db.Integer(), primary_key=True)
+
+        anomaly_run_id = db.Column(db.Integer, db.ForeignKey('anomaly_detection_runs.id'))
+        filepath = db.Column(db.String(255), nullable=False)
+        left = db.Column(db.Float, nullable=True)
+        right = db.Column(db.Float, nullable=True)
+        top = db.Column(db.Float, nullable=True)
+        bottom = db.Column(db.Float, nullable=True)
+
+    class Assignment(db.Model):
+
+        __tablename__ = 'assignments'
+
+        id = db.Column(db.Integer(), primary_key=True)
+
+        project = db.Column(db.String(255), nullable=False)
+        name = db.Column(db.String(255), nullable=False)
+
+    class AssignmentItem(db.Model):
+
+        __tablename__ = 'assignment_items'
+
+        id = db.Column(db.Integer(), primary_key=True)
+
+        assignment_id = db.Column(db.Integer, db.ForeignKey('assignments.id'))
+        anomaly_id = db.Column(db.Integer, db.ForeignKey('anomaly_detection_run_anomalies.id'))
+        series = db.Column(db.String(255), nullable=False)
+        left = db.Column(db.Float, nullable=True)
+        right = db.Column(db.Float, nullable=True)
+        top = db.Column(db.Float, nullable=True)
+        bottom = db.Column(db.Float, nullable=True)
 
     class Role(db.Model):
 
@@ -224,10 +275,10 @@ def create_app(cfg):
         # Parse parameters
         projname = request.args.get('project')
         filename = request.args.get('file')
-        xBoundLeft = getFloatParamOrNone('xl')
-        xBoundRight = getFloatParamOrNone('xr')
-        yBoundTop = getFloatParamOrNone('yt')
-        yBoundBottom = getFloatParamOrNone('yb')
+        left = getFloatParamOrNone('xl')
+        right = getFloatParamOrNone('xr')
+        top = getFloatParamOrNone('yt')
+        bottom = getFloatParamOrNone('yb')
         seriesID = request.args.get('sid')
         label = request.args.get('label')
 
@@ -257,7 +308,7 @@ def create_app(cfg):
         # Write the annotation
         return simplejson.dumps({
             'success': True,
-            'id': file.annotationSet.createAnnotation(xBoundLeft, xBoundRight, yBoundTop, yBoundBottom, seriesID, label)
+            'id': file.annotationSet.createAnnotation(left, right, top, bottom, seriesID, label)
         })
 
     @app.route(config.rootWebPath + '/delete_annotation')
@@ -523,10 +574,10 @@ def create_app(cfg):
         projname = request.args.get('project')
         filename = request.args.get('file')
         id = request.args.get('id')
-        xBoundLeft = getFloatParamOrNone('xl')
-        xBoundRight = getFloatParamOrNone('xr')
-        yBoundTop = getFloatParamOrNone('yt')
-        yBoundBottom = getFloatParamOrNone('yb')
+        left = getFloatParamOrNone('xl')
+        right = getFloatParamOrNone('xr')
+        top = getFloatParamOrNone('yt')
+        bottom = getFloatParamOrNone('yb')
         seriesID = request.args.get('sid')
         label = request.args.get('label')
 
@@ -555,7 +606,7 @@ def create_app(cfg):
 
         # Write the annotation
         return simplejson.dumps({
-            'success': file.annotationSet.updateAnnotation(id, xBoundLeft, xBoundRight, yBoundTop, yBoundBottom, seriesID, label)
+            'success': file.annotationSet.updateAnnotation(id, left, right, top, bottom, seriesID, label)
         })
 
     @socketio.on('add_data')

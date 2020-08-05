@@ -72,7 +72,7 @@ class Project:
     # Returns a list of user's annotations for all files in the project
     def getAnnotations(self):
 
-        return [[a.id, os.path.basename(a.filepath), a.series, a.xboundleft, a.xboundright, a.yboundtop, a.yboundbottom, a.annotation] for a in self.anndb.query.filter_by(user_id=current_user.id, project=self.name).all()]
+        return [[a.id, os.path.basename(a.filepath), a.series, a.left, a.right, a.top, a.bottom, a.annotation] for a in self.anndb.query.filter_by(user_id=current_user.id, project=self.name).all()]
 
     def getAvailableFilesList(self):
         return [f.orig_filename for f in self.files]
@@ -189,7 +189,6 @@ class Project:
         i=0
         for orig_filename in self.getProcessedFileList():
             self.loadProcessedFile(orig_filename)
-            # break
             # i = i + 1
             # if i == 5:
             #     break

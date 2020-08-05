@@ -157,7 +157,7 @@ body.realtime > #controls > #control_footer > p#exitrealtime {
 }
 
 #annotationStartDate, #annotationStartTime, #annotationEndDate, #annotationEndTime {
-    width: 75%;
+    width: 85%;
     margin-bottom: 3px;
 }
 

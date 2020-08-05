@@ -3,13 +3,13 @@
 // Class declaration
 function RequestHandler() {}
 
-RequestHandler.prototype.createAnnotation = function(projname, filename, xBoundLeft, xBoundRight, seriesID, label, callback) {
+RequestHandler.prototype.createAnnotation = function(projname, filename, left, right, seriesID, label, callback) {
 
 	this._newRequest(callback, globalAppConfig.createAnnotationURL, {
 		project: projname,
 		file: filename,
-		xl: xBoundLeft,
-		xr: xBoundRight,
+		xl: left,
+		xr: right,
 		/*yt: ,
 		yb: ,*/
 		sid: seriesID,
@@ -75,14 +75,14 @@ RequestHandler.prototype.requestSeriesRangedData = function(projname, filename, 
 	});
 };
 
-RequestHandler.prototype.updateAnnotation = function(id, projname, filename, xBoundLeft, xBoundRight, seriesID, label, callback) {
+RequestHandler.prototype.updateAnnotation = function(id, projname, filename, left, right, seriesID, label, callback) {
 
 	this._newRequest(callback, globalAppConfig.updateAnnotationURL, {
 		id: id,
 		project: projname,
 		file: filename,
-		xl: xBoundLeft,
-		xr: xBoundRight,
+		xl: left,
+		xr: right,
 		/*yt: ,
 		yb: ,*/
 		sid: seriesID,
