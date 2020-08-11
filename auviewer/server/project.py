@@ -1,14 +1,18 @@
+"""Class and related functionality for projects."""
+import logging
 import os
 import time
 import traceback
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from flask_login import current_user
+from pathlib import Path
 
-from . import config
-from . import dbgw
+from . import models
+from .config import config
 from .file import File
 from .exceptions import ProcessedFileExists
+from .shared import create_empty_json_file
 
 class FileChangeHandler(FileSystemEventHandler):
 
@@ -36,13 +40,13 @@ class FileChangeHandler(FileSystemEventHandler):
 
 class Project:
 
-    # The project name should also be the directory name in the originals dir.
+    # The project name should also be the directory name in the projects directory.
     def __init__(self, project_name):
 
         self.name = project_name
 
         # Set the project root directory
-        self.project_dir = os.path.join(config.projectsDir, self.name)
+        self.project_dir = os.path.join(str(config['projectsDirPathObj']), self.name)
 
         # Set the project templates directory
         self.templates_dir = os.path.join(self.project_dir, 'templates')
@@ -59,9 +63,6 @@ class Project:
         # Holds references to the files that belong to the project
         self.files = []
 
-        self.anndb = dbgw.receive('Annotation')
-        self.db = dbgw.receive('db')
-
     # Cleanup
     def __del__(self):
         try:
@@ -72,7 +73,7 @@ class Project:
     # Returns a list of user's annotations for all files in the project
     def getAnnotations(self):
 
-        return [[a.id, os.path.basename(a.filepath), a.series, a.left, a.right, a.top, a.bottom, a.annotation] for a in self.anndb.query.filter_by(user_id=current_user.id, project=self.name).all()]
+        return [[a.id, os.path.basename(a.filepath), a.series, a.left, a.right, a.top, a.bottom, a.annotation] for a in models.Annotation.query.filter_by(user_id=current_user.id, project=self.name).all()]
 
     def getAvailableFilesList(self):
         return [f.orig_filename for f in self.files]
@@ -228,3 +229,143 @@ class Project:
             except ProcessedFileExists:
 
                 print("The processed file was found to already exist. Skipping this file.")
+
+
+def load_projects():
+
+    # Will hold loaded projects
+    projectsList = []
+
+    # Load projects from the database
+    logging.info("Loading projects from the database.")
+    projs = models.Project.query.all()
+    print("Projects in database:")
+    for p in projs:
+        print(f'{p.id} / {p.name} / {p.path}')
+
+        # Path object for the project
+        projPathObj = Path(p.path)
+
+        # Validate the project folder
+        try:
+            validate_project_folder(projPathObj)
+        except Exception as e:
+            logging.error(f'Project folder {projPathObj} is invalid.\n{e}')
+            # TODO(gus): Update the database to reflect this?
+        else:
+            # TODO(gus): We need to have project take absolute path and project name!
+            # Instantiate project, and add to the list to be returned
+            projectsList.append(Project(projPathObj.name))
+
+    # Detect new project folders not in the database
+    logging.info(f"Scanning projects folder {config['projectsDirPathObj']} for new projects.")
+    for projPathObj in [p for p in config['projectsDirPathObj'].iterdir() if p.is_dir()]:
+
+        # Check whether path exists in database projects
+        foundInExistingProject = False
+        for p in projs:
+            if Path(p.path).samefile(projPathObj):
+                foundInExistingProject = True
+                break
+
+        # Skip if this project folder was found to exist in the database already
+        if foundInExistingProject:
+            continue
+
+        # Ensure we have a valid project folder (i.e. it can be empty, but it
+        # cannot contain invalid files or folders).
+        try:
+            validate_project_folder(projPathObj)
+        except Exception as e:
+            logging.error(f'Project folder {projPathObj} is invalid.\n{e}')
+        else:
+            logging.info(f'Project folder {projPathObj} is valid.')
+
+            # Scaffold project folder
+            scaffold_project_folder(projPathObj)
+
+            # Add project to the database
+            project = models.Project(name=projPathObj.name, path=str(projPathObj.resolve()))
+            models.db.session.add(project)
+            models.db.session.commit()
+            logging.info(f"Added project to database: {projPathObj}")
+
+            # TODO(gus): We need to have project take absolute path and project name!
+            # Instantiate project, and add to the list to be returned
+            projectsList.append(Project(projPathObj.name))
+
+    logging.info(f"Loaded projects: {projectsList}")
+
+    # Return the list of loaded projects
+    return projectsList
+
+# Generate the baseline project folder contents as needed
+def scaffold_project_folder(projPathObj):
+
+    logging.info(f"Scaffolding project folder {projPathObj}.")
+
+    # Create the originals folder if needed
+    (projPathObj / 'originals').mkdir(exist_ok=True)
+
+    # Create the processed folder if needed
+    (projPathObj / 'processed').mkdir(exist_ok=True)
+
+    # Create the templates folder if needed
+    projTemplatesFolderPathObj = projPathObj / 'templates'
+    projTemplatesFolderPathObj.mkdir(exist_ok=True)
+
+    # Create empty template files if needed
+    create_empty_json_file(projTemplatesFolderPathObj / 'interface_templates.json')
+    create_empty_json_file(projTemplatesFolderPathObj / 'project_template.json')
+
+    logging.info(f"Finished scaffolding project folder {projPathObj}.")
+
+# Raises an exception if the project folder is invalid
+def validate_project_folder(projPathObj):
+
+    logging.info(f"Validating project folder {projPathObj}.")
+
+    # Validate top-level folders
+    for p in [p for p in projPathObj.iterdir()]:
+
+        # Project folder should only contain directories
+        if not p.is_dir():
+            raise Exception(f'Project folder contains invalid file: {p}')
+
+        # Validate expected top-level folder names
+        if p.name not in ['originals', 'processed', 'templates']:
+            raise Exception(f'Project folder contains invalid folder: {p}')
+
+    # Validate expected template files if they exist.
+    tp = p / "templates"
+    if tp.exists():
+        for p in [p for p in tp.iterdir()]:
+            if p.name not in ['project_template.json', 'interface_templates.json']:
+                raise Exception(f'Project templates folder contains invalid file: {p}')
+
+    # TODO(gus): Validate that originals have processed?
+
+    logging.info(f'Finished validating project folder {projPathObj}.')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

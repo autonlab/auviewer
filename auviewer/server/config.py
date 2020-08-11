@@ -1,63 +1,80 @@
+"""
+Holds & provides configuration parameters for auviewer.
+"""
+
 import os.path
 import json
+from pathlib import Path
 
-# This file holds configuration parameters for the medview application.
+from .shared import create_empty_json_file
 
-# Output verbosity
-# Overridden by load_config.
-verbose = True
+# Holds all config params
+config = {
 
-# AUView root data directory should have following structure:
-#   [root]
-#   - global_templates
-#   - - global_default_interface_templates.json (optional)
-#   - - global_default_project_template.json (optional)
-#   - projects
-#   - - [project_name]
-#   - - - originals
-#   - - - - [original hdf5 files]
-#   - - - processed
-#   - - - - [empty initially, will be used by AUView to store processed files]
-#   - - - templates
-#   - - - - project_template.json (optional)
-#   - - - - interface_templates.json (optional)
-# Overridden by load_config.
-auvDataRoot = None
+    ### General settings
 
-# A root directory from which the web application is served. Should begin with a
-# slash and end without a slask (in other words, end with a directory name). If
-# there is no root directory, rootWebPath should be empty string. You must also
-# change the corresponding setting in config.js. Examples:
-# '/approot'
-# '/app/root'
-# ''
-# Overridden by load_config.
-rootWebPath = ''
+    # Output verbosity
+    'verbose': False,
 
-# Password encryption key.
-# Overridden by load_config.
-SECRET_KEY = ''
 
-# Max number of data points to transmit for a given view
-M = 3000
 
-# The number to multiply by numDownsamples each time in building downsample
-# levels. For example, if M=3000 and stepMultipler=2, the first downsample
-# is 3K intervals, the second 6K, the third 12K, and so forth.
-stepMultiplier = 2
+    ### Tuning parameters
 
-# AUView code root directory
-auvCodeRoot = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    # Max number of data points to transmit for a given view
+    'M': 3000,
 
-cfg = None
+    # The number to multiply by numDownsamples each time in building downsample
+    # levels. For example, if M=3000 and stepMultipler=2, the first downsample
+    # is 3K intervals, the second 6K, the third 12K, and so forth.
+    'stepMultiplier': 2,
 
-# File locations. Updated in load_config.
-projectsDir = 'projects/'
-globalTemplatesDir = 'global_templates/'
-globalDefaultProjectTemplateFile = 'global_default_project_template.json'
-globalDefaultInterfaceTemplatesFile = 'global_default_interface_templates.json'
 
-# Flask application configuration
+
+    ### Asset locations
+
+    # AUView code root directory
+    'auvCodeRoot': os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
+
+    # Data directory location (pathlib.Path object).
+    # NOTE: This is the only config param that has no default value and must
+    # be defined.
+    'dataPathObj': None,
+
+    # Path to the projects directory (pathlib.Path object).
+    'projectsDirPathObj': None,
+
+    # Global templates (pathlib.Path objects).
+    'globalTemplatesDirPathObj': None,
+    'globalDefaultProjectTemplateFilePathObj': None,
+    'globalDefaultInterfaceTemplatesFilePathObj': None,
+
+
+
+    ### Web server configuration
+
+    'host': 'localhost',
+    'port': 8001,
+    'debug': False,
+    'reloader': False,
+
+    # Root directory from which the web application is served. Should begin with a
+    # slash and end without a slash (in other words, end with a directory name). If
+    # there is no root directory, rootWebPath should be empty string. You must also
+    # change the corresponding setting in config.js. Examples:
+    # ''
+    # '/approot'
+    # '/app/root'
+    'rootWebPath': '',
+
+    # Password encryption key
+    'secret_key': '',
+
+    # Mail integration settings object
+    'mail': None,
+
+}
+
+# Flask configuration object
 class FlaskConfigClass(object):
     """ Flask application config """
 
@@ -128,21 +145,88 @@ class FlaskConfigClass(object):
     USER_UNAUTHENTICATED_ENDPOINT = 'user.login'
     USER_UNAUTHORIZED_ENDPOINT = 'index'
 
-def load_config(fn):
+# Load configuration file
+def load_config(cp):
 
-    global cfg
-    cfg = json.loads(open(fn, 'r').read())
+    global config
 
-    global verbose, auvDataRoot, rootWebPath, SECRET_KEY
-    verbose = cfg['verbose']
-    auvDataRoot = cfg['data_path']
-    rootWebPath = cfg['root_web_path']
-    SECRET_KEY = cfg['secret_key']
+    print(f"Loading config file {cp}.")
 
-    global projectsDir, globalTemplatesDir, globalDefaultProjectTemplateFile, globalDefaultInterfaceTemplatesFile
-    projectsDir = os.path.join(auvDataRoot, projectsDir)
-    globalTemplatesDir = os.path.join(auvDataRoot, globalTemplatesDir)
-    globalDefaultProjectTemplateFile = os.path.join(globalTemplatesDir, globalDefaultProjectTemplateFile)
-    globalDefaultInterfaceTemplatesFile = os.path.join(globalTemplatesDir, globalDefaultInterfaceTemplatesFile)
+    with cp.open() as f:
+        json_config = json.load(f)
 
-    return cfg
+    # The following values are valid and can be pulled from the json config file
+    possible_keys = [
+        'host',
+        'port',
+        'debug',
+        'reloader',
+
+        'verbose',
+
+        'root_web_path',
+        'secret_key',
+        'mail',
+    ]
+
+    # Set/override any valid settings provided in the json config file
+    for k in possible_keys:
+        if k in json_config:
+            config[k] = json_config[k]
+
+# Generate the baseline data directory contents as needed
+def scaffold_data_path():
+
+    global config
+
+    # Grab the data path object
+    p = config['dataPathObj']
+
+    # Create the config subdirectory if needed
+    cfgPathObj = p / 'config'
+    cfgPathObj.mkdir(exist_ok=True)
+
+    # Create the database subdirectory if needed
+    dbPathObj = p / 'database'
+    dbPathObj.mkdir(exist_ok=True)
+
+    # Create the global templates subdirectory if needed, and set in the config
+    config['globalTemplatesDirPathObj'] = p / 'global_templates'
+    config['globalTemplatesDirPathObj'].mkdir(exist_ok=True)
+
+    # Create the projects path subdirectory if needed, and set in the config
+    config['projectsDirPathObj'] = p / 'projects'
+    config['projectsDirPathObj'].mkdir(exist_ok=True)
+
+    # Create empty config json file if needed
+    create_empty_json_file(cfgPathObj / 'config.json')
+
+    # Create empty global interface templates json file if needed, and set in the config
+    config['globalDefaultInterfaceTemplatesFilePathObj'] = config['globalTemplatesDirPathObj'] / 'interface_templates.json'
+    create_empty_json_file(config['globalDefaultInterfaceTemplatesFilePathObj'])
+
+    # Create empty global project template json file if needed, and set in the config
+    config['globalDefaultProjectTemplateFilePathObj'] = config['globalTemplatesDirPathObj'] / 'project_template.json'
+    create_empty_json_file(config['globalDefaultProjectTemplateFilePathObj'])
+
+# Sets, prepares, and processes the data path.
+def set_data_path(path):
+
+    global config
+
+    # Create a path object, converting a relative path to absolute if necessary
+    p = Path(path).resolve()
+
+    # Create the data directory if necessary
+    p.mkdir(exist_ok=True)
+
+    # Attach the data path object to config
+    config['dataPathObj'] = p
+
+    # Check if a config file was provided, and, if so, load the config
+    cp = p / 'config' / 'config.json'
+    if cp.is_file():
+        load_config(cp)
+
+    # Set up the data path scaffolding as needed
+    scaffold_data_path()

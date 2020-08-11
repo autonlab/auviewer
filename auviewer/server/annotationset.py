@@ -1,9 +1,9 @@
 import os
 
-from . import config
+from .config import config
 from flask_login import current_user
 
-from . import dbgw
+from . import models
 
 class AnnotationSet:
 
@@ -12,30 +12,20 @@ class AnnotationSet:
         # Set the file parent
         self.fileparent = fileparent
 
-        self.anndb = dbgw.receive('Annotation')
-        self.db=dbgw.receive('db')
-
     def createAnnotation(self, left=None, right=None, top=None, bottom=None, seriesID='', label=''):
 
-        # We expect the filepath to begin with the projects directory
-        if not self.fileparent.getFilepath().startswith(config.projectsDir):
-            print(
-                "Error on creating annotation. The file path is expected to start with the projects directory. File path:",
-                self.fileparent.getFilepath(), "Projects directory:", config.projectsDir)
-            return
-
-        newann = self.anndb(
+        newann = models.Annotation(
             user_id=current_user.id,
             project=self.fileparent.projparent.name,
-            filepath=self.fileparent.getFilepath()[len(config.projectsDir):],
+            filepath=self.fileparent.getFilepath()[len(str(config['projectsDirPathObj'])):],
             series=seriesID,
             left=left,
             right=right,
             top=top,
             bottom=bottom,
             annotation=label)
-        self.db.session.add(newann)
-        self.db.session.commit()
+        models.db.session.add(newann)
+        models.db.session.commit()
 
         return newann.id
 
@@ -44,7 +34,7 @@ class AnnotationSet:
     def deleteAnnotation(self, id):
 
         # Get the annotation in question
-        annotationToDelete = self.anndb.query.filter_by(id=id).first()
+        annotationToDelete = models.Annotation.query.filter_by(id=id).first()
 
         # Verify the user has requested to delete his or her own annotation.
         if annotationToDelete.user_id != current_user.id:
@@ -52,8 +42,8 @@ class AnnotationSet:
             return False
 
         # Having reached this point, delete the annotation
-        self.db.session.delete(annotationToDelete)
-        self.db.session.commit()
+        models.db.session.delete(annotationToDelete)
+        models.db.session.commit()
 
         # Return true to indicate success
         return True
@@ -65,17 +55,12 @@ class AnnotationSet:
         if self.fileparent.mode() == 'realtime':
             return []
 
-        # We expect the filepath to begin with the projects directory
-        if not self.fileparent.getFilepath().startswith(config.projectsDir):
-            print("Error on getting annotations. The file path is expected to start with the projects directory. File path:", self.fileparent.getFilepath(), "Projects directory:", config.projectsDir)
-            return []
-
-        return [[a.id, os.path.basename(a.filepath), a.series, a.left, a.right, a.top, a.bottom, a.annotation] for a in self.anndb.query.filter_by(user_id=current_user.id, project=self.fileparent.projparent.name, filepath=self.fileparent.getFilepath()[len(config.projectsDir):]).all()]
+        return [[a.id, os.path.basename(a.filepath), a.series, a.left, a.right, a.top, a.bottom, a.annotation] for a in models.Annotation.query.filter_by(user_id=current_user.id, project=self.fileparent.projparent.name, filepath=self.fileparent.getFilepath()[len(str(config['projectsDirPathObj'])):]).all()]
 
     def updateAnnotation(self, id, left=None, right=None, top=None, bottom=None, seriesID='', label=''):
 
         # Get the annotation in question
-        annotationToUpdate = self.anndb.query.filter_by(id=id).first()
+        annotationToUpdate = models.Annotation.query.filter_by(id=id).first()
 
         # Verify the user has requested to update his or her own annotation.
         if annotationToUpdate.user_id != current_user.id:
@@ -91,7 +76,7 @@ class AnnotationSet:
         annotationToUpdate.annotation=label
 
         # Commit the changes
-        self.db.session.commit()
+        models.db.session.commit()
 
         # Return true to indicate success
         return True

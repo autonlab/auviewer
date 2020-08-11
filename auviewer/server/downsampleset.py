@@ -2,7 +2,7 @@ import numpy as np
 import time
 import psutil
 
-from . import config
+from .config import config
 from .cylib import buildDownsampleFromRaw, buildNextDownsampleUp, getSliceParam, numDownsamplesToBuild
 
 # Represents a set of downsamples for a series of data.
@@ -69,7 +69,7 @@ class DownsampleSet:
         if i < 0:
             i = nds + i
 
-        return config.M * (config.stepMultiplier ** i)
+        return config['M'] * (config['stepMultiplier'] ** i)
 
     # Returns a slice of the appropriate downsample for the given time range, or
     # nothing if there is no appropriate downsample available (in this case, raw
@@ -127,7 +127,7 @@ class DownsampleSet:
 
         # Get an array of the downsamples to build (each element of the array
         # is a number of intervals to divide the data set into).
-        ndtb = numDownsamplesToBuild(self.seriesparent.rawTimes, config.M, config.stepMultiplier)
+        ndtb = numDownsamplesToBuild(self.seriesparent.rawTimes, config['M'], config['stepMultiplier'])
 
         # If we do not need to build any downsamples, return now.
         if ndtb < 1:
@@ -147,7 +147,7 @@ class DownsampleSet:
                 print("This pass from raw.")
                 downsample = buildDownsampleFromRaw(self.seriesparent.rawTimes, self.seriesparent.rawValues, self.getNumIntervalsByIndex(i, ndtb))
             else:
-                downsample = buildNextDownsampleUp(previousDownsample, self.getTimePerIntervalByIndex(i + 1, ndtb), config.stepMultiplier)
+                downsample = buildNextDownsampleUp(previousDownsample, self.getTimePerIntervalByIndex(i + 1, ndtb), config['stepMultiplier'])
 
             print("MEM AFT-DSBLD: " + str(p.memory_full_info().uss / 1024 / 1024) + " MB")
 
@@ -186,7 +186,7 @@ class DownsampleSet:
     def whichDownsampleIndexForTimespan(self, timespan):
 
         # Calculate the largest interval size to deliver <= M intervals, in seconds
-        maxTimePerInterval = timespan / config.M
+        maxTimePerInterval = timespan / config['M']
 
         # Determine which downsample to use. To do this, find the first
         # downsample, going from the largest interval downwards, which is too

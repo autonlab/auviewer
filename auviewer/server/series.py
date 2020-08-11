@@ -6,7 +6,7 @@ import psutil
 from threading import Lock
 from copy import copy
 
-from . import config
+from .config import config
 from .rawdata import RawData
 from .downsampleset import DownsampleSet
 from .cylib import generateThresholdAlerts
@@ -251,8 +251,8 @@ class Series:
         # Initialize raw data
         # self.rawTimes = []
         # self.rawValues = []
-        self.rawTimes = deque(maxlen=config.M)
-        self.rawValues = deque(maxlen=config.M)
+        self.rawTimes = deque(maxlen=config['M'])
+        self.rawValues = deque(maxlen=config['M'])
 
 def simpleSeriesName(s):
     simpleNameComponents = s.split('/')[-1].split(':')

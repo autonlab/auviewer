@@ -93,7 +93,7 @@ class File:
     # Returns updated file data for transmission to realtime subscribers.
     def addSeriesData(self, seriesData):
 
-        if config.verbose:
+        if config['verbose']:
             print('Adding series data.', seriesData)
 
         if self.mode() != 'realtime':
@@ -131,7 +131,7 @@ class File:
                 "output_type": 'real'
             }
 
-        if config.verbose:
+        if config['verbose']:
             print('addSeriesData() returning', update)
 
         return update

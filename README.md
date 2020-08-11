@@ -1,3 +1,71 @@
+# New Content (to be organized)
+
+## AUViewer Use Cases
+
+AUViewer allows the following primary use cases:
+
+* Visualize & analyze time series data in a Jupyter Notebook
+* Work on a project of time series data in a web-based interface
+* Allow multi-user annotation of time series data in a web-based interface
+* Serve via intranet or internet
+
+## Technical Architecture
+
+### Operating Mode Use Cases
+
+From a perspective of technical architecture, the following use cases are accommodated:
+
+* Jupyter Notebook Interface
+  * Visualize/explore time series data ad-hoc
+  * Visualize/explore project data
+  * Analyze project data
+  * Analyze annotations
+  
+* Python Module
+  * Add project data
+  * Analyze project data
+  * Analyze annotations
+  
+* Web Server
+  * Visualize/explore and/or annotate project data in single-user mode
+  * Perform analytical tasks (e.g. create & manage annotation assignments, etc.)
+  * Multi-user visualization & annotation by human subject matter experts
+  * Optional user authentication integration
+   
+### Data Directory
+
+When AUViewer is being used to visualize ad-hoc data, a data directory (including database) are _not_ required. In all other cases, a data directory is required.
+
+The data directory is specified either as a function parameters (e.g. when used as a Python module) or as a command-line argument (when starting the web server via command line).
+
+The data directory will contain project files, templates, config, and the database. The directory may be initially empty or pre-populated with some data. The organization of the directory is as follows, and assets will be created by AUViewer as needed if they do not already exist:
+* config
+  * _config.json_
+* database
+  * _db.sqlite_
+* global_templates
+  * _interface_templates.json_
+  * _project_template.json_
+* projects
+  * [project name]
+    * originals
+    * processed
+    * templates
+      * _project_template.json_
+      * _interface_templates.json_
+
+(???) With the exception of the config file, the locations of all data directory assets above may be changed (???)
+
+### App Configuration
+
+App config consists of the following types of configuration parameters:
+* General settings (e.g. verbose output)
+* Tuning parameters (e.g. target data points per series transmission)
+* Asset locations
+* Web server configuration (e.g. root web directory, Flask config)
+
+AUViewer comes with default config parameters for everything except the data directory location. Configuration is loaded and managed by the `auviewer.config` module.
+
 # Medview Patient Data Viewer/Annotator
 
 ## Table of Contents

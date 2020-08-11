@@ -8,10 +8,10 @@ import json
 def main():
     #Config
     sources_and_destinations = [
-        ['template_sources.builtin_default_project_template', f'/zfsauton2/home/gwelter/code/medview/auviewer/static/www/js/builtin_templates/builtin_default_project_template.json'],
-        ['template_sources.builtin_default_interface_templates', f'/zfsauton2/home/gwelter/code/medview/auviewer/static/www/js/builtin_templates/builtin_default_interface_templates.json'],
-        ['template_sources.global_default_project_template', '/zfsauton/data/public/gwelter/AUView/global_templates/global_default_project_template.json'],
-        ['template_sources.global_default_interface_templates', '/zfsauton/data/public/gwelter/AUView/global_templates/global_default_interface_templates.json']
+        ['template_sources.builtin_default_project_template', f'/zfsauton2/home/gwelter/code/medview/auviewer/static/builtin_templates/project_template.json'],
+        ['template_sources.builtin_default_interface_templates', f'/zfsauton2/home/gwelter/code/medview/auviewer/static/builtin_templates/interface_templates.json'],
+        ['template_sources.global_default_project_template', '/zfsauton/data/public/gwelter/AUView/global_templates/project_template.json'],
+        ['template_sources.global_default_interface_templates', '/zfsauton/data/public/gwelter/AUView/global_templates/interface_templates.json']
 ]
 
     for pair in sources_and_destinations:

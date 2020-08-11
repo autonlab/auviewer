@@ -1,13 +1,10 @@
 from flask import Flask, Blueprint, send_from_directory, request, render_template, render_template_string
 from flask_mail import Mail
 from flask_socketio import SocketIO, join_room, leave_room, rooms
-from flask_sqlalchemy import SQLAlchemy
 from htmlmin.main import minify
 from pprint import pprint
-from sqlalchemy.sql import func
 import os
 import argparse
-import datetime
 
 # Simplejson package is required in order to "ignore" NaN values and implicitly
 # convert them into null values. RFC JSON spec left out NaN values, even though
@@ -18,18 +15,18 @@ import datetime
 # values. Find "ignore_nan" here: https://simplejson.readthedocs.io/en/latest/
 import simplejson
 
-from . import config, dbgw
+from . import models
+from .config import set_data_path, config, FlaskConfigClass
 from .file import File
-from .project import Project
+from .project import Project, load_projects
 
-from ..flask_user import confirm_email_required, current_user, login_required, UserManager, UserMixin, SQLAlchemyAdapter
+from ..flask_user import confirm_email_required, current_user, login_required, UserManager, SQLAlchemyAdapter
 from ..flask_user.signals import user_sent_invitation, user_registered
 
-
-def create_app(cfg):
+def create_app():
 
     # Instantiate the Flask web application class
-    app = Flask(__name__, template_folder=f'{config.auvCodeRoot}/static/www/templates')
+    app = Flask(__name__, template_folder=config['auvCodeRoot']+'/static/www/templates')
 
     # Instantiate SocketIO
     socketio = SocketIO(app)
@@ -38,7 +35,7 @@ def create_app(cfg):
     @app.context_processor
     def inject_dict_for_all_templates():
         return {
-            'rootWebPath': config.rootWebPath
+            'rootWebPath': config['rootWebPath']
         }
 
     # Minify HTML when possible
@@ -49,150 +46,36 @@ def create_app(cfg):
         return response
 
     # Apply Flask configuration for Flask-User package
-    app.config.from_object(config.FlaskConfigClass)
+    app.config.from_object(FlaskConfigClass)
     app.config.update({
-        'SECRET_KEY': config.SECRET_KEY,
-        'SQLALCHEMY_DATABASE_URI': f'sqlite:///{config.auvDataRoot}/userdb.sqlite',
-        **cfg['mail'],
-        'USER_CHANGE_PASSWORD_URL': config.rootWebPath + app.config['USER_CHANGE_PASSWORD_URL'],
-        'USER_CHANGE_USERNAME_URL': config.rootWebPath + app.config['USER_CHANGE_USERNAME_URL'],
-        'USER_CONFIRM_EMAIL_URL': config.rootWebPath + app.config['USER_CONFIRM_EMAIL_URL'],
-        'USER_EMAIL_ACTION_URL': config.rootWebPath + app.config['USER_EMAIL_ACTION_URL'],
-        'USER_FORGOT_PASSWORD_URL': config.rootWebPath + app.config['USER_FORGOT_PASSWORD_URL'],
-        'USER_INVITE_URL': config.rootWebPath + app.config['USER_INVITE_URL'],
-        'USER_LOGIN_URL': config.rootWebPath + app.config['USER_LOGIN_URL'],
-        'USER_LOGOUT_URL': config.rootWebPath + app.config['USER_LOGOUT_URL'],
-        'USER_MANAGE_EMAILS_URL': config.rootWebPath + app.config['USER_MANAGE_EMAILS_URL'],
-        'USER_PROFILE_URL': config.rootWebPath + app.config['USER_PROFILE_URL'],
-        'USER_REGISTER_URL': config.rootWebPath + app.config['USER_REGISTER_URL'],
-        'USER_RESEND_CONFIRM_EMAIL_URL': config.rootWebPath + app.config['USER_RESEND_CONFIRM_EMAIL_URL'],
-        'USER_RESET_PASSWORD_URL': config.rootWebPath + app.config['USER_RESET_PASSWORD_URL']
+        'SECRET_KEY': config['secret_key'],
+        'SQLALCHEMY_DATABASE_URI': f"sqlite:///{(config['dataPathObj'] / 'database' / 'db.sqlite')}",
+        **config['mail'],
+        'USER_CHANGE_PASSWORD_URL': config['rootWebPath'] + app.config['USER_CHANGE_PASSWORD_URL'],
+        'USER_CHANGE_USERNAME_URL': config['rootWebPath'] + app.config['USER_CHANGE_USERNAME_URL'],
+        'USER_CONFIRM_EMAIL_URL': config['rootWebPath'] + app.config['USER_CONFIRM_EMAIL_URL'],
+        'USER_EMAIL_ACTION_URL': config['rootWebPath'] + app.config['USER_EMAIL_ACTION_URL'],
+        'USER_FORGOT_PASSWORD_URL': config['rootWebPath'] + app.config['USER_FORGOT_PASSWORD_URL'],
+        'USER_INVITE_URL': config['rootWebPath'] + app.config['USER_INVITE_URL'],
+        'USER_LOGIN_URL': config['rootWebPath'] + app.config['USER_LOGIN_URL'],
+        'USER_LOGOUT_URL': config['rootWebPath'] + app.config['USER_LOGOUT_URL'],
+        'USER_MANAGE_EMAILS_URL': config['rootWebPath'] + app.config['USER_MANAGE_EMAILS_URL'],
+        'USER_PROFILE_URL': config['rootWebPath'] + app.config['USER_PROFILE_URL'],
+        'USER_REGISTER_URL': config['rootWebPath'] + app.config['USER_REGISTER_URL'],
+        'USER_RESEND_CONFIRM_EMAIL_URL': config['rootWebPath'] + app.config['USER_RESEND_CONFIRM_EMAIL_URL'],
+        'USER_RESET_PASSWORD_URL': config['rootWebPath'] + app.config['USER_RESET_PASSWORD_URL']
     })
 
-    # Initialize Flask-SQLAlchemy, Flask-Mail, and Flask-Babel
-    db = SQLAlchemy(app)
+    # Initialize the db models with the Flask app
+    models.init_flask_app(app)
+    #models.db.init_app(app)
+    #models.db.create_all(app)
+
+    # Initialize Flask-Mail
     mail = Mail(app)
 
-    class Annotation(db.Model):
-
-        __tablename__ = 'annotations'
-
-        id = db.Column(db.Integer(), primary_key=True)
-
-        user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-        project = db.Column(db.String(255), nullable=False)
-        filepath = db.Column(db.String(255), nullable=False)
-        series = db.Column(db.String(255), nullable=False)
-        left = db.Column(db.Float, nullable=True)
-        right = db.Column(db.Float, nullable=True)
-        top = db.Column(db.Float, nullable=True)
-        bottom = db.Column(db.Float, nullable=True)
-        annotation = db.Column(db.Text, nullable=False)
-        created_at = db.Column(db.DateTime, nullable=False, server_default=func.now())
-
-    class AnomalyDetectionRun(db.Model):
-
-        __tablename__ = 'anomaly_detection_runs'
-
-        id = db.Column(db.Integer(), primary_key=True)
-
-        project = db.Column(db.String(255), nullable=False)
-        name = db.Column(db.String(255), nullable=False)
-        series = db.Column(db.String(255), nullable=False)
-        parameters = db.Column(db.String(255), nullable=True)
-        created_at = db.Column(db.DateTime, nullable=False, server_default=func.now())
-
-    class AnomalyDetectionRunAnomaly(db.Model):
-
-        __tablename__ = 'anomaly_detection_run_anomalies'
-
-        id = db.Column(db.Integer(), primary_key=True)
-
-        anomaly_run_id = db.Column(db.Integer, db.ForeignKey('anomaly_detection_runs.id'))
-        filepath = db.Column(db.String(255), nullable=False)
-        left = db.Column(db.Float, nullable=True)
-        right = db.Column(db.Float, nullable=True)
-        top = db.Column(db.Float, nullable=True)
-        bottom = db.Column(db.Float, nullable=True)
-
-    class Assignment(db.Model):
-
-        __tablename__ = 'assignments'
-
-        id = db.Column(db.Integer(), primary_key=True)
-
-        project = db.Column(db.String(255), nullable=False)
-        name = db.Column(db.String(255), nullable=False)
-
-    class AssignmentItem(db.Model):
-
-        __tablename__ = 'assignment_items'
-
-        id = db.Column(db.Integer(), primary_key=True)
-
-        assignment_id = db.Column(db.Integer, db.ForeignKey('assignments.id'))
-        anomaly_id = db.Column(db.Integer, db.ForeignKey('anomaly_detection_run_anomalies.id'))
-        series = db.Column(db.String(255), nullable=False)
-        left = db.Column(db.Float, nullable=True)
-        right = db.Column(db.Float, nullable=True)
-        top = db.Column(db.Float, nullable=True)
-        bottom = db.Column(db.Float, nullable=True)
-
-    class Role(db.Model):
-
-        __tablename__ = 'roles'
-
-        id = db.Column(db.Integer(), primary_key=True)
-        name = db.Column(db.String(50), nullable=False, server_default=u'', unique=True)  # for @roles_accepted()
-
-    class User(db.Model, UserMixin):
-
-        __tablename__ = 'users'
-
-        id = db.Column(db.Integer, primary_key=True)
-
-        # User authentication information. The collation='NOCASE' is required
-        # to search case insensitively when USER_IFIND_MODE is 'nocase_collation'.
-        email = db.Column(db.String(255, collation='NOCASE'), nullable=False, unique=True)
-        confirmed_at = db.Column(db.DateTime(), nullable=True)
-        password = db.Column(db.String(255), nullable=False, server_default='')
-
-        # User information
-        active = db.Column('is_active', db.Boolean(), nullable=False, server_default='0')
-        first_name = db.Column(db.Unicode(50), nullable=False, server_default=u'')
-        last_name = db.Column(db.Unicode(50), nullable=False, server_default=u'')
-
-        # Relationships
-        roles = db.relationship('Role', secondary='users_roles', backref=db.backref('users', lazy='dynamic'))
-
-    class UserInvitation(db.Model):
-
-        __tablename__ = 'user_invite'
-
-        id = db.Column(db.Integer, primary_key=True)
-        email = db.Column(db.String(255), nullable=False)
-        # save the user of the invitee
-        invited_by_user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-        # token used for registration page to identify user registering
-        token = db.Column(db.String(100), nullable=False, server_default='')
-
-    # Define the UserRoles association model
-    class UsersRoles(db.Model):
-
-        __tablename__ = 'users_roles'
-
-        id = db.Column(db.Integer(), primary_key=True)
-        user_id = db.Column(db.Integer(), db.ForeignKey('users.id', ondelete='CASCADE'))
-        role_id = db.Column(db.Integer(), db.ForeignKey('roles.id', ondelete='CASCADE'))
-
-    # Create all database tables
-    db.create_all()
-
-    dbgw.provide('db', db)
-    dbgw.provide('Annotation', Annotation)
-
     # Setup Flask-User
-    db_adapter = SQLAlchemyAdapter(db, User, UserInvitationClass=UserInvitation)  # Select database adapter
+    db_adapter = SQLAlchemyAdapter(models.db, models.User, UserInvitationClass=models.UserInvitation)  # Select database adapter
     user_manager = UserManager(db_adapter, app)  # Init Flask-User and bind to app
 
     # You may use this code snippet below to create initial/new admin users
@@ -222,13 +105,13 @@ def create_app(cfg):
         sender.logger.info("USER SENT INVITATION")
 
     # Map our static assets to be served
-    app.register_blueprint(Blueprint('css', __name__, static_url_path=config.rootWebPath+'/css', static_folder=os.path.join(config.auvCodeRoot, 'static/www/css')))
-    app.register_blueprint(Blueprint('fonts', __name__, static_url_path=config.rootWebPath+'/fonts', static_folder=os.path.join(config.auvCodeRoot, 'static/www/fonts')))
-    app.register_blueprint(Blueprint('js', __name__, static_url_path=config.rootWebPath+'/js', static_folder=os.path.join(config.auvCodeRoot, 'static/www/js')))
+    app.register_blueprint(Blueprint('css', __name__, static_url_path=config['rootWebPath']+'/css', static_folder=os.path.join(config['auvCodeRoot'], 'static/www/css')))
+    app.register_blueprint(Blueprint('fonts', __name__, static_url_path=config['rootWebPath']+'/fonts', static_folder=os.path.join(config['auvCodeRoot'], 'static/www/fonts')))
+    app.register_blueprint(Blueprint('js', __name__, static_url_path=config['rootWebPath']+'/js', static_folder=os.path.join(config['auvCodeRoot'], 'static/www/js')))
 
     ### NON-SECURE AREAS (NO LOGIN REQUIRED) ###
 
-    @app.route(config.rootWebPath+'/anyone')
+    @app.route(config['rootWebPath']+'/anyone')
     def home_page():
         return render_template_string("""
             {% extends "base.html" %}
@@ -243,7 +126,7 @@ def create_app(cfg):
             {% endblock %}
             """)
 
-    @app.route(config.rootWebPath+'/user_manage')
+    @app.route(config['rootWebPath']+'/user_manage')
     @login_required
     def user_manage():
         pprint(vars(current_user))
@@ -263,12 +146,12 @@ def create_app(cfg):
     ### All methods below should have ###
     ### the @login_required decorator ###
 
-    @app.route(config.rootWebPath + '/bokeh.html')
+    @app.route(config['rootWebPath']+'/bokeh.html')
     @login_required
     def bokeh():
         return send_from_directory('../www', 'bokeh.html')
 
-    @app.route(config.rootWebPath+'/create_annotation', methods=['GET'])
+    @app.route(config['rootWebPath']+'/create_annotation', methods=['GET'])
     @login_required
     def create_annotation():
 
@@ -311,7 +194,7 @@ def create_app(cfg):
             'id': file.annotationSet.createAnnotation(left, right, top, bottom, seriesID, label)
         })
 
-    @app.route(config.rootWebPath + '/delete_annotation')
+    @app.route(config['rootWebPath']+'/delete_annotation')
     @login_required
     def delete_annotation():
 
@@ -348,7 +231,7 @@ def create_app(cfg):
             'success': file.annotationSet.deleteAnnotation(id)
         })
 
-    @app.route(config.rootWebPath + '/detect_anomalies', methods=['GET'])
+    @app.route(config['rootWebPath']+'/detect_anomalies', methods=['GET'])
     @login_required
     def detect_anomalies():
 
@@ -396,7 +279,7 @@ def create_app(cfg):
 
         return simplejson.dumps(alerts, ignore_nan=True)
 
-    @app.route(config.rootWebPath + '/get_project_annotations')
+    @app.route(config['rootWebPath']+'/get_project_annotations')
     @login_required
     def get_project_annotations():
 
@@ -415,7 +298,7 @@ def create_app(cfg):
 
         return json_output
 
-    @app.route(config.rootWebPath + '/initial_payload')
+    @app.route(config['rootWebPath']+'/initial_payload')
     @login_required
     def initial_payload():
 
@@ -427,22 +310,22 @@ def create_app(cfg):
         global_default_interface_templates = simplejson.dumps({})
 
         try:
-            with open(os.path.join(config.auvCodeRoot, 'static/www/js/builtin_templates/builtin_default_project_template.json'), 'r') as f:
+            with open(os.path.join(config['auvCodeRoot'], 'static/builtin_templates/project_template.json'), 'r') as f:
                 builtin_default_project_template = f.read()
         except:
             pass
         try:
-            with open(os.path.join(config.auvCodeRoot, 'static/www/js/builtin_templates/builtin_default_interface_templates.json'), 'r') as f:
+            with open(os.path.join(config['auvCodeRoot'], 'static/builtin_templates/interface_templates.json'), 'r') as f:
                 builtin_default_interface_templates = f.read()
         except:
             pass
         try:
-            with open(config.globalDefaultProjectTemplateFile, 'r') as f:
+            with config['globalDefaultProjectTemplateFilePathObj'].open() as f:
                 global_default_project_template = f.read()
         except:
             pass
         try:
-            with open(config.globalDefaultInterfaceTemplatesFile, 'r') as f:
+            with config['globalDefaultInterfaceTemplatesFilePathObj'].open() as f:
                 global_default_interface_templates = f.read()
         except:
             pass
@@ -457,14 +340,14 @@ def create_app(cfg):
 
         return simplejson.dumps(response)
 
-    @app.route(config.rootWebPath+'/')
-    @app.route(config.rootWebPath+'/index.html')
+    @app.route(config['rootWebPath']+'/')
+    @app.route(config['rootWebPath']+'/index.html')
     @login_required
     def index():
         #return send_from_directory('../www', 'index.html')
         return render_template('index.html')
 
-    @app.route(config.rootWebPath+'/initial_file_payload')
+    @app.route(config['rootWebPath']+'/initial_file_payload')
     @login_required
     def initial_file_payload():
 
@@ -505,7 +388,7 @@ def create_app(cfg):
         else:
             return "Invalid request."
 
-    @app.route(config.rootWebPath + '/initial_project_payload')
+    @app.route(config['rootWebPath']+'/initial_project_payload')
     @login_required
     def initial_project_payload():
 
@@ -528,7 +411,7 @@ def create_app(cfg):
 
         return json_output
 
-    @app.route(config.rootWebPath + '/series_ranged_data', methods=['GET'])
+    @app.route(config['rootWebPath']+'/series_ranged_data', methods=['GET'])
     @login_required
     def series_ranged_data():
 
@@ -566,7 +449,7 @@ def create_app(cfg):
 
             return json_output
 
-    @app.route(config.rootWebPath + '/update_annotation', methods=['GET'])
+    @app.route(config['rootWebPath']+'/update_annotation', methods=['GET'])
     @login_required
     def update_annotation():
 
@@ -612,7 +495,7 @@ def create_app(cfg):
     @socketio.on('add_data')
     def handle_add_data(json):
 
-        if config.verbose:
+        if config['verbose']:
             print('received socketio: add_data')
             print('msg data:', json)
 
@@ -631,7 +514,7 @@ def create_app(cfg):
     @socketio.on('push_template')
     def handle_push_template(json):
 
-        if config.verbose:
+        if config['verbose']:
             print('received socketio: push_template')
             print('msg data:', json)
 
@@ -648,7 +531,7 @@ def create_app(cfg):
     @socketio.on('subscribe')
     def handle_subscribe(json):
 
-        if config.verbose:
+        if config['verbose']:
             print('received socketio: subscribe')
             print('msg data:', json)
 
@@ -665,7 +548,7 @@ def create_app(cfg):
     @socketio.on('unsubscribe')
     def handle_unsubscribe():
 
-        if config.verbose:
+        if config['verbose']:
             print('received socketio: unsubscribe')
 
         try:
@@ -691,7 +574,7 @@ def create_app(cfg):
 
     return (app, socketio)
 
-def load_projects():
+def load_projects_OLD():
 
     # Get list of subdirectories
     project_subdirectories = [subdir for subdir in os.listdir(config.projectsDir) if subdir != 'originals' and subdir != 'processed' and os.path.isdir(os.path.join(config.projectsDir, subdir))]
@@ -739,18 +622,20 @@ def unsubscribe_from_realtime_updates():
 
 def main():
 
-    parser = argparse.ArgumentParser(description='Auton Lab Universal Viewer')
-    parser.add_argument('config', type=str, help='Configuration file to load.')
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(prog='python -m auviewer.server.serve', description='Auton Lab Universal Viewer')
+    parser.add_argument('datapath', type=str, help='Path to data directory (may be empty if starting new)')
     args = parser.parse_args()
 
-    cfg = config.load_config(args.config)
+    # Set provided data path
+    set_data_path(args.datapath)\
 
-    (app, socketio) = create_app(cfg)
+    (app, socketio) = create_app()
     socketio.run(app,
-        host=cfg['host'],
-        port=cfg['port'],
-        debug=cfg['debug'],
-        use_reloader=cfg['reloader'])
+        host=config['host'],
+        port=config['port'],
+        debug=config['debug'],
+        use_reloader=config['reloader'])
 
 # Start development web server
 if __name__ == '__main__':
