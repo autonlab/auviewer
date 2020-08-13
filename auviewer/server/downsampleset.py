@@ -29,12 +29,9 @@ class DownsampleSet:
     # processed data file.
     def getNumDownsamplesFromFile(self):
 
-        # If we're newly processing data, return 0. Otherwise, if a processed
-        # data file is expected but not available, raise an exception.
-        if self.seriesparent.fileparent.newlyProcessData:
+        # If no processed file is available, return 0
+        if not hasattr(self.seriesparent.fileparent, 'pf'):
             return 0
-        elif not hasattr(self.seriesparent.fileparent, 'pf'):
-            raise RuntimeError
 
         # Get reference to the group containing the downsamples
         grp = self.seriesparent.fileparent.pf['/'.join(self.seriesparent.h5pathDownsample)]

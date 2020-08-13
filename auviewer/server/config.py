@@ -6,7 +6,7 @@ import os.path
 import json
 from pathlib import Path
 
-from .shared import create_empty_json_file
+from .shared import createEmptyJSONFile
 
 # Holds all config params
 config = {
@@ -199,15 +199,15 @@ def scaffold_data_path():
     config['projectsDirPathObj'].mkdir(exist_ok=True)
 
     # Create empty config json file if needed
-    create_empty_json_file(cfgPathObj / 'config.json')
+    createEmptyJSONFile(cfgPathObj / 'config.json')
 
     # Create empty global interface templates json file if needed, and set in the config
     config['globalDefaultInterfaceTemplatesFilePathObj'] = config['globalTemplatesDirPathObj'] / 'interface_templates.json'
-    create_empty_json_file(config['globalDefaultInterfaceTemplatesFilePathObj'])
+    createEmptyJSONFile(config['globalDefaultInterfaceTemplatesFilePathObj'])
 
     # Create empty global project template json file if needed, and set in the config
     config['globalDefaultProjectTemplateFilePathObj'] = config['globalTemplatesDirPathObj'] / 'project_template.json'
-    create_empty_json_file(config['globalDefaultProjectTemplateFilePathObj'])
+    createEmptyJSONFile(config['globalDefaultProjectTemplateFilePathObj'])
 
 # Sets, prepares, and processes the data path.
 def set_data_path(path):

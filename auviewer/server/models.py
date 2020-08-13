@@ -66,6 +66,14 @@ class Project(db.Model):
     path = db.Column(db.String(255), nullable=False)
 
 
+class File(db.Model):
+    __tablename__ = 'files'
+    id = db.Column(db.Integer(), primary_key=True)
+    project_id = db.Column(db.Integer(), db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
+    #project = db.relationship('Project', backref=db.backref('files', lazy=True))
+    path = db.Column(db.String(255), nullable=False)
+
+
 class Role(db.Model):
     __tablename__ = 'roles'
     id = db.Column(db.Integer(), primary_key=True)

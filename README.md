@@ -51,8 +51,8 @@ The data directory will contain project files, templates, config, and the databa
     * originals
     * processed
     * templates
-      * _project_template.json_
       * _interface_templates.json_
+      * _project_template.json_
 
 (???) With the exception of the config file, the locations of all data directory assets above may be changed (???)
 

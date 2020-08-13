@@ -18,7 +18,7 @@ import simplejson
 from . import models
 from .config import set_data_path, config, FlaskConfigClass
 from .file import File
-from .project import Project, load_projects
+from .project import load_projects
 
 from ..flask_user import confirm_email_required, current_user, login_required, UserManager, SQLAlchemyAdapter
 from ..flask_user.signals import user_sent_invitation, user_registered
@@ -91,10 +91,11 @@ def create_app():
     #     db.session.commit()
 
     # Load projects
-    projects = load_projects()
+    load_projects()
 
     # Instantiate a file for realtime, in-memory usage (probably temporary)
-    rtf = File(projparent=None)
+    # TODO(gus): Refactor realtime
+    #rtf = File(projparent=None)
 
     @user_registered.connect_via(app)
     def after_registered_hook(sender, user, user_invite):
@@ -573,23 +574,6 @@ def create_app():
             return default
 
     return (app, socketio)
-
-def load_projects_OLD():
-
-    # Get list of subdirectories
-    project_subdirectories = [subdir for subdir in os.listdir(config.projectsDir) if subdir != 'originals' and subdir != 'processed' and os.path.isdir(os.path.join(config.projectsDir, subdir))]
-
-    projects = {}
-
-    for s in project_subdirectories:
-
-        print("\n\n#### LOADING PROJECT "+s+" ####\n\n")
-
-        projects[s] = Project(s)
-        projects[s].processFiles()
-        projects[s].loadProcessedFiles()
-
-    return projects
 
 def subscribe_to_realtime_updates(project, file):
 

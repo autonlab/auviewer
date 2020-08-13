@@ -1,6 +1,5 @@
-import os.path
+import logging
 import time
-from os import remove as rmfile
 import traceback
 import pandas as pd
 
@@ -9,7 +8,6 @@ import audata
 from . import config
 from .annotationset import AnnotationSet
 from .cylib import generateThresholdAlerts
-from .exceptions import ProcessedFileExists
 from .series import Series, simpleSeriesName
 
 # File represents a single patient data file. File may operate in file- or
@@ -19,24 +17,17 @@ from .series import Series, simpleSeriesName
 # realtime-mode.
 class File:
 
-    def __init__(self, projparent, orig_filename='', proc_filename='', orig_dir='', proc_dir=''):
+    def __init__(self, projparent, id, origFilePathObj, procFilePathObj, processNewFiles=True):
 
-        print("\n------------------------------------------------\nACCESSING FILE: " + os.path.join(orig_dir, orig_filename) + "\n------------------------------------------------\n")
+        logging.info(f"\n------------------------------------------------\nACCESSING FILE: (ID {id}) {origFilePathObj}\n------------------------------------------------\n")
 
         # Holds reference to the project parent
         self.projparent = projparent
 
-        # Holds the original filename
-        self.orig_filename = orig_filename
-
-        # Holds the directory that contains the original file
-        self.orig_dir = orig_dir
-
-        # Holds the procesed filename
-        self.proc_filename = proc_filename
-
-        # Holds the directory that contains the processed file
-        self.proc_dir = proc_dir
+        # File ID & paths
+        self.id = id
+        self.origFilePathObj = origFilePathObj
+        self.procFilePathObj = procFilePathObj
 
         # Will hold the data series from the file
         self.series = []
@@ -46,33 +37,40 @@ class File:
             self.annotationSet = AnnotationSet(self)
         except:
             # An exception here likely means we're in serverless mode. Ignore.
+            # TODO: Serverless mode? Is this for realtime?
             pass
 
         if self.mode() == 'file':
 
             # Open the original file
-            self.openOriginalFile()
+            self.f = audata.File.open(str(self.origFilePathObj), return_datetimes=False)
 
-            # Attempt to open the processed data file. Set the newlyProcessData
-            # property accordingly. If the processed file is not present, we need
-            # to newly process data.
-            self.newlyProcessData = not self.openProcessedFile()
+            # Load series data into memory
+            self.load()
 
-            # If we need to newly process data, do so now. Currently, if we process
-            # data, we do not load data (so File will be unusable for reading data
-            # after it finishes processing a file). This may be changed in future.
-            if self.newlyProcessData:
+            # Load the processed file if it exists
+            if self.procFilePathObj.exists():
+                self.pf = audata.File.open(str(self.procFilePathObj), return_datetimes=False)
+
+            # Otherwise, if we're supposed to process new file data, process it.
+            elif processNewFiles:
                 self.process()
+
+            # Otherwise, raise an exception
             else:
-                self.load()
+                raise Exception(f"File {self.origFilePathObj} has not been processed, but cannot proceed with processing because processNewFiles=False.")
 
     def __del__(self):
-        print("Cleaning up closed file.")
+
+        logging.info("Cleaning up closed file.")
+
+        # Close the original file
         try:
             self.f.close()
         except:
             pass
 
+        # Close the processed file
         try:
             self.pf.close()
         except:
@@ -135,23 +133,6 @@ class File:
             print('addSeriesData() returning', update)
 
         return update
-
-    # Creates & opens a new HDF5 data file for storing processed data.
-    def createProcessedFile(self):
-
-        # Verify that the processed file does not already exist
-        if os.path.isfile(self.getProcessedFilepath()):
-            print("Processed file already exists. Raising ProcessedFileExists exception.")
-            raise ProcessedFileExists
-
-        # Create the file which will be used to store processed data
-        try:
-            print("Creating processed file.")
-            self.pf = audata.File.new(self.getProcessedFilepath(), overwrite=False, return_datetimes=False)
-            return self.pf
-        except:
-            print("There was an exception while h5 was creating the processed file. Raising ProcessedFileExists exception.")
-            raise ProcessedFileExists
 
     def detectAnomalies(self, type, series, thresholdlow=None, thresholdhigh=None, duration=300, persistence=.7, maxgap=300, series2=None):
 
@@ -241,7 +222,7 @@ class File:
     # Returns all event series
     def getEvents(self):
 
-        print("Assembling all event series for file " + self.orig_filename + ".")
+        logging.info(f"Assembling all event series for file {self.origFilePathObj}.")
         start = time.time()
 
         events = {}
@@ -277,18 +258,14 @@ class File:
             traceback.print_exc()
 
         end = time.time()
-        print("Completed assembly of all event series for file " + self.orig_filename + ". Took " + str(round(end - start, 5)) + "s.")
+        logging.info(f"Completed assembly of all event series for file {self.origFilePathObj}. Took {str(round(end - start, 5))}s.")
 
         return events
-
-    # Returns the complete path to the original data file, including filename.
-    def getFilepath(self):
-        return os.path.join(self.orig_dir, self.orig_filename)
 
     # Produces JSON output for all series in the file at the maximum time range.
     def getInitialPayloadOutput(self):
 
-        print("Assembling all series full output for file " + self.orig_filename + ".")
+        logging.info(f"Assembling all series full output for file {self.origFilePathObj}.")
         start = time.time()
 
         outputObject = {
@@ -304,7 +281,7 @@ class File:
             outputObject['series'][s.id] = s.getFullOutput()
 
         end = time.time()
-        print("Completed assembly of all series full output for file " + self.orig_filename + ". Took " + str(round(end - start, 5)) + "s.")
+        logging.info(f"Completed assembly of all series full output for file {self.origFilePathObj}. Took {str(round(end - start, 5))}s.")
 
         # Return the output object
         return outputObject
@@ -319,18 +296,6 @@ class File:
             metadata['data'] = self.f.meta_data
 
         return metadata
-
-    # Returns a reference to the processed data file, or None if there is none.
-    def getProcessedFile(self):
-
-        if not hasattr(self, 'pf') or not self.pf or self.pf is None:
-            return None
-        else:
-            return self.pf
-
-    # Returns the complete path to the processed data file, including filename.
-    def getProcessedFilepath(self):
-        return os.path.join(self.proc_dir, self.proc_filename)
 
     # Returns the series instance corresponding to the provided series ID, or
     # None if the series cannot be found.
@@ -373,7 +338,7 @@ class File:
     # time range.
     def getSeriesRangedOutput(self, seriesids, start, stop):
 
-        print("Assembling series ranged output for file " + self.orig_filename + ", series ]" + ', '.join(seriesids) + "].")
+        logging.info(f"Assembling series ranged output for file {self.origFilePathObj}, series [{', '.join(seriesids)}].")
         st = time.time()
 
         outputObject = {
@@ -385,7 +350,7 @@ class File:
                 outputObject['series'][s.id] = s.getRangedOutput(start, stop)
 
         et = time.time()
-        print("Completed assembly of series ranged output for file " + self.orig_filename + ", series [" + ', '.join(seriesids) + "]. Took " + str(round(et - st, 5)) + "s.")
+        logging.info(f"Completed assembly of series ranged output for file {self.origFilePathObj}, series [{', '.join(seriesids)}]. Took {str(round(et - st, 5))}s.")
 
         # Return the output object
         return outputObject
@@ -395,22 +360,13 @@ class File:
     # does not load series data into memory).
     def load(self):
 
-        print('Loading series from file.')
+        logging.info('Loading series from file.')
 
         # Iteratee through all datasets in the partial file
         for (ds, _) in self.f.recurse():
-
             self.loadSeriesFromDataset(ds)
 
-        # if 'numerics' in self.f.keys():
-        #     for name in self.f['numerics']:
-        #         self.loadSeriesFromDataset(['numerics', name, 'data'])
-        #
-        # if 'waveforms' in self.f.keys():
-        #     for name in self.f['waveforms']:
-        #         self.loadSeriesFromDataset(['waveforms', name, 'data'])
-
-        print('Completed loading series from file.')
+        logging.info('Completed loading series from file.')
 
     # Load all available series from a dataset
     def loadSeriesFromDataset(self, ds):
@@ -433,96 +389,81 @@ class File:
 
         # If time column not available, print an error & return
         if timecol is None:
-            print(f"Did not find a time column in {self.orig_filename}.", 'Cols:', cols)
+            logging.error(f"Did not find a time column in {self.origFilePathObj}.\nCols: {cols}")
             return
         else:
-            print(f'Using time column {ds.name}:{timecol}')
+            logging.info(f'Using time column {ds.name}:{timecol}')
 
         # Iterate through all remaining columns and instantiate series for each
         for valcol in (c for c in cols if c != timecol):
             coltype = cols[valcol]['type']
             if coltype in ('real', 'integer'):
-                print(f'  - Adding {coltype} series: {ds.name}:{valcol}')
+                logging.info(f'  - Adding {coltype} series: {ds.name}:{valcol}')
                 self.series.append(Series(ds, timecol, valcol, self))
             else:
-                print(f'  - Skipping unsupported {coltype} series: {valcol}')
+                logging.warning(f'  - Skipping unsupported {coltype} series: {valcol}')
 
     # Returns the mode in which File is operating, either "file" or "realtime".
     def mode(self):
-        return 'file' if self.orig_filename != '' else 'realtime'
-
-    # Opens the HDF5 file.
-    def openOriginalFile(self):
-
-        # Open the HDF5 file
-        self.f = audata.File.open(self.getFilepath(), return_datetimes=False)
-
-    # Opens the processed HDF5 data file. Returns boolean whether able to open.
-    def openProcessedFile(self):
-
-        # Open the processed data file
-        try:
-            self.pf = audata.File.open(self.getProcessedFilepath(), return_datetimes=False)
-        except Exception as e:
-            print("Unable to open the processed data file " + self.getProcessedFilepath() + ".\n", e)
-            traceback.print_exc()
-            return False
-
-        # If an exception was not raised, that means the file was opened
-        return True
+        # TODO(gus): When reviving realtime functionality, revise this
+        return 'file'
 
     # Process and store all downsamples for all series for the file.
     def process(self):
 
         try:
 
-            print("Processing & storing all series for file " + self.orig_filename + ".")
+            logging.info(f"Processing & storing all series for file {self.origFilePathObj}.")
             start = time.time()
 
-            # Load data series into memory from file (does not load data though)
-            self.load()
-
             # Create the file for storing processed data.
-            f = self.createProcessedFile()
+            self.pf = audata.File.new(str(self.procFilePathObj), overwrite=False, return_datetimes=False)
 
             # Process & store numeric series
             for s in self.series:
                 s.processAndStore()
 
-            f.flush()
+            self.pf.flush()
+
+            # Reload series data in memory since we have new downsamples
+            self.load()
 
             end = time.time()
-            print("Completed processing & storing all series for file " + self.orig_filename + ". Took " + str(round((end - start) / 60, 3)) + " minutes).")
-
-        # For ProcessedFileExists exception, don't delete the file but simply
-        # re-raise the exception.
-        except ProcessedFileExists:
-            raise
+            logging.info(f"Completed processing & storing all series for file {self.origFilePathObj}. Took {str(round((end - start) / 60, 3))} minutes).")
 
         except (KeyboardInterrupt, SystemExit):
 
-            print("Interrupt detected. Aborting as requested.")
-            print("Deleting partially completed processed file " + self.getProcessedFilepath() + ".")
+            logging.warning("Interrupt detected. Aborting as requested.")
+            logging.warning(f"Deleting partially completed processed file {self.procFilePathObj}.")
+
+            # Close the file
+            try:
+                self.pf.close()
+            except Exception as e:
+                logging.error(f"Unable to close the processed file.\n{e}\n{traceback.format_exc()}")
 
             # Delete the processed data file
-            rmfile(self.getProcessedFilepath())
+            self.procFilePathObj.unlink()
 
-            print("File has been removed.")
+            logging.info("Partial processed file has been removed.")
 
             # Quit the program
             quit()
 
         except Exception as e:
 
-            print("There was an exception while processing & storing data for " + self.orig_filename + ".")
-            print(e)
-            print("Deleting partially completed processed file " + self.getProcessedFilepath() + ".")
+            logging.error(f"There was an exception while processing & storing data for {self.origFilePathObj}.\n{e}\n{traceback.format_exc()}\nDeleting partially completed processed file {self.procFilePathObj}.")
+
+            # Close the file
+            try:
+                self.pf.close()
+            except Exception as e:
+                logging.error(f"Unable to close the processed file.\n{e}\n{traceback.format_exc()}")
 
             # Delete the processed data file
-            if os.path.isfile(self.getProcessedFilepath()):
-                rmfile(self.getProcessedFilepath())
+            self.procFilePathObj.unlink(missing_ok=True)
 
-            print("File has been removed.")
+            logging.info("File has been removed.")
 
-            # Re-aise the exception
+            # Re-raise the exception
             raise
