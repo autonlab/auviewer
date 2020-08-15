@@ -1,10 +1,10 @@
-from flask import Flask, Blueprint, send_from_directory, request, render_template, render_template_string
+from flask import Flask, Blueprint, send_from_directory, request, render_template, render_template_string, abort
 from flask_mail import Mail
 from flask_socketio import SocketIO, join_room, leave_room, rooms
 from htmlmin.main import minify
 from pprint import pprint
-import os
 import argparse
+import logging
 
 # Simplejson package is required in order to "ignore" NaN values and implicitly
 # convert them into null values. RFC JSON spec left out NaN values, even though
@@ -18,15 +18,15 @@ import simplejson
 from . import models
 from .config import set_data_path, config, FlaskConfigClass
 from .file import File
-from .project import load_projects
+from .project import loadProjects, getProject, getProjectsList
 
 from ..flask_user import confirm_email_required, current_user, login_required, UserManager, SQLAlchemyAdapter
 from ..flask_user.signals import user_sent_invitation, user_registered
 
-def create_app():
+def createApp():
 
     # Instantiate the Flask web application class
-    app = Flask(__name__, template_folder=config['auvCodeRoot']+'/static/www/templates')
+    app = Flask(__name__, template_folder=str(config['codeRootPathObj'] / 'static' / 'www' / 'templates'))
 
     # Instantiate SocketIO
     socketio = SocketIO(app)
@@ -68,8 +68,6 @@ def create_app():
 
     # Initialize the db models with the Flask app
     models.init_flask_app(app)
-    #models.db.init_app(app)
-    #models.db.create_all(app)
 
     # Initialize Flask-Mail
     mail = Mail(app)
@@ -82,16 +80,16 @@ def create_app():
     # (since it is not possible through the interface). Alternatively, you
     # could modify the database.
     #
-    # new_admin_email = 'gwelter@andrew.cmu.edu'
-    # new_admin_pass = 'akeminute'
-    # if not User.query.filter(User.email == new_admin_email).first():
-    #     u = User(email=new_admin_email, active=True, password=user_manager.hash_password(new_admin_pass))
-    #     u.roles.append(Role(name='admin'))
-    #     db.session.add(u)
-    #     db.session.commit()
+    new_admin_email = 'gwelter@gmail.com'
+    new_admin_pass = 'akeminute'
+    if not models.User.query.filter_by(email=new_admin_email).first():
+        u = models.User(email=new_admin_email, active=True, password=user_manager.hash_password(new_admin_pass))
+        u.roles.append(models.Role(name='admin'))
+        models.db.session.add(u)
+        models.db.session.commit()
 
     # Load projects
-    load_projects()
+    loadProjects()
 
     # Instantiate a file for realtime, in-memory usage (probably temporary)
     # TODO(gus): Refactor realtime
@@ -105,43 +103,12 @@ def create_app():
     def after_invitation_hook(sender, **extra):
         sender.logger.info("USER SENT INVITATION")
 
-    # Map our static assets to be served
-    app.register_blueprint(Blueprint('css', __name__, static_url_path=config['rootWebPath']+'/css', static_folder=os.path.join(config['auvCodeRoot'], 'static/www/css')))
-    app.register_blueprint(Blueprint('fonts', __name__, static_url_path=config['rootWebPath']+'/fonts', static_folder=os.path.join(config['auvCodeRoot'], 'static/www/fonts')))
-    app.register_blueprint(Blueprint('js', __name__, static_url_path=config['rootWebPath']+'/js', static_folder=os.path.join(config['auvCodeRoot'], 'static/www/js')))
-
     ### NON-SECURE AREAS (NO LOGIN REQUIRED) ###
 
-    @app.route(config['rootWebPath']+'/anyone')
-    def home_page():
-        return render_template_string("""
-            {% extends "base.html" %}
-            {% block content %}
-                <h2>Home Pages</h2>
-                {% if call_or_get(current_user.is_authenticated) %}
-                <p><a href="{{ url_for('user.profile') }}">Profile Page</a></p>
-                <p><a href="{{ url_for('user.logout') }}">Sign out</a></p>
-                {% else %}
-                <p><a href="{{ url_for('user.login') }}">Sign in or Register</a></p>
-                {% endif %}
-            {% endblock %}
-            """)
-
-    @app.route(config['rootWebPath']+'/user_manage')
-    @login_required
-    def user_manage():
-        pprint(vars(current_user))
-        return render_template_string("""
-            {% extends "base.html" %}
-            {% block content %}
-                <h2>Profile Page</h2>
-                <p>Hello {{ current_user.email }},</p>
-                <p><a href="{{ url_for('home_page') }}">Home Page</a></p>
-                <p><a href="{{ url_for('user.change_password') }}">Change password</a></p>
-                <p><a href="{{ url_for('user.invite') }}">Invite User</a></p>
-                <p><a href="{{ url_for('user.logout') }}">Sign out</a></p>
-            {% endblock %}
-            """)
+    # Map our static assets to be served
+    app.register_blueprint(Blueprint('css', __name__, static_url_path=config['rootWebPath'] + '/css', static_folder=str(config['codeRootPathObj'] / 'static' / 'www' / 'css')))
+    app.register_blueprint(Blueprint('fonts', __name__, static_url_path=config['rootWebPath'] + '/fonts', static_folder=str(config['codeRootPathObj'] / 'static' / 'www' / 'fonts')))
+    app.register_blueprint(Blueprint('js', __name__, static_url_path=config['rootWebPath'] + '/js', static_folder=str(config['codeRootPathObj'] / 'static' / 'www' / 'js')))
 
     ### SECURE AREAS (LOGIN REQUIRED) ###
     ### All methods below should have ###
@@ -299,54 +266,12 @@ def create_app():
 
         return json_output
 
-    @app.route(config['rootWebPath']+'/initial_payload')
-    @login_required
-    def initial_payload():
-
-        #TODO(gus): This is hacked together temporarily. Move to permanent home.
-
-        builtin_default_project_template = simplejson.dumps({})
-        builtin_default_interface_templates = simplejson.dumps({})
-        global_default_project_template = simplejson.dumps({})
-        global_default_interface_templates = simplejson.dumps({})
-
-        try:
-            with open(os.path.join(config['auvCodeRoot'], 'static/builtin_templates/project_template.json'), 'r') as f:
-                builtin_default_project_template = f.read()
-        except:
-            pass
-        try:
-            with open(os.path.join(config['auvCodeRoot'], 'static/builtin_templates/interface_templates.json'), 'r') as f:
-                builtin_default_interface_templates = f.read()
-        except:
-            pass
-        try:
-            with config['globalDefaultProjectTemplateFilePathObj'].open() as f:
-                global_default_project_template = f.read()
-        except:
-            pass
-        try:
-            with config['globalDefaultInterfaceTemplatesFilePathObj'].open() as f:
-                global_default_interface_templates = f.read()
-        except:
-            pass
-
-        response = {
-            'projects': list(projects.keys()),
-            'builtin_default_project_template': builtin_default_project_template,
-            'builtin_default_interface_templates': builtin_default_interface_templates,
-            'global_default_project_template': global_default_project_template,
-            'global_default_interface_templates': global_default_interface_templates
-        }
-
-        return simplejson.dumps(response)
-
     @app.route(config['rootWebPath']+'/')
     @app.route(config['rootWebPath']+'/index.html')
     @login_required
     def index():
         #return send_from_directory('../www', 'index.html')
-        return render_template('index.html')
+        return render_template('index.html', projects=getProjectsList())
 
     @app.route(config['rootWebPath']+'/initial_file_payload')
     @login_required
@@ -389,28 +314,62 @@ def create_app():
         else:
             return "Invalid request."
 
+    @app.route(config['rootWebPath']+'/initial_payload')
+    @login_required
+    def initial_payload():
+
+        response = {
+            'projects': list(projects.keys()),
+            'builtin_default_interface_templates': config['builtinDefaultInterfaceTemplates'],
+            'builtin_default_project_template': config['builtinDefaultProjectTemplate'],
+            'global_default_interface_templates': config['globalDefaultInterfaceTemplates'],
+            'global_default_project_template': config['globalDefaultProjectTemplate'],
+        }
+
+        return simplejson.dumps(response)
+
     @app.route(config['rootWebPath']+'/initial_project_payload')
     @login_required
     def initial_project_payload():
 
         # Parse parameters
-        projname = request.args.get('project')
+        id = request.args.get('id', type=int)
 
-        # Try to get the project
-        try:
-
-            # Get the project
-            project = projects[projname]
-
-        except:
-
-            print("Project could not be retrieved:", projname)
+        p = getProject(id)
+        if p is None:
+            logging.error(f"Project ID {id} not found.")
             return simplejson.dumps([])
 
-        output = project.getInitialPayloadOutput()
-        json_output = simplejson.dumps(output)
+        return simplejson.dumps(p.getInitialPayloadOutput())
 
-        return json_output
+    @app.route(config['rootWebPath']+'/project')
+    @login_required
+    def project():
+
+        # Parse parameters
+        id = request.args.get('id', type=int)
+
+        p = getProject(id)
+        if p is None:
+            logging.error(f"Project ID {id} not found.")
+            abort(404, descriptino="Project not found.")
+            return
+
+        # Data for the HTML template
+        project = p.getInitialPayloadOutput()
+        templates = {
+            'builtin_default_interface_templates': config['builtinDefaultInterfaceTemplates'],
+            'builtin_default_project_template': config['builtinDefaultProjectTemplate'],
+            'global_default_interface_templates': config['globalDefaultInterfaceTemplates'],
+            'global_default_project_template': config['globalDefaultProjectTemplate'],
+        }
+
+        # Assemble the data into a payload. We JSON-encode this twice. The first
+        # one converts the dict into JSON. The second one essentially makes the
+        # JSON string safe to drop straight into JavaScript code, as we are doing.
+        payload = simplejson.dumps(simplejson.dumps({**project, **templates}))
+
+        return render_template('project.html', project_name=project['project_name'], payload=payload)
 
     @app.route(config['rootWebPath']+'/series_ranged_data', methods=['GET'])
     @login_required
@@ -493,6 +452,22 @@ def create_app():
             'success': file.annotationSet.updateAnnotation(id, left, right, top, bottom, seriesID, label)
         })
 
+    @app.route(config['rootWebPath'] + '/user_manage')
+    @login_required
+    def user_manage():
+        pprint(vars(current_user))
+        return render_template_string("""
+                {% extends "base.html" %}
+                {% block content %}
+                    <h2>Profile Page</h2>
+                    <p>Hello {{ current_user.email }},</p>
+                    <p><a href="{{ url_for('home_page') }}">Home Page</a></p>
+                    <p><a href="{{ url_for('user.change_password') }}">Change password</a></p>
+                    <p><a href="{{ url_for('user.invite') }}">Invite User</a></p>
+                    <p><a href="{{ url_for('user.logout') }}">Sign out</a></p>
+                {% endblock %}
+                """)
+
     @socketio.on('add_data')
     def handle_add_data(json):
 
@@ -512,6 +487,7 @@ def create_app():
             # TODO(gus): Report an error to user in a websocket response
             raise e
 
+    # TODO(gus): Remove this and related
     @socketio.on('push_template')
     def handle_push_template(json):
 
@@ -539,7 +515,7 @@ def create_app():
         try:
 
             # Subscribe the user to realtime updates
-            subscribe_to_realtime_updates(json['project'], json['filename'])
+            subscribeToRealtimeUpdates(json['project'], json['filename'])
 
         except Exception as e:
 
@@ -555,7 +531,7 @@ def create_app():
         try:
 
             # Subscribe the user to realtime updates
-            unsubscribe_from_realtime_updates()
+            unsubscribeFromRealtimeUpdates()
 
         except Exception as e:
 
@@ -575,7 +551,7 @@ def create_app():
 
     return (app, socketio)
 
-def subscribe_to_realtime_updates(project, file):
+def subscribeToRealtimeUpdates(project, file):
 
     # NOTE: It is not really necessary to track which project & file the user is
     # subscribed to since, currently, it is only possible to subscribe to the
@@ -583,7 +559,7 @@ def subscribe_to_realtime_updates(project, file):
     # this and it enables future expansion to have more than one realtime file.
 
     # Unsubscribe the user from any rooms exception own sid
-    unsubscribe_from_realtime_updates()
+    unsubscribeFromRealtimeUpdates()
 
     # Name of new room to subscribe to
     room = project + '__^^__' + file
@@ -593,7 +569,7 @@ def subscribe_to_realtime_updates(project, file):
 
     print('User', request.sid, 'has been subscribed to', room)
 
-def unsubscribe_from_realtime_updates():
+def unsubscribeFromRealtimeUpdates():
 
     # Get the user's sid
     sid = request.sid
@@ -614,7 +590,7 @@ def main():
     # Set provided data path
     set_data_path(args.datapath)\
 
-    (app, socketio) = create_app()
+    (app, socketio) = createApp()
     socketio.run(app,
         host=config['host'],
         port=config['port'],

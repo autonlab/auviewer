@@ -1,0 +1,322 @@
+{% extends 'base.html' %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ rootWebPath }}/css/third-party/bootstrap-select.min.css">
+<link rel='stylesheet' href='{{ rootWebPath }}/css/third-party/dygraph.css'/>
+<link rel='stylesheet' href='{{ rootWebPath }}/css/third-party/webix.min.css'/>
+<link rel='stylesheet' href='{{ rootWebPath }}/css/app.css'/>
+{% endblock %}
+
+{% block js %}
+
+<!-- Backend initial payload -->
+<script type="application/javascript">
+	const payload = JSON.parse({{payload|safe}});
+	console.log('payload', payload);
+</script>
+
+<script src="{{ rootWebPath }}/js/third-party/bootstrap-select.min.js"></script>
+
+<!-- SockerIO for pseudo-realtime connectivity -->
+<script src="{{ rootWebPath }}/js/third-party/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I="></script>
+
+<!-- Dygraphs & Synchronizer -->
+<script src="{{ rootWebPath }}/js/third-party/dygraph.js"></script>
+<script src="{{ rootWebPath }}/js/third-party/synchronizer.js"></script>
+
+<!-- Webix -->
+<script src="{{ rootWebPath }}/js/third-party/webix.min.js"></script>
+
+<!-- Random color generator -->
+<script src="{{ rootWebPath }}/js/third-party/random_color.js"></script>
+
+<!-- Config -->
+<script src="{{ rootWebPath }}/js/config.js"></script>
+
+<!-- Classes -->
+<script src="{{ rootWebPath }}/js/classes/annotation.js"></script>
+<script src="{{ rootWebPath }}/js/classes/file.js"></script>
+<script src="{{ rootWebPath }}/js/classes/globalstatemanager.js"></script>
+<script src="{{ rootWebPath }}/js/classes/graph.js"></script>
+<script src="{{ rootWebPath }}/js/classes/project.js"></script>
+<script src="{{ rootWebPath }}/js/classes/requesthandler.js"></script>
+<script src="{{ rootWebPath }}/js/classes/templatesystem.js"></script>
+
+<!-- Function Libraries -->
+<script src="{{ rootWebPath }}/js/event_handlers.js"></script>
+<script src="{{ rootWebPath }}/js/helpers.js"></script>
+
+<!-- App Main -->
+<script src="{{ rootWebPath }}/js/app.js"></script>
+
+{% endblock %}
+
+{% block content %}
+<div id="controls">
+
+	<div id="projectAndFileSelection">
+
+		<h5>{{project_name}}</h5>
+
+		<h6>File</h6>
+
+		<div class="form-group">
+			<select class="form-control form-control-sm selectpicker bs-width-correction" data-title="Select file" data-live-search="true" id="file_selection" onchange="globalStateManager.loadFile();">
+			</select>
+		</div>
+
+	</div>
+
+	<h6>Plot</h6>
+	<button type="button" class="btn btn-sm btn-light" style="margin-bottom: 18px;" onclick="globalStateManager.currentFile ? globalStateManager.currentFile.plotControl.show() : null;">Show/Hide Graphs</button><br>
+
+	<h6>Zoom Control</h6>
+	<div style="width: 100%; margin-bottom: 10px;">
+		<div style="width: 100%; text-align: center; margin-bottom: 4px;">
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(21600000);" title="6 hours">6hr</button>
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(7200000);" title="2 hours">2hr</button>
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(3600000);" title="1 hour">1hr</button>
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(600000);" title="10 minutes">10m</button>
+		</div>
+		<div style="width: 100%; text-align: center; margin-bottom: 4px;">
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(60000);" title="1 minute">1m</button>
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(10000);" title="10 seconds">10s</button>
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(1000);" title="1 second">1s</button>
+		</div>
+		<div style="width: 100%; text-align: center;">
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.resetZoomToOutermost();" title="Reset zoom to see all data">All</button>
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomBy(0, .1);" title="Zoom out by 10%">-</button>
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomBy(1, .1);" title="Zoom in by 10%">+</button>
+		</div>
+	</div>
+
+	<h6>Annotation Workflow</h6>
+	<span class="clickable" onclick="globalStateManager.currentFile.annotationWorkflowPrevious();">&lt; Prev</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="clickable" onclick="globalStateManager.currentFile.annotationWorkflowNext();">Next &gt;</span>
+	<div id="annotationWorkflowSubtext"></div>
+	<button type="button" class="btn btn-sm btn-light" data-toggle="modal" data-target="#annotationsListModal" style="margin-bottom: 3px;">View File Annotations</button><br>
+	<button type="button" class="btn btn-sm btn-light" data-toggle="modal" data-target="#allAnnotationsListModal">View Project Annotations</button>
+	<br><br>
+
+	<div id="anomalyDetectionPanel">
+
+		<h6>Exceedance Detection</h6>
+
+		<span style="font-size: 0.9em;"><i class="fa fa-plus-circle"></i>New</span>
+
+		<div class="form-group row" style="margin-bottom: 0.3rem">
+			<label for="alert_gen_type_field" class="col-sm-5 col-form-label col-form-label-sm">Pattern Type</label>
+			<div class="col-sm-7">
+				<select class="form-control form-control-sm" id="alert_gen_type_field">
+					<option value="anomalydetection">Exceedance Detection</option>
+					<option value="correlation">Correlation Pattern</option>
+				</select>
+			</div>
+		</div>
+		<div class="form-group row" style="margin-bottom: 0.3rem">
+			<label for="alert_gen_series_field" class="col-sm-5 col-form-label col-form-label-sm">Series</label>
+			<div class="col-sm-7">
+				<select class="form-control form-control-sm selectpicker" data-title="Select series" data-live-search="true" id="alert_gen_series_field">
+				</select>
+			</div>
+		</div>
+		<div class="form-group row" style="margin-bottom: 0.3rem">
+			<label for="alert_gen_threshold_high_field" class="col-sm-5 col-form-label col-form-label-sm">Threshold<sub>High</sub></label>
+			<div class="col-sm-7">
+				<input class="form-control form-control-sm" type="text" id="alert_gen_threshold_high_field" placeholder="e.g. 200" />
+			</div>
+		</div>
+		<div class="form-group row" style="margin-bottom: 0.3rem">
+			<label for="alert_gen_threshold_low_field" class="col-sm-5 col-form-label col-form-label-sm">Threshold<sub>Low</sub></label>
+			<div class="col-sm-7">
+				<input class="form-control form-control-sm" type="text" id="alert_gen_threshold_low_field" placeholder="e.g. 70" />
+			</div>
+		</div>
+		<div class="form-group row" style="margin-bottom: 0.3rem">
+			<label for="alert_gen_duration_field" class="col-sm-5 col-form-label col-form-label-sm">Duration (s)</label>
+			<div class="col-sm-7">
+				<input class="form-control form-control-sm" type="text" id="alert_gen_duration_field" placeholder="e.g. 60" />
+			</div>
+		</div>
+		<div class="form-group row" style="margin-bottom: 0.3rem">
+			<label for="alert_gen_dutycycle_field" class="col-sm-5 col-form-label col-form-label-sm" style="white-space: nowrap;">Persistence (%)</label>
+			<div class="col-sm-7">
+				<input class="form-control form-control-sm" type="text" id="alert_gen_dutycycle_field" placeholder="e.g. 70" />
+			</div>
+		</div>
+		<div class="form-group row" style="margin-bottom: 0.3rem">
+			<label for="alert_gen_maxgap_field" class="col-sm-5 col-form-label col-form-label-sm">Max Gap (s)</label>
+			<div class="col-sm-7">
+				<input class="form-control form-control-sm" type="text" id="alert_gen_maxgap_field" placeholder="e.g. 60" />
+			</div>
+		</div>
+		<div class="form-group row">
+			<div class="col-sm-12 text-right">
+				<button onclick="if (confirm('Are you sure you want to clear anomalies?\n\nNote: This will only clear the anomalies from your current browsing session. Memorized anomaly detection will re-run upon reload.')) { globalStateManager.currentFile.clearAnomalies(); }" class="btn btn-secondary btn-sm">Clear</button>
+				<button onclick="globalStateManager.currentFile.detectAnomaliesFromForm();" class="btn btn-primary btn-sm">Generate</button>
+			</div>
+		</div>
+
+	</div>
+
+	<div id="control_footer">
+
+		<p id="enterrealtime" onclick="globalStateManager.enterRealtimeMode();">Switch to Realtime</p>
+		<p id="exitrealtime" onclick="globalStateManager.exitRealtimeMode();">Exit Realtime</p>
+
+	</div>
+
+</div>
+<div id="graphs">
+
+<!--	<video controls>-->
+<!--		<source src="js/sample.webm" type="video/webm">-->
+<!--		Your browser does not support the video tag.-->
+<!--	</video>-->
+
+</div>
+
+<!-- Annotation Modal -->
+<div class="modal fade" id="annotationModal" tabindex="-1" role="dialog" aria-labelledby="annotationModalTitle" aria-hidden="true">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h6 class="modal-title" id="annotationModalTitle">Annotation</h6>
+				<button type="button" class="close cancelButton" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<form>
+<!--					<div class="form-group">-->
+<!--						<label for="annotationLabel">Label</label>-->
+<!--						<select class="form-control" id="annotationLabel" name="annotationLabel">-->
+<!--							<option value="Real">Real</option>-->
+<!--							<option value="Artifact">Artifact</option>-->
+<!--						</select>-->
+<!--					</div>-->
+					<div class="form-group" id="annotationIDContainer">
+						<label for="annotationID">Annotation ID</label>
+						<div style="font-weight: bold;" id="annotationID"></div>
+					</div>
+					<div class="form-group">
+						<label for="annotationFile">File</label>
+						<input type="text" id="annotationFile" class="form-control" disabled>
+					</div>
+					<div class="form-group">
+						<label for="annotationSeries">Series</label>
+						<input type="text" id="annotationSeries" class="form-control" disabled>
+					</div>
+					<div class="form-group">
+
+						<label>Confidence</label><br>
+						<div class="form-check form-check-inline">
+							<input class="form-check-input" type="radio" name="annotationConfidence" id="inlineRadio-n3" value="-3">
+							<label class="form-check-label" for="inlineRadio-n3">-3</label>
+						</div>
+						<div class="form-check form-check-inline">
+							<input class="form-check-input" type="radio" name="annotationConfidence" id="inlineRadio-n2" value="-2">
+							<label class="form-check-label" for="inlineRadio-n2">-2</label>
+						</div>
+						<div class="form-check form-check-inline">
+							<input class="form-check-input" type="radio" name="annotationConfidence" id="inlineRadio-n1" value="-1">
+							<label class="form-check-label" for="inlineRadio-n1">-1</label>
+						</div>
+						<div class="form-check form-check-inline">
+							<input class="form-check-input" type="radio" name="annotationConfidence" id="inlineRadio-0" value="0">
+							<label class="form-check-label" for="inlineRadio-0">0</label>
+						</div>
+						<div class="form-check form-check-inline">
+							<input class="form-check-input" type="radio" name="annotationConfidence" id="inlineRadio-1" value="1">
+							<label class="form-check-label" for="inlineRadio-1">+1</label>
+						</div>
+						<div class="form-check form-check-inline">
+							<input class="form-check-input" type="radio" name="annotationConfidence" id="inlineRadio-2" value="2">
+							<label class="form-check-label" for="inlineRadio-2">+2</label>
+						</div>
+						<div class="form-check form-check-inline">
+							<input class="form-check-input" type="radio" name="annotationConfidence" id="inlineRadio-3" value="3">
+							<label class="form-check-label" for="inlineRadio-3">+3</label>
+						</div>
+					</div>
+					<div class="form-group">
+						<label for="annotationNotes">Notes</label>
+						<textarea class="form-control" id="annotationNotes" rows="3"></textarea>
+					</div>
+					<div class="form-row">
+						<div class="col">
+							<label for="annotationStartTime">Start Time</label>
+							<input type="date" class="form-control" id="annotationStartDate"><input type="time" step=".001" class="form-control" id="annotationStartTime" step="1">
+						</div>
+						<div class="col">
+							<label for="annotationEndTime">End Time</label>
+							<input type="date" class="form-control" id="annotationEndDate"><input type="time" step=".001" class="form-control" id="annotationEndTime" step="1">
+						</div>
+					</div>
+				</form>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-danger mr-auto deleteButton">Delete</button>
+				<button type="button" class="btn btn-secondary cancelButton" data-dismiss="modal">Cancel</button>
+				<button type="button" class="btn btn-primary saveButton">Save</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Annotation List Modal -->
+<div id="annotationsListModal" class="modal bd-example-modal-lg" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog mw-100 w-75">
+		<div class="modal-content" style="overflow-x: scroll;">
+			<div class="modal-header">
+				<h5 class="modal-title">File Annotations</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<table class="table table-sm table-hover">
+					<thead>
+					<tr>
+						<th scope="col">ID</th>
+						<th scope="col">Begin</th>
+						<th scope="col">End</th>
+						<th scope="col">Annotation</th>
+					</tr>
+					</thead>
+					<tbody></tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- All Annotation List Modal -->
+<div id="allAnnotationsListModal" class="modal bd-example-modal-lg" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog mw-100 w-75">
+		<div class="modal-content" style="overflow-x: scroll;">
+			<div class="modal-header">
+				<h5 class="modal-title">Annotations for All Project Files</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<table class="table table-sm table-hover">
+					<thead>
+					<tr>
+						<th scope="col">ID</th>
+						<th scope="col">File</th>
+						<th scope="col">Begin</th>
+						<th scope="col">End</th>
+						<th scope="col">Annotation</th>
+					</tr>
+					</thead>
+					<tbody></tbody>
+				</table>
+				<button type="button" class="btn btn-light" onclick="globalStateManager.currentProject.getAnnotations(populateAllAnnotationsModal);">Refresh</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+{% endblock %}

@@ -1,3 +1,4 @@
+"""Database models and connectivity."""
 from flask_sqlalchemy import SQLAlchemy
 from ..flask_user import UserMixin
 from sqlalchemy.sql import func
@@ -64,6 +65,7 @@ class Project(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(255), nullable=False)
     path = db.Column(db.String(255), nullable=False)
+    total_anomalies = db.Column(db.Integer(), nullable=False, default=0)
 
 
 class File(db.Model):
@@ -98,6 +100,9 @@ class User(db.Model, UserMixin):
 
     # Relationships
     roles = db.relationship('Role', secondary='users_roles', backref=db.backref('users', lazy='dynamic'))
+
+    # Other
+    assignments_remaining = db.Column(db.Integer(), nullable=False, default=0)
 
 
 class UserInvitation(db.Model):

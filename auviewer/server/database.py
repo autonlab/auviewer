@@ -1,1 +1,0 @@
-# TODO: Once we're ready to move login out of auviewer, then we can change from flask-sqlalchemy to sqlalchemy and move the database models to this module.

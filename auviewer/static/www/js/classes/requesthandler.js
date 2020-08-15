@@ -49,16 +49,6 @@ RequestHandler.prototype.requestInitialFilePayload = function(projname, filename
 	});
 };
 
-RequestHandler.prototype.requestInitialPayload = function(callback) {
-	this._newRequest(callback, globalAppConfig.initialPayloadURL, {});
-};
-
-RequestHandler.prototype.requestInitialProjectPayload = function(projname, callback) {
-	this._newRequest(callback, globalAppConfig.initialProjectPayloadURL, {
-		project: projname
-	});
-};
-
 RequestHandler.prototype.requestProjectAnnotations = function(projname, callback) {
 	this._newRequest(callback, globalAppConfig.getProjectAnnotationsURL, {
 		project: projname

@@ -18,8 +18,6 @@ let globalAppConfig = {
 	deleteAnnotationURL: 'delete_annotation',
 	detectAnomaliesURL: 'detect_anomalies',
 	initialFilePayloadURL: 'initial_file_payload',
-	initialPayloadURL: 'initial_payload',
-	initialProjectPayloadURL: 'initial_project_payload',
 	getProjectAnnotationsURL: 'get_project_annotations',
 	seriesRangedDataURL: 'series_ranged_data',
 	updateAnnotationURL: 'update_annotation',

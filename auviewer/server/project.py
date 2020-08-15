@@ -11,20 +11,35 @@ from .config import config
 from .file import File
 from .shared import createEmptyJSONFile
 
+# Will hold loaded projects
+loadedProjects = []
+
 class Project:
 
     # The project name should also be the directory name in the projects directory.
-    def __init__(self, id, name, projDirPathObj, processNewFiles=True):
+    def __init__(self, projectModel, processNewFiles=True):
 
         # Set id, name, and relevant paths
-        self.id = id
-        self.name = name
-        self.projDirPathObj = projDirPathObj
-        self.originalsDirPathObj = projDirPathObj / 'originals'
-        self.processedDirPathObj = projDirPathObj / 'processed'
-        self.templatesDirPathObj = projDirPathObj / 'templates'
-        self.interfaceTemplatesFilePathObj = self.templatesDirPathObj / 'interface_templates.json'
-        self.projectTemplateFilePathObj = self.templatesDirPathObj / 'project_template.json'
+        self.id = projectModel.id
+        self.name = projectModel.name
+        self.total_anomalies = projectModel.total_anomalies
+        self.projDirPathObj = Path(projectModel.path)
+        self.originalsDirPathObj = self.projDirPathObj / 'originals'
+        self.processedDirPathObj = self.projDirPathObj / 'processed'
+
+        # Load interface templates
+        self.interfaceTemplates = "{}"
+        p = self.projDirPathObj / 'templates' / 'interface_templates.json'
+        if p.is_file():
+            with p.open() as f:
+                self.interfaceTemplates = f.read()
+
+        # Load project template
+        self.projectTemplate = "{}"
+        p = self.projDirPathObj / 'templates' / 'project_template.json'
+        if p.is_file():
+            with p.open() as f:
+                self.projectTemplate = f.read()
 
         # Holds references to the files that belong to the project
         self.files = []
@@ -44,9 +59,6 @@ class Project:
 
         return [[a.id, os.path.basename(a.filepath), a.series, a.left, a.right, a.top, a.bottom, a.annotation] for a in models.Annotation.query.filter_by(user_id=current_user.id, project=self.name).all()]
 
-    def getAvailableFilesList(self):
-        return [f.orig_filename for f in self.files]
-
     def getFile(self, filename):
 
         # TODO(gus): Convert this to a hash table
@@ -62,32 +74,15 @@ class Project:
         print("Assembling initial project payload output for project", self.name)
 
         outputObject = {
-            'name': self.name,
-            'files': self.getAvailableFilesList(),
-            'project_template': self.getProjectTemplate(),
-            'interface_templates': self.getInterfaceTemplates()
+            'project_id': self.id,
+            'project_name': self.name,
+            'project_files': [[f.id, f.origFilePathObj.name] for f in self.files],
+            'project_template': self.projectTemplate,
+            'interface_templates': self.interfaceTemplates,
         }
 
         # Return the output object
         return outputObject
-
-    # Returns string containing the interface templates JSON, or None if it does
-    # not exist.
-    def getInterfaceTemplates(self):
-        try:
-            with self.interfaceTemplatesFilePathObj.open() as f:
-                return f.read()
-        except:
-            return None
-
-    # Returns string containing the project template JSON, or None if it does
-    # not exist.
-    def getProjectTemplate(self):
-        try:
-            with self.projectTemplateFilePathObj.open() as f:
-                return f.read()
-        except:
-            return None
 
     # Load files belonging to the project, and process new files if desired.
     def loadProjectFiles(self, processNewFiles=True):
@@ -126,9 +121,7 @@ class Project:
         if processNewFiles:
 
             # For each new project file which does not exist in the database...
-            for newOrigFilePathObj in [p for p in self.originalsDirPathObj.iterdir() if
-                                       p.is_file() and p.suffix == '.h5' and not any(
-                                               map(lambda p: p.samefile(newOrigFilePathObj), existingFilePathObjs))]:
+            for newOrigFilePathObj in [p for p in self.originalsDirPathObj.iterdir() if p.is_file() and p.suffix == '.h5' and not any(map(lambda existingFilePathObj: p.samefile(existingFilePathObj), existingFilePathObjs))]:
 
                 # Establish the path of the new processed file
                 newProcFilePathObj = self.processedDirPathObj / (newOrigFilePathObj.stem + '_processed.h5')
@@ -154,40 +147,63 @@ class Project:
                 self.files.append(newFileClassInstance)
 
 
-def get_project(id):
-    pass
+# Returns the project with matching ID or None.
+def getProject(id):
+    global loadedProjects
+    print(loadedProjects)
+    for p in loadedProjects:
+        print(f"project id {p.id}")
+        if p.id == id:
+            print("returning")
+            return p
+    return None
 
-# Load projects into memory. This must be called before get_project and
+def getProjectsList():
+    global loadedProjects
+    return [{
+        'id': p.id,
+        'name': p.name,
+        'files': len(p.files),
+        'anomalies': p.total_anomalies,
+        'annotations': models.Annotation.query.filter_by(user_id=current_user.id).count(),
+        'assignments_rem': models.User.query.filter_by(id=current_user.id).first().assignments_remaining,
+    } for p in loadedProjects]
+
+# Load projects into memory. This must be called before getProject and
 # list_projects. Will also detect new projects in the projects folder and add
 # them to the database.
-def load_projects():
+def loadProjects():
 
-    # Will hold loaded projects
-    projectsList = []
+    global loadedProjects
+
+    logging.info("Loading projects.")
+
+    # Reset projects to empty list
+    loadedProjects = []
 
     # Load projects from the database
-    logging.info("Loading projects from the database.")
     projs = models.Project.query.all()
-    logging.info("Projects in database:")
     for p in projs:
-        logging.info(f'{p.id} / {p.name} / {p.path}')
+
+        logging.info(f"Loading project id {p.id} ({p.name}) at {p.path}")
 
         # Path object for the project
         projDirPathObj = Path(p.path)
 
         # Validate the project folder
         try:
-            validate_project_folder(projDirPathObj)
+            validateProjectFolder(projDirPathObj)
         except Exception as e:
             logging.error(f'Project folder {projDirPathObj} is invalid.\n{e}\n{traceback.format_exc()}')
             # TODO(gus): Update the database to reflect this?
         else:
             # TODO(gus): We need to have project take absolute path and project name!
             # Instantiate project, and add to the list to be returned
-            projectsList.append(Project(p.id, p.name, Path(p.path)))
+            loadedProjects.append(Project(p))
+
+            logging.info("Finished loading project.")
 
     # Detect new project folders not in the database
-    logging.info(f"Scanning projects folder {config['projectsDirPathObj']} for new projects.")
     for projDirPathObj in [p for p in config['projectsDirPathObj'].iterdir() if p.is_dir()]:
 
         # Check whether path exists in database projects
@@ -206,14 +222,14 @@ def load_projects():
         # Ensure we have a valid project folder (i.e. it can be empty, but it
         # cannot contain invalid files or folders).
         try:
-            validate_project_folder(projDirPathObj)
+            validateProjectFolder(projDirPathObj)
         except Exception as e:
             logging.error(f"Project folder {projDirPathObj} is invalid.\n{e}\n{traceback.format_exc()}")
         else:
             logging.info(f'Project folder {projDirPathObj} is valid.')
 
             # Scaffold project folder
-            scaffold_project_folder(projDirPathObj)
+            scaffoldProjectFolder(projDirPathObj)
 
             # Add project to the database
             project = models.Project(name=projDirPathObj.name, path=str(projDirPathObj.resolve()))
@@ -223,15 +239,12 @@ def load_projects():
 
             # TODO(gus): We need to have project take absolute path and project name!
             # Instantiate project, and add to the list to be returned
-            projectsList.append(Project(project.id, project.name, Path(project.path)))
+            loadedProjects.append(Project(project))
 
-    logging.info(f"Loaded projects: {projectsList}")
-
-    # Return the list of loaded projects
-    return projectsList
+    logging.info("Finished loading projects.")
 
 # Generate the baseline project folder contents as needed
-def scaffold_project_folder(projDirPathObj):
+def scaffoldProjectFolder(projDirPathObj):
 
     logging.info(f"Scaffolding project folder {projDirPathObj}.")
 
@@ -252,7 +265,7 @@ def scaffold_project_folder(projDirPathObj):
     logging.info(f"Finished scaffolding project folder {projDirPathObj}.")
 
 # Raises an exception if the project folder is invalid
-def validate_project_folder(projDirPathObj):
+def validateProjectFolder(projDirPathObj):
 
     logging.info(f"Validating project folder {projDirPathObj}.")
 

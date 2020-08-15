@@ -195,136 +195,51 @@ $('#allAnnotationsListModal').on('show.bs.modal', function (e) {
 
 });
 
-// Request the list of files for the project
-requestHandler.requestInitialPayload(function(data) {
 
-	templateSystem.provideBuiltinTemplates(
-		(data.hasOwnProperty('builtin_default_project_template') && data['builtin_default_project_template'] ? JSON.parse(data['builtin_default_project_template']) : {}) || {},
-		(data.hasOwnProperty('builtin_default_interface_templates') && data['builtin_default_interface_templates'] ? JSON.parse(data['builtin_default_interface_templates']) : {}) || {},
-	);
-	templateSystem.provideGlobalTemplates(
-		(data.hasOwnProperty('global_default_project_template') && data['global_default_project_template'] ? JSON.parse(data['global_default_project_template']) : {}) || {},
-		(data.hasOwnProperty('global_default_interface_templates') && data['global_default_interface_templates'] ? JSON.parse(data['global_default_interface_templates']) : {}) || {},
-	);
 
-	let projectSelect = document.getElementById('project_selection');
 
-	for (let i in data['projects']) {
+// Provide the built-in template assets to TemplateSystem
+templateSystem.provideBuiltinTemplates(
+	(payload.hasOwnProperty('builtin_default_project_template') && payload['builtin_default_project_template'] ? JSON.parse(payload['builtin_default_project_template']) : {}) || {},
+	(payload.hasOwnProperty('builtin_default_interface_templates') && payload['builtin_default_interface_templates'] ? JSON.parse(payload['builtin_default_interface_templates']) : {}) || {},
+);
 
-		let opt = document.createElement('OPTION');
-		opt.setAttribute('value', data['projects'][i]);
-		opt.innerText = data['projects'][i];
-		projectSelect.appendChild(opt);
+// Provide the global template assets to TemplateSystem
+templateSystem.provideGlobalTemplates(
+	(payload.hasOwnProperty('global_default_project_template') && payload['global_default_project_template'] ? JSON.parse(payload['global_default_project_template']) : {}) || {},
+	(payload.hasOwnProperty('global_default_interface_templates') && payload['global_default_interface_templates'] ? JSON.parse(payload['global_default_interface_templates']) : {}) || {},
+);
 
-	}
+// Provide the projects template assets to TemplateSystem
+templateSystem.provideProjectTemplates(payload['project_name'],
+	(payload.hasOwnProperty('project_template') && payload['project_template'] ? JSON.parse(payload['project_template']) : {}) || {},
+	(payload.hasOwnProperty('interface_templates') && payload['interface_templates'] ? JSON.parse(payload['interface_templates']) : {}) || {}
+);
 
-	// Re-render the select picker
-	$(projectSelect).selectpicker('refresh');
+// Instantiate the current project
+globalStateManager.currentProject = new Project(payload['project_id'], payload['project_name'])
 
-	// Detect hash variables
-	var hash = window.location.hash.substr(1);
-	var result = hash.split('&').reduce(function (result, item) {
-	    var parts = item.split('=');
-	    result[parts[0]] = parts[1];
-	    return result;
-	}, {});
+let fileSelect = document.getElementById('file_selection');
 
-	// Handle initial hash variables
-	if (result.hasOwnProperty('project') && result.hasOwnProperty('file')) {
-		globalStateManager.loadFile(result['file'], result['project'])
-	}
+for (const f of payload['project_files']) {
 
-});
+	let opt = document.createElement('OPTION');
+	opt.setAttribute('value', f[0]);
+	opt.innerText = f[1];
+	fileSelect.appendChild(opt);
 
+}
 
+// Re-render the select-picker
+$(fileSelect).selectpicker('refresh');
 
-
-
-
-
-
-
-
-
-
-
-
-
-var small_film_set = [
-	{ id:1, title:"The Shawshank Redemption", year:1994, votes:678790, rating:9.2, rank:1},
-	{ id:2, title:"The Godfather", year:1972, votes:511495, rating:9.2, rank:2},
-	{ id:3, title:"The Godfather: Part II", year:1974, votes:319352, rating:9.0, rank:3},
-	{ id:4, title:"The Good, the Bad and the Ugly", year:1966, votes:213030, rating:8.9, rank:4},
-	{ id:5, title:"My Fair Lady", year:1964, votes:533848, rating:8.9, rank:5},
-	{ id:6, title:"12 Angry Men", year:1957, votes:164558, rating:8.9, rank:6}
-];
-
-// let xyz = webix.ui({
-// 	view: "window",
-// 	close: true,
-// 	head: "Available Graphs &mdash; Show/Hide",
-// 	left: 50,
-// 	move: true,
-// 	top: 50,
-// 	body: {
-// 		view: "treetable",
-// 		collapse: true,
-// 		autoheight: true,
-// 		autowidth: true,
-// 		filterMode:{ level: false, showSubItems: false },
-// 		select: false,
-// 		threeState: true,
-// 		columns: [
-// 			{ id: "value", adjust: true, fillspace: true, header: ["Graphs", {content:"textFilter"}], minWidth: 350, template: "{common.space()}{common.icon()}{common.treecheckbox()}{common.folder()}#value#" }
-// 		],
-// 		data: [
-// 			{ "value": "The Shawshank Redemption", "data":[
-// 					{ "value": "Part 1"},
-// 					{ "value": "Part 2", "data":[
-// 							{ "value": "Part 1", checked: true}
-// 						]}
-// 				]}
-// 		]
-// 	}
-// });
-//
-// xyz.show();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// Detect & handle hash variables
+var hash = window.location.hash.substr(1);
+var result = hash.split('&').reduce(function (result, item) {
+    var parts = item.split('=');
+    result[parts[0]] = parts[1];
+    return result;
+}, {});
+if (result.hasOwnProperty('file')) {
+	globalStateManager.loadFile(result['file'])
+}

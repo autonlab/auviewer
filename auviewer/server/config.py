@@ -8,6 +8,20 @@ from pathlib import Path
 
 from .shared import createEmptyJSONFile
 
+# Get the code root
+# TODO(gus): This may not work when once viewer is pip installable
+codeRootPathObj = Path(__file__).resolve().parent.parent
+
+# Read in the built-in default interface templates file. This will (and should)
+# # raise an exception if the file does not exist.
+with (codeRootPathObj / 'static' / 'builtin_templates' / 'interface_templates.json').open() as f:
+    bdit = f.read()
+
+# Read in the built-in default project template file. This will (and should)
+# raise an exception if the file does not exist.
+with (codeRootPathObj / 'static' / 'builtin_templates' / 'project_template.json').open() as f:
+    bdpt = f.read()
+
 # Holds all config params
 config = {
 
@@ -33,7 +47,7 @@ config = {
     ### Asset locations
 
     # AUView code root directory
-    'auvCodeRoot': os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
+    'codeRootPathObj': codeRootPathObj,
 
     # Data directory location (pathlib.Path object).
     # NOTE: This is the only config param that has no default value and must
@@ -42,11 +56,6 @@ config = {
 
     # Path to the projects directory (pathlib.Path object).
     'projectsDirPathObj': None,
-
-    # Global templates (pathlib.Path objects).
-    'globalTemplatesDirPathObj': None,
-    'globalDefaultProjectTemplateFilePathObj': None,
-    'globalDefaultInterfaceTemplatesFilePathObj': None,
 
 
 
@@ -71,6 +80,23 @@ config = {
 
     # Mail integration settings object
     'mail': None,
+
+
+
+    ### Templates
+
+    # Built-in default interface templates
+    'builtinDefaultInterfaceTemplates': bdit,
+
+    # Built-in default project template
+    'builtinDefaultProjectTemplate': bdpt,
+
+    # Global default interface templates (will be overwritten upon a data folder being designated)
+    'globalDefaultInterfaceTemplates': "{}",
+
+    # Global default project template (will be overwritten upon a data folder being designated)
+    'globalDefaultProjectTemplate': "{}",
+
 
 }
 
@@ -101,7 +127,7 @@ class FlaskConfigClass(object):
 
     # Override default Flask-User URLs with root web path prefix. For documentation,
     # see "URLs" section of https://flask-user.readthedocs.io/en/v0.6/customization.html.
-    # These are overridden in serve.py (create_app).
+    # These are overridden in serve.py (createApp).
     # USER_CHANGE_PASSWORD_URL = rootWebPath+'/user/change-password'
     # USER_CHANGE_USERNAME_URL = rootWebPath+'/user/change-username'
     # USER_CONFIRM_EMAIL_URL = rootWebPath+'/user/confirm-email/<token>'
@@ -152,6 +178,7 @@ def load_config(cp):
 
     print(f"Loading config file {cp}.")
 
+    # Unmarshal the config file from JSON into a dict
     with cp.open() as f:
         json_config = json.load(f)
 
@@ -179,35 +206,17 @@ def scaffold_data_path():
 
     global config
 
-    # Grab the data path object
+    # Grab the data folder path object
     p = config['dataPathObj']
 
-    # Create the config subdirectory if needed
-    cfgPathObj = p / 'config'
-    cfgPathObj.mkdir(exist_ok=True)
-
-    # Create the database subdirectory if needed
-    dbPathObj = p / 'database'
-    dbPathObj.mkdir(exist_ok=True)
-
-    # Create the global templates subdirectory if needed, and set in the config
-    config['globalTemplatesDirPathObj'] = p / 'global_templates'
-    config['globalTemplatesDirPathObj'].mkdir(exist_ok=True)
-
-    # Create the projects path subdirectory if needed, and set in the config
-    config['projectsDirPathObj'] = p / 'projects'
-    config['projectsDirPathObj'].mkdir(exist_ok=True)
-
-    # Create empty config json file if needed
-    createEmptyJSONFile(cfgPathObj / 'config.json')
-
-    # Create empty global interface templates json file if needed, and set in the config
-    config['globalDefaultInterfaceTemplatesFilePathObj'] = config['globalTemplatesDirPathObj'] / 'interface_templates.json'
-    createEmptyJSONFile(config['globalDefaultInterfaceTemplatesFilePathObj'])
-
-    # Create empty global project template json file if needed, and set in the config
-    config['globalDefaultProjectTemplateFilePathObj'] = config['globalTemplatesDirPathObj'] / 'project_template.json'
-    createEmptyJSONFile(config['globalDefaultProjectTemplateFilePathObj'])
+    # Scaffold
+    (p / 'config').mkdir(exist_ok=True)
+    (p / 'database').mkdir(exist_ok=True)
+    (p / 'global_templates').mkdir(exist_ok=True)
+    (p / 'projects').mkdir(exist_ok=True)
+    createEmptyJSONFile(p / 'config' / 'config.json')
+    createEmptyJSONFile(p / 'global_templates' / 'interface_templates.json')
+    createEmptyJSONFile(p / 'global_templates' / 'project_template.json')
 
 # Sets, prepares, and processes the data path.
 def set_data_path(path):
@@ -223,10 +232,25 @@ def set_data_path(path):
     # Attach the data path object to config
     config['dataPathObj'] = p
 
-    # Check if a config file was provided, and, if so, load the config
+    # Set the project folder path
+    config['projectsDirPathObj'] = p / 'projects'
+
+    # Check if a config file is available, and, if so, load the config
     cp = p / 'config' / 'config.json'
     if cp.is_file():
         load_config(cp)
+
+    # Check if global interface templates file is available, and, if so, load it
+    gdit = p / 'global_templates' / 'interface_templates.json'
+    if gdit.is_file():
+        with gdit.open() as f:
+            config['globalDefaultInterfaceTemplates'] = f.read()
+
+    # Check if global project template file is available, and, if so, load it
+    gdpt = p / 'global_templates' / 'project_template.json'
+    if gdpt.is_file():
+        with gdpt.open() as f:
+            config['globalDefaultProjectTemplate'] = f.read()
 
     # Set up the data path scaffolding as needed
     scaffold_data_path()

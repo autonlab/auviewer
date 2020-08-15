@@ -9,11 +9,34 @@ AUViewer allows the following primary use cases:
 * Allow multi-user annotation of time series data in a web-based interface
 * Serve via intranet or internet
 
-## Technical Architecture
+## Technical Documentation
 
-### Operating Mode Use Cases
+### Technical Architecture
 
-From a perspective of technical architecture, the following use cases are accommodated:
+AUViewer is comprised of:
+* A Python codebase in the form of a package built of modules, and
+* A static HTML/JS/CSS codebase which makes up the frontend web application.
+
+The Python code is organized primarily around classes which represent the conceptual components of the data:
+* Project
+  * File
+    * AnnotationSet
+    * Series
+      * DownsampleSet
+      * RawData
+
+Other significant Python components are:
+* Flask web server
+* Cython functions for downsampling
+* Database models and connectivity logic
+* Config module
+* Shared helper functions
+
+Communication between the web application frontend and backend takes place via an HTTP REST API interface using GET parameters for client-to-backend requests and JSON for backend-to-client responses. As a general design pattern, the classes (mentioned above) output generalized data structures (e.g. lists, dicts), and the encapsulation of response data into JSON takes place in the http handler functions. This breakdown makes sense since AUViewer can be used both as a Python/Jupyter Notebook module and a web server.
+
+### Detailed AUViewer Use Cases
+
+In detail, from a perspective of technical architecture, the following use cases are accommodated:
 
 * Jupyter Notebook Interface
   * Visualize/explore time series data ad-hoc
@@ -56,15 +79,15 @@ The data directory will contain project files, templates, config, and the databa
 
 (???) With the exception of the config file, the locations of all data directory assets above may be changed (???)
 
-### App Configuration
+### Backend Configuration
 
-App config consists of the following types of configuration parameters:
+Backend config consists of the following types of configuration parameters:
 * General settings (e.g. verbose output)
 * Tuning parameters (e.g. target data points per series transmission)
 * Asset locations
 * Web server configuration (e.g. root web directory, Flask config)
 
-AUViewer comes with default config parameters for everything except the data directory location. Configuration is loaded and managed by the `auviewer.config` module.
+AUViewer comes with default config parameters for everything except the data directory location, which must be specified. Configuration is loaded and managed by the `auviewer.config` module.
 
 # Medview Patient Data Viewer/Annotator
 
