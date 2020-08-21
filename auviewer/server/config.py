@@ -188,7 +188,7 @@ def load_config(cp):
         'debug',
         'reloader',
 
-        'root_web_path',
+        'rootWebPath',
         'secret_key',
         'mail',
     ]

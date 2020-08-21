@@ -526,6 +526,7 @@ def main():
 
     # Set provided data path
     set_data_path(args.datapath)
+    print('root web path:',config['rootWebPath'])
 
     (app, socketio) = createApp()
     socketio.run(app,
