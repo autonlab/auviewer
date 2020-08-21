@@ -1,6 +1,6 @@
 template = {
 
-	'anomalyDetection': [],
+	'patternDetection': [],
 
 	# Whether to display all series by default
 	'defaultSeriesAll': True,
@@ -29,10 +29,10 @@ template = {
 			'lineColor': '#171717',
 			'dotColor': '#171717',
 			'gridColor': 'rgb(232,122,128)',
-			'ownAnomalyColor': '#f7a438',
-			'otherAnomalyColor': '#f5d4ab',
-			'ownCurrentWorkflowAnomalyColor': '#00bd1d', # '#cd7700', # was #00bd1d
-			'otherCurrentWorkflowAnomalyColor': '#53ff65', # '#f5d4ab', # was #53ff65
+			'ownPatternColor': '#f7a438',
+			'otherPatternColor': '#f5d4ab',
+			'ownCurrentWorkflowPatternColor': '#00bd1d', # '#cd7700', # was #00bd1d
+			'otherCurrentWorkflowPatternColor': '#53ff65', # '#f5d4ab', # was #53ff65
 			'ownAnnotationColor': 'rgba(0,72,182,0.73)',
 			'ownAnnotationLabelColor': '#fff',
 			'otherAnnotationColor': 'rgba(60,100,182,0.73)',

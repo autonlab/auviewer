@@ -1,15 +1,18 @@
 'use strict';
 
-function File(project, filename, callback=null) {
+function File(parentProject, id, callback=null) {
 
 	// Holds the project name
-	this.projname = project;
+	this.parentProject = parentProject;
 
 	// Holds the filelname
-	this.filename = filename;
+	this.id = id;
+
+	// Temporary placeholder for the name
+	this.name = '[ loading... ]';
 
 	// Load the project config
-	this.template = templateSystem.getProjectTemplate(project);
+	this.template = templateSystem.getProjectTemplate(this.parentProject.id);
 
 	// Holds the file metadata
 	this.metadata = {};
@@ -20,6 +23,36 @@ function File(project, filename, callback=null) {
 	// Holds the initial payload data for the file
 	this.fileData = {};
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	this.annotationSets = [];
+	this.patternSets = [];
+
+	// Array of annotations and patterns to render. This is an amalgamation of
+	// all Annotation objects (which can represent both annotations & patterns)
+	// under those AnnotationSet and PatternSet objects which are toggled by the
+	// user to display currently. When the user toggles a display setting, this
+	// array gets updated.
+	this.annotationsAndPatternsToRender = []
+
+
+
+
+
+
+
 	// Holds annotations for the file
 	this.annotations = [];
 
@@ -27,8 +60,26 @@ function File(project, filename, callback=null) {
 	// annotation workflow, or -1 if user is not currently in the workflow.
 	this.annotationWorkflowCurrentIndex = -1;
 
-	// Indicates user is at the i'th anomaly, during the annotation workflow.
-	this.annotationWorkflowAnomalyNumber = 0;
+	// Indicates user is at the i'th pattern, during the annotation workflow.
+	this.annotationWorkflowPatternNumber = 0;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	// Used for realtime-mode to buffer incoming new data
 	this.newDataBuffer = null;
@@ -40,9 +91,9 @@ function File(project, filename, callback=null) {
 	// Holds the reference to the graph synchronization object
 	this.sync = null;
 
-	// Holds the parameters of executed anomaly detection jobs whose results are
+	// Holds the parameters of executed pattern detection jobs whose results are
 	// still being displayed (avoids duplication of jobs).
-	this.alreadyExecutedAnomalyDetectionJobs = [];
+	this.alreadyExecutedPatternDetectionJobs = [];
 
 	/*
 	Holds the min [0] and max [1] x-value across all graphs currently displayed.
@@ -53,9 +104,6 @@ function File(project, filename, callback=null) {
 	be passed into the options.dateWindow parameter for a dygraph.
 	*/
 	this.globalXExtremes = [];
-
-	// Persist for callback
-	let file = this;
 
 	// Will hold a reference to the plot control Webix instance
 	this.plotControl = null;
@@ -98,7 +146,7 @@ function File(project, filename, callback=null) {
 							if (g) {
 								if (g.isShowing() && !isChecked) {
 									// If the graph is showing but shouldn't be, hide it.
-									g.remove();
+									g.hide();
 								} else if (!g.isShowing() && isChecked) {
 									// If the graph isn't showing but should be, show it.
 									g.show();
@@ -125,7 +173,7 @@ function File(project, filename, callback=null) {
 
 	// If we're not in realtime-mode, request the initial file payload, and
 	// handle the response when it comes.
-	requestHandler.requestInitialFilePayload(this.projname, this.filename, function (data) {
+	requestHandler.requestInitialFilePayload(this.parentProject.id, this.id, function (data) {
 
 		// If the payload is empty, something has gone wrong. Clear the file,
 		// and we're done.
@@ -134,12 +182,15 @@ function File(project, filename, callback=null) {
 			return;
 		}
 
+		// Set the name
+		this.name = data.filename;
+
 		// Prepare data received from the backend and attach to class instance
-		file.fileData = file.prepareData(data, data.baseTime);
+		this.fileData = this.prepareData(data, data.baseTime);
 
 		// Pad data, if necessary, for each series
-		for (let s of Object.keys(file.fileData.series)) {
-			padDataIfNeeded(file.fileData.series[s].data);
+		for (let s of Object.keys(this.fileData.series)) {
+			padDataIfNeeded(this.fileData.series[s].data);
 		}
 
 		// Create any defined group series which has at least one member series
@@ -149,14 +200,14 @@ function File(project, filename, callback=null) {
 		// NOTE: If you're trying to understand this code in the future, I'm
 		// sorry. I could not document this in any way that would help make it
 		// more understandable, and it is a bit of a labyrinth.
-		for (let g of Object.getOwnPropertyNames(file.template.groups)) {
+		for (let g of Object.getOwnPropertyNames(this.template.groups)) {
 
-			const group = file.template.groups[g];
+			const group = this.template.groups[g];
 
 			// Verify at least one series member of the group is present.
 			let atLeastOneSeriesPresent = false;
 			for (let s of group['members']) {
-				if (file.fileData['series'].hasOwnProperty(s)) {
+				if (this.fileData['series'].hasOwnProperty(s)) {
 					atLeastOneSeriesPresent = true;
 					break;
 				}
@@ -165,124 +216,128 @@ function File(project, filename, callback=null) {
 				continue;
 			}
 
-			file.createGroupSeries(g, group['members'], createMergedTimeSeries(group['members'], file.fileData.series));
+			this.createGroupSeries(g, group['members'], createMergedTimeSeries(group['members'], this.fileData.series));
 
 		}
 
-		window.requestAnimationFrame(
+		// Populate the annotation sets
+		for (const asd of this.fileData['annotationsets']) {
+			this.annotationSets.push(new AnnotationSet(this, asd['id'], asd['name'], asd['description'], asd['annotations']))
+		}
 
-			(function() {
+		// Populate the pattern sets
+		for (const asd of this.fileData['patternsets']) {
+			this.patternSets.push(new PatternSet(this, asd['id'], asd['name'], asd['description'], asd['patterns']))
+		}
 
-				let t0 = performance.now();
+		window.requestAnimationFrame(function() {
 
-				// Attach & render file metadata
-				this.metadata = data.metadata;
-				this.renderMetadata();
+			let t0 = performance.now();
 
-				// Instantiate event graphs
-				this.renderEventGraphs();
+			// Attach & render file metadata
+			this.metadata = data.metadata;
+			this.renderMetadata();
 
-				// Instantiate series graphs
-				for (let s of Object.keys(this.fileData.series)) {
-					this.graphs[s] = new Graph(s, file);
+			// Instantiate event graphs
+			this.renderEventGraphs();
+
+			// Instantiate series graphs
+			for (let s of Object.keys(this.fileData.series)) {
+				this.graphs[s] = new Graph(s, this);
+			}
+
+			// With all graphs instantiated, trigger resize of all graphs
+			// (this resolves a dygraphs bug where the first few graphs drawn
+			// are wider than the rest due to a scrollbar which initiallly is
+			// not needed and, later, is).
+			this.triggerResizeAllGraphs();
+
+			// Synchronize the graphs
+			this.synchronizeGraphs();
+
+			// If this is a realtime file, subscribe to realtime updates via the
+			// websocket connection.
+			if (this.mode() === 'realtime') {
+
+				socket.emit('subscribe', {
+					project_id: this.parentProject.id,
+					file_id: this.id
+				});
+
+			}
+
+			let tt = performance.now() - t0;
+			globalAppConfig.performance && tt > globalAppConfig.performanceReportingThresholdGeneral && console.log("Initial file graph building took " + Math.round(tt) + "ms.", this.parentProject, this);
+
+			// Grab the alert generation dropdown
+			let alertGenSeriesDropdown = document.getElementById('alert_gen_series_field');
+
+			// // Clear the alert generation dropdown
+			// // See: https://jsperf.com/innerhtml-vs-removechild/15
+			// while (alertGenSeriesDropdown.firstChild) {
+			// 	alertGenSeriesDropdown.removeChild(alertGenSeriesDropdown.firstChild);
+			// }
+
+			// // Populate the alert generation dropdown
+			// let opt = document.createElement('option');
+			// alertGenSeriesDropdown.add(opt);
+			// for (let s of Object.keys(this.fileData.series)) {
+			// 	let opt = document.createElement('option');
+			// 	opt.text = s;
+			// 	opt.value = s;
+			// 	alertGenSeriesDropdown.add(opt);
+			// }
+			//
+			// // Re-render the select picker
+			// $(alertGenSeriesDropdown).selectpicker('refresh');
+
+			// Instantiate the plot control Webix element
+			this.plotControl = webix.ui(this.plotControlConfig);
+
+			// Check default-shown graphs in the plot control interface
+			const plotControlTreeTable = this.plotControl.getBody();
+			plotControlTreeTable.blockEvent();
+			for (const s of Object.keys(this.graphs)) {
+				const g = this.graphs[s];
+				if (g.isShowing()) {
+					this.plotControl.getBody().checkItem(g.fullName);
 				}
+			}
+			plotControlTreeTable.unblockEvent();
 
-				// Synchronize the graphs
-				this.synchronizeGraphs();
+			// // Process pre-defined pattern detection for all currently-displaying
+			// // series. We gather all displaying series before starting to send the
+			// // pattern detection requests because we don't want to conflict with a
+			// // the on-display pattern detection that will happen when a user toggles
+			// // a hidden series to display.
+			// let seriesInitiallyDisplaying = [];
+			// for (let s of Object.keys(this.graphs)) {
+			// 	if (this.graphs[s].isShowing()) {
+			// 		if (this.graphs[s].isGroup) {
+			// 			seriesInitiallyDisplaying.push.apply(seriesInitiallyDisplaying, this.graphs[s].group);
+			// 		} else {
+			// 			seriesInitiallyDisplaying.push(this.graphs[s].fullName);
+			// 		}
+			// 	}
+			// }
+			// this.runPatternDetectionJobsForSeries(seriesInitiallyDisplaying);
 
-				// Populate the annotations
-				if (Array.isArray(this.fileData.annotations) && this.fileData.annotations.length > 0) {
-					for (let a of this.fileData.annotations) {
-						this.annotations.push(new Annotation({valuesArrayFromBackend: a}, 'existing'));
-					}
-					globalStateManager.currentFile.triggerRedraw();
-				}
+			// If a callback was requested (provided to the File class
+			// initializer), call it.
+			if (callback) {
+				callback();
+			}
 
-				// If this is a realtime file, subscribe to realtime updates via the
-				// websocket connection.
-				if (this.mode() === 'realtime') {
+		}.bind(this));
 
-					socket.emit('subscribe', {
-						project: this.projname,
-						filename: this.filename
-					});
-
-				}
-
-				let tt = performance.now() - t0;
-				globalAppConfig.performance && tt > globalAppConfig.performanceReportingThresholdGeneral && console.log("Initial file graph building took " + Math.round(tt) + "ms.", this.projname, this.filename);
-
-				// Grab the alert generation dropdown
-				let alertGenSeriesDropdown = document.getElementById('alert_gen_series_field');
-
-				// // Clear the alert generation dropdown
-				// // See: https://jsperf.com/innerhtml-vs-removechild/15
-				// while (alertGenSeriesDropdown.firstChild) {
-				// 	alertGenSeriesDropdown.removeChild(alertGenSeriesDropdown.firstChild);
-				// }
-
-				// Populate the alert generation dropdown
-				let opt = document.createElement('option');
-				alertGenSeriesDropdown.add(opt);
-				for (let s of Object.keys(this.fileData.series)) {
-					let opt = document.createElement('option');
-					opt.text = s;
-					opt.value = s;
-					alertGenSeriesDropdown.add(opt);
-				}
-
-				// Re-render the select picker
-				$(alertGenSeriesDropdown).selectpicker('refresh');
-
-				// Instantiate the plot control Webix element
-				this.plotControl = webix.ui(file.plotControlConfig);
-
-				// Check default-shown graphs in the plot control interface
-				const plotControlTreeTable = this.plotControl.getBody();
-				plotControlTreeTable.blockEvent();
-				for (const s of Object.keys(this.graphs)) {
-					const g = this.graphs[s];
-					if (g.isShowing()) {
-						this.plotControl.getBody().checkItem(g.fullName);
-					}
-				}
-				plotControlTreeTable.unblockEvent();
-
-				// Process pre-defined anomaly detection for all currently-displaying
-				// series. We gather all displaying series before starting to send the
-				// anomaly detection requests because we don't want to conflict with a
-				// the on-display anomaly detection that will happen when a user toggles
-				// a hidden series to display.
-				let seriesInitiallyDisplaying = [];
-				for (let s of Object.keys(this.graphs)) {
-					if (this.graphs[s].isShowing()) {
-						if (this.graphs[s].isGroup) {
-							seriesInitiallyDisplaying.push.apply(seriesInitiallyDisplaying, this.graphs[s].group);
-						} else {
-							seriesInitiallyDisplaying.push(this.graphs[s].fullName);
-						}
-					}
-				}
-				this.runAnomalyDetectionJobsForSeries(seriesInitiallyDisplaying);
-
-				// If a callback was requested (provided to the File class
-				// initializer), call it.
-				if (callback) {
-					callback();
-				}
-
-			}).bind(file)
-
-		);
-
-	});
+	}.bind(this));
 
 }
 
 // Go to the next annotation in the workflow.
 File.prototype.annotationWorkflowNext = function() {
 
-	// Iterate through next subsequent annotations until we hit another anomaly
+	// Iterate through next subsequent annotations until we hit another pattern
 	// or hit the end of the array.
 	while(this.annotationWorkflowCurrentIndex++ || true) {
 
@@ -291,21 +346,21 @@ File.prototype.annotationWorkflowNext = function() {
 			this.annotationWorkflowCurrentIndex = -1;
 			this.resetZoomToOutermost();
 
-			this.annotationWorkflowAnomalyNumber = 0;
+			this.annotationWorkflowPatternNumber = 0;
 			document.getElementById("annotationWorkflowSubtext").innerText = '';
 
 			return;
 		}
 
-		// If we reach another anomaly, stop there.
-		if (this.annotations[this.annotationWorkflowCurrentIndex].state === 'anomaly') {
+		// If we reach another pattern, stop there.
+		if (this.annotations[this.annotationWorkflowCurrentIndex].type === 'pattern') {
 			break;
 		}
 
 	}
 
 	// Update indicator number
-	this.annotationWorkflowAnomalyNumber++;
+	this.annotationWorkflowPatternNumber++;
 
 	// Update annotation display to reflect the newly set parameters.
 	this.annotationWorkflowUpdateCurrent();
@@ -315,7 +370,7 @@ File.prototype.annotationWorkflowNext = function() {
 // Go to the previous annotation in the workflow.
 File.prototype.annotationWorkflowPrevious = function() {
 
-	// Iterate through next subsequent annotations until we hit another anomaly
+	// Iterate through next subsequent annotations until we hit another pattern
 	// or hit the end of the array.
 	while(this.annotationWorkflowCurrentIndex-- || true) {
 
@@ -324,21 +379,21 @@ File.prototype.annotationWorkflowPrevious = function() {
 			this.annotationWorkflowCurrentIndex = -1;
 			this.resetZoomToOutermost();
 
-			this.annotationWorkflowAnomalyNumber = 0;
+			this.annotationWorkflowPatternNumber = 0;
 			document.getElementById("annotationWorkflowSubtext").innerText = '';
 
 			return;
 		}
 
-		// If we reach another anomaly, stop there.
-		if (this.annotations[this.annotationWorkflowCurrentIndex].state === 'anomaly') {
+		// If we reach another pattern, stop there.
+		if (this.annotations[this.annotationWorkflowCurrentIndex].type === 'pattern') {
 			break;
 		}
 
 	}
 
 	// Update indicator number
-	this.annotationWorkflowAnomalyNumber--;
+	this.annotationWorkflowPatternNumber--;
 
 	// Update annotation display to reflect the newly set parameters.
 	this.annotationWorkflowUpdateCurrent();
@@ -346,7 +401,7 @@ File.prototype.annotationWorkflowPrevious = function() {
 };
 
 // Update current annotation display for the workflow according to
-// this.annotationWorkflowCurrentIndex and this.annotationWorkflowAnomalyNumber.
+// this.annotationWorkflowCurrentIndex and this.annotationWorkflowPatternNumber.
 File.prototype.annotationWorkflowUpdateCurrent = function() {
 
 	// Grab our annotation
@@ -358,9 +413,9 @@ File.prototype.annotationWorkflowUpdateCurrent = function() {
 	let postfix = '</td></tr>';
 
 	document.getElementById("annotationWorkflowSubtext").innerHTML =
-		'<p style="font-style: italic; margin-bottom: 2px;">Current Anomaly</p>' +
+		'<p style="font-style: italic; margin-bottom: 2px;">Current Pattern</p>' +
 		'<table><tbody>' +
-		prefix+'Anomaly #:'+between+this.annotationWorkflowAnomalyNumber+postfix +
+		prefix+'Pattern #:'+between+this.annotationWorkflowPatternNumber+postfix +
 		prefix+'Series:'+between+annotation.series+postfix +
 		prefix+'Begin:'+between+annotation.getStartDate().toLocaleString()+postfix +
 		prefix+'End:'+between+annotation.getEndDate().toLocaleString()+postfix +
@@ -368,24 +423,6 @@ File.prototype.annotationWorkflowUpdateCurrent = function() {
 
 	// Go to the annotation in the graph
 	annotation.goTo();
-
-};
-
-// Removes all detected anomalies
-File.prototype.clearAnomalies = function() {
-
-	// Clear all anomaly annotations from the annotations array
-	for (let i = this.annotations.length-1; i >= 0; i--) {
-		if (this.annotations[i].state === 'anomaly') {
-			this.annotations[i].deleteLocal();
-		}
-	}
-
-	// Clear the already-executed anomaly detection jobs array
-	this.alreadyExecutedAnomalyDetectionJobs = [];
-
-	// Redraw
-	this.triggerRedraw();
 
 };
 
@@ -421,12 +458,28 @@ File.prototype.destroy = function() {
 			// Close plot control
 			this.plotControl.close();
 
+			// Clear annotation control panel tables
+			try {
+				const astb = document.getElementById('annotation_sets_cp_table').querySelector('tbody');
+				while (astb.firstChild) { astb.removeChild(astb.firstChild); }
+			} catch (e) {
+				console.log('Unable to clear annotation sets control panel table.', e);
+			}
+
+			// Clear pattern control panel tables
+			try {
+				const astb = document.getElementById('pattern_sets_cp_table').querySelector('tbody');
+				while (astb.firstChild) { astb.removeChild(astb.firstChild); }
+			} catch (e) {
+				console.log('Unable to clear pattern sets control panel table.', e);
+			}
+
 			// Destroy graph synchronization state management
 			this.unsynchronizeGraphs();
 
 			// Remove each graph
 			for (let s of Object.keys(this.graphs)) {
-				this.graphs[s].remove();
+				this.graphs[s].hide();
 			}
 
 			// Clear the graph div
@@ -455,13 +508,11 @@ File.prototype.destroy = function() {
 
 };
 
-// Run anomaly detection with the parameters provided. The callback parameter,
+// Run pattern detection with the parameters provided. The callback parameter,
 // if provided, will be called either after the response has been received from
 // the server and processed or upon a return resulting from a missing-parameter
 // error.
-File.prototype.detectAnomalies = function(type, series, thresholdlow, thresholdhigh, duration, persistence, maxgap, callback=null) {
-
-	globalAppConfig.verbose && console.log("Anomaly detection called.");
+File.prototype.detectPatterns = function(type, series, thresholdlow, thresholdhigh, duration, persistence, maxgap, callback=null) {
 
 	// In case any of our numerical parameters are numerical 0, convert them to
 	// strings now so we can effectively do parameter checking.
@@ -496,20 +547,20 @@ File.prototype.detectAnomalies = function(type, series, thresholdlow, thresholdh
 	) {
 
 		// Log the error to console.
-		console.log("Required parameters are missing for anomaly detection.");
+		console.log("Required parameters are missing for pattern detection.");
 
 		// Call callback if provided
 		if (callback !== null && typeof callback === 'function') {
 			callback();
 		}
 
-		// Return as we cannot continue anomaly detection.
+		// Return as we cannot continue pattern detection.
 		return;
 
 	}
 
 	// Check whether this job has already run
-	for (let j of this.alreadyExecutedAnomalyDetectionJobs) {
+	for (let j of this.alreadyExecutedPatternDetectionJobs) {
 		if (j[0] === series &&
 			(j[1] === parseFloat(thresholdlow) || (isNaN(j[1]) && isNaN(parseFloat(thresholdlow)))) &&
 			(j[2] === parseFloat(thresholdhigh) || (isNaN(j[2]) && isNaN(parseFloat(thresholdhigh)))) &&
@@ -518,38 +569,39 @@ File.prototype.detectAnomalies = function(type, series, thresholdlow, thresholdh
 			(j[5] === parseFloat(maxgap)) || (isNaN(j[5]) && isNaN(parseFloat(maxgap)))) {
 
 			// Log the error to console.
-			console.log("An anomaly detection job with the same parameters executed previously. Aborting.");
+			console.log("A pattern detection job with the same parameters executed previously. Aborting.");
 
 			// Call callback if provided
 			if (callback !== null && typeof callback === 'function') {
 				callback();
 			}
 
-			// Return as we cannot continue anomaly detection.
+			// Return as we cannot continue pattern detection.
 			return;
 		}
 	}
 
 	// Add this job's parameters to the already-executed jobs array
-	this.alreadyExecutedAnomalyDetectionJobs.push([series, parseFloat(thresholdlow), parseFloat(thresholdhigh), parseFloat(duration), parseFloat(persistence), parseFloat(maxgap)]);
+	this.alreadyExecutedPatternDetectionJobs.push([series, parseFloat(thresholdlow), parseFloat(thresholdhigh), parseFloat(duration), parseFloat(persistence), parseFloat(maxgap)]);
 
 	// Persist for callback
 	let file = this;
 
-	requestHandler.requestAnomalyDetection(globalStateManager.currentFile.projname, globalStateManager.currentFile.filename, type, series, thresholdlow, thresholdhigh, duration, persistence, maxgap, function (data) {
+	requestHandler.requestPatternDetection(this.parentProject.id, this.id, type, series, thresholdlow, thresholdhigh, duration, persistence, maxgap, function (data) {
 
 		if (Array.isArray(data) && data.length > 0) {
 
 			for (let a of data) {
-				file.annotations.push(new Annotation({
-					file: globalStateManager.currentFile.filename,
+				this.annotations.push(new Annotation({
+					file_id: this.id,
+					filename: this.name,
 					series: series,
 					begin: a[0],
 					end: a[1]
-				}, 'anomaly'));
+				}, 'pattern'));
 			}
 
-			file.triggerRedraw();
+			this.triggerRedraw();
 
 			// Call callback if provided
 			if (callback !== null && typeof callback === 'function') {
@@ -558,14 +610,12 @@ File.prototype.detectAnomalies = function(type, series, thresholdlow, thresholdh
 
 		}
 
-	});
-
-    globalAppConfig.verbose && console.log("Anomaly detection request sent.");
+	}.bind(this));
 
 };
 
-// Run anomaly detection with the user-input form values.
-File.prototype.detectAnomaliesFromForm = function() {
+// Run pattern detection with the user-input form values.
+File.prototype.detectPatternsFromForm = function() {
 
 	let type = document.getElementById("alert_gen_type_field").value;
 	let series = document.getElementById("alert_gen_series_field").value;
@@ -575,9 +625,29 @@ File.prototype.detectAnomaliesFromForm = function() {
 	let persistence = document.getElementById("alert_gen_dutycycle_field").value;
 	let maxgap = document.getElementById("alert_gen_maxgap_field").value;
 
-	this.detectAnomalies(type, series, thresholdlow, thresholdhigh, duration, persistence, maxgap);
+	this.detectPatterns(type, series, thresholdlow, thresholdhigh, duration, persistence, maxgap);
 
 };
+
+// Get an annotation set by ID
+File.prototype.getAnnotationSetByID = function(id) {
+	for (let a of this.annotationSets) {
+		if (a.id === id) {
+			return a;
+		}
+	}
+	return null;
+}
+
+// Get an pattern set by ID
+File.prototype.getPatternSetByID = function(id) {
+	for (let a of this.patternSets) {
+		if (a.id === id) {
+			return a;
+		}
+	}
+	return null;
+}
 
 // Returns the graph class instance for the series name provided if it exists.
 // Otherwise, returns null;
@@ -704,7 +774,7 @@ File.prototype.getPostloadDataUpdateHandler = function() {
 
 // Returns the mode of File, either 'realtime' or 'file'.
 File.prototype.mode = function() {
-	return (this.projname === '__realtime__' && this.filename === '__realtime__') ? 'realtime' : 'file';
+	return (this.parentProject.name === '__realtime__' && this.name === '__realtime__') ? 'realtime' : 'file';
 };
 
 // Prepares & returns data by converting times to Date objects and calculating
@@ -852,6 +922,16 @@ File.prototype.processNewRealtimeData = function(newData) {
 		this.renderBufferedRealtimeData();
 	}
 
+};
+
+// Rebuilds the merged set of annotations & patterns to render.
+File.prototype.rebuildRenderSet = function() {
+	this.annotationsAndPatternsToRender = [];
+	for (const set of this.annotationSets.concat(this.patternSets)) {
+		if (set.display === true) {
+			set.setDisplay(true);
+		}
+	}
 };
 
 // Renders new buffered realtime data recursively & continuously until there is
@@ -1140,9 +1220,9 @@ File.prototype.resetZoomToOutermost = function() {
 	this.zoomTo(this.getOutermostZoomWindow(), true);
 };
 
-// Runs pre-defined anomaly detection jobs for one or more series. The series
+// Runs pre-defined pattern detection jobs for one or more series. The series
 // parameter may be a string or array of strings.
-File.prototype.runAnomalyDetectionJobsForSeries = function(series) {
+File.prototype.runPatternDetectionJobsForSeries = function(series) {
 
 	if (!Array.isArray(series)) {
 		series = [series];
@@ -1151,28 +1231,28 @@ File.prototype.runAnomalyDetectionJobsForSeries = function(series) {
 	// Persist for callback
 	let file = this;
 
-	// We now use recursion to send the anomaly detection requests serially.
+	// We now use recursion to send the pattern detection requests serially.
 	let adi = 0;
 	let recursiveDetectionFunc = function() {
 
-		if (adi < file.template.anomalyDetection.length) {
+		if (adi < file.template.patternDetection.length) {
 
 			let i = adi++;
 
 			// If the series was initially displaying, run the pre-defined
-			// anomaly detection for it.
-			if (file.template.anomalyDetection[i].hasOwnProperty('series') && series.includes(file.template.anomalyDetection[i].series)) {
-				file.detectAnomalies(
-					'anomalydetection',
-					file.template.anomalyDetection[i].hasOwnProperty('series') ? file.template.anomalyDetection[i].series : null,
-					file.template.anomalyDetection[i].hasOwnProperty('tlow') ? file.template.anomalyDetection[i].tlow : null,
-					file.template.anomalyDetection[i].hasOwnProperty('thigh') ? file.template.anomalyDetection[i].thigh : null,
-					file.template.anomalyDetection[i].hasOwnProperty('dur') ? file.template.anomalyDetection[i].dur : null,
-					file.template.anomalyDetection[i].hasOwnProperty('duty') ? file.template.anomalyDetection[i].duty : null,
-					file.template.anomalyDetection[i].hasOwnProperty('maxgap') ? file.template.anomalyDetection[i].maxgap : null,
+			// pattern detection for it.
+			if (file.template.patternDetection[i].hasOwnProperty('series') && series.includes(file.template.patternDetection[i].series)) {
+				file.detectPatterns(
+					'patterndetection',
+					file.template.patternDetection[i].hasOwnProperty('series') ? file.template.patternDetection[i].series : null,
+					file.template.patternDetection[i].hasOwnProperty('tlow') ? file.template.patternDetection[i].tlow : null,
+					file.template.patternDetection[i].hasOwnProperty('thigh') ? file.template.patternDetection[i].thigh : null,
+					file.template.patternDetection[i].hasOwnProperty('dur') ? file.template.patternDetection[i].dur : null,
+					file.template.patternDetection[i].hasOwnProperty('duty') ? file.template.patternDetection[i].duty : null,
+					file.template.patternDetection[i].hasOwnProperty('maxgap') ? file.template.patternDetection[i].maxgap : null,
 					recursiveDetectionFunc);
 			} else {
-				// Even if this anomaly detection was not processed because
+				// Even if this pattern detection was not processed because
 				// the series was not passed in, continue onto the next one.
 				recursiveDetectionFunc();
 			}
@@ -1181,7 +1261,7 @@ File.prototype.runAnomalyDetectionJobsForSeries = function(series) {
 
 	};
 
-	// Kick off the recursive pre-defined anomaly detection.
+	// Kick off the recursive pre-defined pattern detection.
 	recursiveDetectionFunc();
 
 };
@@ -1239,6 +1319,11 @@ File.prototype.triggerRedraw = function() {
 
 };
 
+// Trigger a resize of all graphs which are currently showing.
+File.prototype.triggerResizeAllGraphs = function() {
+	for (const s in this.graphs) { this.graphs[s].triggerResize(); }
+};
+
 // Request and update data for the current view of all graphs for current file.
 // NOTE: There is an identically-named function on both File and Graph classes.
 File.prototype.updateCurrentViewData = function() {
@@ -1287,7 +1372,7 @@ File.prototype.updateCurrentViewData = function() {
 	let xRange = lastGraphShowing.dygraphInstance.xAxisRange();
 
 	// Request the updated view data from the backend.
-	requestHandler.requestSeriesRangedData(this.projname, this.filename, series, xRange[0]/1000-this.fileData.baseTime, xRange[1]/1000-this.fileData.baseTime, this.getPostloadDataUpdateHandler());
+	requestHandler.requestSeriesRangedData(this.parentProject.id, this.id, series, xRange[0]/1000-this.fileData.baseTime, xRange[1]/1000-this.fileData.baseTime, this.getPostloadDataUpdateHandler());
 
 };
 

@@ -3,34 +3,35 @@
 // Class declaration
 function RequestHandler() {}
 
-RequestHandler.prototype.createAnnotation = function(projname, filename, left, right, seriesID, label, callback) {
+RequestHandler.prototype.createAnnotation = function(project_id, file_id, left, right, seriesID, label, pattern_id, callback) {
 
 	this._newRequest(callback, globalAppConfig.createAnnotationURL, {
-		project: projname,
-		file: filename,
+		project_id: project_id,
+		file_id: file_id,
 		xl: left,
 		xr: right,
 		/*yt: ,
 		yb: ,*/
 		sid: seriesID,
-		label: label
+		label: label,
+		pattern_id: pattern_id
 	});
 
 };
 
-RequestHandler.prototype.deleteAnnotation = function(id, projname, filename, callback) {
+RequestHandler.prototype.deleteAnnotation = function(id, project_id, file_id, callback) {
 	this._newRequest(callback, globalAppConfig.deleteAnnotationURL, {
 		id: id,
-		project: projname,
-		file: filename
+		project_id: project_id,
+		file_id: file_id
 	});
 };
 
-RequestHandler.prototype.requestAnomalyDetection = function(projname, filename, type, seriesID, tlow, thigh, duration, persistence, maxgap, callback) {
+RequestHandler.prototype.requestPatternDetection = function(project_id, file_id, type, seriesID, tlow, thigh, duration, persistence, maxgap, callback) {
 
-	this._newRequest(callback, globalAppConfig.detectAnomaliesURL, {
-		project: projname,
-		file: filename,
+	this._newRequest(callback, globalAppConfig.detectPatternsURL, {
+		project_id: project_id,
+		file_id: file_id,
 		type: type,
 		series: seriesID,
 		thresholdlow: tlow,
@@ -42,41 +43,41 @@ RequestHandler.prototype.requestAnomalyDetection = function(projname, filename, 
 
 };
 
-RequestHandler.prototype.requestInitialFilePayload = function(projname, filename, callback) {
+RequestHandler.prototype.requestInitialFilePayload = function(project_id, file_id, callback) {
 	this._newRequest(callback, globalAppConfig.initialFilePayloadURL, {
-		project: projname,
-		file: filename
+		project_id: project_id,
+		file_id: file_id
 	});
 };
 
-RequestHandler.prototype.requestProjectAnnotations = function(projname, callback) {
+RequestHandler.prototype.requestProjectAnnotations = function(project_id, callback) {
 	this._newRequest(callback, globalAppConfig.getProjectAnnotationsURL, {
-		project: projname
+		project_id: project_id
 	})
 };
 
-RequestHandler.prototype.requestSeriesRangedData = function(projname, filename, series, startTime, stopTime, callback) {
+RequestHandler.prototype.requestSeriesRangedData = function(project_id, file_id, series, startTime, stopTime, callback) {
 	this._newRequest(callback, globalAppConfig.seriesRangedDataURL, {
-		project: projname,
-		file: filename,
+		project_id: project_id,
+		file_id: file_id,
 		s: series,
 		start: startTime,
 		stop: stopTime
 	});
 };
 
-RequestHandler.prototype.updateAnnotation = function(id, projname, filename, left, right, seriesID, label, callback) {
+RequestHandler.prototype.updateAnnotation = function(id, project_id, file_id, left, right, seriesID, label, callback) {
 
 	this._newRequest(callback, globalAppConfig.updateAnnotationURL, {
 		id: id,
-		project: projname,
-		file: filename,
+		project_id: project_id,
+		file_id: file_id,
 		xl: left,
 		xr: right,
 		/*yt: ,
 		yb: ,*/
 		sid: seriesID,
-		label: label,
+		label: label
 	});
 
 };
@@ -86,6 +87,8 @@ RequestHandler.prototype.updateAnnotation = function(id, projname, filename, lef
 // such values. In the latter case, the array will be passed in as a GET
 // parameter array of values.
 RequestHandler.prototype._newRequest = function(callback, path, params) {
+
+	globalAppConfig.verbose && console.log("Sending request to " + path, params);
 
 	// Instantiate a new HTTP request object
 	let req = new XMLHttpRequest();
@@ -107,7 +110,7 @@ RequestHandler.prototype._newRequest = function(callback, path, params) {
 				let t0 = performance.now();
 				callback(data);
 				let tt = performance.now() - t0;
-				globalAppConfig.performance && tt > globalAppConfig.performanceReportingThresholdGeneral && console.log("Request callback took " + Math.round(tt) + "ms:", path, params);
+				globalAppConfig.performance && tt > globalAppConfig.performanceReportingThresholdGeneral && console.log("Request callback took " + Math.round(tt) + "ms:", path);
 			} else {
 				console.log("Important: Callback not provided to request handler.");
 			}

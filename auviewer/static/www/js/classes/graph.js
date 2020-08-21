@@ -29,7 +29,7 @@ function Graph(seriesOrGroupName, file) {
 		this.group = groupTemplate['members']; //this.file.fileData.series[this.series].group;
 
 		// Group template
-		this.template = templateSystem.getGroupTemplate(this.file.projname, this.fullName);
+		this.template = templateSystem.getGroupTemplate(this.file.parentProject.id, this.fullName);
 
 	} else {
 
@@ -48,7 +48,7 @@ function Graph(seriesOrGroupName, file) {
 		this.group = [seriesOrGroupName];
 
 		// Series template
-		this.template = templateSystem.getSeriesTemplate(this.file.projname, this.fullName);
+		this.template = templateSystem.getSeriesTemplate(this.file.parentProject.id, this.fullName);
 
 	}
 
@@ -126,12 +126,7 @@ Graph.prototype.build = function() {
 				'<tr>' +
 					'<td class="graph_title" title="'+this.altText+'">'+this.shortName+'</td>' +
 					'<td rowspan="2">' +
-						'<div class="graph">' +
-							'<table style="width:100%;height:100%;"><tbody><tr>' +
-							// '<td style="width:75%;"><div class="innerLeft" style="width: 100%; height: 100%;"></div></td>' +
-							// '<td style="width:25%; border-left: 1px solid #888;"><div class="innerRight" style="width: 100%; height: 100%;"></div></td>' +
-							'<td style="width:100%;"><div class="innerLeft" style="width: 100%; height: 100%;"></div></td>' +
-						'</tr></tbody></table></div>' +
+						'<div class="graph"></div>' +
 					'</td>' +
 				'</tr>' +
 				'<tr>' +
@@ -144,8 +139,8 @@ Graph.prototype.build = function() {
 
 	// Grab references to the legend & graph elements so they can be used later.
 	this.legendDomElement = this.graphWrapperDomElement.querySelector('.legend > div');
-	this.graphDomElement = this.graphWrapperDomElement.querySelector('.graph .innerLeft');
-	this.rightGraphDomElement = this.graphWrapperDomElement.querySelector('.graph .innerRight');
+	this.graphDomElement = this.graphWrapperDomElement.querySelector('.graph');//('.graph .innerLeft');
+	this.rightGraphDomElement = false;//this.graphWrapperDomElement.querySelector('.graph .innerRight');
 
 	// let titleDomElement = document.createElement('DIV');
 	// titleDomElement.className = 'graph_title';
@@ -180,6 +175,31 @@ Graph.prototype.build = function() {
 
 	// Add this graph to the plot control
 	this.addSelfToPlotControl();
+
+};
+
+// Remove the graph from the interface.
+Graph.prototype.hide = function() {
+
+	// Unsynchronize the graphs temporarily for the duration of the removal.
+	this.file.unsynchronizeGraphs();
+
+	// Destroy the dygraph instance
+	if (this.dygraphInstance !== null) {
+		this.dygraphInstance.destroy();
+	}
+
+	// Delete the dygraph instance reference
+	this.dygraphInstance = null;
+
+	// Hide the graph & legend divs
+	this.hideDOMElements();
+
+	// Trigger resize of all graphs (resolves a dygraphs sizing bug)
+	this.file.triggerResizeAllGraphs();
+
+	// Resynchronize the graphs now that removal is complete.
+	this.file.synchronizeGraphs()
 
 };
 
@@ -305,28 +325,6 @@ Graph.prototype.isShowing = function() {
 	return this.dygraphInstance !== null;
 };
 
-// Remove the graph from the interface.
-Graph.prototype.remove = function() {
-
-	// Unsynchronize the graphs temporarily for the duration of the removal.
-	this.file.unsynchronizeGraphs();
-
-	// Destroy the dygraph instance
-	if (this.dygraphInstance !== null) {
-		this.dygraphInstance.destroy();
-	}
-
-	// Delete the dygraph instance reference
-	this.dygraphInstance = null;
-
-	// Hide the graph & legend divs
-	this.hideDOMElements();
-
-	// Resynchronize the graphs now that removal is complete.
-	this.file.synchronizeGraphs()
-
-};
-
 // Replace the data attached to the dygraph. Block redraw of the dygraph by
 // passing in true for the block_redraw optional parameter.
 Graph.prototype.replacePlottedData = function(data, block_redraw=false) {
@@ -347,16 +345,19 @@ Graph.prototype.show = function() {
 	// Instantiate the dygraph
 	this.instantiateDygraph();
 
+	// Trigger resize of all graphs (resolves a dygraphs sizing bug)
+	this.file.triggerResizeAllGraphs();
+
 	// Resynchronize the graphs now that the addition is complete.
 	this.file.synchronizeGraphs();
 
-	// Run pre-defined anomaly detection jobs (async).
+	// Run pre-defined pattern detection jobs (async).
 	// NOTE: This function takes either string or array as parameter, so it
 	// works for a single or group series graph.
 	if (this.isGroup) {
-		this.file.runAnomalyDetectionJobsForSeries(this.group);
+		this.file.runPatternDetectionJobsForSeries(this.group);
 	} else {
-		this.file.runAnomalyDetectionJobsForSeries(this.fullName);
+		this.file.runPatternDetectionJobsForSeries(this.fullName);
 	}
 
 	// Update the data from the backend for the new series only
@@ -367,6 +368,13 @@ Graph.prototype.show = function() {
 // Show the graph & legend divs for the named series.
 Graph.prototype.showDOMElements = function() {
 	this.graphWrapperDomElement.style.display = 'block';
+};
+
+// Triggers a resize of the dygraph instance, if showing.
+Graph.prototype.triggerResize = function() {
+	if (this.isShowing()) {
+		this.dygraphInstance.resize();
+	}
 };
 
 // Request and update data for the current view of the graph.
@@ -382,6 +390,6 @@ Graph.prototype.updateCurrentViewData = function() {
 	let series = this.isGroup ? this.group : [this.fullName];
 
 	// Request the updated view data from the backend.
-	requestHandler.requestSeriesRangedData(this.file.projname, this.file.filename, series, xRange[0]/1000-this.file.fileData.baseTime, xRange[1]/1000-this.file.fileData.baseTime, this.file.getPostloadDataUpdateHandler());
+	requestHandler.requestSeriesRangedData(this.file.parentProject.id, this.file.id, series, xRange[0]/1000-this.file.fileData.baseTime, xRange[1]/1000-this.file.fileData.baseTime, this.file.getPostloadDataUpdateHandler());
 
 };

@@ -1,15 +1,16 @@
 """Class and related functionality for projects."""
 import logging
-import os
+import pandas as pd
 import traceback
 
-from flask_login import current_user
 from pathlib import Path
+from sqlalchemy import and_
 
 from . import models
+from .patternset import PatternSet
 from .config import config
 from .file import File
-from .shared import createEmptyJSONFile
+from .shared import annotationOrPatternOutput, createEmptyJSONFile
 
 # Will hold loaded projects
 loadedProjects = []
@@ -22,10 +23,12 @@ class Project:
         # Set id, name, and relevant paths
         self.id = projectModel.id
         self.name = projectModel.name
-        self.total_anomalies = projectModel.total_anomalies
         self.projDirPathObj = Path(projectModel.path)
         self.originalsDirPathObj = self.projDirPathObj / 'originals'
         self.processedDirPathObj = self.projDirPathObj / 'processed'
+
+        # Hold a reference to the db model for future use
+        self.model = projectModel
 
         # Load interface templates
         self.interfaceTemplates = "{}"
@@ -44,8 +47,14 @@ class Project:
         # Holds references to the files that belong to the project
         self.files = []
 
+        # Holds references to the pattern sets that belong to the project
+        self.patternsets = []
+
         # Load project files
         self.loadProjectFiles(processNewFiles)
+
+        # Load pattern sets
+        self.loadPatternSets()
 
     # Cleanup
     def __del__(self):
@@ -54,35 +63,83 @@ class Project:
         except:
             pass
 
+    # Create and return a new pattern set.
+    def createPatternSet(self, name, description=None):
+
+        # Create pattern set in the database
+        patternSetModel = models.PatternSet(project_id=self.id, name=name, description=description)
+        models.db.session.add(patternSetModel)
+        models.db.session.commit()
+
+        # Instantiate PatternSet and add to the project's pattern sets
+        patternSet = PatternSet(self, patternSetModel)
+        self.patternsets.append(patternSet)
+
+        # Return the pattern set
+        return patternSet
+
+    # Run pattern detection on all files, and return a single list of results.
+    def detectPatterns(self, type, series, thresholdlow, thresholdhigh, duration, persistence, maxgap):
+        al = [[f.id, f.name, series, pattern[0], pattern[1], None, None] for f in self.files for pattern in f.detectPatterns(type, series, thresholdlow, thresholdhigh, duration, persistence, maxgap)]
+        return pd.DataFrame(al, columns=['file_id', 'filename', 'series', 'left', 'right', 'top', 'bottom'])
+
     # Returns a list of user's annotations for all files in the project
-    def getAnnotations(self):
+    def getAnnotationsOutput(self, user_id):
+        return [[a.id, a.file_id, Path(a.file.path).name, a.series, a.left, a.right, a.top, a.bottom, a.label, a.pattern_id] for a in models.Annotation.query.filter_by(user_id=user_id, project_id=self.id).all()]
 
-        return [[a.id, os.path.basename(a.filepath), a.series, a.left, a.right, a.top, a.bottom, a.annotation] for a in models.Annotation.query.filter_by(user_id=current_user.id, project=self.name).all()]
-
-    def getFile(self, filename):
-
-        # TODO(gus): Convert this to a hash table
+    # Returns the file with matching ID or None.
+    def getFile(self, id):
         for f in self.files:
-            if f.orig_filename == filename:
+            if f.id == id:
                 return f
-
-        # Having reached this point, we cannot find the file
         return None
 
-    def getInitialPayloadOutput(self):
+    # Returns initial project payload data
+    def getInitialPayload(self, user_id):
 
         print("Assembling initial project payload output for project", self.name)
 
-        outputObject = {
+        return {
+
+            # Project data
             'project_id': self.id,
             'project_name': self.name,
+            'project_assignments': [{
+                'id': ps.id,
+                'name': ps.name,
+                'description': ps.description,
+                'patterns': [
+                    #annotationOrPatternOutput(p) for p in ps.patterns
+                    annotationOrPatternOutput(p, p.annotations[0] if len(p.annotations)>0 else None) for p in models.db.session.query(models.Pattern).filter_by(pattern_set_id=ps.id).outerjoin(models.Annotation, and_(models.Annotation.pattern_id==models.Pattern.id, models.Annotation.user_id==1)).all()
+                ]
+            } for ps in models.PatternSet.query.filter(models.PatternSet.users.any(id=user_id), models.PatternSet.project_id==self.id).all()],
             'project_files': [[f.id, f.origFilePathObj.name] for f in self.files],
-            'project_template': self.projectTemplate,
+
+            # Template data
+            'builtin_default_interface_templates': config['builtinDefaultInterfaceTemplates'],
+            'builtin_default_project_template': config['builtinDefaultProjectTemplate'],
+            'global_default_interface_templates': config['globalDefaultInterfaceTemplates'],
+            'global_default_project_template': config['globalDefaultProjectTemplate'],
             'interface_templates': self.interfaceTemplates,
+            'project_template': self.projectTemplate,
+
         }
 
-        # Return the output object
-        return outputObject
+    # Get project's pattern set by ID
+    def getPatternSetByID(self, id):
+        for p in self.patternsets:
+            if p.id == id:
+                return p
+        return None
+
+    # Get total count of patterns in all the project's pattern sets
+    def getTotalPatternCount(self):
+        return sum([ps.count for ps in self.patternsets])
+
+    # Load pattern sets belonging to the project
+    def loadPatternSets(self):
+        for psm in models.PatternSet.query.filter_by(project_id=self.id).all():
+            self.patternsets.append(PatternSet(self, psm))
 
     # Load files belonging to the project, and process new files if desired.
     def loadProjectFiles(self, processNewFiles=True):
@@ -146,30 +203,26 @@ class Project:
                 newFileClassInstance.id = newFileDBEntry.id
                 self.files.append(newFileClassInstance)
 
-
 # Returns the project with matching ID or None.
-def getProject(id):
+def getProjectByID(id):
     global loadedProjects
-    print(loadedProjects)
     for p in loadedProjects:
-        print(f"project id {p.id}")
         if p.id == id:
-            print("returning")
             return p
     return None
 
-def getProjectsList():
+def getProjectsList(user_id):
     global loadedProjects
     return [{
         'id': p.id,
         'name': p.name,
         'files': len(p.files),
-        'anomalies': p.total_anomalies,
-        'annotations': models.Annotation.query.filter_by(user_id=current_user.id).count(),
-        'assignments_rem': models.User.query.filter_by(id=current_user.id).first().assignments_remaining,
+        'patterns': p.getTotalPatternCount(),
+        'annotations': models.Annotation.query.filter_by(user_id=user_id, project_id=p.id).count(),
+        'assignments_rem': models.User.query.filter_by(id=user_id).first().assignments_remaining,
     } for p in loadedProjects]
 
-# Load projects into memory. This must be called before getProject and
+# Load projects into memory. This must be called before getProjectByID and
 # list_projects. Will also detect new projects in the projects folder and add
 # them to the database.
 def loadProjects():

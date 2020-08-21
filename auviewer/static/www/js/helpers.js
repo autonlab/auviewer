@@ -1,5 +1,13 @@
 'use strict';
 
+// Given a DOM element, clears all of its contents.
+// See: https://jsperf.com/innerhtml-vs-removechild/15
+function clearDOMElementContent(de) {
+	while (de.firstChild) {
+		de.removeChild(de.firstChild);
+	}
+}
+
 // Converts the first column of the series to date object, based on first
 // column and basetime being in being in milliseconds.
 function convertFirstColumnToDate(data, baseTime) {
@@ -184,6 +192,14 @@ function getHTML5DateTimeStringsFromDate(d) {
 
 	// Return them in array
 	return [ds, ts];
+}
+
+// Holds the next incremental local ID.
+let localIDTracker = 0;
+
+// Generate an incrementing unique local id
+function localIDGenerator() {
+	return "local" + localIDTracker++
 }
 
 /**

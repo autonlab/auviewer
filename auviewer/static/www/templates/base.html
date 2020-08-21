@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>AUView &ndash; Auton Universal Viewer</title>
+	<title>Auton Universal Viewer</title>
+	<link rel="apple-touch-icon" sizes="180x180" href="{{rootWebPath}}/img/favicons/apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="{{rootWebPath}}/img/favicons/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="{{rootWebPath}}/img/favicons/favicon-16x16.png">
 	<!--<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">-->
 	<!--<link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">-->
 	<link href="{{rootWebPath}}/css/third-party/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T">
@@ -21,8 +24,8 @@
 
 {% block body %}
 
-<nav class="navbar navbar-expand-sm navbar-light bg-light mb-4">
-	<a class="navbar-brand" href="{{rootWebPath}}/">Auton Universal Viewer<span style="display: none;" id="realtimeTitle"> &ndash; Realtime Mode</span></a>
+<nav class="navbar fixed-top navbar-expand-sm navbar-light bg-light mb-4">
+	<a class="navbar-brand" style="padding: 0;" href="{{rootWebPath}}/"><img src="{{rootWebPath}}/img/10.jpg"> Auton Universal Viewer<span style="display: none;" id="realtimeTitle"> &ndash; Realtime Mode</span></a>
 	<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
 		<span class="navbar-toggler-icon"></span>
 	</button>
@@ -124,8 +127,8 @@
 		        <td>Annotate section</td>
 	        </tr>
 	        <tr>
-		        <td><i class="fa fa-mouse-pointer"></i> on <span style="text-decoration: underline; text-decoration-color: #f7a438;">Anomaly</span></td>
-		        <td>Create annotation from anomaly</td>
+		        <td><i class="fa fa-mouse-pointer"></i> on <span style="text-decoration: underline; text-decoration-color: #f7a438;">Pattern</span></td>
+		        <td>Create annotation from pattern</td>
 	        </tr>
 	        <tr>
 		        <td><i class="fa fa-mouse-pointer"></i> on <span style="text-decoration: underline; text-decoration-color: #0048B6;">Annotation</span></td>

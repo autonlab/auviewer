@@ -4,6 +4,8 @@
     cursor: pointer;
 }
 
+.color-square { width: 17.4px; height: 17.4px; }
+
 /* Main */
 
 body {
@@ -12,34 +14,54 @@ body {
 
 #controls {
     position: fixed;
-    top: 64px;
+    top: 56px;
     left: 0;
     box-sizing: border-box;
     width: 260px;
-    height: calc(100% - 64px);
+    height: calc(100% - 56px);
+    padding-top: 8px;
     padding-left: 8px;
     overflow-y: auto;
     overflow-x: hidden;
 }
 
-div.bootstrap-select.bs-width-correction > div.dropdown-menu {
+#zoomControl { width: 100%; margin-bottom: 10px; }
+#zoomControl > div { width: 100%; text-align: center; margin-bottom: 4px; }
+
+.control-panel-table { font-size: 0.8em; }
+.control-panel-table th { font-size: 0.9em; }
+
+div.bootstrap-select.bs-width-correction > div.dropdown-menu { width: 100%; }
+div.bootstrap-select > div.dropdown-menu ul.dropdown-menu { font-size: 0.875rem !important; }
+div.bootstrap-select > div.dropdown-menu a.dropdown-item { padding: 4px 8px; }
+
+#assignmentPanelArea { display: none; }
+.assignment-panel {
+    box-sizing: border-box;
     width: 100%;
+    border: 1px solid #ccc;
+    padding: 8px;
 }
-
-div.bootstrap-select > div.dropdown-menu ul.dropdown-menu {
-    font-size: 0.875rem !important;
-}
-
-div.bootstrap-select > div.dropdown-menu a.dropdown-item {
-    padding: 4px 8px;
-}
+.assignment-panel > h6 { font-size: 0.9em; }
+.assignment-panel .btn-group button { font-size: 0.7em; }
+p.assignment-panel-bottom-label { font-size: 0.6em; margin-top: 0; font-style: italic; text-align: right; padding-right: 2px; }
 
 #graphs {
     box-sizing: border-box;
-    padding-left: 270px;
-    width: 99%;
-    height: 100%;
+    /*padding-left: 270px;*/
+    /*height: 100%;*/
     margin-bottom: 100px;
+
+
+
+    position: fixed;
+    top: 56px;
+    left: 270px;
+    width: calc(100% - 270px);
+    height: calc(100% - 56px);
+    padding: 8px 4px 60px 8px;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 #metadata {
@@ -99,6 +121,7 @@ div.bootstrap-select > div.dropdown-menu a.dropdown-item {
     border: 1px solid #aaa;
     padding: 2px 4px;
     word-wrap: break-word;
+    z-index: 99999;
 }
 
 .graph_wrapper > table > tbody > tr > td.legend > div > span {
@@ -113,7 +136,7 @@ div.bootstrap-select > div.dropdown-menu a.dropdown-item {
 
 /* Realtime */
 
-body.realtime > #controls > #projectAndFileSelection, body.realtime > #controls > #anomalyDetectionPanel {
+body.realtime > #controls > #projectAndFileSelection, body.realtime > #controls > #patternDetectionPanel {
     display: none !important;
 }
 body.realtime #realtimeTitle {

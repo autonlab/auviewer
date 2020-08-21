@@ -1,4 +1,5 @@
 from flask import Flask, Blueprint, send_from_directory, request, render_template, render_template_string, abort
+from flask_login import current_user
 from flask_mail import Mail
 from flask_socketio import SocketIO, join_room, leave_room, rooms
 from htmlmin.main import minify
@@ -16,9 +17,10 @@ import logging
 import simplejson
 
 from . import models
+from .patternset import getAssignments
 from .config import set_data_path, config, FlaskConfigClass
 from .file import File
-from .project import loadProjects, getProject, getProjectsList
+from .project import loadProjects, getProjectByID, getProjectsList
 
 from ..flask_user import confirm_email_required, current_user, login_required, UserManager, SQLAlchemyAdapter
 from ..flask_user.signals import user_sent_invitation, user_registered
@@ -80,27 +82,29 @@ def createApp():
     # (since it is not possible through the interface). Alternatively, you
     # could modify the database.
     #
-    new_admin_email = 'gwelter@gmail.com'
-    new_admin_pass = 'akeminute'
-    if not models.User.query.filter_by(email=new_admin_email).first():
-        u = models.User(email=new_admin_email, active=True, password=user_manager.hash_password(new_admin_pass))
-        u.roles.append(models.Role(name='admin'))
-        models.db.session.add(u)
-        models.db.session.commit()
+    with app.app_context():
+        new_admin_email = 'gwelter@gmail.com'
+        new_admin_pass = 'akeminute'
+        if not models.User.query.filter_by(email=new_admin_email).first():
+            u = models.User(email=new_admin_email, active=True, password=user_manager.hash_password(new_admin_pass))
+            u.roles.append(models.Role(name='admin'))
+            models.db.session.add(u)
+            models.db.session.commit()
 
     # Load projects
-    loadProjects()
+    with app.app_context():
+        loadProjects()
 
     # Instantiate a file for realtime, in-memory usage (probably temporary)
     # TODO(gus): Refactor realtime
     #rtf = File(projparent=None)
 
     @user_registered.connect_via(app)
-    def after_registered_hook(sender, user, user_invite):
+    def after_registered_hook(sender):
         sender.logger.info("USER REGISTERED")
 
     @user_sent_invitation.connect_via(app)
-    def after_invitation_hook(sender, **extra):
+    def after_invitation_hook(sender):
         sender.logger.info("USER SENT INVITATION")
 
     ### NON-SECURE AREAS (NO LOGIN REQUIRED) ###
@@ -108,7 +112,12 @@ def createApp():
     # Map our static assets to be served
     app.register_blueprint(Blueprint('css', __name__, static_url_path=config['rootWebPath'] + '/css', static_folder=str(config['codeRootPathObj'] / 'static' / 'www' / 'css')))
     app.register_blueprint(Blueprint('fonts', __name__, static_url_path=config['rootWebPath'] + '/fonts', static_folder=str(config['codeRootPathObj'] / 'static' / 'www' / 'fonts')))
+    app.register_blueprint(Blueprint('img', __name__, static_url_path=config['rootWebPath'] + '/img', static_folder=str(config['codeRootPathObj'] / 'static' / 'www' / 'img')))
     app.register_blueprint(Blueprint('js', __name__, static_url_path=config['rootWebPath'] + '/js', static_folder=str(config['codeRootPathObj'] / 'static' / 'www' / 'js')))
+
+    @app.route('/favicon.ico')
+    def favicon():
+        return send_from_directory(str(config['codeRootPathObj'] / 'static' / 'www' / 'img' / 'favicons'), 'favicon.ico')
 
     ### SECURE AREAS (LOGIN REQUIRED) ###
     ### All methods below should have ###
@@ -124,42 +133,39 @@ def createApp():
     def create_annotation():
 
         # Parse parameters
-        projname = request.args.get('project')
-        filename = request.args.get('file')
+        project_id = request.args.get('project_id', type=int)
+        file_id = request.args.get('file_id', type=int)
         left = getFloatParamOrNone('xl')
         right = getFloatParamOrNone('xr')
         top = getFloatParamOrNone('yt')
         bottom = getFloatParamOrNone('yb')
         seriesID = request.args.get('sid')
         label = request.args.get('label')
+        pattern_id = request.args.get('pattern_id', type=int)
 
-        # Try to get the project
-        try:
-
-            # Get the project
-            project = projects[projname]
-
-        except:
-
-            print("Project could not be retrieved:", projname)
+        # Get the project
+        project = getProjectByID(project_id)
+        if project is None:
+            logging.error(f"Project ID {project_id} not found.")
             return simplejson.dumps({
                 'success': False
             })
 
         # Get the file
-        file = project.getFile(filename)
-
-        # If we did not find the file, return empty output
-        if not isinstance(file, File):
-            print("File could not be retrieved:", filename)
+        file = project.getFile(file_id)
+        if file is None:
+            logging.error(f"File ID {file_id} not found.")
             return simplejson.dumps({
                 'success': False
             })
 
         # Write the annotation
+        newAnnotationID = file.createAnnotation(current_user.id, left, right, top, bottom, seriesID, label, pattern_id)
+
+        # Output response
         return simplejson.dumps({
             'success': True,
-            'id': file.annotationSet.createAnnotation(left, right, top, bottom, seriesID, label)
+            'id': newAnnotationID,
         })
 
     @app.route(config['rootWebPath']+'/delete_annotation')
@@ -167,47 +173,43 @@ def createApp():
     def delete_annotation():
 
         # Parse parameters
-        id = request.args.get('id')
-        projname = request.args.get('project')
-        filename = request.args.get('file')
+        id = request.args.get('id', type=int)
+        project_id = request.args.get('project_id', type=int)
+        file_id = request.args.get('file_id', type=int)
 
-        # Try to get the project
-        try:
-
-            # Get the project
-            project = projects[projname]
-
-        except:
-
-            print("Project could not be retrieved:", projname)
+        # Get the project
+        project = getProjectByID(project_id)
+        if project is None:
+            logging.error(f"Project ID {project_id} not found.")
             return simplejson.dumps({
                 'success': False
             })
 
         # Get the file
-        file = project.getFile(filename)
-
-        # If we did not find the file, return empty output
-        if not isinstance(file, File):
-            print("File could not be retrieved:", filename)
+        file = project.getFile(file_id)
+        if file is None:
+            logging.error(f"File ID {file_id} not found.")
             return simplejson.dumps({
                 'success': False
             })
 
-        # Delete the annotation
+        # Write the annotation
+        deletionSuccess = file.deleteAnnotation(current_user.id, id)
+
+        # Output response
         return simplejson.dumps({
-            'success': file.annotationSet.deleteAnnotation(id)
+            'success': deletionSuccess,
         })
 
-    @app.route(config['rootWebPath']+'/detect_anomalies', methods=['GET'])
+    @app.route(config['rootWebPath']+'/detect_patterns', methods=['GET'])
     @login_required
-    def detect_anomalies():
+    def detect_patterns():
 
         # TODO(gus): Add checks here
 
         # Parse the series name and alert parameters
-        projname = request.args.get('project')
-        filename = request.args.get('file')
+        project_id = request.args.get('project_id', type=int)
+        file_id = request.args.get('file_id', type=int)
         type = request.args.get('type')
         series = request.args.get('series')
         thresholdlow = request.args.get('thresholdlow', type=float) if request.args.get('thresholdlow') != '' else None
@@ -216,26 +218,21 @@ def createApp():
         persistence = request.args.get('persistence', type=float)/100
         maxgap = request.args.get('maxgap', type=float)
 
-        # Try to get the project
-        try:
-
-            # Get the project
-            project = projects[projname]
-
-        except:
-
-            print("Project could not be retrieved:", projname)
-            return simplejson.dumps([])
+        # Get the project
+        project = getProjectByID(project_id)
+        if project is None:
+            logging.error(f"Project ID {project_id} not found.")
+            abort(404, description="Project not found.")
+            return
 
         # Get the file
-        file = project.getFile(filename)
+        file = project.getFile(file_id)
+        if file is None:
+            logging.error(f"File ID {file_id} not found.")
+            return simplejson.dumps([])
 
-        # If we did not find the file, return empty output
-        if not isinstance(file, File):
-            print("File could not be retrieved:", filename)
-            return ''
-
-        alerts = file.detectAnomalies(
+        # Run pattern detection
+        alerts = file.detectPatterns(
             type=type,
             series=series,
             thresholdlow=thresholdlow,
@@ -245,6 +242,7 @@ def createApp():
             maxgap=maxgap
         )
 
+        # Output response
         return simplejson.dumps(alerts, ignore_nan=True)
 
     @app.route(config['rootWebPath']+'/get_project_annotations')
@@ -252,95 +250,55 @@ def createApp():
     def get_project_annotations():
 
         # Parse parameters
-        projname = request.args.get('project')
+        project_id = request.args.get('project_id', type=int)
 
         # Get the project
-        try:
-            project = projects[projname]
-        except:
-            print("Project could not be retrieved:", projname)
-            return simplejson.dumps({})
+        project = getProjectByID(project_id)
+        if project is None:
+            logging.error(f"Project ID {project_id} not found.")
+            abort(404, description="Project not found.")
+            return
 
-        output = project.getAnnotations()
-        json_output = simplejson.dumps(output, ignore_nan=True)
+        # Assemble project annotations
+        projectAnnotations = project.getAnnotationsOutput(current_user.id)
 
-        return json_output
+        # Output response
+        return simplejson.dumps(projectAnnotations, ignore_nan=True)
 
     @app.route(config['rootWebPath']+'/')
     @app.route(config['rootWebPath']+'/index.html')
     @login_required
     def index():
-        #return send_from_directory('../www', 'index.html')
-        return render_template('index.html', projects=getProjectsList())
+        return render_template('index.html', projects=getProjectsList(current_user.id), assignments=getAssignments(current_user.id))
 
     @app.route(config['rootWebPath']+'/initial_file_payload')
     @login_required
     def initial_file_payload():
 
-        if request.method == 'GET' and len(request.args.get('file', default='')) > 0:
-
-            # Parse parameters
-            projname = request.args.get('project')
-            filename = request.args.get('file')
-
-            # If the user is in realtime mode, select the realtime file.
-            if projname == '__realtime__' and filename == '__realtime__':
-
-                file = rtf
-
-            else:
-
-                # Get the project
-                try:
-                    project = projects[projname]
-                except:
-                    print("Project could not be retrieved:", projname)
-                    return simplejson.dumps({})
-
-                # Get the file
-                file = project.getFile(filename)
-
-            # If we did not find the file, return empty output
-            if not isinstance(file, File):
-                return ''
-
-            # Return the full (zoomed-out but downsampled if appropriate) datasets for
-            # all data series.
-            output = file.getInitialPayloadOutput()
-            json_output = simplejson.dumps(output, ignore_nan=True)
-
-            return json_output
-
-        else:
-            return "Invalid request."
-
-    @app.route(config['rootWebPath']+'/initial_payload')
-    @login_required
-    def initial_payload():
-
-        response = {
-            'projects': list(projects.keys()),
-            'builtin_default_interface_templates': config['builtinDefaultInterfaceTemplates'],
-            'builtin_default_project_template': config['builtinDefaultProjectTemplate'],
-            'global_default_interface_templates': config['globalDefaultInterfaceTemplates'],
-            'global_default_project_template': config['globalDefaultProjectTemplate'],
-        }
-
-        return simplejson.dumps(response)
-
-    @app.route(config['rootWebPath']+'/initial_project_payload')
-    @login_required
-    def initial_project_payload():
-
         # Parse parameters
-        id = request.args.get('id', type=int)
+        project_id = request.args.get('project_id', type=int)
+        file_id = request.args.get('file_id', type=int)
 
-        p = getProject(id)
-        if p is None:
-            logging.error(f"Project ID {id} not found.")
-            return simplejson.dumps([])
+        # Get the project
+        project = getProjectByID(project_id)
+        if project is None:
+            logging.error(f"Project ID {project_id} not found.")
+            abort(404, description="Project not found.")
+            return
 
-        return simplejson.dumps(p.getInitialPayloadOutput())
+        # Get the file
+        file = project.getFile(file_id)
+        if file is None:
+            logging.error(f"File ID {file_id} not found.")
+            abort(404, description="File not found.")
+            return
+
+        # Assemble the initial file payload (full zoomed-out & downsampled, if
+        # necessary, datasets for all data series.
+        initialFilePayload = file.getInitialPayload(current_user.id)
+        
+        # Output response
+        return simplejson.dumps(initialFilePayload, ignore_nan=True)
 
     @app.route(config['rootWebPath']+'/project')
     @login_required
@@ -349,73 +307,60 @@ def createApp():
         # Parse parameters
         id = request.args.get('id', type=int)
 
-        p = getProject(id)
+        p = getProjectByID(id)
         if p is None:
             logging.error(f"Project ID {id} not found.")
-            abort(404, descriptino="Project not found.")
+            abort(404, description="Project not found.")
             return
 
-        # Data for the HTML template
-        project = p.getInitialPayloadOutput()
-        templates = {
-            'builtin_default_interface_templates': config['builtinDefaultInterfaceTemplates'],
-            'builtin_default_project_template': config['builtinDefaultProjectTemplate'],
-            'global_default_interface_templates': config['globalDefaultInterfaceTemplates'],
-            'global_default_project_template': config['globalDefaultProjectTemplate'],
-        }
+        # Project payload data for the HTML template
+        projectPayload = p.getInitialPayload(current_user.id)
 
         # Assemble the data into a payload. We JSON-encode this twice. The first
         # one converts the dict into JSON. The second one essentially makes the
         # JSON string safe to drop straight into JavaScript code, as we are doing.
-        payload = simplejson.dumps(simplejson.dumps({**project, **templates}))
+        projectPayloadJSON = simplejson.dumps(simplejson.dumps(projectPayload))
 
-        return render_template('project.html', project_name=project['project_name'], payload=payload)
+        return render_template('project.html', project_name=projectPayload['project_name'], payload=projectPayloadJSON)
 
     @app.route(config['rootWebPath']+'/series_ranged_data', methods=['GET'])
     @login_required
     def series_ranged_data():
 
-        if request.method == 'GET' and len(request.args.get('file', default='')) > 0 and len(
-                request.args.get('start', default='')) > 0 and len(request.args.get('start', default='')) > 0 and len(
-                request.args.get('stop', default='')) > 0:
+        # Parse parameters
+        project_id = request.args.get('project_id', type=int)
+        file_id = request.args.get('file_id', type=int)
+        series = request.args.getlist('s[]')
+        start = request.args.get('start', type=float)
+        stop = request.args.get('stop', type=float)
 
-            # Parse the series name and start & stop times
-            projname = request.args.get('project')
-            filename = request.args.get('file')
-            series = request.args.getlist('s[]')
-            start = request.args.get('start', type=float)
-            stop = request.args.get('stop', type=float)
+        # Get the project
+        project = getProjectByID(project_id)
+        if project is None:
+            logging.error(f"Project ID {project_id} not found.")
+            abort(404, description="Project not found.")
+            return
 
-            # Try to get the project
-            try:
+        # Get the file
+        file = project.getFile(file_id)
+        if file is None:
+            logging.error(f"File ID {file_id} not found.")
+            abort(404, description="File not found.")
+            return
 
-                # Get the project
-                project = projects[projname]
+        # Assemble the series ranged data
+        seriesRangedData = file.getSeriesRangedOutput(series, start, stop)
 
-            except:
-
-                print("Project could not be retrieved:", projname)
-                return simplejson.dumps({})
-
-            # Get the file
-            file = project.getFile(filename)
-
-            # If we did not find the file, return empty output
-            if not isinstance(file, File):
-                return ''
-
-            output = file.getSeriesRangedOutput(series, start, stop)
-            json_output = simplejson.dumps(output, ignore_nan=True)
-
-            return json_output
+        # Output response
+        return simplejson.dumps(seriesRangedData, ignore_nan=True)
 
     @app.route(config['rootWebPath']+'/update_annotation', methods=['GET'])
     @login_required
     def update_annotation():
 
         # Parse parameters
-        projname = request.args.get('project')
-        filename = request.args.get('file')
+        project_id = request.args.get('project_id', type=int)
+        file_id = request.args.get('file_id', type=int)
         id = request.args.get('id')
         left = getFloatParamOrNone('xl')
         right = getFloatParamOrNone('xr')
@@ -424,32 +369,28 @@ def createApp():
         seriesID = request.args.get('sid')
         label = request.args.get('label')
 
-        # Try to get the project
-        try:
-
-            # Get the project
-            project = projects[projname]
-
-        except:
-
-            print("Project could not be retrieved:", projname)
+        # Get the project
+        project = getProjectByID(project_id)
+        if project is None:
+            logging.error(f"Project ID {project_id} not found.")
             return simplejson.dumps({
                 'success': False
             })
 
         # Get the file
-        file = project.getFile(filename)
-
-        # If we did not find the file, return empty output
-        if not isinstance(file, File):
-            print("File could not be retrieved:", filename)
+        file = project.getFile(file_id)
+        if file is None:
+            logging.error(f"File ID {file_id} not found.")
             return simplejson.dumps({
                 'success': False
             })
 
-        # Write the annotation
+        # Update the annotation
+        updateSuccess = file.updateAnnotation(current_user.id, id, left, right, top, bottom, seriesID, label)
+
+        # Output the response
         return simplejson.dumps({
-            'success': file.annotationSet.updateAnnotation(id, left, right, top, bottom, seriesID, label)
+            'success': updateSuccess,
         })
 
     @app.route(config['rootWebPath'] + '/user_manage')
@@ -471,9 +412,8 @@ def createApp():
     @socketio.on('add_data')
     def handle_add_data(json):
 
-        if config['verbose']:
-            print('received socketio: add_data')
-            print('msg data:', json)
+        logging.info('received socketio: add_data')
+        logging.info('msg data:', json)
 
         try:
 
@@ -491,9 +431,8 @@ def createApp():
     @socketio.on('push_template')
     def handle_push_template(json):
 
-        if config['verbose']:
-            print('received socketio: push_template')
-            print('msg data:', json)
+        logging.info('received socketio: push_template')
+        logging.info('msg data:', json)
 
         # Verify we have the template in the dict
         if 'template' not in json:
@@ -508,9 +447,8 @@ def createApp():
     @socketio.on('subscribe')
     def handle_subscribe(json):
 
-        if config['verbose']:
-            print('received socketio: subscribe')
-            print('msg data:', json)
+        logging.info('received socketio: subscribe')
+        logging.info('msg data:', json)
 
         try:
 
@@ -525,8 +463,7 @@ def createApp():
     @socketio.on('unsubscribe')
     def handle_unsubscribe():
 
-        if config['verbose']:
-            print('received socketio: unsubscribe')
+        logging.info('received socketio: unsubscribe')
 
         try:
 
@@ -549,7 +486,7 @@ def createApp():
         else:
             return default
 
-    return (app, socketio)
+    return app, socketio
 
 def subscribeToRealtimeUpdates(project, file):
 
@@ -588,7 +525,7 @@ def main():
     args = parser.parse_args()
 
     # Set provided data path
-    set_data_path(args.datapath)\
+    set_data_path(args.datapath)
 
     (app, socketio) = createApp()
     socketio.run(app,

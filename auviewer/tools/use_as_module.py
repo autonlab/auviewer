@@ -33,8 +33,8 @@ def main():
     print('rawValues', type(spo2Series.rawValues), spo2Series.rawValues.shape)
     print(spo2Series.rawValues, "\n")
 
-    # Run anomaly detection
-    anomalies = file.detectAnomalies(
+    # Run pattern detection
+    patterns = file.detectPatterns(
         series = 'numerics/HR.HR/data',
         thresholdlow=58,
         thresholdhigh=110,
@@ -43,8 +43,8 @@ def main():
         maxgap=1800
     )
 
-    print('\nHere is a list of anomalies detected.\n')
-    for a in anomalies:
+    print('\nHere is a list of patterns detected.\n')
+    for a in patterns:
         print(a)
 
 if __name__ == '__main__':

@@ -24,10 +24,6 @@ if (navigator.userAgent.indexOf("Chrome") === -1) {
 
 }
 
-let requestHandler = new RequestHandler();
-let globalStateManager = new GlobalStateManager();
-let templateSystem = new TemplateSystem();
-
 // Setup the websocket connection
 let socket = io();
 socket.on('connect', function() {
@@ -43,7 +39,7 @@ socket.on('new_data', function(data) {
 	let currentFile = globalStateManager.currentFile;
 
 	// If we're not in realtime mode, we cannot process incoming realtime data.
-	if (!currentFile || !(currentFile.projname === '__realtime__' && currentFile.filename === '__realtime__')) {
+	if (!currentFile || !(currentFile.parentProject.name === '__realtime__' && currentFile.name === '__realtime__')) {
 		console.log('Received new realtime data, but not in realtime mode. Ignoring.');
 		return;
 	}
@@ -109,7 +105,7 @@ $('#annotationsListModal').on('show.bs.modal', function (e) {
 
 		for (let a of globalStateManager.currentFile.annotations) {
 
-			if (a.state === 'existing') {
+			if (a.type === 'annotation') {
 
 				// Create the dom element
 				let tr = document.createElement('tr');
@@ -124,7 +120,7 @@ $('#annotationsListModal').on('show.bs.modal', function (e) {
 					'<th scope="row">' + a.id + '</th>' +
 					'<td>' + a.getStartDate().toLocaleString() + '</td>' +
 					'<td>' + a.getEndDate().toLocaleString() + '</td>' +
-					'<td>' + JSON.stringify(a.annotation) + '</td>';
+					'<td>' + JSON.stringify(a.label) + '</td>';
 				tbody.appendChild(tr);
 			}
 
@@ -154,7 +150,7 @@ function populateAllAnnotationsModal() {
 
 		for (let a of globalStateManager.currentProject.annotations) {
 
-			if (a.state === 'existing') {
+			if (a.type === 'annotation') {
 
 				// Create the dom element
 				let tr = document.createElement('tr');
@@ -167,10 +163,10 @@ function populateAllAnnotationsModal() {
 				// Display content of the row
 				tr.innerHTML =
 					'<th scope="row">' + a.id + '</th>' +
-					'<td>' + a.file + '</td>' +
+					'<td>' + a.filename + '</td>' +
 					'<td>' + a.getStartDate().toLocaleString() + '</td>' +
 					'<td>' + a.getEndDate().toLocaleString() + '</td>' +
-					'<td>' + JSON.stringify(a.annotation) + '</td>';
+					'<td>' + JSON.stringify(a.label) + '</td>';
 				tbody.appendChild(tr);
 			}
 
@@ -195,43 +191,12 @@ $('#allAnnotationsListModal').on('show.bs.modal', function (e) {
 
 });
 
+let requestHandler = new RequestHandler();
+let globalStateManager = new GlobalStateManager();
+let templateSystem = new TemplateSystem();
 
-
-
-// Provide the built-in template assets to TemplateSystem
-templateSystem.provideBuiltinTemplates(
-	(payload.hasOwnProperty('builtin_default_project_template') && payload['builtin_default_project_template'] ? JSON.parse(payload['builtin_default_project_template']) : {}) || {},
-	(payload.hasOwnProperty('builtin_default_interface_templates') && payload['builtin_default_interface_templates'] ? JSON.parse(payload['builtin_default_interface_templates']) : {}) || {},
-);
-
-// Provide the global template assets to TemplateSystem
-templateSystem.provideGlobalTemplates(
-	(payload.hasOwnProperty('global_default_project_template') && payload['global_default_project_template'] ? JSON.parse(payload['global_default_project_template']) : {}) || {},
-	(payload.hasOwnProperty('global_default_interface_templates') && payload['global_default_interface_templates'] ? JSON.parse(payload['global_default_interface_templates']) : {}) || {},
-);
-
-// Provide the projects template assets to TemplateSystem
-templateSystem.provideProjectTemplates(payload['project_name'],
-	(payload.hasOwnProperty('project_template') && payload['project_template'] ? JSON.parse(payload['project_template']) : {}) || {},
-	(payload.hasOwnProperty('interface_templates') && payload['interface_templates'] ? JSON.parse(payload['interface_templates']) : {}) || {}
-);
-
-// Instantiate the current project
-globalStateManager.currentProject = new Project(payload['project_id'], payload['project_name'])
-
-let fileSelect = document.getElementById('file_selection');
-
-for (const f of payload['project_files']) {
-
-	let opt = document.createElement('OPTION');
-	opt.setAttribute('value', f[0]);
-	opt.innerText = f[1];
-	fileSelect.appendChild(opt);
-
-}
-
-// Re-render the select-picker
-$(fileSelect).selectpicker('refresh');
+// Instantiate the current project with the payload
+globalStateManager.currentProject = new Project(payload)
 
 // Detect & handle hash variables
 var hash = window.location.hash.substr(1);
@@ -240,6 +205,6 @@ var result = hash.split('&').reduce(function (result, item) {
     result[parts[0]] = parts[1];
     return result;
 }, {});
-if (result.hasOwnProperty('file')) {
-	globalStateManager.loadFile(result['file'])
+if (result.hasOwnProperty('file_id')) {
+	globalStateManager.loadFile(result['file_id'])
 }

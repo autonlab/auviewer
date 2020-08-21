@@ -95,10 +95,10 @@ GlobalStateManager.prototype.loadFile = function(id='', callback=null) {
 	fs.selectpicker('refresh');
 
 	// Load the file
-	this.currentFile = new File(project, filename, callback);
+	this.currentFile = new File(this.currentProject, Number(id), callback);
 
 	// Set hash parameters
-	window.location.hash = "file="+filename;
+	window.location.hash = "file_id="+id;
 
 	return true;
 

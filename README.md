@@ -17,22 +17,49 @@ AUViewer is comprised of:
 * A Python codebase in the form of a package built of modules, and
 * A static HTML/JS/CSS codebase which makes up the frontend web application.
 
-The Python code is organized primarily around classes which represent the conceptual components of the data:
-* Project
-  * File
-    * AnnotationSet
-    * Series
-      * DownsampleSet
-      * RawData
+The Python code is organized primarily around classes which represent the most important conceptual components of the data:
+* `Project`
+  * `File`
+    * `Series`
+      * `DownsampleSet`
+      * `RawData`
 
-Other significant Python components are:
+Other conceptual components, in the backend, are represented exclusively by database models (e.g. models.Annotation, models.PatternSet, and models.Pattern). The differentiating factor is that the Python classes, while the application is running, are treated as the primary source of truth for the associated data, and the database is a persistence medium; whereas, for the conceptual components which are only represented by database models, the database is the source of truth while the application is running.
+
+Other important Python technical components are:
 * Flask web server
 * Cython functions for downsampling
 * Database models and connectivity logic
 * Config module
 * Shared helper functions
 
-Communication between the web application frontend and backend takes place via an HTTP REST API interface using GET parameters for client-to-backend requests and JSON for backend-to-client responses. As a general design pattern, the classes (mentioned above) output generalized data structures (e.g. lists, dicts), and the encapsulation of response data into JSON takes place in the http handler functions. This breakdown makes sense since AUViewer can be used both as a Python/Jupyter Notebook module and a web server.
+Similar to Python, the web client JavaScript codebase is organized primarily around classes which represent the important conceptual components of the data:
+* `Project`
+  * `File`
+    * `AnnotationSet` (extends `Set`)
+      * TODO: `Annotation` (extends `Member`)
+    * `AssignmentSet` (extends `Set`)
+      * `Assignment` (extends `Member`)
+    * `PatternSet` (extends `Set`)
+      * `Pattern` (extends `Member`)
+    * `Graph`
+
+Additionally, a few technical components are implemented in classes:
+* `GlobalStateManager` (instantiated as a global variable `globalStateManager`)
+* `RequestHandler` (instantiated as a global variable `requestHandler`)
+* `TemplateSystem` (instantiated as a global variable `templateSystem`)
+
+No persistence or caching layer is used by the frontend codebase.
+
+#### Strategies
+
+Because AUViewer is meant for visualization & annotation of large datasets, one important architectural strategy is to lazy load the data from disk (i.e. no caching in memory) with the exception of metadata which is not likely to grow too large for memory. For example, when the AUViewer web service starts, it loads the projects, file lists, and series lists but not the data contained therein. Each time an API request comes in to load a file, the data is read from disk, served, and then immediately purged from memory.
+
+#### Patterns & Conventions
+
+Communication between the web application frontend and backend takes place via an HTTP REST API interface using GET parameters for client-to-backend requests and JSON for backend-to-client responses. As a general design pattern, the classes (mentioned above) output generalized data structures (e.g. lists, dicts), and the encapsulation of response data into JSON takes place in the http handler functions in the `serve` module. This breakdown makes sense since AUViewer can be used both as a Python/Jupyter Notebook module and a web server.
+
+As a function naming convention, getters are named `get[Thing]`, but getters which return output structured primarily for web transmission are named `get[Thing]Output` (for API transmission) or `get[Thing]Payload` (for an initial data payload embedded in an html template).
 
 ### Detailed AUViewer Use Cases
 
@@ -70,7 +97,7 @@ The data directory will contain project files, templates, config, and the databa
   * _interface_templates.json_
   * _project_template.json_
 * projects
-  * [project name]
+  * \[project name\]
     * originals
     * processed
     * templates

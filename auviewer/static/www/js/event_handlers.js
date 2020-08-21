@@ -20,17 +20,19 @@ function handleAnnotationHighlightEnd (event, g, context, fileOrGraph) {
 
 	// Warning if annotating a group
 	if (graph.isGroup) {
-		alert("You are annotating a group of series. Please select the series you wish to annotate from the series dropdown.");
+		alert("You are annotating a group of series. Please select the individual series you wish to annotate from the Show/Hide Graphs interface.");
 	}
 
 	// Create a new annotation
-	let annotation = new Annotation({
-		file: globalStateManager.currentFile.filename,
+	const destinationSet = globalStateManager.currentFile.getAnnotationSetByID('general');
+	let annotation = new Annotation(destinationSet, {
+		file_id: globalStateManager.currentFile.id,
+		filename: globalStateManager.currentFile.name,
 		series: graph.group[0],
 		begin: from,
 		end: to
-	}, 'new');
-    file.annotations.push(annotation);
+	}, 'unsaved_annotation');
+    destinationSet.addMember(annotation);
 
 	// Show the annotation dialog
     annotation.showDialog();
@@ -122,15 +124,18 @@ function handleClick(e, x) {
 	// callback poorly, so we have to get it in a convoluted way.
 	let graph = $(e.path[2]).data('graphClassInstance');
 
+	console.log("Handling canvas click. # Annotations:", e.offsetX, file.annotationsAndPatternsToRender);
+
 	// Iterate through the annotations to look for an annotation under the click
-	for (let i = 0; i < file.annotations.length; i++) {
-		if (e.offsetX >= file.annotations[i].offsetXLeft && e.offsetX <= file.annotations[i].offsetXRight) {
+	for (let i = 0; i < file.annotationsAndPatternsToRender.length; i++) {
+		if (e.offsetX >= file.annotationsAndPatternsToRender[i].offsetXLeft && e.offsetX <= file.annotationsAndPatternsToRender[i].offsetXRight) {
 			if (
-				!file.annotations[i].series ||
-				(!graph.isGroup && file.annotations[i].series === graph.fullName) ||
-				(graph.isGroup && graph.group.includes(file.annotations[i].series))
+				!file.annotationsAndPatternsToRender[i].series ||
+				(!graph.isGroup && file.annotationsAndPatternsToRender[i].series === graph.fullName) ||
+				(graph.isGroup && graph.group.includes(file.annotationsAndPatternsToRender[i].series))
 			) {
-				file.annotations[i].showDialog();
+				console.log("Found", file.annotationsAndPatternsToRender[i]);
+				file.annotationsAndPatternsToRender[i].showDialog();
 				break;
 			}
 		}
@@ -379,6 +384,13 @@ function handleUnderlayRedraw(canvas, area, g) {
 	//globalAppConfig.verbose && console.log("handleUnderlayRedraw()");
 
 	let file = globalStateManager.currentFile;
+	let proj = globalStateManager.currentProject;
+
+	// Establish the current assignment pattern ID, if any
+	let currentAssignmentID = '';
+	if (proj.assignmentsManager.currentTargetAssignmentSet != null && proj.assignmentsManager.currentTargetAssignmentSet.currentTargetAssignmentIndex != null) {
+		currentAssignmentID = proj.assignmentsManager.currentTargetAssignmentSet.members[proj.assignmentsManager.currentTargetAssignmentSet.currentTargetAssignmentIndex].id;
+	}
 
 	let left, right, x, y, width, height;
 
@@ -388,25 +400,25 @@ function handleUnderlayRedraw(canvas, area, g) {
 	// console.log(canvas, area, g, Object.getOwnPropertyNames(g.setIndexByName_));
 
 	// We need to make multiple passes to render in layers.
-	// Layer 0: Anomalies detected on self graph
-	// Layer 1: Anomalies detected on other graph
+	// Layer 0: Patterns detected on self graph
+	// Layer 1: Patterns detected on other graph
 	// Layer 2: New & existing annotations (new annotations will naturally be rendered above existing by array order)
 	for (let layer = 0; layer < 4; layer++) {
 
-		for (let i = 0; i < file.annotations.length; i++) {
+		for (let i = 0; i < file.annotationsAndPatternsToRender.length; i++) {
 
 			if (
-				// Layer 0 -- other anomalies
-				(layer === 0 && file.annotations[i].state === 'anomaly' && file.annotations[i].series != null && gci.fullName !== file.annotations[i].series) ||
+				// Layer 0 -- other patterns
+				(layer === 0 && file.annotationsAndPatternsToRender[i].type === 'pattern' && file.annotationsAndPatternsToRender[i].series != null && gci.fullName !== file.annotationsAndPatternsToRender[i].series) ||
 
 				// Layer 1 -- other annotations
-				(layer === 1 && (file.annotations[i].state === 'new' || file.annotations[i].state === 'existing') && file.annotations[i].series != null && gci.fullName !== file.annotations[i].series) ||
+				(layer === 1 && (file.annotationsAndPatternsToRender[i].type === 'unsaved_annotation' || file.annotationsAndPatternsToRender[i].type === 'annotation') && file.annotationsAndPatternsToRender[i].series != null && gci.fullName !== file.annotationsAndPatternsToRender[i].series) ||
 
-				// Layer 2 -- self anomalies
-				(layer === 2 && file.annotations[i].state === 'anomaly' && !(file.annotations[i].series != null && gci.fullName !== file.annotations[i].series)) ||
+				// Layer 2 -- self patterns
+				(layer === 2 && file.annotationsAndPatternsToRender[i].type === 'pattern' && !(file.annotationsAndPatternsToRender[i].series != null && gci.fullName !== file.annotationsAndPatternsToRender[i].series)) ||
 
 				// Layer 3 -- self annotations
-				(layer === 3 && (file.annotations[i].state === 'new' || file.annotations[i].state === 'existing') && !(file.annotations[i].series != null && gci.fullName !== file.annotations[i].series))
+				(layer === 3 && (file.annotationsAndPatternsToRender[i].type === 'unsaved_annotation' || file.annotationsAndPatternsToRender[i].type === 'annotation') && !(file.annotationsAndPatternsToRender[i].series != null && gci.fullName !== file.annotationsAndPatternsToRender[i].series))
 			) {
 
 				// // If this annotation does not belong to this series, move on.
@@ -414,8 +426,8 @@ function handleUnderlayRedraw(canvas, area, g) {
 				// 	continue;
 				// }
 
-				left = g.toDomXCoord(new Date((file.annotations[i].begin + file.fileData.baseTime) * 1000));
-				right = g.toDomXCoord(new Date((file.annotations[i].end + file.fileData.baseTime) * 1000));
+				left = g.toDomXCoord(new Date((file.annotationsAndPatternsToRender[i].begin + file.fileData.baseTime) * 1000));
+				right = g.toDomXCoord(new Date((file.annotationsAndPatternsToRender[i].end + file.fileData.baseTime) * 1000));
 
 				// Prepare the parameters we'll pass into fillRect. We impose a minimum
 				// of 1px width so that, at any zoom level, the annotation is visible.
@@ -424,30 +436,30 @@ function handleUnderlayRedraw(canvas, area, g) {
 				width = Math.max(1, right - left);
 				height = area.h; //shortHighlights ? area.h/5*.85 : area.h;
 
-				// Determine if the annotation/anomaly series matches this current graph
-				let annotationBelongsToThisGraph = file.annotations[i].series && gci.group.includes(file.annotations[i].series);
+				// Determine if the annotation/pattern series matches this current graph
+				let annotationBelongsToThisGraph = file.annotationsAndPatternsToRender[i].series && gci.group.includes(file.annotationsAndPatternsToRender[i].series);
 
 				// Prepare styling for the section highlight.
-				if (file.annotations[i].state === 'anomaly') {
+				if (file.annotationsAndPatternsToRender[i].type === 'pattern') {
 
-					// Determine if the anomaly is the current workflow anomaly
-					let currentWorkflowAnomaly = i === file.annotationWorkflowCurrentIndex;
+					// Determine if the pattern is the current workflow pattern
+					let currentWorkflowPattern = file.annotationsAndPatternsToRender[i].id === currentAssignmentID;
 
-					if (currentWorkflowAnomaly && annotationBelongsToThisGraph) {
-						// Current workflow anomaly that belongs to this series.
-						canvas.fillStyle = this.template.ownCurrentWorkflowAnomalyColor;
-					} else if (currentWorkflowAnomaly) {
-						// Current workflow anomaly from another series.
-						canvas.fillStyle = this.template.otherCurrentWorkflowAnomalyColor;
+					if (currentWorkflowPattern && annotationBelongsToThisGraph) {
+						// Current workflow pattern that belongs to this series.
+						canvas.fillStyle = this.template.ownCurrentWorkflowPatternColor;
+					} else if (currentWorkflowPattern) {
+						// Current workflow pattern from another series.
+						canvas.fillStyle = this.template.otherCurrentWorkflowPatternColor;
 					} else if (annotationBelongsToThisGraph) {
-						// Anomaly that belongs to this series.
-						canvas.fillStyle = this.template.ownAnomalyColor;
+						// Pattern that belongs to this series.
+						canvas.fillStyle = this.template.ownPatternColor;
 					} else {
-						// Anomaly from another series.
-						canvas.fillStyle = this.template.otherAnomalyColor;
+						// Pattern from another series.
+						canvas.fillStyle = this.template.otherPatternColor;
 					}
 
-				} else if (file.annotations[i].series === gci.fullName) {
+				} else if (file.annotationsAndPatternsToRender[i].series === gci.fullName) {
 					// Annotation that belongs to this series
 					canvas.fillStyle = this.template.ownAnnotationColor;
 				} else {
@@ -459,16 +471,18 @@ function handleUnderlayRedraw(canvas, area, g) {
 				canvas.fillRect(x, y, width, height);
 
 				// Set offsets for later click detection
-				file.annotations[i].offsetXLeft = x;
-				file.annotations[i].offsetXRight = x + width;
+				file.annotationsAndPatternsToRender[i].offsetXLeft = x;
+				file.annotationsAndPatternsToRender[i].offsetXRight = x + width;
 
 				// Draw annotation label text
-				if (file.annotations[i].annotation.confidence) {
-					canvas.font = "12px Arial";
-					canvas.fillStyle = this.template.ownAnnotationLabelColor;
-					canvas.textAlign = "center";
-					canvas.fillText(file.annotations[i].annotation.confidence, x + (width / 2), y+3+height/2/*area.y + (area.h * .1)*/);
-				}
+				try {
+					if (file.annotationsAndPatternsToRender[i].label.confidence) {
+						canvas.font = "12px Arial";
+						canvas.fillStyle = this.template.ownAnnotationLabelColor;
+						canvas.textAlign = "center";
+						canvas.fillText(file.annotationsAndPatternsToRender[i].label.confidence, x + (width / 2), y + 3 + height / 2/*area.y + (area.h * .1)*/);
+					}
+				} catch {}
 
 			}
 

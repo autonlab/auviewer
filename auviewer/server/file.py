@@ -1,3 +1,4 @@
+from pathlib import Path
 import logging
 import time
 import traceback
@@ -5,10 +6,10 @@ import pandas as pd
 
 import audata
 
-from . import config
-from .annotationset import AnnotationSet
+from . import models
 from .cylib import generateThresholdAlerts
 from .series import Series, simpleSeriesName
+from .shared import annotationOrPatternOutput
 
 # File represents a single patient data file. File may operate in file- or
 # realtime-mode. In file-mode, all data is written to & read from a file. In
@@ -29,36 +30,34 @@ class File:
         self.origFilePathObj = origFilePathObj
         self.procFilePathObj = procFilePathObj
 
+        # Filename
+        self.name = Path(self.origFilePathObj).name
+
         # Will hold the data series from the file
         self.series = []
-
-        # Instantiate the AnnotationSet class for the file
-        try:
-            self.annotationSet = AnnotationSet(self)
-        except:
-            # An exception here likely means we're in serverless mode. Ignore.
-            # TODO: Serverless mode? Is this for realtime?
-            pass
 
         if self.mode() == 'file':
 
             # Open the original file
             self.f = audata.File.open(str(self.origFilePathObj), return_datetimes=False)
 
+            # Load the processed file if it exists
+            if self.procFilePathObj.exists():
+                logging.info(f"Opening processed file {self.procFilePathObj}.")
+                self.pf = audata.File.open(str(self.procFilePathObj), return_datetimes=False)
+
             # Load series data into memory
             self.load()
 
-            # Load the processed file if it exists
-            if self.procFilePathObj.exists():
-                self.pf = audata.File.open(str(self.procFilePathObj), return_datetimes=False)
-
-            # Otherwise, if we're supposed to process new file data, process it.
-            elif processNewFiles:
+            # If the processed file does not exist and we're supposed to process
+            # new file data, process it.
+            if not self.procFilePathObj.exists() and processNewFiles:
+                logging.info(f"Generating processed file for {self.origFilePathObj}")
                 self.process()
 
-            # Otherwise, raise an exception
-            else:
-                raise Exception(f"File {self.origFilePathObj} has not been processed, but cannot proceed with processing because processNewFiles=False.")
+            # If the processed file still does not exist, raise an exception
+            if not self.procFilePathObj.exists():
+                raise Exception(f"File {self.origFilePathObj} has not been processed and therefore cannot be loaded.")
 
     def __del__(self):
 
@@ -91,8 +90,7 @@ class File:
     # Returns updated file data for transmission to realtime subscribers.
     def addSeriesData(self, seriesData):
 
-        if config['verbose']:
-            print('Adding series data.', seriesData)
+        logging.info(f"Adding series data: {seriesData}")
 
         if self.mode() != 'realtime':
             raise Exception('Can only addSeriesData() while in mem-mode.')
@@ -129,18 +127,63 @@ class File:
                 "output_type": 'real'
             }
 
-        if config['verbose']:
-            print('addSeriesData() returning', update)
+        logging.info(f"Adding series data completed. Returning {update}")
 
         return update
 
-    def detectAnomalies(self, type, series, thresholdlow=None, thresholdhigh=None, duration=300, persistence=.7, maxgap=300, series2=None):
+    # Create an annotation for the file
+    def createAnnotation(self, user_id, left=None, right=None, top=None, bottom=None, seriesID='', label='', pattern_id=None):
+
+        # If the pattern_id is set, determine the pattern_set_id.
+        pattern_set_id = None;
+        if pattern_id:
+            pattern_set_id = models.Pattern.query.filter_by(id=pattern_id).first().pattern_set_id
+
+        newann = models.Annotation(
+            user_id=user_id,
+            project_id=self.projparent.id,
+            file_id=self.id,
+            series=seriesID,
+            left=left,
+            right=right,
+            top=top,
+            bottom=bottom,
+            label=label,
+            pattern_set_id=pattern_set_id,
+            pattern_id=pattern_id
+        )
+        models.db.session.add(newann)
+        models.db.session.commit()
+
+        return newann.id
+
+    # Deletes the annotation with the given ID, after some checks. Returns true
+    # or false to indicate success.
+    def deleteAnnotation(self, user_id, id):
+
+        # Get the annotation in question
+        annotationToDelete = models.Annotation.query.filter_by(id=id).first()
+
+        # Verify the user has requested to delete his or her own annotation.
+        if annotationToDelete.user_id != user_id:
+            logging.critical(
+                f"Error/securityissue on annotation deletion: User (id {user_id}) tried to delete an annotation (id {id}) belonging to another user (id {annotationToDelete.user_id}).")
+            return False
+
+        # Having reached this point, delete the annotation
+        models.db.session.delete(annotationToDelete)
+        models.db.session.commit()
+
+        # Return true to indicate success
+        return True
+
+    def detectPatterns(self, type, series, thresholdlow=None, thresholdhigh=None, duration=300, persistence=.7, maxgap=300, series2=None):
 
         # Determine the mode (see generateThresholdAlerts function description
         # for details on this parameter).
         if thresholdlow is None and thresholdhigh is None:
             # We must have at least one of thresholdlow or thresholdhigh.
-            print("Error: We need at least one of threshold low or threshold high in order to perform anomaly detection.")
+            print("Error: We need at least one of threshold low or threshold high in order to perform pattern detection.")
             return []
 
         if thresholdhigh is None:
@@ -152,9 +195,9 @@ class File:
         else:
             mode = 2
 
-        if type == 'anomalydetection':
+        if type == 'patterndetection':
 
-            # Find the series & run anomaly detection
+            # Find the series & run pattern detection
             for s in self.series:
                 if s.id == series:
                     return s.generateThresholdAlerts(thresholdlow, thresholdhigh, mode, duration, persistence, maxgap).tolist()
@@ -209,12 +252,12 @@ class File:
             # Set the index to the datetime column
             df.set_index('time_conv', inplace=True)
 
-            print(df)
+            logging.debug(df)
 
             # Generate the rolling-window correlation
             corr = df['val1'].rolling(timewindow).corr(other=df['val2'])
 
-            # Now run anomaly detection on the rolling-window correlation
+            # Now run pattern detection on the rolling-window correlation
             alerts = generateThresholdAlerts(df['time'].to_numpy(), corr.to_numpy(), thresholdlow, thresholdhigh, mode, duration, persistence, maxgap).tolist()
 
             return alerts
@@ -263,14 +306,34 @@ class File:
         return events
 
     # Produces JSON output for all series in the file at the maximum time range.
-    def getInitialPayloadOutput(self):
+    def getInitialPayload(self, user_id):
 
         logging.info(f"Assembling all series full output for file {self.origFilePathObj}.")
         start = time.time()
 
+        # Assemble the output object.
         outputObject = {
-            # 'annotations': self.annotationSet.getAnnotations().tolist(),
-            'annotations': self.annotationSet.getAnnotations(),
+            'filename': self.origFilePathObj.name,
+            'annotationsets': [{
+                'id': 'general',
+                'name': 'General',
+                'description': None,
+                'annotations': [annotationOrPatternOutput(a) for a in models.Annotation.query.filter_by(user_id=user_id, project_id=self.projparent.id, file_id=self.id, pattern_set_id=None).all()]
+            }] + [
+                {
+                    'id': patternset.id,
+                    'name': patternset.name,
+                    'description': patternset.description,
+                    'annotations': [annotationOrPatternOutput(a) for a in models.Annotation.query.filter_by(user_id=user_id, project_id=self.projparent.id, file_id=self.id, pattern_set_id=patternset.id).all()]
+                } for patternset in models.PatternSet.query.filter_by(project_id=self.projparent.id).all()
+            ],
+            'patternsets': [
+                {
+                    'id': patternset.id,
+                    'name': patternset.name,
+                    'description': patternset.description,
+                    'patterns': [annotationOrPatternOutput(pattern) for pattern in models.Pattern.query.filter_by(pattern_set_id=patternset.id, file_id=self.id).all()]
+                } for patternset in models.PatternSet.query.filter_by(project_id=self.projparent.id).all()],
             'baseTime': 0, # ATW: Not sure if this is still necessary.
             'events': self.getEvents(),
             'metadata': self.getMetadata(),
@@ -467,3 +530,28 @@ class File:
 
             # Re-raise the exception
             raise
+
+    # Update an annotation with new values
+    def updateAnnotation(self, user_id, id, left=None, right=None, top=None, bottom=None, seriesID='', label=''):
+
+        # Get the annotation in question
+        annotationToUpdate = models.Annotation.query.filter_by(id=id).first()
+
+        # Verify the user has requested to update his or her own annotation.
+        if annotationToUpdate.user_id != user_id:
+            logging.critical(f"Error/securityissue on annotation update: User (id {user_id}) tried to update an annotation (id {id}) belonging to another user (id {annotationToUpdate.user_id}).")
+            return False
+
+        # Set updated values
+        annotationToUpdate.series = seriesID
+        annotationToUpdate.left = left
+        annotationToUpdate.right = right
+        annotationToUpdate.top = top
+        annotationToUpdate.bottom = bottom
+        annotationToUpdate.label = label
+
+        # Commit the changes
+        models.db.session.commit()
+
+        # Return true to indicate success
+        return True

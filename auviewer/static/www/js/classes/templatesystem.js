@@ -27,7 +27,7 @@ function TemplateSystem() {
 }
 
 // Class-internal helper function to generate, cache, and return group template.
-TemplateSystem.prototype.generateGroupTemplate = function(projectName, groupName) {
+TemplateSystem.prototype.generateGroupTemplate = function(project_id, groupName) {
 
 	// Holds the series template we will return.
 	let group_template;
@@ -44,10 +44,10 @@ TemplateSystem.prototype.generateGroupTemplate = function(projectName, groupName
 			this.global_default_series_template,
 
 			// The specific-project default series template
-			(verifyObjectPropertyChain(this.project_templates, [projectName, 'project_template', 'series', 'default']) ? this.project_templates[projectName]['project_template']['series']['default'] : {}),
+			(verifyObjectPropertyChain(this.project_templates, [project_id, 'project_template', 'series', 'default']) ? this.project_templates[project_id]['project_template']['series']['default'] : {}),
 
 			// Any system-pushed specific-project default series templates
-			...(verifyObjectPropertyChain(this.dynamic, ['project_templates', projectName, '[]']) ? this.dynamic['project_templates'][projectName].filter(proj => proj.hasOwnProperty('series') && proj['series'].hasOwnProperty('default')).map(proj => proj['series']['default']) : []),
+			...(verifyObjectPropertyChain(this.dynamic, ['project_templates', project_id, '[]']) ? this.dynamic['project_templates'][project_id].filter(proj => proj.hasOwnProperty('series') && proj['series'].hasOwnProperty('default')).map(proj => proj['series']['default']) : []),
 
 			// The built-in default-project specific-series template
 			(verifyObjectPropertyChain(this.builtin_default_project_template, ['groups', groupName]) ? this.builtin_default_project_template['groups'][groupName] : {}),
@@ -56,10 +56,10 @@ TemplateSystem.prototype.generateGroupTemplate = function(projectName, groupName
 			(verifyObjectPropertyChain(this.global_default_project_template, ['groups', groupName]) ? this.global_default_project_template['groups'][groupName] : {}),
 
 			// The specific-project specific-series template
-			(verifyObjectPropertyChain(this.project_templates, [projectName, 'project_template', 'groups', groupName]) ? this.project_templates[projectName]['project_template']['groups'][groupName] : {}),
+			(verifyObjectPropertyChain(this.project_templates, [project_id, 'project_template', 'groups', groupName]) ? this.project_templates[project_id]['project_template']['groups'][groupName] : {}),
 
 			// Any system-pushed specific-project specific-series templates
-			...(verifyObjectPropertyChain(this.dynamic, ['project_templates', projectName, '[]']) ? this.dynamic['project_templates'][projectName].filter(proj => proj.hasOwnProperty('groups') && proj['groups'].hasOwnProperty(groupName)).map(proj => proj['groups'][groupName]) : [])
+			...(verifyObjectPropertyChain(this.dynamic, ['project_templates', project_id, '[]']) ? this.dynamic['project_templates'][project_id].filter(proj => proj.hasOwnProperty('groups') && proj['groups'].hasOwnProperty(groupName)).map(proj => proj['groups'][groupName]) : [])
 		);
 
 	} catch (err) {
@@ -68,13 +68,13 @@ TemplateSystem.prototype.generateGroupTemplate = function(projectName, groupName
 	}
 
 	// Cache the newly-generated series template
-	if (!this.cached_templates.hasOwnProperty(projectName)) {
-		this.cached_templates[projectName] = {};
+	if (!this.cached_templates.hasOwnProperty(project_id)) {
+		this.cached_templates[project_id] = {};
 	}
-	if (!this.cached_templates[projectName].hasOwnProperty('groups')) {
-		this.cached_templates[projectName]['groups'] = {};
+	if (!this.cached_templates[project_id].hasOwnProperty('groups')) {
+		this.cached_templates[project_id]['groups'] = {};
 	}
-	this.cached_templates[projectName]['groups'][groupName] = group_template;
+	this.cached_templates[project_id]['groups'][groupName] = group_template;
 
 	// globalAppConfig.verbose && console.log("TemplateSystem.getSeriesTemplate("+seriesName+") returning", deepCopy(series_template));
 
@@ -83,7 +83,7 @@ TemplateSystem.prototype.generateGroupTemplate = function(projectName, groupName
 };
 
 // Class-internal helper function to generate, cache, and return project template.
-TemplateSystem.prototype.generateProjectTemplate = function(projectName) {
+TemplateSystem.prototype.generateProjectTemplate = function(project_id) {
 
 	// Holds the project template we will return.
 	let project_template;
@@ -99,10 +99,10 @@ TemplateSystem.prototype.generateProjectTemplate = function(projectName) {
 			this.global_default_project_template,
 
 			// The specific-project template
-			(verifyObjectPropertyChain(this.project_templates, [projectName, 'project_template']) ? this.project_templates[projectName]['project_template'] : {}),
+			(verifyObjectPropertyChain(this.project_templates, [project_id, 'project_template']) ? this.project_templates[project_id]['project_template'] : {}),
 
 			// Any system-pushed specific-project template
-			...(verifyObjectPropertyChain(this.dynamic, ['project_templates', projectName, '[]']) ? this.dynamic['project_templates'][projectName] : [])
+			...(verifyObjectPropertyChain(this.dynamic, ['project_templates', project_id, '[]']) ? this.dynamic['project_templates'][project_id] : [])
 
 		);
 
@@ -112,15 +112,16 @@ TemplateSystem.prototype.generateProjectTemplate = function(projectName) {
 	}
 
 	// The project template does not need the series definitions.
-	if (project_template.hasOwnProperty('series')) {
-		delete project_template['series'];
-	}
+	// TODO: Temporarily disabling this
+	// if (project_template.hasOwnProperty('series')) {
+	// 	delete project_template['series'];
+	// }
 
 	// Cache the newly-generated project template
-	if (!this.cached_templates.hasOwnProperty(projectName)) {
-		this.cached_templates[projectName] = {};
+	if (!this.cached_templates.hasOwnProperty(project_id)) {
+		this.cached_templates[project_id] = {};
 	}
-	this.cached_templates[projectName]['project_template'] = project_template;
+	this.cached_templates[project_id]['project_template'] = project_template;
 
 	globalAppConfig.verbose && console.log("TemplateSystem.generateProjectTemplate() returning", project_template);
 
@@ -129,7 +130,7 @@ TemplateSystem.prototype.generateProjectTemplate = function(projectName) {
 };
 
 // Class-internal helper function to generate, cache, and return series template.
-TemplateSystem.prototype.generateSeriesTemplate = function(projectName, seriesName) {
+TemplateSystem.prototype.generateSeriesTemplate = function(project_id, seriesName) {
 
 	// Holds the series template we will return.
 	let series_template;
@@ -146,10 +147,10 @@ TemplateSystem.prototype.generateSeriesTemplate = function(projectName, seriesNa
 			this.global_default_series_template,
 
 			// The specific-project default series template
-			(verifyObjectPropertyChain(this.project_templates, [projectName, 'project_template', 'series', 'default']) ? this.project_templates[projectName]['project_template']['series']['default'] : {}),
+			(verifyObjectPropertyChain(this.project_templates, [project_id, 'project_template', 'series', 'default']) ? this.project_templates[project_id]['project_template']['series']['default'] : {}),
 
 			// Any system-pushed specific-project default series templates
-			...(verifyObjectPropertyChain(this.dynamic, ['project_templates', projectName, '[]']) ? this.dynamic['project_templates'][projectName].filter(proj => proj.hasOwnProperty('series') && proj['series'].hasOwnProperty('default')).map(proj => proj['series']['default']) : []),
+			...(verifyObjectPropertyChain(this.dynamic, ['project_templates', project_id, '[]']) ? this.dynamic['project_templates'][project_id].filter(proj => proj.hasOwnProperty('series') && proj['series'].hasOwnProperty('default')).map(proj => proj['series']['default']) : []),
 
 			// The built-in default-project specific-series template
 			(verifyObjectPropertyChain(this.builtin_default_project_template, ['series', seriesName]) ? this.builtin_default_project_template['series'][seriesName] : {}),
@@ -158,10 +159,10 @@ TemplateSystem.prototype.generateSeriesTemplate = function(projectName, seriesNa
 			(verifyObjectPropertyChain(this.global_default_project_template, ['series', seriesName]) ? this.global_default_project_template['series'][seriesName] : {}),
 
 			// The specific-project specific-series template
-			(verifyObjectPropertyChain(this.project_templates, [projectName, 'project_template', 'series', seriesName]) ? this.project_templates[projectName]['project_template']['series'][seriesName] : {}),
+			(verifyObjectPropertyChain(this.project_templates, [project_id, 'project_template', 'series', seriesName]) ? this.project_templates[project_id]['project_template']['series'][seriesName] : {}),
 
 			// Any system-pushed specific-project specific-series templates
-			...(verifyObjectPropertyChain(this.dynamic, ['project_templates', projectName, '[]']) ? this.dynamic['project_templates'][projectName].filter(proj => proj.hasOwnProperty('series') && proj['series'].hasOwnProperty(seriesName)).map(proj => proj['series'][seriesName]) : [])
+			...(verifyObjectPropertyChain(this.dynamic, ['project_templates', project_id, '[]']) ? this.dynamic['project_templates'][project_id].filter(proj => proj.hasOwnProperty('series') && proj['series'].hasOwnProperty(seriesName)).map(proj => proj['series'][seriesName]) : [])
 		);
 
 	} catch (err) {
@@ -170,13 +171,13 @@ TemplateSystem.prototype.generateSeriesTemplate = function(projectName, seriesNa
 	}
 
 	// Cache the newly-generated series template
-	if (!this.cached_templates.hasOwnProperty(projectName)) {
-		this.cached_templates[projectName] = {};
+	if (!this.cached_templates.hasOwnProperty(project_id)) {
+		this.cached_templates[project_id] = {};
 	}
-	if (!this.cached_templates[projectName].hasOwnProperty('series')) {
-		this.cached_templates[projectName]['series'] = {};
+	if (!this.cached_templates[project_id].hasOwnProperty('series')) {
+		this.cached_templates[project_id]['series'] = {};
 	}
-	this.cached_templates[projectName]['series'][seriesName] = series_template;
+	this.cached_templates[project_id]['series'][seriesName] = series_template;
 
 	// globalAppConfig.verbose && console.log("TemplateSystem.getSeriesTemplate("+seriesName+") returning", deepCopy(series_template));
 
@@ -185,24 +186,22 @@ TemplateSystem.prototype.generateSeriesTemplate = function(projectName, seriesNa
 };
 
 // Returns the final processed/merged template for the group.
-TemplateSystem.prototype.getGroupTemplate = function(projectName, groupName) {
-	return ( verifyObjectPropertyChain(this.cached_templates, [projectName, 'groups', groupName]) ? this.cached_templates[projectName]['groups'][groupName] : this.generateGroupTemplate(projectName, groupName) );
+TemplateSystem.prototype.getGroupTemplate = function(project_id, groupName) {
+	return ( verifyObjectPropertyChain(this.cached_templates, [project_id, 'groups', groupName]) ? this.cached_templates[project_id]['groups'][groupName] : this.generateGroupTemplate(project_id, groupName) );
 };
 
 // Returns the final processed/merged template for the project.
-TemplateSystem.prototype.getProjectTemplate = function(projectName) {
-	return ( verifyObjectPropertyChain(this.cached_templates, [projectName, 'project_template']) ? this.cached_templates[projectName]['project_template'] : this.generateProjectTemplate(projectName) );
+TemplateSystem.prototype.getProjectTemplate = function(project_id) {
+	return ( verifyObjectPropertyChain(this.cached_templates, [project_id, 'project_template']) ? this.cached_templates[project_id]['project_template'] : this.generateProjectTemplate(project_id) );
 };
 
 // Returns the final processed/merged template for the series.
-TemplateSystem.prototype.getSeriesTemplate = function(projectName, seriesName) {
-	return ( verifyObjectPropertyChain(this.cached_templates, [projectName, 'series', seriesName]) ? this.cached_templates[projectName]['series'][seriesName] : this.generateSeriesTemplate(projectName, seriesName) );
+TemplateSystem.prototype.getSeriesTemplate = function(project_id, seriesName) {
+	return ( verifyObjectPropertyChain(this.cached_templates, [project_id, 'series', seriesName]) ? this.cached_templates[project_id]['series'][seriesName] : this.generateSeriesTemplate(project_id, seriesName) );
 };
 
 // Provide builtin templates.
 TemplateSystem.prototype.provideBuiltinTemplates = function(builtin_default_project_template, builtin_default_interface_templates) {
-
-	globalAppConfig.verbose && console.log("TemplateSystem.provideBuiltinTemplates starting.");
 
 	let t0 = performance.now();
 
@@ -214,14 +213,10 @@ TemplateSystem.prototype.provideBuiltinTemplates = function(builtin_default_proj
 	let tt = performance.now() - t0;
 
 	globalAppConfig.performance && tt > globalAppConfig.performanceReportingThresholdTemplateSystem && console.log("TemplateSystem.provideBuiltinTemplates() took " + Math.round(tt) + "ms.");
-
-	globalAppConfig.verbose && console.log("TemplateSystem.provideBuiltinTemplates ended.");
 };
 
 // Provide global templates.
 TemplateSystem.prototype.provideGlobalTemplates = function(global_default_project_template, global_default_interface_templates) {
-
-	globalAppConfig.verbose && console.log("TemplateSystem.provideGlobalTemplates starting.");
 
 	let t0 = performance.now();
 
@@ -234,15 +229,11 @@ TemplateSystem.prototype.provideGlobalTemplates = function(global_default_projec
 
 	globalAppConfig.performance && tt > globalAppConfig.performanceReportingThresholdTemplateSystem && console.log("TemplateSystem.provideGlobalTemplates() took " + Math.round(tt) + "ms.");
 
-	globalAppConfig.verbose && console.log("TemplateSystem.provideGlobalTemplates ended.");
-
 };
 
 // Provide a project's template and interface templates to TemplateSystem in the
 // form of unparsed JSON strings.
 TemplateSystem.prototype.provideProjectTemplates = function(name, project_template, interface_templates) {
-
-	globalAppConfig.verbose && console.log("TemplateSystem.provideProjectTemplates starting.");
 
 	let t0 = performance.now();
 
@@ -255,8 +246,6 @@ TemplateSystem.prototype.provideProjectTemplates = function(name, project_templa
 	let tt = performance.now() - t0;
 
 	globalAppConfig.performance && tt > globalAppConfig.performanceReportingThresholdTemplateSystem && console.log("TemplateSystem.provideProjectTempaltes() took " + Math.round(tt) + "ms.");
-
-	globalAppConfig.verbose && console.log("TemplateSystem.provideProjectTemplates ended.");
 
 };
 
@@ -303,6 +292,6 @@ TemplateSystem.prototype.providePushTemplate = function(template, project='', in
 	}
 
 	// Log the new dynamic templates.
-	globalAppConfig.verbose && console.log('After push template add:', deepCopy(this.dynamic));
+	globalAppConfig.verbose && console.log('Results after push template add:', deepCopy(this.dynamic));
 
 };

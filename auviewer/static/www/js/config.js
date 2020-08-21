@@ -16,7 +16,7 @@ let globalAppConfig = {
 	// Backend request URLs
 	createAnnotationURL: 'create_annotation',
 	deleteAnnotationURL: 'delete_annotation',
-	detectAnomaliesURL: 'detect_anomalies',
+	detectPatternsURL: 'detect_patterns',
 	initialFilePayloadURL: 'initial_file_payload',
 	getProjectAnnotationsURL: 'get_project_annotations',
 	seriesRangedDataURL: 'series_ranged_data',

@@ -1,10 +1,11 @@
 from collections import deque
+from copy import copy
+from threading import Lock
+import logging
 import numpy as np
 import pandas as pd
 import time
 import psutil
-from threading import Lock
-from copy import copy
 
 from .config import config
 from .rawdata import RawData
@@ -56,7 +57,7 @@ class Series:
             except:
                 self.units = ""
 
-            print("Units", self.units)
+            logging.debug(f"Units: {self.units}")
 
         elif self.fileparent.mode() == 'realtime':
 
@@ -105,7 +106,7 @@ class Series:
     # Produces JSON output for the series at the maximum time range.
     def getFullOutput(self):
 
-        print("Assembling full output for " + self.id + ".")
+        logging.info("Assembling full output for " + self.id + ".")
 
         if self.fileparent.mode() == 'realtime':
 
@@ -122,14 +123,10 @@ class Series:
             # Set data either to the retrieved downsample or to the raw data
             if downsampleFullOutput is not None:
 
-                print("(downsampled output)")
-
                 data = downsampleFullOutput.to_records(index=False).tolist()
                 output_type = 'downsample'
 
             else:
-
-                print("(raw data output)")
 
                 # Get reference to the series datastream from the HDF5 file
                 dataset = self.fileparent.f['/'.join(self.h5path)][()]
@@ -142,7 +139,7 @@ class Series:
             # Having reached this point, the mode is invalid.
             raise Exception('Invalid mode found for fileparent in series.getFullOutput():', self.fileparent.mode())
 
-        print("Completed assembly of full output for " + self.id + ".")
+        logging.info(f"Completed assembly of full ({'downsampled' if output_type=='downsample' else 'raw'}) output for {self.id}.")
 
         # Return the JSON-ready output object
         return {
@@ -157,7 +154,7 @@ class Series:
     # starttime and stoptime being time offset floats in seconds.
     def getRangedOutput(self, starttime, stoptime):
 
-        print("Assembling ranged output for " + self.id + ".")
+        logging.info(f"Assembling ranged output for {self.id}.")
 
         # Getting ranged output is not supported in realtime-mode.
         if self.fileparent.mode() == 'realtime':
@@ -167,16 +164,14 @@ class Series:
         ds = self.dss.getRangedOutput(starttime, stoptime)
 
         if isinstance(ds, pd.DataFrame):
-            print("(downsampled output)")
             data = ds.to_records(index=False).tolist()
             output_type = 'downsample'
 
         else:
-            print("(raw data output)")
             data = self.rd.getRangedOutput(starttime, stoptime)
             output_type = 'real'
 
-        print("Completed assembly of ranged output for " + self.id + ".")
+        logging.info(f"Completed assembly of ranged ({'downsampled' if output_type=='downsample' else 'raw'}) output for {self.id}.")
 
         # Return the JSON-ready output object
         return {
@@ -192,40 +187,40 @@ class Series:
 
         p = psutil.Process()
 
-        print("Processing & storing all downsamples for the series " + self.id)
+        logging.info(f"Processing & storing all downsamples for the series {self.id}")
         start = time.time()
 
-        print("MEM PRE-PULLD: " + str(p.memory_full_info().uss / 1024 / 1024) + " MB")
+        logging.info(f"MEM PRE-PULLD: {p.memory_full_info().uss / 1024 / 1024} MB")
 
         # Pull raw data for the series into memory
         self.pullRawDataIntoMemory()
 
-        print("MEM AFT-PULLD: "+str(p.memory_full_info().uss/1024/1024)+" MB")
+        logging.info(f"MEM AFT-PULLD: {p.memory_full_info().uss/1024/1024} MB")
 
         # Build & store to file all downsamples for the series
         self.dss.processAndStore()
 
-        print("MEM AFT-DSPRC: " + str(p.memory_full_info().uss / 1024 / 1024) + " MB")
+        logging.info(f"MEM AFT-DSPRC: {p.memory_full_info().uss / 1024 / 1024} MB")
 
         # Remove raw data for the series fromm memory
         self.initializeRawDataInMemory()
 
-        print("MEM AFT-REMVD: " + str(p.memory_full_info().uss / 1024 / 1024) + " MB")
+        logging.info(f"MEM AFT-REMVD: {p.memory_full_info().uss / 1024 / 1024} MB")
 
         end = time.time()
-        print("Completed processing & storing all downsamples for the series " + self.id + ". Took " + str(round((end - start) / 60, 3)) + " minutes.")
+        logging.info(f"Completed processing & storing all downsamples for the series {self.id}. Took {round((end - start) / 60, 3)} minutes.")
 
     # Pulls the raw data for the series from the file into memory (self.rawTimeOffsets
     # and self.rawValues). If the returnValuesOnly is set, the function will return
     # a tuple with the times & values and not hold them in the class instance.
     def pullRawDataIntoMemory(self, returnValuesOnly=False):
 
-        print("Reading raw series data into memory for " + self.id + ".")
+        logging.info(f"Reading raw series data into memory for {self.id}.")
         start = time.time()
 
         # If we're in realtime mode, this procedure is not applicable.
         if self.fileparent.mode() == 'realtime':
-            print("Reading raw series n/a since we're in mem mode. Returning.")
+            logging.info("Reading raw series n/a since we're in mem mode. Returning.")
             return
 
         # Get reference to the series datastream from the HDF5 file
@@ -242,7 +237,7 @@ class Series:
             self.rawValues = rawValues
 
         end = time.time()
-        print("Finished reading raw series data into memory for " + self.id + " (" + str(self.rawTimes.shape[0]) + " points). Took " + str(round(end - start, 5)) + "s.")
+        logging.info(f"Finished reading raw series data into memory for {self.id} ({self.rawTimes.shape[0]} points). Took {round(end - start, 5)}s.")
 
     # Initializes the raw data stored for the series in memory and thereby
     # removes it from memory.

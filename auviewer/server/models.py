@@ -7,78 +7,83 @@ db = SQLAlchemy()
 
 class Annotation(db.Model):
     __tablename__ = 'annotations'
-    id = db.Column(db.Integer(), primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    project = db.Column(db.String(255), nullable=False)
-    filepath = db.Column(db.String(255), nullable=False)
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='RESTRICT'), nullable=False)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='RESTRICT'), nullable=False)
+    file_id = db.Column(db.Integer, db.ForeignKey('files.id', ondelete='RESTRICT'), nullable=False)
+    pattern_id = db.Column(db.Integer, db.ForeignKey('patterns.id', ondelete='RESTRICT'), nullable=True)
+    pattern_set_id = db.Column(db.Integer, db.ForeignKey('pattern_sets.id', ondelete='RESTRICT'), nullable=True)
     series = db.Column(db.String(255), nullable=False)
     left = db.Column(db.Float, nullable=True)
     right = db.Column(db.Float, nullable=True)
     top = db.Column(db.Float, nullable=True)
     bottom = db.Column(db.Float, nullable=True)
-    annotation = db.Column(db.Text, nullable=False)
+    label = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, server_default=func.now())
 
+    file = db.relationship('File', lazy='joined', backref=db.backref('annotations', lazy=True))
 
-class AnomalyDetectionRun(db.Model):
-    __tablename__ = 'anomaly_detection_runs'
-    id = db.Column(db.Integer(), primary_key=True)
-    project = db.Column(db.String(255), nullable=False)
-    name = db.Column(db.String(255), nullable=False)
+    def __repr__(self):
+        return f"ID: {self.id}, UID: {self.user_id}, PID: {self.project_id}, FID: {self.file_id}, PID: {self.pattern_id}, Series: {self.series}, Boundaries: {self.left} {self.right} {self.top} {self.bottom}, Label: {self.label}"
+
+class Pattern(db.Model):
+    __tablename__ = 'patterns'
+    id = db.Column(db.Integer, primary_key=True)
+    pattern_set_id = db.Column(db.Integer, db.ForeignKey('pattern_sets.id', ondelete='CASCADE'), nullable=False)
+    file_id = db.Column(db.Integer, db.ForeignKey('files.id', ondelete='CASCADE'), nullable=False)
     series = db.Column(db.String(255), nullable=False)
-    parameters = db.Column(db.String(255), nullable=True)
+    left = db.Column(db.Float, nullable=True)
+    right = db.Column(db.Float, nullable=True)
+    top = db.Column(db.Float, nullable=True)
+    bottom = db.Column(db.Float, nullable=True)
+    label = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, server_default=func.now())
 
+    annotations = db.relationship('Annotation', lazy=True, backref=db.backref('pattern', lazy=True))
+    file = db.relationship('File', lazy='joined', backref=db.backref('patterns', lazy=True))
 
-class AnomalyDetectionRunAnomaly(db.Model):
-    __tablename__ = 'anomaly_detection_run_anomalies'
-    id = db.Column(db.Integer(), primary_key=True)
-    anomaly_run_id = db.Column(db.Integer, db.ForeignKey('anomaly_detection_runs.id'))
-    filepath = db.Column(db.String(255), nullable=False)
-    left = db.Column(db.Float, nullable=True)
-    right = db.Column(db.Float, nullable=True)
-    top = db.Column(db.Float, nullable=True)
-    bottom = db.Column(db.Float, nullable=True)
+    def __repr__(self):
+        return f"ID: {self.id}, PSID: {self.pattern_set_id}, FID: {self.file_id}, Series: {self.series}, Boundaries: {self.left} {self.right} {self.top} {self.bottom}, Label: {self.label}" + (f"\n    Annotations: {self.annotations}" if len(self.annotations)>0 else "")
 
 
-class Assignment(db.Model):
-    __tablename__ = 'assignments'
-    id = db.Column(db.Integer(), primary_key=True)
-    project = db.Column(db.String(255), nullable=False)
+# Many-to-many table joining pattern sets to users vis-a-vis assignments
+patternSetAssignments = db.Table('pattern_set_assignments',
+    db.Column('pattern_set_id', db.Integer, db.ForeignKey('pattern_sets.id'), primary_key=True),
+    db.Column('user_id', db.Integer, db.ForeignKey('users.id'), primary_key=True)
+)
+
+
+class PatternSet(db.Model):
+    __tablename__ = 'pattern_sets'
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
     name = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.String(255), nullable=True)
+    created_at = db.Column(db.DateTime, nullable=False, server_default=func.now())
 
-
-class AssignmentItem(db.Model):
-    __tablename__ = 'assignment_items'
-    id = db.Column(db.Integer(), primary_key=True)
-    assignment_id = db.Column(db.Integer, db.ForeignKey('assignments.id'))
-    anomaly_id = db.Column(db.Integer, db.ForeignKey('anomaly_detection_run_anomalies.id'))
-    series = db.Column(db.String(255), nullable=False)
-    left = db.Column(db.Float, nullable=True)
-    right = db.Column(db.Float, nullable=True)
-    top = db.Column(db.Float, nullable=True)
-    bottom = db.Column(db.Float, nullable=True)
-
-
-class Project(db.Model):
-    __tablename__ = 'projects'
-    id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String(255), nullable=False)
-    path = db.Column(db.String(255), nullable=False)
-    total_anomalies = db.Column(db.Integer(), nullable=False, default=0)
+    patterns = db.relationship('Pattern', lazy=True)
+    project = db.relationship('Project', lazy='joined', backref=db.backref('pattern_sets', lazy=True))
+    users = db.relationship('User', secondary=patternSetAssignments, lazy=True, backref=db.backref('pattern_sets', lazy=True))
 
 
 class File(db.Model):
     __tablename__ = 'files'
-    id = db.Column(db.Integer(), primary_key=True)
-    project_id = db.Column(db.Integer(), db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
     #project = db.relationship('Project', backref=db.backref('files', lazy=True))
+    path = db.Column(db.String(255), nullable=False)
+
+
+class Project(db.Model):
+    __tablename__ = 'projects'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
     path = db.Column(db.String(255), nullable=False)
 
 
 class Role(db.Model):
     __tablename__ = 'roles'
-    id = db.Column(db.Integer(), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False, server_default=u'', unique=True)  # for @roles_accepted()
 
 
@@ -102,7 +107,7 @@ class User(db.Model, UserMixin):
     roles = db.relationship('Role', secondary='users_roles', backref=db.backref('users', lazy='dynamic'))
 
     # Other
-    assignments_remaining = db.Column(db.Integer(), nullable=False, default=0)
+    assignments_remaining = db.Column(db.Integer, nullable=False, default=0)
 
 
 class UserInvitation(db.Model):
@@ -118,9 +123,9 @@ class UserInvitation(db.Model):
 # Define the UserRoles association model
 class UsersRoles(db.Model):
     __tablename__ = 'users_roles'
-    id = db.Column(db.Integer(), primary_key=True)
-    user_id = db.Column(db.Integer(), db.ForeignKey('users.id', ondelete='CASCADE'))
-    role_id = db.Column(db.Integer(), db.ForeignKey('roles.id', ondelete='CASCADE'))
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
+    role_id = db.Column(db.Integer, db.ForeignKey('roles.id', ondelete='CASCADE'))
 
 
 def init_flask_app(app):
@@ -129,7 +134,7 @@ def init_flask_app(app):
 
     # Create all database tables
     # TODO(gus): Once we remove flask-user and detach this from flask, move this.
-    # with app.app_context():
-    #     db.create_all()
-    app.app_context().push()
-    db.create_all()
+    with app.app_context():
+        db.create_all()
+    # app.app_context().push()
+    # db.create_all()

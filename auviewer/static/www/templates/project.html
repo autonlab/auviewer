@@ -12,7 +12,7 @@
 <!-- Backend initial payload -->
 <script type="application/javascript">
 	const payload = JSON.parse({{payload|safe}});
-	console.log('payload', payload);
+	console.log('Initial project payload', payload);
 </script>
 
 <script src="{{ rootWebPath }}/js/third-party/bootstrap-select.min.js"></script>
@@ -35,6 +35,8 @@
 
 <!-- Classes -->
 <script src="{{ rootWebPath }}/js/classes/annotation.js"></script>
+<script src="{{ rootWebPath }}/js/classes/annotationset.js"></script>
+<script src="{{ rootWebPath }}/js/classes/assignmentsmanager.js"></script>
 <script src="{{ rootWebPath }}/js/classes/file.js"></script>
 <script src="{{ rootWebPath }}/js/classes/globalstatemanager.js"></script>
 <script src="{{ rootWebPath }}/js/classes/graph.js"></script>
@@ -70,93 +72,152 @@
 	<h6>Plot</h6>
 	<button type="button" class="btn btn-sm btn-light" style="margin-bottom: 18px;" onclick="globalStateManager.currentFile ? globalStateManager.currentFile.plotControl.show() : null;">Show/Hide Graphs</button><br>
 
+	<div id="assignmentPanelArea">
+		<h6 style="display: none;">My Assignments</h6>
+	</div>
+
+	<!--	<span class="clickable" onclick="globalStateManager.currentFile.annotationWorkflowPrevious();">&lt; Prev</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="clickable" onclick="globalStateManager.currentFile.annotationWorkflowNext();">Next &gt;</span>-->
+	<!--	<div id="annotationWorkflowSubtext"></div>-->
+
+	<h6>Annotations</h6>
+	<button type="button" class="btn btn-sm btn-light" data-toggle="modal" data-target="#annotationsListModal" style="margin-bottom: 3px;">View File Annotations</button><br>
+	<button type="button" class="btn btn-sm btn-light" data-toggle="modal" data-target="#allAnnotationsListModal">View Project Annotations</button>
+	<br><br>
+
 	<h6>Zoom Control</h6>
-	<div style="width: 100%; margin-bottom: 10px;">
-		<div style="width: 100%; text-align: center; margin-bottom: 4px;">
+	<div id="zoomControl">
+		<div>
 			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(21600000);" title="6 hours">6hr</button>
 			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(7200000);" title="2 hours">2hr</button>
 			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(3600000);" title="1 hour">1hr</button>
 			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(600000);" title="10 minutes">10m</button>
 		</div>
-		<div style="width: 100%; text-align: center; margin-bottom: 4px;">
+		<div>
 			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(60000);" title="1 minute">1m</button>
 			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(10000);" title="10 seconds">10s</button>
 			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(1000);" title="1 second">1s</button>
 		</div>
-		<div style="width: 100%; text-align: center;">
+		<div>
 			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.resetZoomToOutermost();" title="Reset zoom to see all data">All</button>
 			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomBy(0, .1);" title="Zoom out by 10%">-</button>
 			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomBy(1, .1);" title="Zoom in by 10%">+</button>
 		</div>
 	</div>
 
-	<h6>Annotation Workflow</h6>
-	<span class="clickable" onclick="globalStateManager.currentFile.annotationWorkflowPrevious();">&lt; Prev</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="clickable" onclick="globalStateManager.currentFile.annotationWorkflowNext();">Next &gt;</span>
-	<div id="annotationWorkflowSubtext"></div>
-	<button type="button" class="btn btn-sm btn-light" data-toggle="modal" data-target="#annotationsListModal" style="margin-bottom: 3px;">View File Annotations</button><br>
-	<button type="button" class="btn btn-sm btn-light" data-toggle="modal" data-target="#allAnnotationsListModal">View Project Annotations</button>
-	<br><br>
+	<h6>Annotation Sets</h6>
 
-	<div id="anomalyDetectionPanel">
+	<table id="annotation_sets_cp_table" class="table table-sm table-hover control-panel-table">
+		<thead>
+		<tr>
+			<th scope="col"></th>
+			<th scope="col">Annotation Set</th>
+			<th scope="col" style="width: 35px;">Color</th>
+			<th scope="col" style="width: 35px;">Count</th>
+		</tr>
+		</thead>
+		<tbody>
+<!--		<tr>-->
+<!--			<td><input type="checkbox"></td>-->
+<!--			<td>General</td>-->
+<!--			<td><div class="color-square" style="background-color: #881111;"></div></td>-->
+<!--			<td>25</td>-->
+<!--		</tr>-->
+<!--		<tr>-->
+<!--			<td><input type="checkbox"></td>-->
+<!--			<td>Initial CRI Real v Art Annotation</td>-->
+<!--			<td><div class="color-square" style="background-color: #281372;"></div></td>-->
+<!--			<td>32</td>-->
+<!--		</tr>-->
+		</tbody>
+	</table>
 
-		<h6>Exceedance Detection</h6>
+	<h6>Pattern Sets</h6>
 
-		<span style="font-size: 0.9em;"><i class="fa fa-plus-circle"></i>New</span>
+	<table id="pattern_sets_cp_table" class="table table-sm table-hover control-panel-table">
+		<thead>
+		<tr>
+			<th scope="col"></th>
+			<th scope="col">Annotation Set</th>
+			<th scope="col" style="width: 35px;">Color</th>
+			<th scope="col" style="width: 35px;">Count</th>
+		</tr>
+		</thead>
+		<tbody>
+<!--		<tr>-->
+<!--			<td><input type="checkbox"></td>-->
+<!--			<td>Initial CRI Real v Art Annotation</td>-->
+<!--			<td><div class="color-square" style="background-color: #881111;"></div></td>-->
+<!--			<td>25</td>-->
+<!--		</tr>-->
+<!--		<tr>-->
+<!--			<td><input type="checkbox"></td>-->
+<!--			<td>HR CRI Exceedance Thresholds</td>-->
+<!--			<td><div class="color-square" style="background-color: #281372;"></div></td>-->
+<!--			<td>32</td>-->
+<!--		</tr>-->
+		</tbody>
+	</table>
 
-		<div class="form-group row" style="margin-bottom: 0.3rem">
-			<label for="alert_gen_type_field" class="col-sm-5 col-form-label col-form-label-sm">Pattern Type</label>
-			<div class="col-sm-7">
-				<select class="form-control form-control-sm" id="alert_gen_type_field">
-					<option value="anomalydetection">Exceedance Detection</option>
-					<option value="correlation">Correlation Pattern</option>
-				</select>
-			</div>
-		</div>
-		<div class="form-group row" style="margin-bottom: 0.3rem">
-			<label for="alert_gen_series_field" class="col-sm-5 col-form-label col-form-label-sm">Series</label>
-			<div class="col-sm-7">
-				<select class="form-control form-control-sm selectpicker" data-title="Select series" data-live-search="true" id="alert_gen_series_field">
-				</select>
-			</div>
-		</div>
-		<div class="form-group row" style="margin-bottom: 0.3rem">
-			<label for="alert_gen_threshold_high_field" class="col-sm-5 col-form-label col-form-label-sm">Threshold<sub>High</sub></label>
-			<div class="col-sm-7">
-				<input class="form-control form-control-sm" type="text" id="alert_gen_threshold_high_field" placeholder="e.g. 200" />
-			</div>
-		</div>
-		<div class="form-group row" style="margin-bottom: 0.3rem">
-			<label for="alert_gen_threshold_low_field" class="col-sm-5 col-form-label col-form-label-sm">Threshold<sub>Low</sub></label>
-			<div class="col-sm-7">
-				<input class="form-control form-control-sm" type="text" id="alert_gen_threshold_low_field" placeholder="e.g. 70" />
-			</div>
-		</div>
-		<div class="form-group row" style="margin-bottom: 0.3rem">
-			<label for="alert_gen_duration_field" class="col-sm-5 col-form-label col-form-label-sm">Duration (s)</label>
-			<div class="col-sm-7">
-				<input class="form-control form-control-sm" type="text" id="alert_gen_duration_field" placeholder="e.g. 60" />
-			</div>
-		</div>
-		<div class="form-group row" style="margin-bottom: 0.3rem">
-			<label for="alert_gen_dutycycle_field" class="col-sm-5 col-form-label col-form-label-sm" style="white-space: nowrap;">Persistence (%)</label>
-			<div class="col-sm-7">
-				<input class="form-control form-control-sm" type="text" id="alert_gen_dutycycle_field" placeholder="e.g. 70" />
-			</div>
-		</div>
-		<div class="form-group row" style="margin-bottom: 0.3rem">
-			<label for="alert_gen_maxgap_field" class="col-sm-5 col-form-label col-form-label-sm">Max Gap (s)</label>
-			<div class="col-sm-7">
-				<input class="form-control form-control-sm" type="text" id="alert_gen_maxgap_field" placeholder="e.g. 60" />
-			</div>
-		</div>
-		<div class="form-group row">
-			<div class="col-sm-12 text-right">
-				<button onclick="if (confirm('Are you sure you want to clear anomalies?\n\nNote: This will only clear the anomalies from your current browsing session. Memorized anomaly detection will re-run upon reload.')) { globalStateManager.currentFile.clearAnomalies(); }" class="btn btn-secondary btn-sm">Clear</button>
-				<button onclick="globalStateManager.currentFile.detectAnomaliesFromForm();" class="btn btn-primary btn-sm">Generate</button>
-			</div>
-		</div>
+<!--	<div id="patternDetectionPanel">-->
 
-	</div>
+<!--		<h6>Exceedance Detection</h6>-->
+
+<!--		<span style="font-size: 0.9em;"><i class="fa fa-plus-circle"></i>New</span>-->
+
+<!--		<div class="form-group row" style="margin-bottom: 0.3rem">-->
+<!--			<label for="alert_gen_type_field" class="col-sm-5 col-form-label col-form-label-sm">Pattern Type</label>-->
+<!--			<div class="col-sm-7">-->
+<!--				<select class="form-control form-control-sm" id="alert_gen_type_field">-->
+<!--					<option value="patterndetection">Exceedance Detection</option>-->
+<!--					<option value="correlation">Correlation Pattern</option>-->
+<!--				</select>-->
+<!--			</div>-->
+<!--		</div>-->
+<!--		<div class="form-group row" style="margin-bottom: 0.3rem">-->
+<!--			<label for="alert_gen_series_field" class="col-sm-5 col-form-label col-form-label-sm">Series</label>-->
+<!--			<div class="col-sm-7">-->
+<!--				<select class="form-control form-control-sm selectpicker" data-title="Select series" data-live-search="true" id="alert_gen_series_field">-->
+<!--				</select>-->
+<!--			</div>-->
+<!--		</div>-->
+<!--		<div class="form-group row" style="margin-bottom: 0.3rem">-->
+<!--			<label for="alert_gen_threshold_high_field" class="col-sm-5 col-form-label col-form-label-sm">Threshold<sub>High</sub></label>-->
+<!--			<div class="col-sm-7">-->
+<!--				<input class="form-control form-control-sm" type="text" id="alert_gen_threshold_high_field" placeholder="e.g. 200" />-->
+<!--			</div>-->
+<!--		</div>-->
+<!--		<div class="form-group row" style="margin-bottom: 0.3rem">-->
+<!--			<label for="alert_gen_threshold_low_field" class="col-sm-5 col-form-label col-form-label-sm">Threshold<sub>Low</sub></label>-->
+<!--			<div class="col-sm-7">-->
+<!--				<input class="form-control form-control-sm" type="text" id="alert_gen_threshold_low_field" placeholder="e.g. 70" />-->
+<!--			</div>-->
+<!--		</div>-->
+<!--		<div class="form-group row" style="margin-bottom: 0.3rem">-->
+<!--			<label for="alert_gen_duration_field" class="col-sm-5 col-form-label col-form-label-sm">Duration (s)</label>-->
+<!--			<div class="col-sm-7">-->
+<!--				<input class="form-control form-control-sm" type="text" id="alert_gen_duration_field" placeholder="e.g. 60" />-->
+<!--			</div>-->
+<!--		</div>-->
+<!--		<div class="form-group row" style="margin-bottom: 0.3rem">-->
+<!--			<label for="alert_gen_dutycycle_field" class="col-sm-5 col-form-label col-form-label-sm" style="white-space: nowrap;">Persistence (%)</label>-->
+<!--			<div class="col-sm-7">-->
+<!--				<input class="form-control form-control-sm" type="text" id="alert_gen_dutycycle_field" placeholder="e.g. 70" />-->
+<!--			</div>-->
+<!--		</div>-->
+<!--		<div class="form-group row" style="margin-bottom: 0.3rem">-->
+<!--			<label for="alert_gen_maxgap_field" class="col-sm-5 col-form-label col-form-label-sm">Max Gap (s)</label>-->
+<!--			<div class="col-sm-7">-->
+<!--				<input class="form-control form-control-sm" type="text" id="alert_gen_maxgap_field" placeholder="e.g. 60" />-->
+<!--			</div>-->
+<!--		</div>-->
+<!--		<div class="form-group row">-->
+<!--			<div class="col-sm-12 text-right">-->
+<!--				<button onclick="if (confirm('Are you sure you want to clear patterns?\n\nNote: This will only clear the patterns from your current browsing session. Memorized pattern detection will re-run upon reload.')) { globalStateManager.currentFile.clearPatterns(); }" class="btn btn-secondary btn-sm">Clear</button>-->
+<!--				<button onclick="globalStateManager.currentFile.detectPatternsFromForm();" class="btn btn-primary btn-sm">Generate</button>-->
+<!--			</div>-->
+<!--		</div>-->
+
+<!--	</div>-->
 
 	<div id="control_footer">
 

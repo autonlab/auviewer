@@ -31,7 +31,7 @@
 					<tr>
 						<th scope="col">Project</th>
 						<th scope="col">Files</th>
-						<th scope="col">Anomalies</th>
+						<th scope="col">Patterns</th>
 						<th scope="col">Annotations</th>
 						<th scope="col">Assignments Rem.</th>
 					</tr>
@@ -41,7 +41,7 @@
 					<tr onclick="window.location='/project?id={{p.id}}'">
 						<th scope="row">{{p.name}}</th>
 						<td>{{p.files}}</td>
-						<td>{{p.anomalies}}</td>
+						<td>{{p.patterns}}</td>
 						<td>{{p.annotations}}</td>
 						<td>{{p.assignments_rem}}</td>
 					</tr>
@@ -66,20 +66,15 @@
 					</tr>
 				</thead>
 				<tbody>
-					<tr onclick="window.location='/project?id=1'">
-						<th scope="row">Preliminary Annotations</th>
-						<td>Condition C</td>
-						<td>225</td>
-						<td>15</td>
-						<td>240</td>
+					{% for a in assignments %}
+					<tr onclick="window.location='/assignment?id={{a.id}}'">
+						<th scope="row">{{a.name}}</th>
+						<td>{{a.project_name}}</td>
+						<td>{{a.completed}}</td>
+						<td>{{a.remaining}}</td>
+						<td>{{a.total}}</td>
 					</tr>
-					<tr>
-						<th scope="row">Active Learning</th>
-						<td>Condition C</td>
-						<td>0</td>
-						<td>2000</td>
-						<td>2000</td>
-					</tr>
+					{% endfor %}
 				</tbody>
 			</table>
 

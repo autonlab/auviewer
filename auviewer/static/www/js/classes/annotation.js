@@ -1,17 +1,27 @@
 'use strict';
 
-// Holds the next incremental local ID.
-let maxLocalAnnotationID = 0;
+// Annotation can represent an annotation or pattern.
+function Annotation(parentSet, dataObjOrArray, type, forceIDReset=false) {
 
-// Annotation constructor.
-function Annotation(dataObjOrArray, state, forceIDReset=false) {
+	// Holds a reference to the parent set (either AnnotationSet or PatternSet)
+	this.parentSet = parentSet;
+
+	// Grab a reference to the parent set array of annotations or patterns
+	this.parentSetArray = this.parentSet.hasOwnProperty('annotations') ? this.parentSet.annotations : this.parentSet.patterns;
 
 	// Set default values
-	this.file = null;
+	this.id = null;
+	this.file_id = null;
+	this.filename = null;
 	this.series = null;
-	this.annotation = {};
 	this.begin = 0;
 	this.end = 0;
+	this.label = {};
+	this.pattern_id = null;
+
+	// Holds an object related to this item. For example, if this instance is an
+	// Annotation, related may hold the Pattern it annotates.
+	this.related = null;
 
 	// Populate values from the object or array provided
 	if (typeof dataObjOrArray === 'object' && dataObjOrArray !== null) {
@@ -22,33 +32,30 @@ function Annotation(dataObjOrArray, state, forceIDReset=false) {
 
 	// Set the local ID if a backend ID was not provided
 	if (forceIDReset || !this.hasOwnProperty('id') || !this.id) {
-		this.id = "local" + maxLocalAnnotationID++;
+		this.id = localIDGenerator();
 	}
 
-	// Holds the state of the annotation. May be 'new', 'existing', or 'anomaly'.
-	this.state = state;
+	// Holds the type of the annotation. May be 'annotation', 'unsaved_annotation', or 'pattern'.
+	this.type = type;
 
-	// Validate the state value.
-	if (this.state !== 'new' && this.state !== 'existing' && this.state !== 'anomaly') {
-		console.log('Error: An invalid state was provided to the annotation constructor: ' + this.state);
+	// Validate the type value.
+	if (this.type !== 'unsaved_annotation' && this.type !== 'annotation' && this.type !== 'pattern') {
+		console.log('Error: An invalid type was provided to the annotation constructor: ' + this.type);
 	}
 
 }
 
 // Cancel creation of a new annotation. This function removes the annotation
 // from the global annotations array.
+// TODO(gus): To be more robust, the process of editing an existing annotation
+// should cache a copy of the pre-update annotation and, if update fails & the
+// user cancels out of the dialog, it should revert to the previous values.
 Annotation.prototype.cancel = function () {
 
 	// If this was a new annotation, then delete it (in this case, the user is
 	// cancelling the creation of the new annotation).
-	if (this.state === 'new') {
-
-		// Delete the local copy of the annotation.
-		this.deleteLocal();
-
-		// Trigger a redraw to remove the annotation
-		globalStateManager.currentFile.triggerRedraw();
-
+	if (this.type === 'unsaved_annotation') {
+		this.parentSet.deleteMember(this);
 	}
 
 	// Remove the dialog from the UI
@@ -56,56 +63,33 @@ Annotation.prototype.cancel = function () {
 
 };
 
-// Delete the annotation (only valid for this.state==='existing').
+// Delete the annotation (only valid for this.type==='annotation').
 Annotation.prototype.delete = function () {
 
-	if (this.state === 'existing') {
+	if (this.type === 'annotation') {
 
 		console.log('Delete called. Sending request to backend.');
 
-		// Persist this for callback
-		let annotation = this;
-
 		// Send deletion request to the backend.
-		requestHandler.deleteAnnotation(this.id, globalStateManager.currentFile.projname, globalStateManager.currentFile.filename, function (data) {
+		requestHandler.deleteAnnotation(this.id, globalStateManager.currentFile.parentProject.id, globalStateManager.currentFile.id, function (data) {
 
 			globalAppConfig.verbose && console.log('Delete response received from backend.', deepCopy(data));
 
 			if (data.hasOwnProperty('success') && data['success'] === true) {
-
-				// Delete the local copy of the annotation.
-				annotation.deleteLocal();
-
-				// Trigger a redraw to remove the annotation
-				globalStateManager.currentFile.triggerRedraw();
-
+				this.parentSet.deleteMember(this);
+				this.hideDialog();
 			} else {
-
 				console.log("Received an error while trying to delete annotation.");
+				alert('There was an error trying to delete this annotation.');
 
 			}
 
-		});
+		}.bind(this));
 
-		// Hide the dialog modal.
-		this.hideDialog();
 
 	} else {
-		console.log("Error: Delete called on annotation where this.state !== 'existing' (current state is '"+this.state+"').");
+		console.log("Error: Delete called on annotation where this.type !== 'annotation' (current type is '"+this.type+"').");
 	}
-};
-
-// Deletes the local copy of the annotation from the array of annotations.
-Annotation.prototype.deleteLocal = function() {
-
-	let file = globalStateManager.currentFile;
-
-	// Get this annotation's index in the global array
-	let i = this.getIndex();
-
-	// Remove the annotation from the global array
-	file.annotations.splice(i, 1);
-
 };
 
 // Returns JS Date object corresponding to end date.
@@ -116,17 +100,6 @@ Annotation.prototype.getEndDate = function() {
 // Returns JS Date object corresponding to start date.
 Annotation.prototype.getStartDate = function() {
 	return new Date(this.begin * 1000);
-};
-
-// Returns the index of the object in the annotations array, or -1 if not found.
-Annotation.prototype.getIndex = function () {
-	let file = globalStateManager.currentFile;
-	for (let i = 0; i < file.annotations.length; i++) {
-		if (file.annotations[i].id === this.id) {
-			return i;
-		}
-	}
-	return -1;
 };
 
 // Go to the annotation by centering the graph plot at the annotation. If the
@@ -143,7 +116,7 @@ Annotation.prototype.goTo = function() {
 		// Total zoom window time to display
 		let zwTotal = 6 * 60 * 60;
 
-		// Total gap = total zoom window less the anomaly duration
+		// Total gap = total zoom window less the pattern duration
 		let zwTotalGap = zwTotal - (this.end - this.begin);
 
 		// Gap on either side
@@ -163,7 +136,7 @@ Annotation.prototype.goTo = function() {
 	// Ensure we have the correct file loaded. If a new file is loaded, it will
 	// call callback upon loading. If not, loadFile will return false, and we
 	// will call the callback ourselves.
-	if (!globalStateManager.loadFile(this.file, '', callback)) {
+	if (!globalStateManager.loadFile(this.file_id, callback)) {
 		callback();
 	}
 
@@ -183,7 +156,7 @@ Annotation.prototype.populateFormFromValues = function() {
 	document.getElementById('annotationID').innerText = this.id;
 
 	// Populate the file & series names
-	document.getElementById('annotationFile').value = this.file;
+	document.getElementById('annotationFile').value = this.filename;
 	document.getElementById('annotationSeries').value = this.series;
 
 	// Populate annotation start date & time fields
@@ -207,18 +180,18 @@ Annotation.prototype.populateFormFromValues = function() {
 	// 	$('#annotationLabel').val($('#annotationLabel option:first').val());
 	// }
 
-	if (this.annotation.hasOwnProperty('confidence')) {
+	try {
 		// Set the annotation confidence
-		$("input[name='annotationConfidence'][value='"+this.annotation.confidence+"']").prop('checked', true);
-	} else {
+		$("input[name='annotationConfidence'][value='"+this.label.confidence+"']").prop('checked', true);
+	} catch {
 		// Uncheck all confidence selections
 		$("input[name='annotationConfidence']").prop('checked', false);
 	}
 
-	if (this.annotation.hasOwnProperty('notes')) {
+	try {
 		// Set the annotation notes
-		$('#annotationNotes').val(this.annotation.notes);
-	} else {
+		$('#annotationNotes').val(this.label.notes);
+	} catch {
 		// Clear the annotation notes
 		$('#annotationNotes').val('');
 	}
@@ -237,7 +210,7 @@ Annotation.prototype.populateValuesFromForm = function() {
 	this.begin = annotationStartOffset;
 	this.end = annotationEndOffset;
 
-	this.annotation = {
+	this.label = {
 		// label: $('#annotationLabel').val(),
 		confidence: $("input[name='annotationConfidence']:checked").val(),
 		notes: $('#annotationNotes').val()
@@ -256,26 +229,36 @@ Annotation.prototype.populateValuesFromObject = function (obj) {
 		if (!obj.valuesArrayFromBackend || !Array.isArray(obj.valuesArrayFromBackend)) {
 			console.log('Error: Array provided to annotator was null or not array.');
 			return;
-		} else if (obj.valuesArrayFromBackend.length !== 8) {
+		} else if (obj.valuesArrayFromBackend.length !== 10 && obj.valuesArrayFromBackend.length !== 20) {
 			console.log('Error: Invalid array provided to annotator (size '+obj.valuesArrayFromBackend.length+').');
 			return;
 		}
 
 		// Set values from the array
 		this.id = obj.valuesArrayFromBackend[0];
-		this.file = obj.valuesArrayFromBackend[1];
-		this.series = obj.valuesArrayFromBackend[2]
-		this.begin = obj.valuesArrayFromBackend[3];
-		this.end = obj.valuesArrayFromBackend[4];
-		this.annotation = JSON.parse(obj.valuesArrayFromBackend[7]);
+		this.file_id = obj.valuesArrayFromBackend[1];
+		this.filename = obj.valuesArrayFromBackend[2];
+		this.series = obj.valuesArrayFromBackend[3]
+		this.begin = obj.valuesArrayFromBackend[4];
+		this.end = obj.valuesArrayFromBackend[5];
+		this.label = JSON.parse(obj.valuesArrayFromBackend[8]);
+		this.pattern_id = obj.valuesArrayFromBackend[9];
+
+		// If data for a related item was provided, instantiate it.
+		if (obj.valuesArrayFromBackend.length === 20) {
+			this.related = new Annotation(this.parentSet, {'valuesArrayFromBackend': obj.valuesArrayFromBackend.slice(10, 20)}, (this.type === 'annotation' || this.type === 'unsaved_annotation') ? 'pattern' : 'annotation');
+		}
 
 	}
 
 	if (obj.hasOwnProperty('id')) {
 		this.id = obj.id;
 	}
-	if (obj.hasOwnProperty('file')) {
-		this.file = obj.file;
+	if (obj.hasOwnProperty('file_id')) {
+		this.file_id = obj.file_id;
+	}
+	if (obj.hasOwnProperty('filename')) {
+		this.filename = obj.filename;
 	}
 	if (obj.hasOwnProperty('series')) {
 		this.series = obj.series;
@@ -286,77 +269,78 @@ Annotation.prototype.populateValuesFromObject = function (obj) {
 	if (obj.hasOwnProperty('end')) {
 		this.end = obj.end;
 	}
-	if (obj.hasOwnProperty('annotation')) {
-		this.annotation = obj.annotation;
+	if (obj.hasOwnProperty('label')) {
+		this.label = obj.label;
+	}
+	if (obj.hasOwnProperty('pattern_id')) {
+		this.pattern_id = obj.pattern_id;
 	}
 
 };
 
-// Either finalizes creation of a new annotation (if this.state==='new'), or
-// saves an existing annotation (if this.state==='existing').
+// Either finalizes creation of a new annotation (if this.type==='unsaved_annotation'), or
+// updates an existing annotation (if this.type==='annotation').
 Annotation.prototype.save = function () {
 
-	// Make a copy of the anomaly in case it's needed later
-	let copyForLater = new Annotation(this, 'anomaly', true);
+	// We don't expect the save function to be called from an pattern annotation.
+	if (this.type === 'pattern') {
+		console.log("Error! Save dialog called from pattern annotation.");
+		return;
+	}
 
 	// Pull values from form
 	this.populateValuesFromForm();
 
-	// Persist the this variable for the event handler.
-	let annotation = this;
-
-	if (this.state === 'new' || this.state === 'anomaly') {
+	if (this.type === 'unsaved_annotation') {
 
 		// Attempt to create the annotation in the backend
-		requestHandler.createAnnotation(globalStateManager.currentFile.projname, globalStateManager.currentFile.filename, this.begin, this.end, this.series, JSON.stringify(this.annotation), (function (data) {
+		requestHandler.createAnnotation(globalStateManager.currentFile.parentProject.id, globalStateManager.currentFile.id, this.begin, this.end, this.series, JSON.stringify(this.label), this.pattern_id, function (data) {
 
 			if (data.hasOwnProperty('success') && data.success === true) {
 
 				globalAppConfig.verbose && console.log("Annotation has been written.");
 
-				// If this annotation was previously an anomly, add a duplicate
-				// of it before we proceed since we're about to convert this one
-				// to an annotation.
-				if (annotation.state === 'anomaly') {
-					globalStateManager.currentFile.annotations.push(copyForLater);
-				}
-
 				// Set ID received from backend
-				annotation.id = data.id;
+				this.id = data.id;
 
-				// Update state to 'existing'
-				annotation.state = 'existing';
+				// Update type to 'annotation'
+				this.type = 'annotation';
+
+				// Hide the dialog
+				this.hideDialog();
+
+				// If this was an annotation of a pattern, report it to the
+				// assignments manager (in case the pattern is an assignment).
+				if (this.pattern_id != null) {
+					globalStateManager.currentProject.assignmentsManager.annotationCreatedForPattern(this.related.parentSet.id, this.related.id, this);
+				}
 
 			} else {
 
-				globalAppConfig.verbose && console.log("Annotation creation failed.");
-
+				console.log("Error! Annotation creation failed.");
 				alert('Annotation creation failed.');
-
-				// If this was a new annotation, delete the local copy.
-				// Otherwise (if it was a detected anomaly), leave it be.
-				if (this.state === 'new') {
-					this.deleteLocal();
-				}
 
 			}
 
 			// Trigger a redraw to show any changes to the annotation
 			globalStateManager.currentFile.triggerRedraw();
 
-		}).bind(this));
+		}.bind(this));
 
-	} else if (this.state === 'existing') {
+	} else if (this.type === 'annotation') {
 
-		requestHandler.updateAnnotation(this.id, globalStateManager.currentFile.projname, globalStateManager.currentFile.filename, this.begin, this.end, this.series, JSON.stringify(this.annotation), function (data) {
+		requestHandler.updateAnnotation(this.id, globalStateManager.currentFile.parentProject.id, globalStateManager.currentFile.id, this.begin, this.end, this.series, JSON.stringify(this.label), function (data) {
 
 			if (data.hasOwnProperty('success') && data.success === true) {
 
 				globalAppConfig.verbose && console.log("Annotation has been updated.");
 
+				// Hide the dialog
+				this.hideDialog();
+
 			} else {
 
-				globalAppConfig.verbose && console.log("Annotation updated failed.");
+				console.log("Error! Annotation updated failed.");
 				alert('Annotation update failed.');
 
 			}
@@ -364,37 +348,66 @@ Annotation.prototype.save = function () {
 			// Trigger a redraw to show any changes to the annotation
 			globalStateManager.currentFile.triggerRedraw();
 
-		});
+		}.bind(this));
 
 	}
 
-	// Hide the dialog
-	this.hideDialog();
-
 };
 
-// Show the new/edit annotation dialog. State may be 'create' or 'edit'.
+// Show the annotation dialog to allow the user to create or edit an annotation.
 Annotation.prototype.showDialog = function () {
+
+	// If this is an pattern, create a new unsaved annotation, and have that show.
+	if (this.type === 'pattern') {
+
+		// Determine the destination annotation set for the new annotation
+		const destinationAnnotationSet = this.parentSet.parentFile.getAnnotationSetByID(this.parentSet.id);
+
+		// Create the new annotation
+		const newAnnotation = new Annotation(destinationAnnotationSet, this, 'unsaved_annotation', true);
+
+		// Set the pattern_id of the new annotation to this pattern
+		newAnnotation.pattern_id = this.id;
+
+		// Also attach this pattern as a related object of the new annotation
+		newAnnotation.related = this;
+
+		// Add the new annotation to its destination annotation set
+		destinationAnnotationSet.addMember(newAnnotation);
+
+		// Triger a redraw of the graphs
+		this.parentSet.parentFile.triggerRedraw();
+
+		// Have the new annotation show the dialog
+		newAnnotation.showDialog();
+
+		// Work here is done, so return.
+		return;
+	}
 
 	let modal = $('#annotationModal');
 
-	// Populate form from values
+	// Populate form values from this annotation
 	this.populateFormFromValues();
 
-	// Attach the calling annotation and the state to the dialog
+	// Attach the calling annotation and the type to the dialog
 	modal.data('callingAnnotation', this);
 
-	if (this.state === 'new') {
+	if (this.type === 'unsaved_annotation') {
 
 		// If we're creating a new annotation...
 
 		// Set modal title, button labels, show/hide button(s)
-		$('#annotationModalTitle').text('New Annotation');
+		if (this.pattern_id) {
+			$('#annotationModalTitle').text('New Annotation from Pattern');
+		} else {
+			$('#annotationModalTitle').text('New Annotation');
+		}
 		$('#annotationIDContainer').hide();
 		$('#annotationModal button.saveButton').text('Create');
 		$('#annotationModal button.deleteButton').hide();
 
-	} else if (this.state === 'existing') {
+	} else if (this.type === 'annotation') {
 
 		// If we're editing...
 
@@ -403,16 +416,6 @@ Annotation.prototype.showDialog = function () {
 		$('#annotationIDContainer').show();
 		$('#annotationModal button.saveButton').text('Save');
 		$('#annotationModal button.deleteButton').show();
-
-	} else if (this.state === 'anomaly') {
-
-		// If this is an anomaly...
-
-		// Set modal title, button labels, show/hide button(s)
-		$('#annotationModalTitle').text('New Annotation from Anomaly');
-		$('#annotationIDContainer').hide();
-		$('#annotationModal button.saveButton').text('Create');
-		$('#annotationModal button.deleteButton').hide();
 
 	}
 

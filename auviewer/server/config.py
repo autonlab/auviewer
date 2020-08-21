@@ -27,8 +27,7 @@ config = {
 
     ### General settings
 
-    # Output verbosity
-    'verbose': False,
+    # TODO: Do we still need this section?
 
 
 
@@ -188,8 +187,6 @@ def load_config(cp):
         'port',
         'debug',
         'reloader',
-
-        'verbose',
 
         'root_web_path',
         'secret_key',

@@ -1,6 +1,6 @@
-import numpy as np
-import time
+import logging
 import psutil
+import time
 
 from .config import config
 from .cylib import buildDownsampleFromRaw, buildNextDownsampleUp, getSliceParam, numDownsamplesToBuild
@@ -133,30 +133,30 @@ class DownsampleSet:
         # Begin by building the last downsample from the raw data first. Then
         # proceed by building the next downsample up from the previously-built
         # downsample until all downsamples have been created.
-        print("MEM PRE-DSBLD: " + str(p.memory_full_info().uss / 1024 / 1024) + " MB")
+        logging.info(f"MEM PRE-DSBLD: {p.memory_full_info().uss / 1024 / 1024} MB")
         for i in range(-1, -ndtb - 1, -1):
 
-            print("Creating downsample (" + str(self.getNumIntervalsByIndex(i, ndtb)) + " intervals possible).")
+            logging.info(f"Creating downsample ({self.getNumIntervalsByIndex(i, ndtb)} intervals possible).")
             start = time.time()
 
             # Build the downsample
             if i == -1:
-                print("This pass from raw.")
+                logging.info("This pass from raw.")
                 downsample = buildDownsampleFromRaw(self.seriesparent.rawTimes, self.seriesparent.rawValues, self.getNumIntervalsByIndex(i, ndtb))
             else:
                 downsample = buildNextDownsampleUp(previousDownsample, self.getTimePerIntervalByIndex(i + 1, ndtb), config['stepMultiplier'])
 
-            print("MEM AFT-DSBLD: " + str(p.memory_full_info().uss / 1024 / 1024) + " MB")
+            logging.info(f"MEM AFT-DSBLD: {p.memory_full_info().uss / 1024 / 1024} MB")
 
             # Save the just-computed downsample for use on the next loop iteration
             previousDownsample = downsample
 
-            print("MEM AFT-REPLP: " + str(p.memory_full_info().uss / 1024 / 1024) + " MB")
+            logging.info(f"MEM AFT-REPLP: {p.memory_full_info().uss / 1024 / 1024} MB")
 
             end = time.time()
-            print("Done creating downsample. Yielded " + str(downsample.shape[0]) + " actual intervals. Took " + str(round(end - start, 5)) + "s.")
+            logging.info(f"Done creating downsample. Yielded {downsample.shape[0]} actual intervals. Took {round(end - start, 5)}s.")
 
-            print("Storing the downsample to the processed file.")
+            logging.info("Storing the downsample to the processed file.")
             start = time.time()
 
             try:
@@ -164,16 +164,15 @@ class DownsampleSet:
                 # Store the downsample
                 dds_name = '{}/{}'.format('/'.join(self.seriesparent.h5pathDownsample), i % ndtb)
                 self.seriesparent.fileparent.pf[dds_name] = downsample
-                print("MEM AFT-STRFL: " + str(p.memory_full_info().uss / 1024 / 1024) + " MB")
+                logging.info(f"MEM AFT-STRFL: {p.memory_full_info().uss / 1024 / 1024} MB")
 
             except:
 
-                print("There was an exception while creating the dataset in the processed data file at the path: " + '/'.join(self.seriesparent.h5pathDownsample) + '/' + str(i%ndtb) + ".")
-
+                logging.info(f"There was an exception while creating the dataset in the processed data file at the path: {'/'.join(self.seriesparent.h5pathDownsample)}/{i%ndtb}.")
                 raise
 
             end = time.time()
-            print("Done storing to file. Took " + str(round(end - start, 5)) + "s.")
+            logging.info(f"Done storing to file. Took {round(end - start, 5)}s.")
 
         # Update the self.numDownsamples count.
         self.numDownsamples = self.getNumDownsamplesFromFile()
