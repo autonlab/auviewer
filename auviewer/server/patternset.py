@@ -1,6 +1,7 @@
 """Class and related functionality for pattern sets."""
 
 from . import models
+import pandas as pd
 
 class PatternSet:
 
@@ -41,6 +42,14 @@ class PatternSet:
             models.User.query.filter(models.User.id.in_(user_ids)).all()
         )
         models.db.session.commit()
+
+    def delete(self):
+        models.db.session.delete(self.dbmodel)
+        models.db.session.commit()
+
+    def getPatterns(self):
+        patterns = [[pattern.file.id, pattern.file.name, pattern.series, pattern.left, pattern.right, pattern.top, pattern.bottom] for pattern in self.dbmodel.patterns]
+        return pd.DataFrame(patterns, columns=['file_id', 'filename', 'series', 'left', 'right', 'top', 'bottom'])
 
     # Set the pattern set's description
     def setDescription(self, description):

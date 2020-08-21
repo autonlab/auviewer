@@ -54,7 +54,8 @@ class Project:
         self.loadProjectFiles(processNewFiles)
 
         # Load pattern sets
-        self.loadPatternSets()
+        for psm in models.PatternSet.query.filter_by(project_id=self.id).all():
+            self.patternsets.append(PatternSet(self, psm))
 
     # Cleanup
     def __del__(self):
@@ -80,8 +81,8 @@ class Project:
 
     # Run pattern detection on all files, and return a single list of results.
     def detectPatterns(self, type, series, thresholdlow, thresholdhigh, duration, persistence, maxgap):
-        al = [[f.id, f.name, series, pattern[0], pattern[1], None, None] for f in self.files for pattern in f.detectPatterns(type, series, thresholdlow, thresholdhigh, duration, persistence, maxgap)]
-        return pd.DataFrame(al, columns=['file_id', 'filename', 'series', 'left', 'right', 'top', 'bottom'])
+        patterns = [[f.id, f.name, series, pattern[0], pattern[1], None, None] for f in self.files for pattern in f.detectPatterns(type, series, thresholdlow, thresholdhigh, duration, persistence, maxgap)]
+        return pd.DataFrame(patterns, columns=['file_id', 'filename', 'series', 'left', 'right', 'top', 'bottom'])
 
     # Returns a list of user's annotations for all files in the project
     def getAnnotationsOutput(self, user_id):
@@ -135,11 +136,6 @@ class Project:
     # Get total count of patterns in all the project's pattern sets
     def getTotalPatternCount(self):
         return sum([ps.count for ps in self.patternsets])
-
-    # Load pattern sets belonging to the project
-    def loadPatternSets(self):
-        for psm in models.PatternSet.query.filter_by(project_id=self.id).all():
-            self.patternsets.append(PatternSet(self, psm))
 
     # Load files belonging to the project, and process new files if desired.
     def loadProjectFiles(self, processNewFiles=True):
