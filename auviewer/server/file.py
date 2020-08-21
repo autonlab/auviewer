@@ -262,6 +262,9 @@ class File:
 
             return alerts
 
+        # Having reached this point, we were unable to generate the alerts.
+        return []
+
     # Returns all event series
     def getEvents(self):
 
