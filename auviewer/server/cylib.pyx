@@ -258,11 +258,11 @@ def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndar
     # Pull the indices of all data points that exceed the threshold.
     # TODO(gus): Is there a more efficient way to do this?
     if mode == 0:
-        pastThresholdIndices = np.nonzero((rawValues <= thresholdlow))[0]
+        pastThresholdIndices = np.nonzero((rawValues < thresholdlow))[0]
     elif mode == 1:
-        pastThresholdIndices = np.nonzero((rawValues >= thresholdhigh))[0]
+        pastThresholdIndices = np.nonzero((rawValues > thresholdhigh))[0]
     elif mode == 2:
-        pastThresholdIndices = np.nonzero((rawValues <= thresholdlow) | (rawValues >= thresholdhigh))[0]
+        pastThresholdIndices = np.nonzero((rawValues < thresholdlow) | (rawValues > thresholdhigh))[0]
     else:
         print("Invalid mode parameter provided to generateThresholdAlerts.")
         return np.array([])
@@ -306,9 +306,9 @@ def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndar
 
             # If this data point exceeds the threshold, increment the number of
             # threshold-exceed data points.
-            if (mode == 0 and rawValues[cdpi] <= thresholdlow) or \
-                (mode == 1 and rawValues[cdpi] >= thresholdhigh) or \
-                (mode == 2 and (rawValues[cdpi] <= thresholdlow or rawValues[cdpi] >= thresholdhigh)):
+            if (mode == 0 and rawValues[cdpi] < thresholdlow) or \
+                (mode == 1 and rawValues[cdpi] > thresholdhigh) or \
+                (mode == 2 and (rawValues[cdpi] < thresholdlow or rawValues[cdpi] > thresholdhigh)):
                 numexceed = numexceed + 1
 
             # Increment to the next data point
