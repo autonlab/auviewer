@@ -492,9 +492,7 @@ File.prototype.destroy = function() {
 			// Clear the alert generation dropdown
 			// See: https://jsperf.com/innerhtml-vs-removechild/15
 			const alertGenSeriesDropdown = document.getElementById('alert_gen_series_field');
-			while (alertGenSeriesDropdown.firstChild) {
-				alertGenSeriesDropdown.removeChild(alertGenSeriesDropdown.firstChild);
-			}
+			clearDOMElementContent(alertGenSeriesDropdown);
 			$(alertGenSeriesDropdown).selectpicker('refresh');
 
 			// Clear state management data

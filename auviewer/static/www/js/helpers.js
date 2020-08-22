@@ -1,10 +1,51 @@
 'use strict';
 
+function classifyAnnotationInRelationToGraph(annotation, graph) {
+
+	// Establish the current assignment pattern ID, if any
+	const currentAssignmentID = getCurrentTargetAssignmentID();
+	
+	// Determine if the annotation/pattern series matches this current graph
+	const annotationBelongsToThisGraph = annotation.series && graph.group.includes(annotation.series);
+
+	// Determine if the pattern is the current workflow pattern
+	const currentWorkflowPattern = annotation.id === currentAssignmentID;
+	
+	if (annotation.type === 'pattern') {
+		if (annotationBelongsToThisGraph) {
+			if (currentWorkflowPattern) {
+				return 'own_pattern_target_assignment';
+			} else {
+				return 'own_pattern_not_target_assignment';
+			}
+		} else {
+			if (currentWorkflowPattern) {
+				return 'other_pattern_target_assignment';
+			} else {
+				return 'other_pattern_not_target_assignment';
+			}
+		}
+	} else if (annotation.type === 'unsaved_annotation' || annotation.type === 'annotation') {
+		if (annotationBelongsToThisGraph) {
+			return 'own_annotation';
+		} else {
+			return 'other_annotation';
+		}
+	} else {
+		return null;
+	}
+	
+}
+
 // Given a DOM element, clears all of its contents.
 // See: https://jsperf.com/innerhtml-vs-removechild/15
 function clearDOMElementContent(de) {
-	while (de.firstChild) {
-		de.removeChild(de.firstChild);
+	try {
+		while (de.firstChild) {
+			de.removeChild(de.firstChild);
+		}
+	} catch (e) {
+		console.log("Exception while clearing dom element content:", e);
 	}
 }
 
@@ -177,6 +218,27 @@ function createMeshedTimeSeries(superset, subset) {
 // Returns a deep copy of any JSON-serializable variable.
 function deepCopy(o) {
 	return JSON.parse(JSON.stringify(o));
+}
+
+function getAnnotationCategoryLayerNumber(category) {
+	switch (category) {
+		case 'other_pattern_not_target_assignment': return 0; break;
+		case 'own_pattern_not_target_assignment': return 1; break;
+		case 'own_pattern_target_assignment':
+		case 'other_pattern_target_assignment': return 2; break;
+		case 'other_annotation': return 3; break;
+		case 'own_annotation': return 4; break;
+		default: console.log("Error! Unrecognized category provided to getAnnotationCategoryLayerNumber():", category);
+	}
+}
+
+// Returns the current target assignment ID or null
+function getCurrentTargetAssignmentID() {
+	const proj = globalStateManager.currentProject;
+	try {
+		return proj.assignmentsManager.currentTargetAssignmentSet.members[proj.assignmentsManager.currentTargetAssignmentSet.currentTargetAssignmentIndex].id;
+	} catch {}
+	return null;
 }
 
 // Returns a 2-member array with date & time strings that can be provided to an

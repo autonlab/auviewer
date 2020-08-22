@@ -7,8 +7,6 @@ These event handlers rely on binding to either file or graph class instance.
 // Ends an annotation highlighting action in response to a mouse-up event.
 function handleAnnotationHighlightEnd (event, g, context, fileOrGraph) {
 
-	let file = globalStateManager.currentFile;
-
 	let left = Math.min(context.dragStartX, context.dragEndX);
 	let right = Math.max(context.dragStartX, context.dragEndX);
 	let from = g.toDataXCoord(left)/1000 - ('file' in fileOrGraph ? fileOrGraph.file.fileData.baseTime : fileOrGraph.fileData.baseTime);
@@ -126,7 +124,10 @@ function handleClick(e, x) {
 
 	console.log("Handling canvas click. # Annotations:", e.offsetX, file.annotationsAndPatternsToRender);
 
-	// Iterate through the annotations to look for an annotation under the click
+	let highestLayerFound = -1;
+	let annotationFound = null;
+
+	// Iterate through the annotations to look for annotations under the click
 	for (let i = 0; i < file.annotationsAndPatternsToRender.length; i++) {
 		if (e.offsetX >= file.annotationsAndPatternsToRender[i].offsetXLeft && e.offsetX <= file.annotationsAndPatternsToRender[i].offsetXRight) {
 			if (
@@ -135,10 +136,25 @@ function handleClick(e, x) {
 				(graph.isGroup && graph.group.includes(file.annotationsAndPatternsToRender[i].series))
 			) {
 				console.log("Found", file.annotationsAndPatternsToRender[i]);
-				file.annotationsAndPatternsToRender[i].showDialog();
-				break;
+
+				// We may find multiple annotations/patterns under the click.
+				// Given multiple finds, we decide which to show based on which
+				// would be showing to the user. This is based on the layering
+				// of the rendering (see handleUnderlayRedraw). So, a higher
+				// layer will win, and given two annotations in the same layer,
+				// the later index (position in annotationsAndPatternsToRender)
+				// will win.
+				if (getAnnotationCategoryLayerNumber(classifyAnnotationInRelationToGraph(file.annotationsAndPatternsToRender[i], graph)) >= highestLayerFound) {
+					annotationFound = file.annotationsAndPatternsToRender[i];
+				}
+
 			}
 		}
+	}
+
+	// If an annotation was found, show its dialog
+	if (annotationFound != null) {
+		annotationFound.showDialog();
 	}
 
 }
@@ -381,16 +397,7 @@ function handlePlotting(e) {
 // annotations on the canvas.
 function handleUnderlayRedraw(canvas, area, g) {
 
-	//globalAppConfig.verbose && console.log("handleUnderlayRedraw()");
-
 	let file = globalStateManager.currentFile;
-	let proj = globalStateManager.currentProject;
-
-	// Establish the current assignment pattern ID, if any
-	let currentAssignmentID = '';
-	if (proj.assignmentsManager.currentTargetAssignmentSet != null && proj.assignmentsManager.currentTargetAssignmentSet.currentTargetAssignmentIndex != null) {
-		currentAssignmentID = proj.assignmentsManager.currentTargetAssignmentSet.members[proj.assignmentsManager.currentTargetAssignmentSet.currentTargetAssignmentIndex].id;
-	}
 
 	let left, right, x, y, width, height;
 
@@ -403,23 +410,18 @@ function handleUnderlayRedraw(canvas, area, g) {
 	// Layer 0: Patterns detected on self graph
 	// Layer 1: Patterns detected on other graph
 	// Layer 2: New & existing annotations (new annotations will naturally be rendered above existing by array order)
-	for (let layer = 0; layer < 4; layer++) {
+	for (let currentPassLayer = 0; currentPassLayer < 5; currentPassLayer++) {
 
 		for (let i = 0; i < file.annotationsAndPatternsToRender.length; i++) {
 
-			if (
-				// Layer 0 -- other patterns
-				(layer === 0 && file.annotationsAndPatternsToRender[i].type === 'pattern' && file.annotationsAndPatternsToRender[i].series != null && gci.fullName !== file.annotationsAndPatternsToRender[i].series) ||
-
-				// Layer 1 -- other annotations
-				(layer === 1 && (file.annotationsAndPatternsToRender[i].type === 'unsaved_annotation' || file.annotationsAndPatternsToRender[i].type === 'annotation') && file.annotationsAndPatternsToRender[i].series != null && gci.fullName !== file.annotationsAndPatternsToRender[i].series) ||
-
-				// Layer 2 -- self patterns
-				(layer === 2 && file.annotationsAndPatternsToRender[i].type === 'pattern' && !(file.annotationsAndPatternsToRender[i].series != null && gci.fullName !== file.annotationsAndPatternsToRender[i].series)) ||
-
-				// Layer 3 -- self annotations
-				(layer === 3 && (file.annotationsAndPatternsToRender[i].type === 'unsaved_annotation' || file.annotationsAndPatternsToRender[i].type === 'annotation') && !(file.annotationsAndPatternsToRender[i].series != null && gci.fullName !== file.annotationsAndPatternsToRender[i].series))
-			) {
+			const category = classifyAnnotationInRelationToGraph(file.annotationsAndPatternsToRender[i], gci);
+			if (category == null) {
+				console.log("Error! Uncategorized/unexpected annotation type during graph in handleUnderlayRedraw():", file.annotationsAndPatternsToRender[i])
+			}
+			
+			// This if statement controls which annotations/patterns are
+			// included in each pass-through of the layering.
+			if (currentPassLayer === getAnnotationCategoryLayerNumber(category)) {
 
 				// // If this annotation does not belong to this series, move on.
 				// if (file.annotations[i].series != null && !Object.getOwnPropertyNames(g.setIndexByName_).includes(file.annotations[i].series)) {
@@ -436,35 +438,28 @@ function handleUnderlayRedraw(canvas, area, g) {
 				width = Math.max(1, right - left);
 				height = area.h; //shortHighlights ? area.h/5*.85 : area.h;
 
-				// Determine if the annotation/pattern series matches this current graph
-				let annotationBelongsToThisGraph = file.annotationsAndPatternsToRender[i].series && gci.group.includes(file.annotationsAndPatternsToRender[i].series);
-
 				// Prepare styling for the section highlight.
-				if (file.annotationsAndPatternsToRender[i].type === 'pattern') {
-
-					// Determine if the pattern is the current workflow pattern
-					let currentWorkflowPattern = file.annotationsAndPatternsToRender[i].id === currentAssignmentID;
-
-					if (currentWorkflowPattern && annotationBelongsToThisGraph) {
-						// Current workflow pattern that belongs to this series.
-						canvas.fillStyle = this.template.ownCurrentWorkflowPatternColor;
-					} else if (currentWorkflowPattern) {
-						// Current workflow pattern from another series.
-						canvas.fillStyle = this.template.otherCurrentWorkflowPatternColor;
-					} else if (annotationBelongsToThisGraph) {
-						// Pattern that belongs to this series.
+				switch (category) {
+					case 'own_annotation':
+						canvas.fillStyle = this.template.ownAnnotationColor;
+						break;
+					case 'other_annotation':
+						canvas.fillStyle = this.template.otherAnnotationColor;
+						break;
+					case 'own_pattern_not_target_assignment':
 						canvas.fillStyle = this.template.ownPatternColor;
-					} else {
-						// Pattern from another series.
+						break;
+					case 'other_pattern_not_target_assignment':
 						canvas.fillStyle = this.template.otherPatternColor;
-					}
-
-				} else if (file.annotationsAndPatternsToRender[i].series === gci.fullName) {
-					// Annotation that belongs to this series
-					canvas.fillStyle = this.template.ownAnnotationColor;
-				} else {
-					// Annotation from another series
-					canvas.fillStyle = this.template.otherAnnotationColor;
+						break;
+					case 'own_pattern_target_assignment':
+						canvas.fillStyle = this.template.ownCurrentWorkflowPatternColor;
+						break;
+					case 'other_pattern_target_assignment':
+						canvas.fillStyle = this.template.otherCurrentWorkflowPatternColor;
+						break;
+					default:
+						console.log("Error! Unexpected annotation category during graph in handleUnderlayRedraw():", file.annotationsAndPatternsToRender[i])
 				}
 
 				// Draw the section highlight.
