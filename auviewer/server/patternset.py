@@ -48,6 +48,11 @@ class PatternSet:
         models.db.session.delete(self.dbmodel)
         models.db.session.commit()
 
+    def deletePatterns(self):
+        models.Pattern.query.filter_by(pattern_set_id=self.id).delete()
+        models.db.session.commit()
+        del self.projparent.patternsets[self.id]
+
     def getPatterns(self):
         patterns = [[pattern.file.id, Path(pattern.file.path).name, pattern.series, pattern.left, pattern.right, pattern.top, pattern.bottom] for pattern in self.dbmodel.patterns]
         return pd.DataFrame(patterns, columns=['file_id', 'filename', 'series', 'left', 'right', 'top', 'bottom'])

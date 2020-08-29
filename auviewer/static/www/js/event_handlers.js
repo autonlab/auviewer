@@ -144,7 +144,9 @@ function handleClick(e, x) {
 				// layer will win, and given two annotations in the same layer,
 				// the later index (position in annotationsAndPatternsToRender)
 				// will win.
-				if (getAnnotationCategoryLayerNumber(classifyAnnotationInRelationToGraph(file.annotationsAndPatternsToRender[i], graph)) >= highestLayerFound) {
+				const newFindLayer = getAnnotationCategoryLayerNumber(classifyAnnotationInRelationToGraph(file.annotationsAndPatternsToRender[i], graph));
+				if (newFindLayer >= highestLayerFound) {
+					highestLayerFound = newFindLayer;
 					annotationFound = file.annotationsAndPatternsToRender[i];
 				}
 
@@ -407,9 +409,6 @@ function handleUnderlayRedraw(canvas, area, g) {
 	// console.log(canvas, area, g, Object.getOwnPropertyNames(g.setIndexByName_));
 
 	// We need to make multiple passes to render in layers.
-	// Layer 0: Patterns detected on self graph
-	// Layer 1: Patterns detected on other graph
-	// Layer 2: New & existing annotations (new annotations will naturally be rendered above existing by array order)
 	for (let currentPassLayer = 0; currentPassLayer < 5; currentPassLayer++) {
 
 		for (let i = 0; i < file.annotationsAndPatternsToRender.length; i++) {

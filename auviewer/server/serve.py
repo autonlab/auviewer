@@ -20,7 +20,7 @@ from . import models
 from .patternset import getAssignments
 from .config import set_data_path, config, FlaskConfigClass
 from .file import File
-from .project import loadProjects, getProjectByID, getProjectsList
+from .project import loadProjects, getProjectByID, getProjectsPayload
 
 from ..flask_user import confirm_email_required, current_user, login_required, UserManager, SQLAlchemyAdapter
 from ..flask_user.signals import user_sent_invitation, user_registered
@@ -269,7 +269,7 @@ def createApp():
     @app.route(config['rootWebPath']+'/index.html')
     @login_required
     def index():
-        return render_template('index.html', projects=getProjectsList(current_user.id), assignments=getAssignments(current_user.id))
+        return render_template('index.html', projects=getProjectsPayload(current_user.id), assignments=getAssignments(current_user.id))
 
     @app.route(config['rootWebPath']+'/initial_file_payload')
     @login_required
@@ -526,7 +526,6 @@ def main():
 
     # Set provided data path
     set_data_path(args.datapath)
-    print('root web path:',config['rootWebPath'])
 
     (app, socketio) = createApp()
     socketio.run(app,

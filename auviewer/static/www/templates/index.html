@@ -67,7 +67,7 @@
 				</thead>
 				<tbody>
 					{% for a in assignments %}
-					<tr onclick="window.location='{{rootWebPath}}/assignment?id={{a.id}}'">
+					<tr onclick="window.location='{{rootWebPath}}/project?id={{a.project_id}}'">
 						<th scope="row">{{a.name}}</th>
 						<td>{{a.project_name}}</td>
 						<td>{{a.completed}}</td>
