@@ -44,12 +44,21 @@ class PatternSet:
         )
         models.db.session.commit()
 
-    def delete(self):
+    def delete(self, deletePatterns=False):
+        """
+        Deletes the pattern set from the database and the parent project
+        instance. If the pattern set has patterns, the deletion will fail,
+        unless the deletePatterns flag is True, in which case it will first
+        delete the child patterns.
+        """
+        if deletePatterns:
+            self.deletePatterns()
         models.db.session.delete(self.dbmodel)
         models.db.session.commit()
         del self.projparent.patternsets[self.id]
 
     def deletePatterns(self):
+        """Delete the patterns belonging to this pattern set."""
         models.Pattern.query.filter_by(pattern_set_id=self.id).delete()
         models.db.session.commit()
 

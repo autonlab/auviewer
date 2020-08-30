@@ -138,7 +138,7 @@ class Project:
         Get project's pattern sets.
         :returns: a dict of the project's PatternSet instances, indexed by id
         """
-        return self.patternsets
+        return self.patternsets.copy()
 
     def getPatternSetByID(self, id) -> Optional[PatternSet]:
         """
@@ -215,6 +215,13 @@ class Project:
                 # list for this project.
                 newFileClassInstance.id = newFileDBEntry.id
                 self.files.append(newFileClassInstance)
+
+    def setName(self, name):
+        """Rename the project."""
+        self.model.name = name
+        models.db.session.commit()
+        self.name = name
+
 
 def getProjectByID(id) -> Optional[PatternSet]:
     """
