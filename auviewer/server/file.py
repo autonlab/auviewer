@@ -177,6 +177,7 @@ class File:
         # Return true to indicate success
         return True
 
+    # TODO(gus): Turn this into DataFrame output in line with Project.detectPatterns.
     def detectPatterns(self, type, series, thresholdlow=None, thresholdhigh=None, duration=300, persistence=.7, maxgap=300, series2=None):
 
         # Determine the mode (see generateThresholdAlerts function description

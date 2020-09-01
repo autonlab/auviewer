@@ -317,9 +317,21 @@ class AssignmentSet extends Set {
 			btngrp.appendChild(this.prevButtonDOMElement);
 			btngrp.appendChild(this.nextButtonDOMElement);
 		} else {
-			// TODO: the enire assignment is complete
+			// The entire assignment is complete
+			this.stop();
+			alert('Your assignment is complete!');
 		}
 
+	};
+
+	stop() {
+		this.parentAssignmentManager.currentTargetAssignmentSet = null;
+		this.currentTargetAssignmentIndex = null;
+		const btngrp = this.assignmentPanelDOMElement.querySelector('.btn-group');
+		clearDOMElementContent(btngrp);
+		this.startButtonDOMElement.innerText = this.getCompletedCount() > 0 ? 'Resume' : 'Begin';
+		this.assignmentPanelDOMElement.querySelector('.btn-group').appendChild(this.startButtonDOMElement);
+		globalStateManager.currentFile.resetZoomToOutermost();
 	};
 
 	updatePanel() {
@@ -332,17 +344,6 @@ class AssignmentSet extends Set {
 
 		this.assignmentPanelDOMElement.querySelector('.completedCount').innerText = completedCount;
 
-	};
-
-	// TODO
-	stop() {
-		this.parentAssignmentManager.currentTargetAssignmentSet = null;
-		this.currentTargetAssignmentIndex = null;
-		const btngrp = this.assignmentPanelDOMElement.querySelector('.btn-group');
-		clearDOMElementContent(btngrp);
-		this.startButtonDOMElement.innerText = this.getCompletedCount() > 0 ? 'Resume' : 'Begin';
-		this.assignmentPanelDOMElement.querySelector('.btn-group').appendChild(this.startButtonDOMElement);
-		globalStateManager.currentFile.resetZoomToOutermost();
 	};
 
 }

@@ -17,7 +17,7 @@ import logging
 import simplejson
 
 from . import models
-from .patternset import getAssignments
+from .patternset import getAssignmentsPayload
 from .config import set_data_path, config, FlaskConfigClass
 from .file import File
 from .project import loadProjects, getProjectByID, getProjectsPayload
@@ -269,7 +269,7 @@ def createApp():
     @app.route(config['rootWebPath']+'/index.html')
     @login_required
     def index():
-        return render_template('index.html', projects=getProjectsPayload(current_user.id), assignments=getAssignments(current_user.id))
+        return render_template('index.html', projects=getProjectsPayload(current_user.id), assignments=getAssignmentsPayload(current_user.id))
 
     @app.route(config['rootWebPath']+'/initial_file_payload')
     @login_required

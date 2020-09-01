@@ -87,7 +87,10 @@ class Project:
         return ps
 
     def detectPatterns(self, type, series, thresholdlow, thresholdhigh, duration, persistence, maxgap):
-        """Run pattern detection on all files, and return a single list of results."""
+        """
+        Run pattern detection on all files, and return a DataFrame of results.
+        This DataFrame, or a subset thereof, can be passed into PatternSet.addPatterns() if desired.
+        """
         patterns = [[f.id, f.name, series, pattern[0], pattern[1], None, None] for f in self.files for pattern in f.detectPatterns(type, series, thresholdlow, thresholdhigh, duration, persistence, maxgap)]
         return pd.DataFrame(patterns, columns=['file_id', 'filename', 'series', 'left', 'right', 'top', 'bottom'])
 
@@ -223,7 +226,7 @@ class Project:
         self.name = name
 
 
-def getProjectByID(id) -> Optional[PatternSet]:
+def getProjectByID(id) -> Optional[Project]:
     """
     Returns the project with matching ID.
     :returns: the Project instance belonging to the id, or None if not found
@@ -233,6 +236,14 @@ def getProjectByID(id) -> Optional[PatternSet]:
         if p.id == id:
             return p
     return None
+
+def getProjects() -> Dict[int, Project]:
+    """
+    Returns loaded projects as a dict.
+    :returns: dict mapped from project ID to project
+    """
+    global loadedProjects
+    return {p.id: p for p in loadedProjects}
 
 def getProjectsPayload(user_id) -> List[Dict]:
     """
@@ -373,50 +384,3 @@ def validateProjectFolder(projDirPathObj):
     # TODO(gus): Validate that originals have processed?
 
     logging.info(f'Finished validating project folder {projDirPathObj}.')
-
-
-
-
-
-
-
-
-
-
-
-
-# The below was used for detecting file changes (e.g. new files, file replacements).
-
-# from watchdog.observers import Observer
-# from watchdog.events import FileSystemEventHandler
-
-# class FileChangeHandler(FileSystemEventHandler):
-#
-#     def __init__(self, target_project):
-#         self.target_project = target_project
-#
-#     def on_created(self, event):
-#
-#         if event.is_directory:
-#             return
-#
-#         # Wait a beat (for both original and processed to be moved)
-#         time.sleep(2)
-#
-#         print("Detected change:", event.src_path)
-#
-#         # If the file has been loaded, reload it.
-#         newfilename = os.path.basename(event.src_path)
-#         for f in self.target_project.files:
-#             if newfilename == f.orig_filename:
-#                 print("Reloading", newfilename)
-#                 self.target_project.files.remove(f)
-#                 self.target_project.loadProcessedFile(newfilename)
-
-# # This was used to setup the file change listener on file load.
-# # Establish a process to watch for updated versions of any project files
-# if os.path.isdir(self.originals_dir):
-#     file_change_handler = FileChangeHandler(self)
-#     self.observer = Observer()
-#     self.observer.schedule(file_change_handler, self.originals_dir)
-#     self.observer.start()
