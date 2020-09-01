@@ -260,14 +260,14 @@ class AssignmentSet extends Set {
 		this.startButtonDOMElement.setAttribute('type', 'button');
 		this.startButtonDOMElement.className = 'btn btn-sm btn-success';
 		if (this.getCompletedCount() >= this.members.length) {
-			this.startButtonDOMElement.classList.remove('btn-primary');
+			this.startButtonDOMElement.classList.remove('btn-success');
 			this.startButtonDOMElement.classList.add('btn-secondary');
 			this.startButtonDOMElement.innerText = 'Complete!';
 			this.assignmentPanelDOMElement.style.backgroundColor = '#ddd';
 		} else {
 			this.startButtonDOMElement.innerText = this.getCompletedCount() > 0 ? 'Resume' : 'Begin';
-			this.startButtonDOMElement.onclick = function () { assignmentset.resume(); };
 		}
+		this.startButtonDOMElement.onclick = function () { assignmentset.resume(); };
 
 		this.prevButtonDOMElement = document.createElement('button');
 		this.prevButtonDOMElement.setAttribute('type', 'button');
@@ -315,7 +315,11 @@ class AssignmentSet extends Set {
 		// TODO: put other assignment sets to the stopped state
 		this.parentAssignmentManager.currentTargetAssignmentSet = this;
 
-		for (this.currentTargetAssignmentIndex = 0; this.currentTargetAssignmentIndex < this.members.length && this.members[this.currentTargetAssignmentIndex].related != null; this.currentTargetAssignmentIndex++){}
+		if (this.getCompletedCount() >= this.members.length) {
+			this.currentTargetAssignmentIndex = 0;
+		} else {
+			for (this.currentTargetAssignmentIndex = 0; this.currentTargetAssignmentIndex < this.members.length && this.members[this.currentTargetAssignmentIndex].related != null; this.currentTargetAssignmentIndex++){}
+		}
 		if (this.currentTargetAssignmentIndex < this.members.length) {
 			this.members[this.currentTargetAssignmentIndex].goTo();
 			const btngrp = this.assignmentPanelDOMElement.querySelector('.btn-group');
@@ -337,7 +341,7 @@ class AssignmentSet extends Set {
 		const btngrp = this.assignmentPanelDOMElement.querySelector('.btn-group');
 		clearDOMElementContent(btngrp);
 		if (this.getCompletedCount() >= this.members.length) {
-			this.startButtonDOMElement.classList.remove('btn-primary');
+			this.startButtonDOMElement.classList.remove('btn-success');
 			this.startButtonDOMElement.classList.add('btn-secondary');
 			this.startButtonDOMElement.innerText = 'Complete!';
 			this.assignmentPanelDOMElement.style.backgroundColor = '#ddd';
