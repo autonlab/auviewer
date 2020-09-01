@@ -1,4 +1,5 @@
 from pathlib import Path
+from sqlalchemy import distinct, or_
 import logging
 import time
 import traceback
@@ -329,7 +330,14 @@ class File:
                     'name': patternset.name,
                     'description': patternset.description,
                     'annotations': [annotationOrPatternOutput(a) for a in models.Annotation.query.filter_by(user_id=user_id, project_id=self.projparent.id, file_id=self.id, pattern_set_id=patternset.id).all()]
-                } for patternset in models.PatternSet.query.filter_by(project_id=self.projparent.id).all()
+                } for patternset in models.PatternSet.query.filter(models.PatternSet.project_id==self.projparent.id, or_(
+                    models.PatternSet.id.notin_(
+                        models.db.session.query(distinct(models.patternSetAssignments.c.pattern_set_id)).subquery()
+                    ),
+                    models.PatternSet.id.in_(
+                        models.db.session.query(models.patternSetAssignments.c.pattern_set_id).filter(models.patternSetAssignments.c.user_id==user_id).subquery()
+                    )
+                )).all()
             ],
             'patternsets': [
                 {
@@ -337,7 +345,15 @@ class File:
                     'name': patternset.name,
                     'description': patternset.description,
                     'patterns': [annotationOrPatternOutput(pattern) for pattern in models.Pattern.query.filter_by(pattern_set_id=patternset.id, file_id=self.id).all()]
-                } for patternset in models.PatternSet.query.filter_by(project_id=self.projparent.id).all()],
+                } for patternset in models.PatternSet.query.filter(models.PatternSet.project_id==self.projparent.id, or_(
+                    models.PatternSet.id.notin_(
+                        models.db.session.query(distinct(models.patternSetAssignments.c.pattern_set_id)).subquery()
+                    ),
+                    models.PatternSet.id.in_(
+                        models.db.session.query(models.patternSetAssignments.c.pattern_set_id).filter(models.patternSetAssignments.c.user_id==user_id).subquery()
+                    )
+                )).all()
+            ],
             'baseTime': 0, # ATW: Not sure if this is still necessary.
             'events': self.getEvents(),
             'metadata': self.getMetadata(),

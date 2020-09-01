@@ -24,7 +24,7 @@ setup(
     description='A general-purpous time series exploration tool.',
     long_description=read('README.md'),
     author='Gus Welter',
-    author_email='gwelter@andrew.cmu.edu',
+    author_email='gwelter@cmu.edu',
     license='GNU LGPL 3',
     entry_points={
         'console_scripts': [
