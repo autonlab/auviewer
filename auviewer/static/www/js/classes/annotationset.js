@@ -233,31 +233,6 @@ class AssignmentSet extends Set {
 		// Persist this reference for event handlers
 		const assignmentset = this;
 
-		// Build button components which may be used in various states
-		this.startButtonDOMElement = document.createElement('button');
-		this.startButtonDOMElement.setAttribute('type', 'button');
-		this.startButtonDOMElement.className = 'btn btn-sm btn-success';
-		this.startButtonDOMElement.innerText = this.getCompletedCount() > 0 ? 'Resume' : 'Begin';
-		this.startButtonDOMElement.onclick = function() { assignmentset.resume(); };
-
-		this.prevButtonDOMElement = document.createElement('button');
-		this.prevButtonDOMElement.setAttribute('type', 'button');
-		this.prevButtonDOMElement.className = 'btn btn-sm btn-secondary';
-		this.prevButtonDOMElement.innerText = 'Prev';
-		this.prevButtonDOMElement.onclick = function() { assignmentset.prev(); };
-
-		this.nextButtonDOMElement = document.createElement('button');
-		this.nextButtonDOMElement.setAttribute('type', 'button');
-		this.nextButtonDOMElement.className = 'btn btn-sm btn-secondary';
-		this.nextButtonDOMElement.innerText = 'Next';
-		this.nextButtonDOMElement.onclick = function() { assignmentset.next(); };
-
-		this.stopButtonDOMElement = document.createElement('button');
-		this.stopButtonDOMElement.setAttribute('type', 'button');
-		this.stopButtonDOMElement.className = 'btn btn-sm btn-danger';
-		this.stopButtonDOMElement.innerHTML = '<i class="fa fa-stop" aria-hidden="true"></i>';
-		this.stopButtonDOMElement.onclick = function() { assignmentset.stop(); };
-
 		// Build & attach the panel content
 		this.assignmentPanelDOMElement = document.createElement('div');
 		this.assignmentPanelDOMElement.className = 'assignment-panel';
@@ -279,6 +254,38 @@ class AssignmentSet extends Set {
 			'</tr></tbody></table>';
 
 		assignmentPanelArea.appendChild(this.assignmentPanelDOMElement);
+
+		// Build button components which may be used in various states
+		this.startButtonDOMElement = document.createElement('button');
+		this.startButtonDOMElement.setAttribute('type', 'button');
+		this.startButtonDOMElement.className = 'btn btn-sm btn-success';
+		if (this.getCompletedCount() >= this.members.length) {
+			this.startButtonDOMElement.classList.remove('btn-primary');
+			this.startButtonDOMElement.classList.add('btn-secondary');
+			this.startButtonDOMElement.innerText = 'Complete!';
+			this.assignmentPanelDOMElement.style.backgroundColor = '#ddd';
+		} else {
+			this.startButtonDOMElement.innerText = this.getCompletedCount() > 0 ? 'Resume' : 'Begin';
+			this.startButtonDOMElement.onclick = function () { assignmentset.resume(); };
+		}
+
+		this.prevButtonDOMElement = document.createElement('button');
+		this.prevButtonDOMElement.setAttribute('type', 'button');
+		this.prevButtonDOMElement.className = 'btn btn-sm btn-secondary';
+		this.prevButtonDOMElement.innerText = 'Prev';
+		this.prevButtonDOMElement.onclick = function() { assignmentset.prev(); };
+
+		this.nextButtonDOMElement = document.createElement('button');
+		this.nextButtonDOMElement.setAttribute('type', 'button');
+		this.nextButtonDOMElement.className = 'btn btn-sm btn-secondary';
+		this.nextButtonDOMElement.innerText = 'Next';
+		this.nextButtonDOMElement.onclick = function() { assignmentset.next(); };
+
+		this.stopButtonDOMElement = document.createElement('button');
+		this.stopButtonDOMElement.setAttribute('type', 'button');
+		this.stopButtonDOMElement.className = 'btn btn-sm btn-danger';
+		this.stopButtonDOMElement.innerHTML = '<i class="fa fa-stop" aria-hidden="true"></i>';
+		this.stopButtonDOMElement.onclick = function() { assignmentset.stop(); };
 
 		// Attach the start button
 		this.assignmentPanelDOMElement.querySelector('.btn-group').appendChild(this.startButtonDOMElement);
@@ -329,9 +336,18 @@ class AssignmentSet extends Set {
 		this.currentTargetAssignmentIndex = null;
 		const btngrp = this.assignmentPanelDOMElement.querySelector('.btn-group');
 		clearDOMElementContent(btngrp);
-		this.startButtonDOMElement.innerText = this.getCompletedCount() > 0 ? 'Resume' : 'Begin';
+		if (this.getCompletedCount() >= this.members.length) {
+			this.startButtonDOMElement.classList.remove('btn-primary');
+			this.startButtonDOMElement.classList.add('btn-secondary');
+			this.startButtonDOMElement.innerText = 'Complete!';
+			this.assignmentPanelDOMElement.style.backgroundColor = '#ddd';
+		} else {
+			this.startButtonDOMElement.innerText = this.getCompletedCount() > 0 ? 'Resume' : 'Begin';
+		}
 		this.assignmentPanelDOMElement.querySelector('.btn-group').appendChild(this.startButtonDOMElement);
-		globalStateManager.currentFile.resetZoomToOutermost();
+		if (globalStateManager.currentFile) {
+			globalStateManager.currentFile.resetZoomToOutermost();
+		}
 	};
 
 	updatePanel() {

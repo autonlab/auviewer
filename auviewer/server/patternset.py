@@ -92,6 +92,7 @@ class PatternSet:
             models.db.session.rollback()
             raise
         models.db.session.commit()
+        self.updateCount()
         return n
 
     def getAnnotationCount(self) -> int:
@@ -126,12 +127,12 @@ class PatternSet:
 
 def getAssignmentsPayload(user_id):
     return [{
-        'id': patternset.id,
-        'name': patternset.name,
-        'description': patternset.description,
-        'project_id': patternset.project.id,
-        'project_name': patternset.project.name,
-        'completed': models.Annotation.query.filter_by(user_id=user_id, pattern_set_id=patternset.id).count(),
-        'remaining': patternset.count - models.Annotation.query.filter_by(user_id=user_id, pattern_set_id=patternset.id).count(),
-        'total': patternset.count,
-    } for patternset in models.PatternSet.query.filter(models.PatternSet.users.any(id=user_id)).all()]
+        'id': ps.id,
+        'name': ps.name,
+        'description': ps.description,
+        'project_id': ps.project.id,
+        'project_name': ps.project.name,
+        'completed': models.Annotation.query.filter_by(user_id=user_id, pattern_set_id=ps.id).count(),
+        'remaining': len(ps.patterns) - models.Annotation.query.filter_by(user_id=user_id, pattern_set_id=ps.id).count(),
+        'total': len(ps.patterns),
+    } for ps in models.PatternSet.query.filter(models.PatternSet.users.any(id=user_id)).all()]
