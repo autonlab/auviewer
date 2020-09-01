@@ -87,7 +87,7 @@ class PatternSet:
         try:
             n = models.Pattern.query.filter(models.Pattern.pattern_set_id == self.id, models.Pattern.id.notin_(
                 models.db.session.query(models.Annotation.pattern_id).filter(models.Annotation.pattern_id.isnot(None)).subquery()
-            )).delete()
+            )).delete(synchronize_session=False)
         except:
             models.db.session.rollback()
             raise
