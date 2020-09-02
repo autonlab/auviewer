@@ -205,8 +205,13 @@ class AssignmentSet extends Set {
 			this.resume();
 		}
 		if (++this.currentTargetAssignmentIndex >= this.members.length) {
-			// TODO: the entire assignment is complete
-			this.currentTargetAssignmentIndex = null;
+
+			// The user reached the end of the assignments.
+			this.stop();
+
+			// If the assignment is complete, display congratulatory message
+			alert("Congratulations, you've completed the assignment!");
+
 		} else {
 			this.members[this.currentTargetAssignmentIndex].goTo();
 		}
