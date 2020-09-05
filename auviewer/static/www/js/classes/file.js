@@ -115,7 +115,7 @@ function File(parentProject, id, callback=null) {
 		head: "Available Graphs &mdash; Show/Hide",
 		move: true,
 		on: {
-			onShow: function(a, b) {
+			onShow: function() {
 				// Auto-focus the search box when showing plot selection window
 				this.getNode().querySelector('input[type=text]').focus();
 			}
@@ -137,24 +137,19 @@ function File(parentProject, id, callback=null) {
 				"onItemCheck": function() {
 
 					const tt = this.plotControl.getBody();
-
-					let id = tt.getFirstId();
-					for (let id = tt.getFirstId(); id; id = tt.getNextId(id)) {
-						if (!tt.isBranch(id)) {
-							const isChecked = tt.isChecked(id);
-							const g = this.getGraphForSeries(id);
-							if (g) {
-								if (g.isShowing() && !isChecked) {
-									// If the graph is showing but shouldn't be, hide it.
-									g.hide();
-								} else if (!g.isShowing() && isChecked) {
-									// If the graph isn't showing but should be, show it.
-									g.show();
-								}
+					tt.data.each(function(obj) {
+						const isChecked = tt.isChecked(obj.id);
+						const g = this.getGraphForSeries(obj.id);
+						if (g) {
+							if (g.isShowing() && !isChecked) {
+								// If the graph is showing but shouldn't be, hide it.
+								g.hide();
+							} else if (!g.isShowing() && isChecked) {
+								// If the graph isn't showing but should be, show it.
+								g.show();
 							}
-							
 						}
-					}
+					}.bind(this));
 
 				}.bind(this)
 			},
@@ -456,7 +451,11 @@ File.prototype.destroy = function() {
 		(function() {
 
 			// Close plot control
-			this.plotControl.close();
+			try {
+				this.plotControl.close();
+			} catch (e) {
+				console.log('Unable to close/destroy plot control widget.');
+			}
 
 			// Clear annotation control panel tables
 			try {
