@@ -14,9 +14,6 @@ from .config import config
 from .file import File
 from .shared import annotationOrPatternOutput, createEmptyJSONFile
 
-# Will hold loaded projects
-loadedProjects = []
-
 class Project:
     """Represents an auviewer project."""
 
@@ -136,6 +133,13 @@ class Project:
 
         }
 
+    def getPatternSet(self, id) -> Optional[PatternSet]:
+        """
+        Get project's pattern set by ID.
+        :returns: the PatternSet instance belonging to the id, or None if not found
+        """
+        return self.patternsets[id] if id in self.patternsets else None
+
     def getPatternSets(self) -> Dict[int, PatternSet]:
         """
         Get project's pattern sets.
@@ -143,19 +147,19 @@ class Project:
         """
         return self.patternsets.copy()
 
-    def getPatternSetByID(self, id) -> Optional[PatternSet]:
-        """
-        Get project's pattern set by ID.
-        :returns: the PatternSet instance belonging to the id, or None if not found
-        """
-        return self.patternsets[id] if id in self.patternsets else None
-
     def getTotalPatternCount(self) -> int:
         """
         Get total count of patterns in all the project's pattern sets
         :returns: number of patterns
         """
         return sum([ps.count for ps in self.patternsets.values()])
+
+    def listPatternSets(self) -> List[List[str]]:
+        """
+        Returns list of pattern sets (ID, names).
+        :return: list of l:return:
+        """
+        return [[ps.id, ps.name] for ps in self.patternsets.values()]
 
     def loadProjectFiles(self, processNewFiles=True):
         """Load files belonging to the project, and process new files if desired."""
@@ -224,170 +228,3 @@ class Project:
         self.model.name = name
         models.db.session.commit()
         self.name = name
-
-
-def getProjectByID(id) -> Optional[Project]:
-    """
-    Returns the project with matching ID.
-    :returns: the Project instance belonging to the id, or None if not found
-    """
-    global loadedProjects
-    for p in loadedProjects:
-        if p.id == id:
-            return p
-    return None
-
-def getProjects() -> Dict[int, Project]:
-    """
-    Returns loaded projects as a dict.
-    :returns: dict mapped from project ID to project
-    """
-    global loadedProjects
-    return {p.id: p for p in loadedProjects}
-
-def getProjectsPayload(user_id) -> List[Dict]:
-    """
-    Returns a list of project information accessible to a given user.
-    :returns: list of objects containing project information
-    """
-    global loadedProjects
-    return [{
-        'id': p.id,
-        'name': p.name,
-        'files': len(p.files),
-        'patterns': p.getTotalPatternCount(),
-        'annotations': models.Annotation.query.filter_by(user_id=user_id, project_id=p.id).count(),
-        'assignments_rem': models.User.query.filter_by(id=user_id).first().assignments_remaining,
-    } for p in loadedProjects]
-
-def listProjects() -> List[List[str]]:
-    """
-    Returns list of project IDs and names.
-    :return: list of lists
-    """
-    return [[p.id, p.name] for p in loadedProjects]
-
-def loadProjects() -> None:
-    """
-    Load or reload projects into memory. This must be called before getProjectByID
-    and list_projects. Will also detect new projects in the projects folder and
-    add them to the database.
-    :return: list of Project instances
-    """
-
-    global loadedProjects
-
-    logging.info("Loading projects.")
-
-    # Reset projects to empty list
-    loadedProjects = []
-
-    # Load projects from the database
-    projs = models.Project.query.all()
-    for p in projs:
-
-        logging.info(f"Loading project id {p.id} ({p.name}) at {p.path}")
-
-        # Path object for the project
-        projDirPathObj = Path(p.path)
-
-        # Validate the project folder
-        try:
-            validateProjectFolder(projDirPathObj)
-        except Exception as e:
-            logging.error(f'Project folder {projDirPathObj} is invalid.\n{e}\n{traceback.format_exc()}')
-            # TODO(gus): Update the database to reflect this?
-        else:
-            # TODO(gus): We need to have project take absolute path and project name!
-            # Instantiate project, and add to the list to be returned
-            loadedProjects.append(Project(p))
-
-            logging.info("Finished loading project.")
-
-    # Detect new project folders not in the database
-    for projDirPathObj in [p for p in config['projectsDirPathObj'].iterdir() if p.is_dir()]:
-
-        # Check whether path exists in database projects
-        foundInExistingProject = False
-        for p in projs:
-            if Path(p.path).samefile(projDirPathObj):
-                foundInExistingProject = True
-                break
-
-        # Skip if this project folder was found to exist in the database already
-        if foundInExistingProject:
-            continue
-
-        logging.info(f"Found new project at {projDirPathObj}.")
-
-        # Ensure we have a valid project folder (i.e. it can be empty, but it
-        # cannot contain invalid files or folders).
-        try:
-            validateProjectFolder(projDirPathObj)
-        except Exception as e:
-            logging.error(f"Project folder {projDirPathObj} is invalid.\n{e}\n{traceback.format_exc()}")
-        else:
-            logging.info(f'Project folder {projDirPathObj} is valid.')
-
-            # Scaffold project folder
-            scaffoldProjectFolder(projDirPathObj)
-
-            # Add project to the database
-            project = models.Project(name=projDirPathObj.name, path=str(projDirPathObj.resolve()))
-            models.db.session.add(project)
-            models.db.session.commit()
-            logging.info(f"Added project to database: {projDirPathObj}")
-
-            # TODO(gus): We need to have project take absolute path and project name!
-            # Instantiate project, and add to the list to be returned
-            loadedProjects.append(Project(project))
-
-    logging.info("Finished loading projects.")
-
-# Generate the baseline project folder contents as needed
-def scaffoldProjectFolder(projDirPathObj):
-
-    logging.info(f"Scaffolding project folder {projDirPathObj}.")
-
-    # Create the originals folder if needed
-    (projDirPathObj / 'originals').mkdir(exist_ok=True)
-
-    # Create the processed folder if needed
-    (projDirPathObj / 'processed').mkdir(exist_ok=True)
-
-    # Create the templates folder if needed
-    projTemplatesFolderPathObj = projDirPathObj / 'templates'
-    projTemplatesFolderPathObj.mkdir(exist_ok=True)
-
-    # Create empty template files if needed
-    createEmptyJSONFile(projTemplatesFolderPathObj / 'interface_templates.json')
-    createEmptyJSONFile(projTemplatesFolderPathObj / 'project_template.json')
-
-    logging.info(f"Finished scaffolding project folder {projDirPathObj}.")
-
-# Raises an exception if the project folder is invalid
-def validateProjectFolder(projDirPathObj):
-
-    logging.info(f"Validating project folder {projDirPathObj}.")
-
-    # Validate top-level folders
-    for p in [p for p in projDirPathObj.iterdir()]:
-
-        # Project folder should only contain directories
-        if not p.is_dir():
-            raise Exception(f'Project folder contains invalid file: {p}')
-
-        # Validate expected top-level folder names
-        if p.name not in ['originals', 'processed', 'templates']:
-            raise Exception(f'Project folder contains invalid folder: {p}')
-
-    # Validate expected template files if they exist.
-    tp = p / "templates"
-    if tp.exists():
-        for p in [p for p in tp.iterdir()]:
-            if p.name not in ['project_template.json', 'interface_templates.json']:
-                raise Exception(f'Project templates folder contains invalid file: {p}')
-
-    # TODO(gus): Validate that originals have processed?
-
-    logging.info(f'Finished validating project folder {projDirPathObj}.')

@@ -99,6 +99,13 @@ class PatternSet:
         """Returns a count of annotations which annotate any pattern in this set."""
         return models.Annotation.query.filter_by(pattern_set_id=self.id).count()
 
+    def getAnnotations(self) -> pd.DataFrame:
+        """Returns a DataFrame of the patterns in this set."""
+        return pd.DataFrame(
+            [[a.file.id, Path(a.file.path).name, a.user_id, a.pattern_id, a.series, a.left, a.right, a.top, a.bottom, a.label, a.created_at] for a in self.dbmodel.annotations],
+            columns=['file_id', 'filename', 'user_id', 'pattern_id', 'series', 'left', 'right', 'top', 'bottom', 'label', 'created']
+        )
+
     def getPatternCount(self) -> int:
         """Returns a count of the patterns in this set."""
         return self.count

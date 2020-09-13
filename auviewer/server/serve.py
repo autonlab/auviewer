@@ -16,11 +16,9 @@ import logging
 # values. Find "ignore_nan" here: https://simplejson.readthedocs.io/en/latest/
 import simplejson
 
-from . import models
+from . import getProject, getProjectsPayload, loadProjects, models
 from .patternset import getAssignmentsPayload
 from .config import set_data_path, config, FlaskConfigClass
-from .file import File
-from .project import loadProjects, getProjectByID, getProjectsPayload
 
 from ..flask_user import confirm_email_required, current_user, login_required, UserManager, SQLAlchemyAdapter
 from ..flask_user.signals import user_sent_invitation, user_registered
@@ -144,7 +142,7 @@ def createApp():
         pattern_id = request.args.get('pattern_id', type=int)
 
         # Get the project
-        project = getProjectByID(project_id)
+        project = getProject(project_id)
         if project is None:
             logging.error(f"Project ID {project_id} not found.")
             return simplejson.dumps({
@@ -178,7 +176,7 @@ def createApp():
         file_id = request.args.get('file_id', type=int)
 
         # Get the project
-        project = getProjectByID(project_id)
+        project = getProject(project_id)
         if project is None:
             logging.error(f"Project ID {project_id} not found.")
             return simplejson.dumps({
@@ -219,7 +217,7 @@ def createApp():
         maxgap = request.args.get('maxgap', type=float)
 
         # Get the project
-        project = getProjectByID(project_id)
+        project = getProject(project_id)
         if project is None:
             logging.error(f"Project ID {project_id} not found.")
             abort(404, description="Project not found.")
@@ -253,7 +251,7 @@ def createApp():
         project_id = request.args.get('project_id', type=int)
 
         # Get the project
-        project = getProjectByID(project_id)
+        project = getProject(project_id)
         if project is None:
             logging.error(f"Project ID {project_id} not found.")
             abort(404, description="Project not found.")
@@ -280,7 +278,7 @@ def createApp():
         file_id = request.args.get('file_id', type=int)
 
         # Get the project
-        project = getProjectByID(project_id)
+        project = getProject(project_id)
         if project is None:
             logging.error(f"Project ID {project_id} not found.")
             abort(404, description="Project not found.")
@@ -307,7 +305,7 @@ def createApp():
         # Parse parameters
         id = request.args.get('id', type=int)
 
-        p = getProjectByID(id)
+        p = getProject(id)
         if p is None:
             logging.error(f"Project ID {id} not found.")
             abort(404, description="Project not found.")
@@ -335,7 +333,7 @@ def createApp():
         stop = request.args.get('stop', type=float)
 
         # Get the project
-        project = getProjectByID(project_id)
+        project = getProject(project_id)
         if project is None:
             logging.error(f"Project ID {project_id} not found.")
             abort(404, description="Project not found.")
@@ -370,7 +368,7 @@ def createApp():
         label = request.args.get('label')
 
         # Get the project
-        project = getProjectByID(project_id)
+        project = getProject(project_id)
         if project is None:
             logging.error(f"Project ID {project_id} not found.")
             return simplejson.dumps({

@@ -61,6 +61,7 @@ class PatternSet(db.Model):
     description = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, server_default=func.now())
 
+    annotations = db.relationship('Annotation', lazy=True)
     patterns = db.relationship('Pattern', lazy=True)
     project = db.relationship('Project', lazy='joined', backref=db.backref('pattern_sets', lazy=True))
     users = db.relationship('User', secondary=patternSetAssignments, lazy=True, backref=db.backref('pattern_sets', lazy=True))

@@ -637,7 +637,7 @@ File.prototype.getAnnotationSetByID = function(id) {
 }
 
 // Get an pattern set by ID
-File.prototype.getPatternSetByID = function(id) {
+File.prototype.getPatternSet = function(id) {
 	for (let a of this.patternSets) {
 		if (a.id === id) {
 			return a;
