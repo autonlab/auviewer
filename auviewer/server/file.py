@@ -371,14 +371,10 @@ class File:
 
     # Returns a dict of file metadata.
     def getMetadata(self):
-        metadata = {}
-
-        # Metadata is currently only available in realtime mode.
-        if self.mode() == 'file':
-            metadata['audata'] = self.f.meta_audata
-            metadata['data'] = self.f.meta_data
-
-        return metadata
+        try:
+            return self.f.file_meta
+        except:
+            return {}
 
     # Returns the series instance corresponding to the provided series ID, or
     # None if the series cannot be found.

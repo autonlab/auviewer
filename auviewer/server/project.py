@@ -260,6 +260,13 @@ def getProjectsPayload(user_id) -> List[Dict]:
         'assignments_rem': models.User.query.filter_by(id=user_id).first().assignments_remaining,
     } for p in loadedProjects]
 
+def listProjects() -> List[List[str]]:
+    """
+    Returns list of project IDs and names.
+    :return: list of lists
+    """
+    return [[p.id, p.name] for p in loadedProjects]
+
 def loadProjects() -> None:
     """
     Load or reload projects into memory. This must be called before getProjectByID
