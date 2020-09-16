@@ -69,6 +69,13 @@ def listProjects() -> List[List[str]]:
     """
     return [[p.id, p.name, p.path] for p in loadedProjects]
 
+def listUsers() -> List[List[str]]:
+    """
+    Returns list of users (ID, email, first name, last name)
+    :return: list of lists
+    """
+    return [[u.id, u.email, u.first_name, u.last_name] for u in models.User.all()]
+
 def loadProject(id) -> Optional[Project]:
     """
     Load a project into memory. Returns the project instance if successful.

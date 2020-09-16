@@ -22,6 +22,7 @@ class Annotation(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, server_default=func.now())
 
     file = db.relationship('File', lazy='joined', backref=db.backref('annotations', lazy=True))
+    user = db.relationship('User', lazy=True)
 
     def __repr__(self):
         return f"ID: {self.id}, UID: {self.user_id}, PID: {self.project_id}, FID: {self.file_id}, PID: {self.pattern_id}, Series: {self.series}, Boundaries: {self.left} {self.right} {self.top} {self.bottom}, Label: {self.label}"

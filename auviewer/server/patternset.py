@@ -2,6 +2,7 @@
 
 from . import models
 from pathlib import Path
+from sqlalchemy.orm import joinedload
 import pandas as pd
 
 class PatternSet:
@@ -102,8 +103,8 @@ class PatternSet:
     def getAnnotations(self) -> pd.DataFrame:
         """Returns a DataFrame of the patterns in this set."""
         return pd.DataFrame(
-            [[a.file.id, Path(a.file.path).name, a.user_id, a.pattern_id, a.series, a.left, a.right, a.top, a.bottom, a.label, a.created_at] for a in self.dbmodel.annotations],
-            columns=['file_id', 'filename', 'user_id', 'pattern_id', 'series', 'left', 'right', 'top', 'bottom', 'label', 'created']
+            [[a.file.id, Path(a.file.path).name, a.user.id, a.user.email, a.user.first_name, a.user.last_name, a.pattern_id, a.series, a.left, a.right, a.top, a.bottom, a.label, a.created_at] for a in models.Annotation.query.options(joinedload('user')).filter_by(pattern_set_id=self.id).all()],
+            columns=['file_id', 'filename', 'user_id', 'user_email', 'user_firstname', 'user_lastname', 'pattern_id', 'series', 'left', 'right', 'top', 'bottom', 'label', 'created']
         )
 
     def getPatternCount(self) -> int:
