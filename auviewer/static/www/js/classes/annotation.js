@@ -180,21 +180,26 @@ Annotation.prototype.populateFormFromValues = function() {
 	// 	$('#annotationLabel').val($('#annotationLabel option:first').val());
 	// }
 
+	// Uncheck all confidence selections
+	$("input[name='annotationConfidence']").prop('checked', false);
 	try {
 		// Set the annotation confidence
 		$("input[name='annotationConfidence'][value='"+this.label.confidence+"']").prop('checked', true);
-	} catch {
-		// Uncheck all confidence selections
-		$("input[name='annotationConfidence']").prop('checked', false);
-	}
+	} catch {}
 
+	// Clear the annotation notes
+	$('#annotationNotes').val('');
 	try {
 		// Set the annotation notes
 		$('#annotationNotes').val(this.label.notes);
-	} catch {
-		// Clear the annotation notes
-		$('#annotationNotes').val('');
-	}
+	} catch {}
+
+	// Clear the pattern notes
+	$('#patternNotes').val('');
+	try {
+		// Set the pattern notes
+		$('#patternNotes').val(this.related.label)
+	} catch {}
 
 };
 
