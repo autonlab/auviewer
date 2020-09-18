@@ -241,7 +241,11 @@ Annotation.prototype.populateValuesFromObject = function (obj) {
 		this.series = obj.valuesArrayFromBackend[3]
 		this.begin = obj.valuesArrayFromBackend[4];
 		this.end = obj.valuesArrayFromBackend[5];
-		this.label = JSON.parse(obj.valuesArrayFromBackend[8]);
+		try {
+			this.label = JSON.parse(obj.valuesArrayFromBackend[8]);
+		} catch (error) {
+			this.label = obj.valuesArrayFromBackend[8];
+		}
 		this.pattern_id = obj.valuesArrayFromBackend[9];
 
 		// If data for a related item was provided, instantiate it.
