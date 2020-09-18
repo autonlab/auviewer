@@ -27,7 +27,7 @@ class PatternSet:
     def addPatterns(self, df):
 
         # Subset only the columns we need from the user
-        df = df[['file_id', 'series', 'left', 'right', 'top', 'bottom']]
+        df = df[['file_id', 'series', 'left', 'right', 'top', 'bottom', 'label']]
 
         # Add the id of this pattern set
         df.insert(0, "pattern_set_id", [self.id]*df.shape[0])
