@@ -96,8 +96,6 @@ class Series:
         # Pull raw data for the series into memory
         self.pullRawDataIntoMemory()
 
-        print("components", expected_frequency, duration, min_density, ceil(expected_frequency*duration*min_density))
-
         # Run through the data and generate alerts
         alerts = generateThresholdAlerts(self.rawTimes, self.rawValues, thresholdlow, thresholdhigh, mode, duration, persistence, maxgap, ceil(expected_frequency*duration*min_density))
 

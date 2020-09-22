@@ -256,8 +256,6 @@ def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarr
 # the duration timespan.
 def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarray[np.float64_t, ndim=1] rawValues, double thresholdlow, double thresholdhigh, int mode, double duration, double persistence, double maxgap, int min_sample_count):
 
-    print("min_sample_count:", min_sample_count)
-
     # Holds the indices of all raw values which surpass the threshold(s)
     cdef np.ndarray[long, ndim=1] pastThresholdIndices
 
@@ -333,9 +331,6 @@ def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndar
             # Increment to the next available unwritten alert
             nuai = nuai + 1
 
-        elif sampleduty >= persistence:
-            print("stop in the name of love:", (cdpi-alertSampleBeginIndex), min_sample_count)
-
     # Slice off unused alerts
     alerts = alerts[0:nuai]
 
@@ -393,11 +388,6 @@ def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndar
 
     # Slice off the unused final alerts array elements
     finalalerts = finalalerts[0:cfai]
-
-    # print("Alerts:")
-    # print(alerts)
-    # print("Final Alerts:")
-    # print(finalalerts)
 
     return finalalerts
 
