@@ -42,25 +42,26 @@ setup(
     package_data={'auviewer': pkg_files},
     include_package_data=True,
     install_requires=[
-        'numpy',
-        'pandas',
         'audata',
-        'jsbeautifier',
-        'simplejson',
-        'python-socketio',
-        'watchdog',
-        'psutil',
-        'passlib',
-        'pycrypto',
-
+        'cython',
+        'email_validator',
         'flask',
         'flask-login',
         'flask-mail',
         'flask-socketio',
         'flask-sqlalchemy',
         'flask-wtf',
-        'cython',
-        'htmlmin'
+        'htmlmin',
+        'jsbeautifier',
+        'numpy',
+        'pandas',
+        'passlib',
+        'psutil',
+        'pycrypto',
+        'python-socketio',
+        'simplejson',
+        'watchdog',
+
     ],
     packages=find_packages()
 )

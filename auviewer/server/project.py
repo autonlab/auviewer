@@ -83,12 +83,12 @@ class Project:
         # Return the pattern set
         return ps
 
-    def detectPatterns(self, type, series, thresholdlow, thresholdhigh, duration, persistence, maxgap):
+    def detectPatterns(self, type, series, thresholdlow, thresholdhigh, duration, persistence, maxgap, expected_frequency=0, min_density=0):
         """
         Run pattern detection on all files, and return a DataFrame of results.
         This DataFrame, or a subset thereof, can be passed into PatternSet.addPatterns() if desired.
         """
-        patterns = [[f.id, f.name, series, pattern[0], pattern[1], None, None] for f in self.files for pattern in f.detectPatterns(type, series, thresholdlow, thresholdhigh, duration, persistence, maxgap)]
+        patterns = [[f.id, f.name, series, pattern[0], pattern[1], None, None] for f in self.files for pattern in f.detectPatterns(type, series, thresholdlow, thresholdhigh, duration, persistence, maxgap, expected_frequency=expected_frequency, min_density=min_density)]
         return pd.DataFrame(patterns, columns=['file_id', 'filename', 'series', 'left', 'right', 'top', 'bottom'])
 
     def getAnnotationsOutput(self, user_id):

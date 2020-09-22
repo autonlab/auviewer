@@ -249,8 +249,14 @@ def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarr
 # provided for alert generation. The mode parameter specifies which of these is
 # provided, with 0 indicating low threshold, 1 indicating high threshold, and 2
 # indicating both being provided. This may not be inferred from the threshold
-# parameter values themselves because no real number is out-of-bounds.
-def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarray[np.float64_t, ndim=1] rawValues, double thresholdlow, double thresholdhigh, int mode, double duration, double persistence, double maxgap):
+# parameter values themselves because no real number is out-of-bounds. The
+# duration is in the same units as the start times (e.g. if start time is in
+# seconds, duration is in seconds). The min_sample_count, if greater than 0, is
+# used to filter out alerts which have fewer than min_sample_count values within
+# the duration timespan.
+def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarray[np.float64_t, ndim=1] rawValues, double thresholdlow, double thresholdhigh, int mode, double duration, double persistence, double maxgap, int min_sample_count):
+
+    print("min_sample_count:", min_sample_count)
 
     # Holds the indices of all raw values which surpass the threshold(s)
     cdef np.ndarray[long, ndim=1] pastThresholdIndices
@@ -319,13 +325,16 @@ def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndar
 
         # If the persistence of the sample exceeds the minimum to qualify for an
         # alert, add this to our alerts.
-        if sampleduty >= persistence:
+        if sampleduty >= persistence and (cdpi-alertSampleBeginIndex) >= min_sample_count:
 
             alerts[nuai,0] = leftboundary
             alerts[nuai,1] = rawOffsets[cdpi-1]
 
             # Increment to the next available unwritten alert
             nuai = nuai + 1
+
+        elif sampleduty >= persistence:
+            print("stop in the name of love:", (cdpi-alertSampleBeginIndex), min_sample_count)
 
     # Slice off unused alerts
     alerts = alerts[0:nuai]

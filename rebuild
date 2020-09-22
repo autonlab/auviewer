@@ -1,5 +1,7 @@
 #!/bin/bash
 
+pip install cython
+
 python setup.py bdist_wheel
 
 # Copy the cython library to the source for debugging.

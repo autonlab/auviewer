@@ -179,7 +179,7 @@ class File:
         return True
 
     # TODO(gus): Turn this into DataFrame output in line with Project.detectPatterns.
-    def detectPatterns(self, type, series, thresholdlow=None, thresholdhigh=None, duration=300, persistence=.7, maxgap=300, series2=None):
+    def detectPatterns(self, type, series, thresholdlow=None, thresholdhigh=None, duration=300, persistence=.7, maxgap=300, series2=None, expected_frequency=0, min_density=0):
 
         # Determine the mode (see generateThresholdAlerts function description
         # for details on this parameter).
@@ -202,7 +202,7 @@ class File:
             # Find the series & run pattern detection
             for s in self.series:
                 if s.id == series:
-                    return s.generateThresholdAlerts(thresholdlow, thresholdhigh, mode, duration, persistence, maxgap).tolist()
+                    return s.generateThresholdAlerts(thresholdlow, thresholdhigh, mode, duration, persistence, maxgap, expected_frequency=expected_frequency, min_density=min_density).tolist()
 
         elif type == 'correlation':
 

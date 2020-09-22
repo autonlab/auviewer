@@ -1,5 +1,6 @@
 from collections import deque
 from copy import copy
+from math import ceil
 from threading import Lock
 import logging
 import numpy as np
@@ -90,13 +91,15 @@ class Series:
 
         return
 
-    def generateThresholdAlerts(self, thresholdlow, thresholdhigh, mode, duration, persistence, maxgap):
+    def generateThresholdAlerts(self, thresholdlow, thresholdhigh, mode, duration, persistence, maxgap, expected_frequency=0, min_density=0):
 
         # Pull raw data for the series into memory
         self.pullRawDataIntoMemory()
 
+        print("components", expected_frequency, duration, min_density, ceil(expected_frequency*duration*min_density))
+
         # Run through the data and generate alerts
-        alerts = generateThresholdAlerts(self.rawTimes, self.rawValues, thresholdlow, thresholdhigh, mode, duration, persistence, maxgap)
+        alerts = generateThresholdAlerts(self.rawTimes, self.rawValues, thresholdlow, thresholdhigh, mode, duration, persistence, maxgap, ceil(expected_frequency*duration*min_density))
 
         # Remove raw data for the series fromm memory
         self.initializeRawDataInMemory()
