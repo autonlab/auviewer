@@ -123,7 +123,7 @@ class PatternSet:
                 pattern.top,
                 pattern.bottom,
                 pattern.label,
-                f"{pattern.projparent.id}{pattern.file.id}{pattern.series}{pattern.left}{pattern.right}{pattern.top}{pattern.bottom}"
+                f"{self.projparent.id}{pattern.file.id}{pattern.series}{pattern.left}{pattern.right}{pattern.top}{pattern.bottom}"
             ] for pattern in self.dbmodel.patterns],
             columns=['file_id', 'filename', 'series', 'left', 'right', 'top', 'bottom', 'label', 'pattern_identifier']
         )
