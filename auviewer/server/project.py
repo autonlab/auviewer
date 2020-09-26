@@ -89,7 +89,9 @@ class Project:
         This DataFrame, or a subset thereof, can be passed into PatternSet.addPatterns() if desired.
         """
         patterns = [[f.id, f.name, series, pattern[0], pattern[1], None, None] for f in self.files for pattern in f.detectPatterns(type, series, thresholdlow, thresholdhigh, duration, persistence, maxgap, expected_frequency=expected_frequency, min_density=min_density)]
-        return pd.DataFrame(patterns, columns=['file_id', 'filename', 'series', 'left', 'right', 'top', 'bottom'])
+        pdf = pd.DataFrame(patterns, columns=['file_id', 'filename', 'series', 'left', 'right', 'top', 'bottom'])
+        pdf['label'] = ''
+        return pdf
 
     def getAnnotationsOutput(self, user_id):
         """Returns a list of user's annotations for all files in the project"""

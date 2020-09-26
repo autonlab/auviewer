@@ -108,95 +108,95 @@ function File(parentProject, id, callback=null) {
 
 
 
-	this.annotationInterface = null;
-
-	this.annotationInterfaceConfig = {
-		view: "window",
-		close: true,
-		head: "Annotation...........",
-		move: true,
-		body: {
-			view:"form", elements: [{
-				view:"abslayout",
-				cells: [
-					{
-						view: "text",
-						left: 490,
-						top: 150,
-						width: 500,
-						label: "File",
-						labelWidth: 100,
-						labelPosition: "top"
-					},
-					{
-						view: "text",
-						left: 490,
-						top: 212,
-						width: 500,
-						label: "Series",
-						labelWidth: 100,
-						labelPosition: "top"
-					},
-					{
-						options: [
-							"-3",
-							"-2",
-							"-1",
-							"0",
-							"+1",
-							"+2",
-							"+3"
-						],
-						view: "radio",
-						left: 490,
-						top: 274,
-						width: 500,
-						label: "Confidence",
-						name: "confidence",
-						labelWidth: 100,
-						value: "-3",
-						labelPosition: "top"
-					},
-					{
-						view: "textarea",
-						left: 490,
-						top: 336,
-						width: 500,
-						labelPosition: "top",
-						label: "Notes",
-						name: "notes",
-						height: 150,
-						labelWidth: 100
-					},
-					{
-						view: "datepicker",
-						left: 490,
-						top: 490,
-						width: 225,
-						label: "Start Time",
-						labelPosition: "top",
-						value: null
-					},
-					{
-						view: "datepicker",
-						left: 765,
-						top: 490,
-						width: 225,
-						label: "End Time",
-						labelPosition: "top"
-					},
-					{
-						view: "daterangepicker",
-						left: 490,
-						top: 560,
-						width: 500,
-						label: "Test Range Picker",
-						labelPosition: "top"
-					}
-				]
-			}]
-		}
-	}
+	// this.annotationInterface = null;
+	//
+	// this.annotationInterfaceConfig = {
+	// 	view: "window",
+	// 	close: true,
+	// 	head: "Annotation...........",
+	// 	move: true,
+	// 	body: {
+	// 		view:"form", elements: [{
+	// 			view:"abslayout",
+	// 			cells: [
+	// 				{
+	// 					view: "text",
+	// 					left: 490,
+	// 					top: 150,
+	// 					width: 500,
+	// 					label: "File",
+	// 					labelWidth: 100,
+	// 					labelPosition: "top"
+	// 				},
+	// 				{
+	// 					view: "text",
+	// 					left: 490,
+	// 					top: 212,
+	// 					width: 500,
+	// 					label: "Series",
+	// 					labelWidth: 100,
+	// 					labelPosition: "top"
+	// 				},
+	// 				{
+	// 					options: [
+	// 						"-3",
+	// 						"-2",
+	// 						"-1",
+	// 						"0",
+	// 						"+1",
+	// 						"+2",
+	// 						"+3"
+	// 					],
+	// 					view: "radio",
+	// 					left: 490,
+	// 					top: 274,
+	// 					width: 500,
+	// 					label: "Confidence",
+	// 					name: "confidence",
+	// 					labelWidth: 100,
+	// 					value: "-3",
+	// 					labelPosition: "top"
+	// 				},
+	// 				{
+	// 					view: "textarea",
+	// 					left: 490,
+	// 					top: 336,
+	// 					width: 500,
+	// 					labelPosition: "top",
+	// 					label: "Notes",
+	// 					name: "notes",
+	// 					height: 150,
+	// 					labelWidth: 100
+	// 				},
+	// 				{
+	// 					view: "datepicker",
+	// 					left: 490,
+	// 					top: 490,
+	// 					width: 225,
+	// 					label: "Start Time",
+	// 					labelPosition: "top",
+	// 					value: null
+	// 				},
+	// 				{
+	// 					view: "datepicker",
+	// 					left: 765,
+	// 					top: 490,
+	// 					width: 225,
+	// 					label: "End Time",
+	// 					labelPosition: "top"
+	// 				},
+	// 				{
+	// 					view: "daterangepicker",
+	// 					left: 490,
+	// 					top: 560,
+	// 					width: 500,
+	// 					label: "Test Range Picker",
+	// 					labelPosition: "top"
+	// 				}
+	// 			]
+	// 		}]
+	// 	}
+	// }
 
 
 
@@ -389,8 +389,8 @@ function File(parentProject, id, callback=null) {
 
 
 
-			this.annotationInterface = webix.ui(this.annotationInterfaceConfig);
-			this.annotationInterface.show();
+			// this.annotationInterface = webix.ui(this.annotationInterfaceConfig);
+			// this.annotationInterface.show();
 
 
 
