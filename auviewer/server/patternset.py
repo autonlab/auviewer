@@ -113,10 +113,21 @@ class PatternSet:
 
     def getPatterns(self) -> pd.DataFrame:
         """Returns a DataFrame of the patterns in this set."""
-        return pd.DataFrame(
-            [[pattern.file.id, Path(pattern.file.path).name, pattern.series, pattern.left, pattern.right, pattern.top, pattern.bottom] for pattern in self.dbmodel.patterns],
-            columns=['file_id', 'filename', 'series', 'left', 'right', 'top', 'bottom']
+        pdf = pd.DataFrame(
+            [[
+                pattern.file.id,
+                Path(pattern.file.path).name,
+                pattern.series,
+                pattern.left,
+                pattern.right,
+                pattern.top,
+                pattern.bottom,
+                pattern.label,
+                f"{pattern.projparent.id}{pattern.file.id}{pattern.series}{pattern.left}{pattern.right}{pattern.top}{pattern.bottom}"
+            ] for pattern in self.dbmodel.patterns],
+            columns=['file_id', 'filename', 'series', 'left', 'right', 'top', 'bottom', 'label', 'pattern_identifier']
         )
+        return pdf
 
     # Set the pattern set's description
     def setDescription(self, description):
