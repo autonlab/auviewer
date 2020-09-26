@@ -119,7 +119,7 @@ class PatternSet:
                 a.created_at,
                 f"{self.projparent.id}{a.file.id}{a.series}{a.left}{a.right}{a.top}{a.bottom}",
             ] for a in models.Annotation.query.options(joinedload('user')).filter_by(pattern_set_id=self.id).all()],
-            columns=['file_id', 'filename', 'user_id', 'user_email', 'user_firstname', 'user_lastname', 'pattern_id', 'series', 'left', 'right', 'top', 'bottom', 'label', 'created']
+            columns=['file_id', 'filename', 'user_id', 'user_email', 'user_firstname', 'user_lastname', 'pattern_id', 'series', 'left', 'right', 'top', 'bottom', 'label', 'created', 'pattern_identifier']
         )
 
     def getPatternCount(self) -> int:
