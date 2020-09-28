@@ -1,10 +1,7 @@
 {
 	"patternDetection": [],
-	"defaultSeriesAll": true,
-	"defaultSeries": [],
-	"groups": {},
 	"series": {
-		"default": {
+		"_default": {
 			"graphHeight": "120px",
 			"drawLine": false,
 			"drawDots": true,
@@ -18,7 +15,8 @@
 			"ownAnnotationColor": "rgba(0,72,182,0.73)",
 			"ownAnnotationLabelColor": "#fff",
 			"otherAnnotationColor": "rgba(60,100,182,0.73)",
-			"otherAnnotationLabelColor": "#fff"
+			"otherAnnotationLabelColor": "#fff",
+			"show": false
 		}
 	}
 }
