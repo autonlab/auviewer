@@ -60,6 +60,7 @@ class PatternSet(db.Model):
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
     name = db.Column(db.String(255), nullable=False)
     description = db.Column(db.String(255), nullable=True)
+    show_by_default = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, server_default=func.now())
 
     annotations = db.relationship('Annotation', lazy=True)

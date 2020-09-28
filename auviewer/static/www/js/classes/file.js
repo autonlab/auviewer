@@ -320,12 +320,12 @@ function File(parentProject, id, callback=null) {
 
 		// Populate the annotation sets
 		for (const asd of this.fileData['annotationsets']) {
-			this.annotationSets.push(new AnnotationSet(this, asd['id'], asd['name'], asd['description'], asd['annotations']))
+			this.annotationSets.push(new AnnotationSet(this, asd['id'], asd['name'], asd['description'], asd['annotations'], asd['show']))
 		}
 
 		// Populate the pattern sets
 		for (const asd of this.fileData['patternsets']) {
-			this.patternSets.push(new PatternSet(this, asd['id'], asd['name'], asd['description'], asd['patterns']))
+			this.patternSets.push(new PatternSet(this, asd['id'], asd['name'], asd['description'], asd['patterns'], asd['show']))
 		}
 
 		window.requestAnimationFrame(function() {

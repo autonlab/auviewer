@@ -15,6 +15,7 @@ class PatternSet:
         # Set id & name
         self.id = dbmodel.id
         self.name = dbmodel.name
+        self.showByDefault = dbmodel.show_by_default
 
         # Holds the db model
         self.dbmodel = dbmodel
@@ -145,15 +146,23 @@ class PatternSet:
         return pdf
 
     # Set the pattern set's description
-    def setDescription(self, description):
+    def setDescription(self, description: str):
+        """Set the pattern set's description."""
         self.dbmodel.description = description
         models.db.session.commit()
 
     # Set the pattern set's name
-    def setName(self, name):
+    def setName(self, name: str):
+        """Set the pattern set's name."""
         self.dbmodel.name = name
         models.db.session.commit()
         self.name = name
+
+    def setShowByDefault(self, show: bool):
+        """Set whether a pattern set should show by default."""
+        self.dbmodel.show_by_default = show
+        models.db.session.commit()
+        self.showByDefault = show
 
     # Update the count of patterns belonging to this set
     def updateCount(self):

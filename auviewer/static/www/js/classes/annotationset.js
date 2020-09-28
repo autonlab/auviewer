@@ -137,14 +137,14 @@ class Set {
 }
 
 class AnnotationSet extends Set {
-	constructor(parentFile, id, name, description, annotationsArray) {
-		super(parentFile, id, name, description, annotationsArray, 'annotation', parentFile.template.series._default.ownAnnotationColor, true);
+	constructor(parentFile, id, name, description, annotationsArray, show) {
+		super(parentFile, id, name, description, annotationsArray, 'annotation', parentFile.template.series._default.ownAnnotationColor, show);
 	}
 }
 
 class PatternSet extends Set {
-	constructor(parentFile, id, name, description, patternsArray) {
-		super(parentFile, id, name, description, patternsArray, 'pattern', parentFile.template.series._default.ownPatternColor, true);
+	constructor(parentFile, id, name, description, patternsArray, show) {
+		super(parentFile, id, name, description, patternsArray, 'pattern', parentFile.template.series._default.ownPatternColor, show);
 	}
 }
 

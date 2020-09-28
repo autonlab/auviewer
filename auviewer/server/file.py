@@ -323,13 +323,15 @@ class File:
                 'id': 'general',
                 'name': 'General',
                 'description': None,
-                'annotations': [annotationOrPatternOutput(a) for a in models.Annotation.query.filter_by(user_id=user_id, project_id=self.projparent.id, file_id=self.id, pattern_set_id=None).all()]
+                'annotations': [annotationOrPatternOutput(a) for a in models.Annotation.query.filter_by(user_id=user_id, project_id=self.projparent.id, file_id=self.id, pattern_set_id=None).all()],
+                'show': True,
             }] + [
                 {
                     'id': patternset.id,
                     'name': patternset.name,
                     'description': patternset.description,
-                    'annotations': [annotationOrPatternOutput(a) for a in models.Annotation.query.filter_by(user_id=user_id, project_id=self.projparent.id, file_id=self.id, pattern_set_id=patternset.id).all()]
+                    'annotations': [annotationOrPatternOutput(a) for a in models.Annotation.query.filter_by(user_id=user_id, project_id=self.projparent.id, file_id=self.id, pattern_set_id=patternset.id).all()],
+                    'show': patternset.show_by_default,
                 } for patternset in models.PatternSet.query.filter(models.PatternSet.project_id==self.projparent.id, or_(
                     models.PatternSet.id.notin_(
                         models.db.session.query(distinct(models.patternSetAssignments.c.pattern_set_id)).subquery()
@@ -344,7 +346,8 @@ class File:
                     'id': patternset.id,
                     'name': patternset.name,
                     'description': patternset.description,
-                    'patterns': [annotationOrPatternOutput(pattern) for pattern in models.Pattern.query.filter_by(pattern_set_id=patternset.id, file_id=self.id).all()]
+                    'patterns': [annotationOrPatternOutput(pattern) for pattern in models.Pattern.query.filter_by(pattern_set_id=patternset.id, file_id=self.id).all()],
+                    'show': patternset.show_by_default,
                 } for patternset in models.PatternSet.query.filter(models.PatternSet.project_id==self.projparent.id, or_(
                     models.PatternSet.id.notin_(
                         models.db.session.query(distinct(models.patternSetAssignments.c.pattern_set_id)).subquery()

@@ -64,14 +64,14 @@ class Project:
         except:
             pass
 
-    def createPatternSet(self, name: str, description=None) -> PatternSet:
+    def createPatternSet(self, name: str, description=None, showByDefault: bool = False) -> PatternSet:
         """
         Create and return a new pattern set.
         :returns: a new PatternSet instance
         """
 
         # Create pattern set in the database
-        patternSetModel = models.PatternSet(project_id=self.id, name=name, description=description)
+        patternSetModel = models.PatternSet(project_id=self.id, name=name, description=description, show_by_default=showByDefault)
         models.db.session.add(patternSetModel)
         models.db.session.commit()
 
