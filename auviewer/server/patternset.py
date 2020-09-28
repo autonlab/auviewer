@@ -117,7 +117,7 @@ class PatternSet:
                 a.bottom,
                 a.label,
                 a.created_at,
-                f"{self.projparent.id}{a.file.id}{a.series}{a.left}{a.right}{a.top}{a.bottom}",
+                f"{self.projparent.id}_{a.file.id}_{a.series}_{a.left}_{a.right}_{a.top}_{a.bottom}",
             ] for a in models.Annotation.query.options(joinedload('user')).filter_by(pattern_set_id=self.id).all()],
             columns=['file_id', 'filename', 'user_id', 'user_email', 'user_firstname', 'user_lastname', 'pattern_id', 'series', 'left', 'right', 'top', 'bottom', 'label', 'created', 'pattern_identifier']
         )
@@ -138,7 +138,7 @@ class PatternSet:
                 pattern.top,
                 pattern.bottom,
                 pattern.label,
-                f"{self.projparent.id}{pattern.file.id}{pattern.series}{pattern.left}{pattern.right}{pattern.top}{pattern.bottom}",
+                f"{self.projparent.id}_{pattern.file.id}_{pattern.series}_{pattern.left}_{pattern.right}_{pattern.top}_{pattern.bottom}",
             ] for pattern in self.dbmodel.patterns],
             columns=['file_id', 'filename', 'series', 'left', 'right', 'top', 'bottom', 'label', 'pattern_identifier']
         )

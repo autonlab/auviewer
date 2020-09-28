@@ -51,12 +51,11 @@ class Project:
         # indexed by pattern set ID.
         self.patternsets = {}
 
+        # Load pattern sets
+        self.loadPatternSets()
+
         # Load project files
         self.loadProjectFiles(processNewFiles)
-
-        # Load pattern sets
-        for psm in models.PatternSet.query.filter_by(project_id=self.id).all():
-            self.patternsets[psm.id] = PatternSet(self, psm)
 
     def __del__(self):
         """Cleanup"""
@@ -163,8 +162,21 @@ class Project:
         """
         return [[ps.id, ps.name] for ps in self.patternsets.values()]
 
+    def loadPatternSets(self) -> None:
+        """Load or reload the project's pattern sets."""
+
+        # Reset pattern sets container
+        self.patternsets = {}
+
+        # Load pattern sets
+        for psm in models.PatternSet.query.filter_by(project_id=self.id).all():
+            self.patternsets[psm.id] = PatternSet(self, psm)
+
     def loadProjectFiles(self, processNewFiles=True):
-        """Load files belonging to the project, and process new files if desired."""
+        """Load or reload files belonging to the project, and process new files if desired."""
+
+        # Reset files list
+        self.files = []
 
         # Will hold all project files that exist in the database (in order to
         # detect new files to process).

@@ -293,9 +293,14 @@ function File(parentProject, id, callback=null) {
 		// NOTE: If you're trying to understand this code in the future, I'm
 		// sorry. I could not document this in any way that would help make it
 		// more understandable, and it is a bit of a labyrinth.
-		for (let g of Object.getOwnPropertyNames(this.template.groups)) {
+		for (let g of Object.getOwnPropertyNames(this.template['series'])) {
 
-			const group = this.template.groups[g];
+			const group = this.template['series'][g];
+
+			// A group would be a series which has a members property
+			if (!group.hasOwnProperty('members')) {
+				continue
+			}
 
 			// Verify at least one series member of the group is present.
 			let atLeastOneSeriesPresent = false;
@@ -415,7 +420,7 @@ function File(parentProject, id, callback=null) {
 			// for (let s of Object.keys(this.graphs)) {
 			// 	if (this.graphs[s].isShowing()) {
 			// 		if (this.graphs[s].isGroup) {
-			// 			seriesInitiallyDisplaying.push.apply(seriesInitiallyDisplaying, this.graphs[s].group);
+			// 			seriesInitiallyDisplaying.push.apply(seriesInitiallyDisplaying, this.graphs[s].members);
 			// 		} else {
 			// 			seriesInitiallyDisplaying.push(this.graphs[s].fullName);
 			// 		}
@@ -835,7 +840,7 @@ File.prototype.getPostloadDataUpdateHandler = function() {
 
 						// Verify that we received all series in the group in the
 						// backend response. If not, continue on to the next graph.
-						for (let s of file.graphs[g].group) {
+						for (let s of file.graphs[g].members) {
 							if (!data.series.hasOwnProperty(s)) {
 								globalAppConfig.verbose && console.log("Did not receive data for series " + s + ". Skipping group " + g + ".");
 								continue graphLoop;
@@ -843,7 +848,7 @@ File.prototype.getPostloadDataUpdateHandler = function() {
 						}
 
 						// Replace graph data with merge of mesh of group series
-						file.graphs[g].replacePlottedData(createMergedTimeSeries(file.graphs[g].group, data.series))
+						file.graphs[g].replacePlottedData(createMergedTimeSeries(file.graphs[g].members, data.series))
 
 					} else {
 
@@ -1118,9 +1123,14 @@ File.prototype.renderBufferedRealtimeData = function() {
 			}
 
 			// Iterate through group series
-			for (let g of Object.getOwnPropertyNames(this.template.groups)) {
+			for (let g of Object.getOwnPropertyNames(this.template['series'])) {
 
-				const group = this.template.groups[g];
+				const group = this.template['series'][g];
+
+				// A group would be a series which has a members property
+				if (!group.hasOwnProperty('members')) {
+					continue
+				}
 
 				// If this group has no new data in the realtime buffer, skip it.
 				let atLeastOneSeriesPresent = false;
@@ -1447,18 +1457,10 @@ File.prototype.updateCurrentViewData = function() {
 
 			lastGraphShowing = this.graphs[g];
 
-			if (this.graphs[g].isGroup) {
-
-				for (let s of this.graphs[g].group) {
-					if (series.indexOf(s) === -1) {
-						series.push(s);
-					}
+			for (const s of this.graphs[g].members) {
+				if (series.indexOf(s) === -1) {
+					series.push(s);
 				}
-
-			} else if (series.indexOf(g) === -1) {
-
-				series.push(this.graphs[g].fullName);
-
 			}
 
 		}

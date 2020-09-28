@@ -26,62 +26,6 @@ function TemplateSystem() {
 
 }
 
-// Class-internal helper function to generate, cache, and return group template.
-TemplateSystem.prototype.generateGroupTemplate = function(project_id, groupName) {
-
-	// Holds the series template we will return.
-	let group_template;
-
-	// Attempt to generate a new merged template
-	try {
-
-		group_template = mergeDeep({},
-
-			// The built-in default series template
-			this.builtin_default_series_template,
-
-			// The global default series template
-			this.global_default_series_template,
-
-			// The specific-project default series template
-			(verifyObjectPropertyChain(this.project_templates, [project_id, 'project_template', 'series', 'default']) ? this.project_templates[project_id]['project_template']['series']['default'] : {}),
-
-			// Any system-pushed specific-project default series templates
-			...(verifyObjectPropertyChain(this.dynamic, ['project_templates', project_id, '[]']) ? this.dynamic['project_templates'][project_id].filter(proj => proj.hasOwnProperty('series') && proj['series'].hasOwnProperty('default')).map(proj => proj['series']['default']) : []),
-
-			// The built-in default-project specific-series template
-			(verifyObjectPropertyChain(this.builtin_default_project_template, ['groups', groupName]) ? this.builtin_default_project_template['groups'][groupName] : {}),
-
-			// The global default-project specific-series template
-			(verifyObjectPropertyChain(this.global_default_project_template, ['groups', groupName]) ? this.global_default_project_template['groups'][groupName] : {}),
-
-			// The specific-project specific-series template
-			(verifyObjectPropertyChain(this.project_templates, [project_id, 'project_template', 'groups', groupName]) ? this.project_templates[project_id]['project_template']['groups'][groupName] : {}),
-
-			// Any system-pushed specific-project specific-series templates
-			...(verifyObjectPropertyChain(this.dynamic, ['project_templates', project_id, '[]']) ? this.dynamic['project_templates'][project_id].filter(proj => proj.hasOwnProperty('groups') && proj['groups'].hasOwnProperty(groupName)).map(proj => proj['groups'][groupName]) : [])
-		);
-
-	} catch (err) {
-		console.log("Error merging series template", err);
-		group_template = this.builtin_default_series_template || {};
-	}
-
-	// Cache the newly-generated series template
-	if (!this.cached_templates.hasOwnProperty(project_id)) {
-		this.cached_templates[project_id] = {};
-	}
-	if (!this.cached_templates[project_id].hasOwnProperty('groups')) {
-		this.cached_templates[project_id]['groups'] = {};
-	}
-	this.cached_templates[project_id]['groups'][groupName] = group_template;
-
-	// globalAppConfig.verbose && console.log("TemplateSystem.getSeriesTemplate("+seriesName+") returning", deepCopy(series_template));
-
-	return group_template;
-
-};
-
 // Class-internal helper function to generate, cache, and return project template.
 TemplateSystem.prototype.generateProjectTemplate = function(project_id) {
 
@@ -147,10 +91,10 @@ TemplateSystem.prototype.generateSeriesTemplate = function(project_id, seriesNam
 			this.global_default_series_template,
 
 			// The specific-project default series template
-			(verifyObjectPropertyChain(this.project_templates, [project_id, 'project_template', 'series', 'default']) ? this.project_templates[project_id]['project_template']['series']['default'] : {}),
+			(verifyObjectPropertyChain(this.project_templates, [project_id, 'project_template', 'series', '_default']) ? this.project_templates[project_id]['project_template']['series']['_default'] : {}),
 
 			// Any system-pushed specific-project default series templates
-			...(verifyObjectPropertyChain(this.dynamic, ['project_templates', project_id, '[]']) ? this.dynamic['project_templates'][project_id].filter(proj => proj.hasOwnProperty('series') && proj['series'].hasOwnProperty('default')).map(proj => proj['series']['default']) : []),
+			...(verifyObjectPropertyChain(this.dynamic, ['project_templates', project_id, '[]']) ? this.dynamic['project_templates'][project_id].filter(proj => proj.hasOwnProperty('series') && proj['series'].hasOwnProperty('_default')).map(proj => proj['series']['_default']) : []),
 
 			// The built-in default-project specific-series template
 			(verifyObjectPropertyChain(this.builtin_default_project_template, ['series', seriesName]) ? this.builtin_default_project_template['series'][seriesName] : {}),
@@ -185,11 +129,6 @@ TemplateSystem.prototype.generateSeriesTemplate = function(project_id, seriesNam
 
 };
 
-// Returns the final processed/merged template for the group.
-TemplateSystem.prototype.getGroupTemplate = function(project_id, groupName) {
-	return ( verifyObjectPropertyChain(this.cached_templates, [project_id, 'groups', groupName]) ? this.cached_templates[project_id]['groups'][groupName] : this.generateGroupTemplate(project_id, groupName) );
-};
-
 // Returns the final processed/merged template for the project.
 TemplateSystem.prototype.getProjectTemplate = function(project_id) {
 	return ( verifyObjectPropertyChain(this.cached_templates, [project_id, 'project_template']) ? this.cached_templates[project_id]['project_template'] : this.generateProjectTemplate(project_id) );
@@ -206,7 +145,7 @@ TemplateSystem.prototype.provideBuiltinTemplates = function(builtin_default_proj
 	let t0 = performance.now();
 
 	this.builtin_default_project_template = builtin_default_project_template || {};
-	this.builtin_default_series_template = (verifyObjectPropertyChain(builtin_default_project_template, ['series', 'default']) ? builtin_default_project_template['series']['default'] : {}) || {};
+	this.builtin_default_series_template = (verifyObjectPropertyChain(builtin_default_project_template, ['series', '_default']) ? builtin_default_project_template['series']['_default'] : {}) || {};
 	this.builtin_default_interface_templates = builtin_default_interface_templates || {};
 	globalAppConfig.verbose && console.log('TemplateSystem.provideBuiltinTemplates set builtin default project, series, and interface templates:', this.builtin_default_project_template, this.builtin_default_series_template, this.builtin_default_interface_templates);
 
@@ -221,7 +160,7 @@ TemplateSystem.prototype.provideGlobalTemplates = function(global_default_projec
 	let t0 = performance.now();
 
 	this.global_default_project_template = global_default_project_template || {};
-	this.global_default_series_template = (verifyObjectPropertyChain(global_default_project_template, ['series', 'default']) ? global_default_project_template['series']['default'] : {}) || {};
+	this.global_default_series_template = (verifyObjectPropertyChain(global_default_project_template, ['series', '_default']) ? global_default_project_template['series']['_default'] : {}) || {};
 	this.global_default_interface_templates = global_default_interface_templates || {};
 	globalAppConfig.verbose && console.log('TemplateSystem.provideGlobalTemplates set global default project, series, and interface templates:', this.global_default_project_template, this.global_default_series_template, this.global_default_interface_templates);
 

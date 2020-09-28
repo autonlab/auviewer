@@ -6,7 +6,7 @@ function classifyAnnotationInRelationToGraph(annotation, graph) {
 	const currentAssignmentID = getCurrentTargetAssignmentID();
 	
 	// Determine if the annotation/pattern series matches this current graph
-	const annotationBelongsToThisGraph = annotation.series && graph.group.includes(annotation.series);
+	const annotationBelongsToThisGraph = annotation.series && graph.members.includes(annotation.series);
 
 	// Determine if the pattern is the current workflow pattern
 	const currentWorkflowPattern = annotation.id === currentAssignmentID;

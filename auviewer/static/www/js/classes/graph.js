@@ -10,9 +10,14 @@ function Graph(seriesOrGroupName, file) {
 	// Generate new local identifier
 	this.localIdentifier = globalStateManager.getGraphIdentifier();
 
-	// Determine whether this is a group or series
-	const groupTemplate = this.file.template['groups'][seriesOrGroupName];
-	if (groupTemplate) {
+	// Full name
+	this.fullName = seriesOrGroupName;
+
+	// Get the template
+	this.template = templateSystem.getSeriesTemplate(this.file.parentProject.id, this.fullName);
+
+	// Set properties depending on whether this is a group or series
+	if (this.template.hasOwnProperty('members')) {
 
 		/* This is a group */
 
@@ -22,14 +27,8 @@ function Graph(seriesOrGroupName, file) {
 		// Short name
 		this.shortName = seriesOrGroupName;
 
-		// Full name
-		this.fullName = seriesOrGroupName;
-
 		// Group members
-		this.group = groupTemplate['members']; //this.file.fileData.series[this.series].group;
-
-		// Group template
-		this.template = templateSystem.getGroupTemplate(this.file.parentProject.id, this.fullName);
+		this.members = this.template['members'];
 
 	} else {
 
@@ -41,20 +40,14 @@ function Graph(seriesOrGroupName, file) {
 		// Short name
 		this.shortName = simpleSeriesName(seriesOrGroupName);
 
-		// Full name
-		this.fullName = seriesOrGroupName;
-
 		// Group members
-		this.group = [seriesOrGroupName];
-
-		// Series template
-		this.template = templateSystem.getSeriesTemplate(this.file.parentProject.id, this.fullName);
+		this.members = [seriesOrGroupName];
 
 	}
 
 	// Assemble the alt text
 	this.altText = "";
-	for (let sn of this.group) {
+	for (let sn of this.members) {
 		if (this.altText) {
 			this.altText += "\n"
 		}
@@ -162,12 +155,8 @@ Graph.prototype.build = function() {
 	// poorly).
 	$(this.graphDomElement).data('graphClassInstance', this);
 
-	// Determine whether to show the graph by default
-	const showGraph = this.file.template.defaultSeriesAll === true || this.file.template.defaultSeries.includes(this.fullName) === true;
-
-	// Instantiate the dygraph if it is configured to appear by default, or if
-	// we're in realtime mode.
-	if (showGraph) {
+	// Instantiate the dygraph if it is configured to appear by default
+	if (this.template['show'] === true) {
 		this.instantiateDygraph();
 	} else {
 		this.hideDOMElements();
@@ -226,7 +215,7 @@ Graph.prototype.instantiateDygraph = function() {
 	// configured range.
 	let yAxisRange = [null, null];
 	if (this.isGroup) {
-		for (let s of this.group) {
+		for (let s of this.members) {
 			if (this.template.hasOwnProperty('range')) {
 				if (yAxisRange[0] === null || yAxisRange[0] > this.template.range[0]) {
 					yAxisRange[0] = this.template.range[0];
@@ -355,7 +344,7 @@ Graph.prototype.show = function() {
 	// NOTE: This function takes either string or array as parameter, so it
 	// works for a single or group series graph.
 	if (this.isGroup) {
-		this.file.runPatternDetectionJobsForSeries(this.group);
+		this.file.runPatternDetectionJobsForSeries(this.members);
 	} else {
 		this.file.runPatternDetectionJobsForSeries(this.fullName);
 	}
@@ -387,7 +376,7 @@ Graph.prototype.updateCurrentViewData = function() {
 	let xRange = this.dygraphInstance.xAxisRange();
 
 	// Assemble the series ID(s) for which we will request updated data.
-	let series = this.isGroup ? this.group : [this.fullName];
+	let series = this.isGroup ? this.members : [this.fullName];
 
 	// Request the updated view data from the backend.
 	requestHandler.requestSeriesRangedData(this.file.parentProject.id, this.file.id, series, xRange[0]/1000-this.file.fileData.baseTime, xRange[1]/1000-this.file.fileData.baseTime, this.file.getPostloadDataUpdateHandler());

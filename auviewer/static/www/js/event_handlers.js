@@ -26,7 +26,7 @@ function handleAnnotationHighlightEnd (event, g, context, fileOrGraph) {
 	let annotation = new Annotation(destinationSet, {
 		file_id: globalStateManager.currentFile.id,
 		filename: globalStateManager.currentFile.name,
-		series: graph.group[0],
+		series: graph.members[0],
 		begin: from,
 		end: to
 	}, 'unsaved_annotation');
@@ -133,7 +133,7 @@ function handleClick(e, x) {
 			if (
 				!file.annotationsAndPatternsToRender[i].series ||
 				(!graph.isGroup && file.annotationsAndPatternsToRender[i].series === graph.fullName) ||
-				(graph.isGroup && graph.group.includes(file.annotationsAndPatternsToRender[i].series))
+				(graph.isGroup && graph.members.includes(file.annotationsAndPatternsToRender[i].series))
 			) {
 				console.log("Found", file.annotationsAndPatternsToRender[i]);
 
