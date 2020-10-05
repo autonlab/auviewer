@@ -5,14 +5,14 @@ import traceback
 
 from pathlib import Path
 from sqlalchemy import and_
-from sqlalchemy.orm import contains_eager
-from typing import List, Dict, Optional
+from sqlalchemy.orm import contains_eager, joinedload
+from typing import AnyStr, List, Dict, Optional, Union
 
 from . import models
 from .patternset import PatternSet
 from .config import config
 from .file import File
-from .shared import annotationOrPatternOutput, createEmptyJSONFile
+from .shared import annotationDataFrame, annotationOrPatternOutput, createEmptyJSONFile
 
 class Project:
     """Represents an auviewer project."""
@@ -92,7 +92,50 @@ class Project:
         pdf['label'] = ''
         return pdf
 
-    def getAnnotationsOutput(self, user_id):
+    def getAnnotations(
+            self,
+            file_id: Union[int, List[int], None] = None,
+            pattern_id: Union[int, List[int], None] = None,
+            pattern_set_id: Union[int, List[int], None]=None,
+            series: Union[AnyStr, List[AnyStr], None]=None,
+            user_id: Union[int, List[int], None] = None) -> pd.DataFrame:
+        """
+        Returns a dataframe of the annotations for this project, optionally
+        matching specified criteria.
+        """
+
+        # Prepare input
+
+        if not isinstance(file_id, List) and file_id is not None:
+            file_id = [file_id]
+        if not isinstance(pattern_id, List) and pattern_id is not None:
+            pattern_id = [pattern_id]
+        if not isinstance(pattern_set_id, List) and pattern_set_id is not None:
+            pattern_set_id = [pattern_set_id]
+        if not isinstance(series, List) and series is not None:
+            series = [series]
+        if not isinstance(user_id, List) and user_id is not None:
+            user_id = [user_id]
+
+        # Query
+        q = models.Annotation.query.options(joinedload('user'))
+
+        # Filter query as necessary
+        if file_id is not None:
+            q = q.filter(models.Annotation.file_id.in_(file_id))
+        if pattern_id is not None:
+            q = q.filter(models.Annotation.pattern_id.in_(pattern_id))
+        if pattern_set_id is not None:
+            q = q.filter(models.Annotation.pattern_set_id.in_(pattern_set_id))
+        if series is not None:
+            q = q.filter(models.Annotation.series.in_(series))
+        if user_id is not None:
+            q = q.filter(models.Annotation.user_id.in_(user_id))
+
+        # Return the dataframe
+        return annotationDataFrame(q.filter(models.Annotation.project_id == self.id).all())
+
+    def getAnnotationsOutput(self, user_id: int):
         """Returns a list of user's annotations for all files in the project"""
         return [[a.id, a.file_id, Path(a.file.path).name, a.series, a.left, a.right, a.top, a.bottom, a.label, a.pattern_id] for a in models.Annotation.query.filter_by(user_id=user_id, project_id=self.id).all()]
 

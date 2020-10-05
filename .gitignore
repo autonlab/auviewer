@@ -1,6 +1,7 @@
 __pycache__/
 env/
 .idea/
+.ipynb_checkpoints/
 *.c
 *.pyc
 *.so

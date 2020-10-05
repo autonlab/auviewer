@@ -1,9 +1,11 @@
 """Class and related functionality for pattern sets."""
 
-from . import models
 from pathlib import Path
 from sqlalchemy.orm import joinedload
 import pandas as pd
+
+from . import models
+from .shared import annotationDataFrame
 
 class PatternSet:
 
@@ -102,26 +104,8 @@ class PatternSet:
         return models.Annotation.query.filter_by(pattern_set_id=self.id).count()
 
     def getAnnotations(self) -> pd.DataFrame:
-        """Returns a DataFrame of the patterns in this set."""
-        return pd.DataFrame(
-            [[
-                a.file.id,
-                Path(a.file.path).name,
-                a.user.id, a.user.email,
-                a.user.first_name,
-                a.user.last_name,
-                a.pattern_id,
-                a.series,
-                a.left,
-                a.right,
-                a.top,
-                a.bottom,
-                a.label,
-                a.created_at,
-                f"{self.projparent.id}_{a.file.id}_{a.series}_{a.left}_{a.right}_{a.top}_{a.bottom}",
-            ] for a in models.Annotation.query.options(joinedload('user')).filter_by(pattern_set_id=self.id).all()],
-            columns=['file_id', 'filename', 'user_id', 'user_email', 'user_firstname', 'user_lastname', 'pattern_id', 'series', 'left', 'right', 'top', 'bottom', 'label', 'created', 'pattern_identifier']
-        )
+        """Returns a DataFrame of the annotations in this set."""
+        return annotationDataFrame(models.Annotation.query.options(joinedload('user')).filter_by(pattern_set_id=self.id).all())
 
     def getPatternCount(self) -> int:
         """Returns a count of the patterns in this set."""
