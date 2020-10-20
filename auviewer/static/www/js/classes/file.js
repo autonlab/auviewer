@@ -1033,11 +1033,13 @@ File.prototype.processNewRealtimeData = function(newData) {
 };
 
 // Rebuilds the merged set of annotations & patterns to render.
+// NOTE: Does not redraw.
 File.prototype.rebuildRenderSet = function() {
 	this.annotationsAndPatternsToRender = [];
 	for (const set of this.annotationSets.concat(this.patternSets)) {
 		if (set.display === true) {
-			set.setDisplay(true);
+			// Set display to true, but suppress redraw
+			set.setDisplay(true, true);
 		}
 	}
 };

@@ -45,6 +45,11 @@ function Graph(seriesOrGroupName, file) {
 
 	}
 
+	// TODO(gus): Temp
+	if (this.isGroup) {
+		console.log("HERE'S JOHNNY!", this.template);
+	}
+
 	// Assemble the alt text
 	this.altText = "";
 	for (let sn of this.members) {

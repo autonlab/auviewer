@@ -1,44 +1,44 @@
-from setuptools import setup, find_packages
-import numpy as np
+from setuptools import setup, find_packages, Extension
+import argparse
 import os
 from glob import glob
-from Cython.Build import cythonize
 
 from auviewer import __VERSION__
 
 NAME = 'auviewer'
 VERSION = __VERSION__
 
+RECOMPILE_CYTHON = False
+
+ext = '.pyx' if RECOMPILE_CYTHON else '.c'
+include_dirs = []
+extensions = [Extension("auviewer.cylib", ["auviewer/cylib"+ext])]
+if RECOMPILE_CYTHON:
+    from Cython.Build import cythonize
+    from numpy import get_include
+    extensions = cythonize(extensions, language_level=3)
+    include_dirs=[get_include()]
 
 def read(fn):
     return open(os.path.join(os.path.dirname(__file__), fn)).read()
 
-
-pkg_files = []
-for elem in glob('auviewer/static/**/*', recursive=True):
-    if os.path.isfile(elem): pkg_files.append(elem.replace('auviewer/', ''))
+pkg_files = [elem.replace('auviewer/', '') for elem in glob('auviewer/static/**/*', recursive=True) if os.path.isfile(elem)]
 
 setup(
     name=NAME,
     version=VERSION,
-    description='A general-purpous time series exploration tool.',
-    long_description=read('README.md'),
+    description='A general-purpose time series exploration & annotation tool.',
+    long_description='',
     author='Gus Welter',
     author_email='gwelter@cmu.edu',
-    license='GNU LGPL 3',
+    license='MIT',
     entry_points={
         'console_scripts': [
-            'auviewer=auviewer.server.serve:main',
-
-            'auv-clean=auviewer.tools.clean:main',
-            'auv-generate-json-templates=auviewer.tools.generate_json_templates:main',
-            'auv-realtime-client=auviewer.tools.rtclient:main',
-            'auv-use-as-module=auviewer.tools.use_as_module:main',
-            'auv-watch-realtime-files=auviewer.tools.watch_realtime_files:main'
+            'auv=auviewer.serve:main'
         ]
     },
-	ext_modules=cythonize('auviewer/server/*.pyx', language_level=3),
-    include_dirs=[np.get_include()],
+	ext_modules=extensions,
+    include_dirs=include_dirs,
     package_data={'auviewer': pkg_files},
     include_package_data=True,
     install_requires=[
@@ -60,8 +60,6 @@ setup(
         'pycrypto',
         'python-socketio',
         'simplejson',
-        'watchdog',
-
     ],
     packages=find_packages()
 )

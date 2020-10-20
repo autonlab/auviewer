@@ -115,15 +115,15 @@ class Set {
 	// NOTE: This function is not idempotent. If setDisplay(true) is called
 	// twice, the set will add itself to the render set twice. This is so that
 	// the function can be used to rebuild the render set.
-	setDisplay(status) {
+	setDisplay(status, suppressredraw=false) {
 		if (status === true) {
 			this.display = true;
 			this.parentFile.annotationsAndPatternsToRender = this.parentFile.annotationsAndPatternsToRender.concat(this.members);
-			this.parentFile.triggerRedraw();
+			!suppressredraw && this.parentFile.triggerRedraw();
 		} else if (status === false) {
 			this.display = false;
 			this.parentFile.rebuildRenderSet();
-			this.parentFile.triggerRedraw();
+			!suppressredraw && this.parentFile.triggerRedraw();
 		} else {
 			console.log("Error! Unexpected value passed to Set.setDisplay(status).")
 		}

@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+# Get project root relative to this script file
+prjroot="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd )"
+docs="$( cd "${prjroot}/docs" > /dev/null 2>&1 && pwd )"
+pkg="$( cd "${prjroot}/auviewer" > /dev/null 2>&1 && pwd )"
+
+make --directory=${docs} clean
+rm -r ${docs}/source/_api
+sphinx-apidoc -f -o ${docs}/source/_api ${pkg} \
+  ${pkg}/flask_user \
+  ${pkg}/config.py \
+  ${pkg}/cylib.* \
+  ${pkg}/downsampleset.py \
+  ${pkg}/models.py \
+  ${pkg}/rawdata.py \
+  ${pkg}/shared.py
+make --directory=${docs} html
+google-chrome ${docs}/build/html/index.html

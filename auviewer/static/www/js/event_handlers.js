@@ -408,6 +408,18 @@ function handleUnderlayRedraw(canvas, area, g) {
 
 	// console.log(canvas, area, g, Object.getOwnPropertyNames(g.setIndexByName_));
 
+	console.log("HI THERE", area, canvas)
+	canvas.strokeStyle = '#bb0000';
+	//canvas.fillRect(area.x, area.y+Math.floor(area.h/2), area.w, 1);
+	canvas.setLineDash([5,3]);
+	canvas.beginPath()
+	console.log("from", area.x, area.y+Math.floor(area.h/2))
+	console.log("to", area.x+area.w, Math.floor(area.h/2))
+	canvas.moveTo(area.x, area.y+Math.floor(area.h/2));
+	canvas.lineTo(area.x+area.w, Math.floor(area.h/2));
+	canvas.stroke();
+	canvas.setLineDash([]);
+
 	// We need to make multiple passes to render in layers.
 	for (let currentPassLayer = 0; currentPassLayer < 5; currentPassLayer++) {
 
