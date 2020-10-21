@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+./clean
+
+# Build sdist
+printf "\nBuilding sdist\n"
+(cd ..; python setup.py sdist)
+
+printf "\nTo be uploaded:\n"
+ls -lah ../dist
+printf "\n"
+
+# Upload to PyPI
+twine upload --repository testpypi ../dist/*

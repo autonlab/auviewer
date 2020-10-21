@@ -2,9 +2,11 @@
 
 # Rebuild from source and install
 
+./clean
+
 (cd ..; python setup.py bdist_wheel)
 
 # Copy the cython library to the source for debugging.
-#cp -v ../build/lib.*/auviewer/cylib.*.so ../auviewer/.
+cp -v ../build/lib.*/auviewer/cylib.*.so ../auviewer/.
 
 pip install -U ../dist/*.whl

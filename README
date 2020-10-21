@@ -1,5 +1,25 @@
 # New Content (to be organized)
 
+## Building & Publishing
+
+To build from source and install locally:
+```bash
+cd tools
+./rebuild
+```
+
+To build from source and publish Linux (wheels and source):
+```bash
+cd tools
+./publish_linux
+```
+
+To build from source and publish Mac wheel:
+```bash
+cd tools
+./publish_mac
+```
+
 ## AUViewer Use Cases
 
 AUViewer allows the following primary use cases:

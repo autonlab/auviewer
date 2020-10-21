@@ -13,10 +13,9 @@ printf "\nBuilding sdist\n"
 printf "\nBuilding manywheel\n"
 docker run --rm -e PLAT=manylinux2014_x86_64 -v ${prjroot}:/io quay.io/pypa/manylinux2014_x86_64 /io/tools/build_manywheel
 
-
-
 printf "\nTo be uploaded:\n"
 ls -lah ../dist
 printf "\n"
 
+# Upload to PyPI
 twine upload --repository testpypi ../dist/*
