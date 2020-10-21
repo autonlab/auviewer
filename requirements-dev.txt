@@ -16,3 +16,4 @@ psutil
 pycrypto
 simplejson
 sqlalchemy
+twine

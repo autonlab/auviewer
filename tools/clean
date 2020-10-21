@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# Clean build files
+
+rm -rfv ../build
+rm -rfv ../dist
+rm -rfv ../*.egg-info

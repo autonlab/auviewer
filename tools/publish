@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+# Get project root relative to this script
+prjroot="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd )"
+
+./clean
+
+# Build sdist
+printf "\nBuilding sdist\n"
+(cd ..; python setup.py sdist)
+
+# Build manywheel Linux wheel
+printf "\nBuilding manywheel\n"
+docker run --rm -e PLAT=manylinux2014_x86_64 -v ${prjroot}:/io quay.io/pypa/manylinux2014_x86_64 /io/tools/build_manywheel
+
+
+
+printf "\nTo be uploaded:\n"
+ls -lah ../dist
+printf "\n"
+
+twine upload --repository testpypi ../dist/*

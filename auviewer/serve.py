@@ -538,6 +538,7 @@ def main():
     elif Path(args.datapath).is_file():
 
         # If a file was provided, assume it's one-off view timeseries request
+        logging.warning("Running viewer against a single file, using a temp directory for data storage (annotations, etc. will be lost).")
 
         # Establish paths we'll be working wtih
         temp_datapath = Path(tempfile.gettempdir()) / 'auvdata'
