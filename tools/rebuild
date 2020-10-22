@@ -2,11 +2,15 @@
 
 # Rebuild from source and install
 
-./clean
+# Get project root relative to this script
+prjroot="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd )"
+[[ -z "$prjroot" ]] && { echo "Script location cannot be root." ; exit 1; }
 
-(cd ..; python setup.py bdist_wheel)
+"${prjroot}"/tools/clean
+
+(cd "${prjroot}"; python setup.py bdist_wheel)
 
 # Copy the cython library to the source for debugging.
-cp -v ../build/lib.*/auviewer/cylib.*.so ../auviewer/.
+cp -v "${prjroot}"/build/lib.*/auviewer/cylib.*.so "${prjroot}"/auviewer/.
 
-pip install -U ../dist/*.whl
+pip install -U "${prjroot}"/dist/*.whl

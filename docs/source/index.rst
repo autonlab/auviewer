@@ -15,6 +15,7 @@ exploration & annotation tool. The code can be found on Github_.
    :maxdepth: 2
    :caption: Contents:
 
+   getstarted
    Atitle <testnb.ipynb>
 
 API Reference

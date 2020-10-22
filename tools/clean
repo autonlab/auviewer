@@ -2,6 +2,10 @@
 
 # Clean build files
 
-rm -rfv ../build
-rm -rfv ../dist
-rm -rfv ../*.egg-info
+# Get project root relative to this script
+prjroot="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd )"
+[[ -z "$prjroot" ]] && { echo "Script location cannot be root." ; exit 1; }
+
+rm -rfv "${prjroot}"/build
+rm -rfv "${prjroot}"/dist
+rm -rfv "${prjroot}"/*.egg-info
