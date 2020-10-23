@@ -3,27 +3,39 @@ Getting Started
 
 Overview
 --------
-AUViewer is a tool for viewing & annotating time series data. It can be used as a standalone tool for individual use or
+AUViewer is a tool for viewing & annotating time series data. It can be used as a standalone tool or
 as a web-based application served to many users for annotation.
 
 Installation
 ------------
 .. code-block:: bash
+
    pip install auviewer
 
 Usage
 -----
 
+Single-File Mode
+````````````````
+
 To view a single file:
+
 .. code-block:: bash
+
    auv myfile.h5
-   # or
+
+or
+
+.. code-block:: bash
+
    python -m auviewer.serve myfile.h5
 
 *Note*: A temporary data folder will be used, and thus any annotations, etc. made to the database will be lost.
 
 To run the viewer normally:
+
 .. code-block:: bash
+
    auv /path/to/auv_data_folder
    # or
    python -m auviewer.serve /path/to/auv_data_folder

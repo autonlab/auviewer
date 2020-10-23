@@ -11,7 +11,7 @@ NAME = 'auviewer'
 VERSION = __VERSION__
 
 # TODO(gus): Temp
-VERSION = VERSION + '.2'
+VERSION = VERSION + '.rc1'
 
 RECOMPILE_CYTHON = False
 
@@ -43,9 +43,11 @@ setup(
     name=NAME,
     version=VERSION,
     description='A general-purpose time series exploration & annotation tool.',
-    long_description='',
+    long_description='AUViewer is a tool for viewing & annotating time series data, usable as a standalone tool for individual use or as a web-based application served to many users for annotation.',
     author='Gus Welter',
     author_email='gwelter@cmu.edu',
+    maintainer='Gus Welter',
+    maintainer_email='gwelter@cmu.edu',
     license='MIT',
     entry_points={
         'console_scripts': [
@@ -75,5 +77,12 @@ setup(
         'simplejson',
     ],
     packages=find_packages(),
-    setup_requires=['numpy']
+    setup_requires=['numpy'],
+    url='https://github.com/autonlab/auviewer',
+    classifiers=[
+        "Operating System :: OS Independent",
+        "Intended Audience :: Science/Research",
+        "Programming Language :: Python :: 3.8",
+        "Topic :: Scientific/Engineering",
+    ],
 )

@@ -4,6 +4,14 @@ auviewer package
 Submodules
 ----------
 
+auviewer.api module
+-------------------
+
+.. automodule:: auviewer.api
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 auviewer.file module
 --------------------
 
