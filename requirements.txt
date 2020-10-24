@@ -5,8 +5,9 @@ flask
 flask_login
 flask_mail
 flask_sqlalchemy
-flask_wtf
+flask-wtf
 htmlmin
+jsbeautifier
 numpy
 pandas
 passlib

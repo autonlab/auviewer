@@ -8,6 +8,7 @@ flask_mail
 flask_sqlalchemy
 flask_wtf
 htmlmin
+jsbeautifier
 jupyterlab
 nbsphinx
 numpy

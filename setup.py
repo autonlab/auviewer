@@ -11,7 +11,7 @@ NAME = 'auviewer'
 VERSION = __VERSION__
 
 # TODO(gus): Temp
-VERSION = VERSION + '.rc1'
+VERSION = VERSION + '.rc4'
 
 RECOMPILE_CYTHON = False
 
@@ -59,6 +59,7 @@ setup(
     package_data={NAME: pkg_files},
     install_requires=[
         'audata',
+        'bcrypt',
         'email_validator',
         'flask',
         'flask-login',
@@ -73,6 +74,7 @@ setup(
         'psutil',
         'pycrypto',
         'simplejson',
+        'sqlalchemy',
     ],
     packages=find_packages(),
     setup_requires=['numpy'],
