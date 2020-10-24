@@ -4,3 +4,5 @@ python:
   version: 3.8
   install:
     - requirements: requirements-dev.txt
+    - method: setuptools
+      path: auviewer
