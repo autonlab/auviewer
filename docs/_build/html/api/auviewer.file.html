@@ -1,0 +1,376 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>auviewer.file module &mdash; Auton Universal Viewer  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="auviewer.patternset module" href="auviewer.patternset.html" />
+    <link rel="prev" title="auviewer.api module" href="auviewer.api.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html">
+          
+
+          
+            
+            <img src="../_static/auv_logo.jpg" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#pypi">PyPI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#building-from-source">Building from Source</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../getstarted.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../getstarted.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getstarted.html#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../getstarted.html#single-file-mode">Single-File Mode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../getstarted.html#regular-mode">Regular Mode</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../getstarted.html#file-format">File Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../about.html#design-choices">Design Choices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../about.html#tradeoffs-implications">Tradeoffs &amp; Implications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../about.html#created-for-you-by">Created for You By</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../about.html#additional-contributors">Additional Contributors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../about.html#interested-in-contributing">Interested in Contributing?</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="auviewer.html">Python API</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="auviewer.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="auviewer.api.html">auviewer.api module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">auviewer.file module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auviewer.patternset.html">auviewer.patternset module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auviewer.project.html">auviewer.project module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auviewer.series.html">auviewer.series module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="auviewer.serve.html">auviewer.serve module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Source Code</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/autonlab/auviewer/">GitHub</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Auton Universal Viewer</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="auviewer.html">auviewer package</a> &raquo;</li>
+        
+      <li>auviewer.file module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/api/auviewer.file.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="module-auviewer.file">
+<span id="auviewer-file-module"></span><h1>auviewer.file module<a class="headerlink" href="#module-auviewer.file" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="auviewer.file.File">
+<em class="property">class </em><code class="sig-prename descclassname">auviewer.file.</code><code class="sig-name descname">File</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">projparent</span></em>, <em class="sig-param"><span class="n">id</span></em>, <em class="sig-param"><span class="n">origFilePathObj</span></em>, <em class="sig-param"><span class="n">procFilePathObj</span></em>, <em class="sig-param"><span class="n">processNewFiles</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#auviewer.file.File" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt id="auviewer.file.File.addSeriesData">
+<code class="sig-name descname">addSeriesData</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">seriesData</span></em><span class="sig-paren">)</span><a class="headerlink" href="#auviewer.file.File.addSeriesData" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="auviewer.file.File.createAnnotation">
+<code class="sig-name descname">createAnnotation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">user_id</span></em>, <em class="sig-param"><span class="n">left</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">right</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">top</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">bottom</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">seriesID</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">label</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">pattern_id</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#auviewer.file.File.createAnnotation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="auviewer.file.File.deleteAnnotation">
+<code class="sig-name descname">deleteAnnotation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">user_id</span></em>, <em class="sig-param"><span class="n">id</span></em><span class="sig-paren">)</span><a class="headerlink" href="#auviewer.file.File.deleteAnnotation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="auviewer.file.File.detectPatterns">
+<code class="sig-name descname">detectPatterns</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">type</span></em>, <em class="sig-param"><span class="n">series</span></em>, <em class="sig-param"><span class="n">thresholdlow</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">thresholdhigh</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">duration</span><span class="o">=</span><span class="default_value">300</span></em>, <em class="sig-param"><span class="n">persistence</span><span class="o">=</span><span class="default_value">0.7</span></em>, <em class="sig-param"><span class="n">maxgap</span><span class="o">=</span><span class="default_value">300</span></em>, <em class="sig-param"><span class="n">series2</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">expected_frequency</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">min_density</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#auviewer.file.File.detectPatterns" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="auviewer.file.File.getEvents">
+<code class="sig-name descname">getEvents</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#auviewer.file.File.getEvents" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="auviewer.file.File.getInitialPayload">
+<code class="sig-name descname">getInitialPayload</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">user_id</span></em><span class="sig-paren">)</span><a class="headerlink" href="#auviewer.file.File.getInitialPayload" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="auviewer.file.File.getMetadata">
+<code class="sig-name descname">getMetadata</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#auviewer.file.File.getMetadata" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="auviewer.file.File.getSeries">
+<code class="sig-name descname">getSeries</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">seriesid</span></em><span class="sig-paren">)</span><a class="headerlink" href="#auviewer.file.File.getSeries" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="auviewer.file.File.getSeriesNames">
+<code class="sig-name descname">getSeriesNames</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#auviewer.file.File.getSeriesNames" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="auviewer.file.File.getSeriesOrCreate">
+<code class="sig-name descname">getSeriesOrCreate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">seriesid</span></em><span class="sig-paren">)</span><a class="headerlink" href="#auviewer.file.File.getSeriesOrCreate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="auviewer.file.File.getSeriesRangedOutput">
+<code class="sig-name descname">getSeriesRangedOutput</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">seriesids</span></em>, <em class="sig-param"><span class="n">start</span></em>, <em class="sig-param"><span class="n">stop</span></em><span class="sig-paren">)</span><a class="headerlink" href="#auviewer.file.File.getSeriesRangedOutput" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="auviewer.file.File.load">
+<code class="sig-name descname">load</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#auviewer.file.File.load" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="auviewer.file.File.loadSeriesFromDataset">
+<code class="sig-name descname">loadSeriesFromDataset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ds</span></em><span class="sig-paren">)</span><a class="headerlink" href="#auviewer.file.File.loadSeriesFromDataset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="auviewer.file.File.mode">
+<code class="sig-name descname">mode</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#auviewer.file.File.mode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="auviewer.file.File.process">
+<code class="sig-name descname">process</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#auviewer.file.File.process" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="auviewer.file.File.updateAnnotation">
+<code class="sig-name descname">updateAnnotation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">user_id</span></em>, <em class="sig-param"><span class="n">id</span></em>, <em class="sig-param"><span class="n">left</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">right</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">top</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">bottom</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">seriesID</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">label</span><span class="o">=</span><span class="default_value">''</span></em><span class="sig-paren">)</span><a class="headerlink" href="#auviewer.file.File.updateAnnotation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="auviewer.patternset.html" class="btn btn-neutral float-right" title="auviewer.patternset module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="auviewer.api.html" class="btn btn-neutral float-left" title="auviewer.api module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Auton Lab, Carnegie Mellon University
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -17,7 +17,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'AUViewer'
+project = 'Auton Universal Viewer'
 copyright = '2020, Auton Lab, Carnegie Mellon University'
 author = 'Gus Welter, Anthony Wertz, Artur Dubrawski'
 
@@ -36,7 +36,7 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['flask_user']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -51,6 +51,11 @@ html_theme_options = {
     'collapse_navigation': False,
 }
 html_logo='_static/img/auv_logo.jpg'
+html_context = {
+    'github_user': 'autonlab',
+    'github_repo': 'auviewer',
+    'github_version': 'master',
+}
 html_css_files = [
     "css/custom.css",
 ]

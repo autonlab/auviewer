@@ -6,8 +6,8 @@ docs="$( cd "${prjroot}/docs" > /dev/null 2>&1 && pwd )"
 pkg="$( cd "${prjroot}/auviewer" > /dev/null 2>&1 && pwd )"
 
 make --directory=${docs} clean
-rm -r ${docs}/source/_api
-sphinx-apidoc -feTM -H "TESTHEADER" -o ${docs}/source/_api ${pkg} \
+rm -r ${docs}/api
+sphinx-apidoc -feTM -o ${docs}/api ${pkg} \
   ${pkg}/flask_user \
   ${pkg}/config.py \
   ${pkg}/cylib.* \
@@ -16,4 +16,12 @@ sphinx-apidoc -feTM -H "TESTHEADER" -o ${docs}/source/_api ${pkg} \
   ${pkg}/rawdata.py \
   ${pkg}/shared.py
 make --directory=${docs} html
-google-chrome ${docs}/build/html/index.html
+
+# Open the docs in Chrome
+if command -v google-chrome &> /dev/null
+then
+  google-chrome ${docs}/build/html/index.html
+else
+  open -a "Google Chrome" ${docs}/_build/html/index.html
+fi
+exit

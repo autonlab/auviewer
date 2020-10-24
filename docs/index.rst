@@ -16,22 +16,10 @@ Auton Universal Viewer (AUViewer) can be used as a standalone tool to view &
 analyze time-series data or as a web-based application served to many users to
 facilitate expert annotation.
 
-Benefits
---------
-*
-*
 
 .. image:: _static/img/screenshot.png
    :width: 100%
    :alt: AUViewer Screenshot
-
-
-.. toctree::
-   :hidden:
-   :name: mastertoc
-   :maxdepth: 2
-
-   Atitle <testnb.ipynb>
 
 
 .. toctree::
@@ -51,7 +39,7 @@ Benefits
    :caption: Documentation
    :name: sec-documentation
 
-   Python API <_api/auviewer>
+   Python API <api/auviewer>
    license
 
 .. toctree::

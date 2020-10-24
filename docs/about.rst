@@ -12,11 +12,12 @@ large time-series data
     limit and still remain performant for a user in a browser on a standard
     internet connection.
 across the internet
-    Using a standard internet connection, e.g. 1 Mbps download
+    Using a basic internet connection, e.g. 1 Mbps download
 portable
-    Many systems for working with large datasets require software installation.
-    AUViewer was made to handle such tasks with no software installation,
-    special compute resources, or special bandwidth requirements.
+    Many software packages for working with large datasets require software
+    installation. AUViewer was made to handle such tasks with no software
+    installation, special compute resources, or special bandwidth required of
+    the end user.
 
 Tradeoffs & Implications
 ------------------------

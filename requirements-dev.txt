@@ -8,11 +8,15 @@ flask_mail
 flask_sqlalchemy
 flask_wtf
 htmlmin
+jupyterlab
+nbsphinx
 numpy
 pandas
 passlib
 psutil
 pycrypto
+sphinx
+sphinx_rtd_theme
 simplejson
 sqlalchemy
 twine
