@@ -1,7 +1,6 @@
 from flask import Flask, Blueprint, send_from_directory, request, render_template, render_template_string, abort
 from flask_login import current_user
 from flask_mail import Mail
-from flask_socketio import SocketIO, join_room, leave_room, rooms
 from htmlmin.main import minify
 from pathlib import Path
 from pprint import pprint
@@ -33,9 +32,6 @@ def createApp():
 
     # Instantiate the Flask web application class
     app = Flask(__name__, template_folder=str(config['codeRootPathObj'] / 'static' / 'www' / 'templates'))
-
-    # Instantiate SocketIO
-    socketio = SocketIO(app)
 
     # Make the root web path available for templates
     @app.context_processor
@@ -413,72 +409,6 @@ def createApp():
                 {% endblock %}
                 """)
 
-    @socketio.on('add_data')
-    def handle_add_data(json):
-
-        logging.info('received socketio: add_data')
-        logging.info('msg data:', json)
-
-        try:
-
-            updates = rtf.addSeriesData(json)
-
-            # Broadcast the new data to subscribers
-            socketio.emit('new_data', updates, room='__realtime____^^____realtime__')
-
-        except Exception as e:
-
-            # TODO(gus): Report an error to user in a websocket response
-            raise e
-
-    # TODO(gus): Remove this and related
-    @socketio.on('push_template')
-    def handle_push_template(json):
-
-        logging.info('received socketio: push_template')
-        logging.info('msg data:', json)
-
-        # Verify we have the template in the dict
-        if 'template' not in json:
-            print('Error: handle_push_template did not receive template (data.template not found):', json)
-
-        # JSONify the template if not already
-        if not isinstance(json['template'], str):
-            json['template'] = simplejson.dumps(json['template'])
-
-        socketio.emit('push_template', json, broadcast=True)
-
-    @socketio.on('subscribe')
-    def handle_subscribe(json):
-
-        logging.info('received socketio: subscribe')
-        logging.info('msg data:', json)
-
-        try:
-
-            # Subscribe the user to realtime updates
-            subscribeToRealtimeUpdates(json['project'], json['filename'])
-
-        except Exception as e:
-
-            # TODO(gus): Report an error to user in a websocket response
-            raise e
-
-    @socketio.on('unsubscribe')
-    def handle_unsubscribe():
-
-        logging.info('received socketio: unsubscribe')
-
-        try:
-
-            # Subscribe the user to realtime updates
-            unsubscribeFromRealtimeUpdates()
-
-        except Exception as e:
-
-            # TODO(gus): Report an error to user in a websocket response
-            raise e
-
     ### HELPERS ###
 
     # Returns the named request parameter as a float or None if the parameter is
@@ -490,36 +420,7 @@ def createApp():
         else:
             return default
 
-    return app, socketio
-
-def subscribeToRealtimeUpdates(project, file):
-
-    # NOTE: It is not really necessary to track which project & file the user is
-    # subscribed to since, currently, it is only possible to subscribe to the
-    # realtime file (__realtime__, __realtime__). However, it was trivial to add
-    # this and it enables future expansion to have more than one realtime file.
-
-    # Unsubscribe the user from any rooms exception own sid
-    unsubscribeFromRealtimeUpdates()
-
-    # Name of new room to subscribe to
-    room = project + '__^^__' + file
-
-    # Subscribe the user to the new room (project)
-    join_room(room)
-
-    print('User', request.sid, 'has been subscribed to', room)
-
-def unsubscribeFromRealtimeUpdates():
-
-    # Get the user's sid
-    sid = request.sid
-
-    # Unsubscribe the user from any rooms exception own sid
-    for r in rooms():
-        if r != sid:
-            leave_room(r)
-            print('User', request.sid, 'has been unsubscribed from', r)
+    return app
 
 def main():
 
@@ -546,34 +447,27 @@ def main():
         gtdir = temp_datapath / 'global_templates'
         prjtmplt = gtdir / 'project_template.json'
 
-        target_file = Path(args.datapath)
+        target_file = Path(args.datapath).resolve()
         symlink_file = filedir / target_file.name
 
         logging.info(f"Using temporary data path {temp_datapath}")
 
-        # Unless we're simply re-running auviewer with the same target file as
-        # the previous run, delete the previous temp data folder
-        if temp_datapath.is_dir() and not symlink_file.exists():
-
-            # Delete our auvdata folder in temp if it already exists
+        # Delete the previous temp data folder if necessary
+        if temp_datapath.is_dir():
             shutil.rmtree(temp_datapath)
 
-        # Unless the target file has already been symlinked (from a previous run
-        # on the same file), rebuild the directory
-        if not symlink_file.exists():
+        # Create temp data, project, and originals folders recursively
+        filedir.mkdir(mode=0o700, parents=True, exist_ok=False)
 
-            # Create temp data, project, and originals folders recursively
-            filedir.mkdir(mode=0o700, parents=True, exist_ok=False)
+        # Create global templates folder
+        gtdir.mkdir(mode=0o700, exist_ok=False)
 
-            # Create global templates folder
-            gtdir.mkdir(mode=0o700, exist_ok=False)
+        # Create a global project template which shows all series by default
+        with prjtmplt.open('x') as f:
+            print('{ "series": { "_default": { "show": true } } }', file=f)
 
-            # Create a global project template which shows all series by default
-            with prjtmplt.open('x') as f:
-                print('{ "series": { "_default": { "show": true } } }', file=f)
-
-            # Establish symlink to the target file
-            symlink_file.symlink_to(target_file)
+        # Establish symlink to the target file
+        symlink_file.symlink_to(target_file)
 
         # Set datapath to our temp datapath
         set_data_path(temp_datapath)
@@ -582,7 +476,7 @@ def main():
         # Otherwise, set the data path provided
         set_data_path(args.datapath)
 
-    (app, socketio) = createApp()
+    app = createApp()
 
     # Open auviewer in the browser, just before we spin up the server
     browser_url = f"http://{config['host']}{':' + str(config['port']) if str(config['port']) != '80' else ''}/{config['rootWebPath']}".rstrip('/')
@@ -592,11 +486,7 @@ def main():
     else:
         threading.Timer(0.5, lambda: webbrowser.open(browser_url)).start()
 
-    socketio.run(app,
-        host=config['host'],
-        port=config['port'],
-        debug=config['debug'],
-        use_reloader=config['reloader'])
+    app.run(host=config['host'], port=config['port'], debug=config['debug'], use_reloader=False)
 
 
 # Start development web server

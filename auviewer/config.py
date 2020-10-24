@@ -63,7 +63,6 @@ config = {
     'host': 'localhost',
     'port': 8001,
     'debug': False,
-    'reloader': False,
 
     # Root directory from which the web application is served. Should begin with a
     # slash and end without a slash (in other words, end with a directory name). If
@@ -186,7 +185,6 @@ def load_config(cp):
         'host',
         'port',
         'debug',
-        'reloader',
 
         'rootWebPath',
         'secret_key',

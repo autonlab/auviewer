@@ -3,36 +3,70 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Auton Universal Viewer Documentation
-====================================
+Auton Universal Viewer
+======================
 
-This is documentation for the `auviewer` package, a general-purpose time series
-exploration & annotation tool. The code can be found on Github_.
+Welcome to the documentation site for Auton Universal Viewer, a free and
+open-source tool for viewing & annotating large time series datasets.
 
+Overview
+--------
+
+Auton Universal Viewer (AUViewer) can be used as a standalone tool to view &
+analyze time-series data or as a web-based application served to many users to
+facilitate expert annotation.
+
+Benefits
+--------
+*
+*
+
+.. image:: _static/img/screenshot.png
+   :width: 100%
+   :alt: AUViewer Screenshot
 
 
 .. toctree::
+   :hidden:
+   :name: mastertoc
    :maxdepth: 2
-   :caption: Contents:
 
-   getstarted
    Atitle <testnb.ipynb>
 
-API Reference
-=============
 
 .. toctree::
-   :maxdepth: 3
+   :hidden:
+   :maxdepth: 2
+   :caption: Getting Started
+   :name: sec-getstarted
 
-   _api/modules
+   installation
+   getstarted
+   about
 
 
+.. toctree::
+   :hidden:
+   :maxdepth: 2
+   :caption: Documentation
+   :name: sec-documentation
 
-Indices and tables
-==================
+   Python API <_api/auviewer>
+   license
+
+.. toctree::
+   :hidden:
+   :maxdepth: 2
+   :caption: Source Code
+   :name: sec-sourcecode
+
+   GitHub <https://github.com/autonlab/auviewer/>
+   Contributing <contributing>
+
+
+Site Map
+--------
 
 * :ref:`genindex`
 * :ref:`modindex`
-* :ref:`search`
 
-.. _Github: https://github.com/autonlab/auviewer

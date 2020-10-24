@@ -53,9 +53,6 @@ GlobalStateManager.prototype.exitRealtimeMode = function () {
 	// Reset & unload current main project
 	this.resetProject();
 
-	// Unsubscribe from realtime updates
-	socket.emit('unsubscribe');
-
 };
 
 // Returns a new unique graph identifier

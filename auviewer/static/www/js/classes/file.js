@@ -353,17 +353,6 @@ function File(parentProject, id, callback=null) {
 			// Synchronize the graphs
 			this.synchronizeGraphs();
 
-			// If this is a realtime file, subscribe to realtime updates via the
-			// websocket connection.
-			if (this.mode() === 'realtime') {
-
-				socket.emit('subscribe', {
-					project_id: this.parentProject.id,
-					file_id: this.id
-				});
-
-			}
-
 			let tt = performance.now() - t0;
 			globalAppConfig.performance && tt > globalAppConfig.performanceReportingThresholdGeneral && console.log("Initial file graph building took " + Math.round(tt) + "ms.", this.parentProject, this);
 

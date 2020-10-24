@@ -253,10 +253,10 @@ class Project:
 
         # If processNewFiles is true, then go through and process new files
         if processNewFiles:
-
+            print('a')
             # For each new project file which does not exist in the database...
             for newOrigFilePathObj in [p for p in self.originalsDirPathObj.iterdir() if p.is_file() and p.suffix == '.h5' and not any(map(lambda existingFilePathObj: p.samefile(existingFilePathObj), existingFilePathObjs))]:
-
+                print('b')
                 # Establish the path of the new processed file
                 newProcFilePathObj = self.processedDirPathObj / (newOrigFilePathObj.stem + '_processed.h5')
 

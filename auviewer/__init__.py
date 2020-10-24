@@ -15,5 +15,9 @@ __VERSION__ = f'{__VERSION_MAJOR__}.{__VERSION_MINOR__}.{__VERSION_BUILD__}{__VE
 
 # Set logging level to info
 import logging
-logging.basicConfig(level=logging.WARNING)
-logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
+if __DEBUG:
+    logging.basicConfig(level=logging.INFO)
+    logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+else:
+    logging.basicConfig(level=logging.WARNING)
+    logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)

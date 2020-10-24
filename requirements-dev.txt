@@ -5,7 +5,6 @@ email_validator
 flask
 flask_login
 flask_mail
-flask_socketio
 flask_sqlalchemy
 flask_wtf
 htmlmin

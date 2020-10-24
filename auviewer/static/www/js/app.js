@@ -24,54 +24,6 @@ if (navigator.userAgent.indexOf("Chrome") === -1) {
 
 }
 
-// Setup the websocket connection
-let socket = io();
-socket.on('connect', function() {
-	console.log('Connected to realtime connection.');
-});
-
-socket.on('new_data', function(data) {
-
-	// Log the received data
-	globalAppConfig.verbose && console.log('rcvd socketio new_data:', deepCopy(data));
-
-	// Grab the current file
-	let currentFile = globalStateManager.currentFile;
-
-	// If we're not in realtime mode, we cannot process incoming realtime data.
-	if (!currentFile || !(currentFile.parentProject.name === '__realtime__' && currentFile.name === '__realtime__')) {
-		console.log('Received new realtime data, but not in realtime mode. Ignoring.');
-		return;
-	}
-
-	// Send the new data for processing
-	currentFile.processNewRealtimeData(data);
-
-});
-
-socket.on('push_template', function(data) {
-
-	// Log the received data
-	globalAppConfig.verbose && console.log('rcvd socketio push_template:', deepCopy(data));
-
-	// Check for expected data format
-
-	// We expect template to be a string
-	if (!data.hasOwnProperty('template') || !(typeof data.template === 'string' || data.template instanceof String )) {
-		console.log("Error: push_template received data without template:", data);
-		return
-	}
-
-	// Parse parameters
-	let template = JSON.parse(data.template);
-	let project = data.hasOwnProperty('project') ? data.project : '';
-	let intfc = data.hasOwnProperty('interface') ? data.interface : '';
-
-	// Push template to the template system
-	templateSystem.providePushTemplate(template, project, intfc)
-
-});
-
 // Attach event handlers to the annotation modal
 $('#annotationModal button.saveButton').click(function() {
 	$('#annotationModal').data('callingAnnotation').save();

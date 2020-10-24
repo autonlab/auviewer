@@ -1,16 +1,13 @@
 Getting Started
 ===============
 
-Overview
---------
-AUViewer is a tool for viewing & annotating time series data. It can be used as a standalone tool or
-as a web-based application served to many users for annotation.
-
 Installation
 ------------
 .. code-block:: bash
 
    pip install auviewer
+
+For further details, see :doc:`installation`.
 
 Usage
 -----
@@ -32,12 +29,19 @@ or
 
 *Note*: A temporary data folder will be used, and thus any annotations, etc. made to the database will be lost.
 
+Regular Mode
+````````````
+
 To run the viewer normally:
 
 .. code-block:: bash
 
    auv /path/to/auv_data_folder
-   # or
+
+or
+
+.. code-block:: bash
+
    python -m auviewer.serve /path/to/auv_data_folder
 
 *Note*: When running for the first time, specify an empty (or non-existent) folder. AUViewer will create the folder and
@@ -49,3 +53,7 @@ AUViewer requires files in the *audata* or *ccdef* format. To convert other sour
 audata format, use the audata_ conversion tool.
 
 .. _audata: https://audata.readthedocs.io/en/latest/
+
+You may download a `sample file`_ to test the viewer (the file is in the *ccdef* format, which is a superset of the *audata* data standard).
+
+.. _sample file: https://github.com/autonlab/auviewer/blob/master/examples/sample_patient.h5

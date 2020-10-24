@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'AUViewer'
-copyright = '2020, Gus Welter, Anthony Wertz, Artur Dubrawski'
+copyright = '2020, Auton Lab, Carnegie Mellon University'
 author = 'Gus Welter, Anthony Wertz, Artur Dubrawski'
 
 
@@ -44,7 +44,23 @@ exclude_patterns = ['flask_user']
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
+# html_theme = 'sphinx_rtd_theme'
 html_theme = 'sphinx_rtd_theme'
+html_theme_options = {
+    'logo_only': True,
+    'collapse_navigation': False,
+}
+html_logo='_static/img/auv_logo.jpg'
+html_css_files = [
+    "css/custom.css",
+]
+
+# Custom sidebar templates, maps document names to template names.
+html_sidebars = {
+    '**': [
+        'about.html', 'navigation.html', 'searchbox.html',
+    ]
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

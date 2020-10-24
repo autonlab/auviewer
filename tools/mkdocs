@@ -7,7 +7,7 @@ pkg="$( cd "${prjroot}/auviewer" > /dev/null 2>&1 && pwd )"
 
 make --directory=${docs} clean
 rm -r ${docs}/source/_api
-sphinx-apidoc -f -o ${docs}/source/_api ${pkg} \
+sphinx-apidoc -feTM -H "TESTHEADER" -o ${docs}/source/_api ${pkg} \
   ${pkg}/flask_user \
   ${pkg}/config.py \
   ${pkg}/cylib.* \
