@@ -13,6 +13,7 @@ jupyterlab
 nbsphinx
 numpy
 pandas
+pandoc
 passlib
 psutil
 pycrypto

@@ -9,6 +9,8 @@ Installation
 
 For further details, see :doc:`installation`.
 
+*Requires Python 3.8*
+
 Usage
 -----
 

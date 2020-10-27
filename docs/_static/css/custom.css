@@ -12,18 +12,24 @@
     --content-background-color: #fcfcfc;
     --logo-opacity: 1.0;
     --navbar-background-color: #333f67;
+    --OLD-navbar-background-color: #333f67;
     --navbar-background-color-hover: #29355c;
+    --OLD-navbar-background-color-hover: #29355c;
     --navbar-background-color-active: #212d51;
+    --OLD-navbar-background-color-active: #212d51;
     --navbar-current-background-color: #212d51;
+    --OLD-navbar-current-background-color: #212d51;
     --navbar-current-background-color-hover: #182343;
+    --OLD-navbar-current-background-color-hover: #182343;
     --navbar-current-background-color-active: #131e3b;
+    --OLD-navbar-current-background-color-active: #131e3b;
     --navbar-level-1-color: #c3e3ff;
     --navbar-level-2-color: #b8d6f0;
     --navbar-level-3-color: #a3c4e1;
-    --navbar-heading-color: #ff7381;
-    --navbar-scrollbar-color: #d45a66;
-    --navbar-scrollbar-hover-color: #b14550;
-    --navbar-scrollbar-active-color: #72383e;
+    --navbar-heading-color: #c41230;
+    --navbar-scrollbar-color: #cd5169;
+    --navbar-scrollbar-hover-color: #c4465a;
+    --navbar-scrollbar-active-color: #761223;
     --navbar-scrollbar-background: #131e2b;
 
     --link-color: #2980b9;
@@ -98,11 +104,17 @@
         /* Decrease the logo opacity when using the dark theme to be less distracting */
         --logo-opacity: 0.85;
         --navbar-background-color: #25282b;
+        --OLD-navbar-background-color: #25282b;
         --navbar-background-color-hover: #333639;
+        --OLD-navbar-background-color-hover: #333639;
         --navbar-background-color-active: #111417;
+        --OLD-navbar-background-color-active: #111417;
         --navbar-current-background-color: #333639;
+        --OLD-navbar-current-background-color: #333639;
         --navbar-current-background-color-hover: #44474a;
+        --OLD-navbar-current-background-color-hover: #44474a;
         --navbar-current-background-color-active: #222528;
+        --OLD-navbar-current-background-color-active: #222528;
         --navbar-level-1-color: #ddd;
         --navbar-level-2-color: #ccc;
         --navbar-level-3-color: #bbb;

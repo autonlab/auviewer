@@ -20,7 +20,7 @@ make --directory=${docs} html
 # Open the docs in Chrome
 if command -v google-chrome &> /dev/null
 then
-  google-chrome ${docs}/build/html/index.html
+  google-chrome ${docs}/_build/html/index.html
 else
   open -a "Google Chrome" ${docs}/_build/html/index.html
 fi

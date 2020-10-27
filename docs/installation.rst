@@ -10,7 +10,7 @@ The auviewer Python package may be installed from PyPI_ with::
 
 .. _PyPI: https://pypi.org/project/auviewer/
 
-Python 3.8 is required.
+*Requires Python 3.8*
 
 Building from Source
 --------------------

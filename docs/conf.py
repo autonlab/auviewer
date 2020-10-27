@@ -50,7 +50,8 @@ html_theme_options = {
     'logo_only': True,
     'collapse_navigation': False,
 }
-html_logo='_static/img/auv_logo.jpg'
+html_logo='_static/img/auv_logo.png'
+html_favicon='_static/img/favicon.ico'
 html_context = {
     'github_user': 'autonlab',
     'github_repo': 'auviewer',

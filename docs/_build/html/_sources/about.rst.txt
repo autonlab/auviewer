@@ -33,12 +33,12 @@ order of 20GB of additional space for pre-computed downsample data).
 
 Created for You By
 ------------------
-Auton Universal Viewer was created for you by `Gus Welter`_, `Anthony Wertz`_, and `Artur Dubrawski`_ of the
+Auton Universal Viewer was created for you by `Gus Welter`_, `Anthony Wertz`_, and `Dr. Artur Dubrawski`_ of the
 `Auton Lab`_ at `Carnegie Mellon University`_.
 
 .. _Gus Welter: https://www.ri.cmu.edu/ri-people/gus-welter/
 .. _Anthony Wertz: https://www.ri.cmu.edu/ri-people/anthony-t-wertz/
-.. _Artur Dubrawski: https://www.ri.cmu.edu/ri-faculty/artur-w-dubrawski/
+.. _Dr. Artur Dubrawski: https://www.ri.cmu.edu/ri-faculty/artur-w-dubrawski/
 .. _Auton Lab: https://www.autonlab.org/
 .. _Carnegie Mellon University: https://www.cmu.edu/
 
