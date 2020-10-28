@@ -1,4 +1,4 @@
-"""Initializes the package."""
+"""AUViewer package."""
 
 __VERSION_MAJOR__ = '0'
 __VERSION_MINOR__ = '1'

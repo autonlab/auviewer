@@ -61,4 +61,4 @@ Additional contributors & collaborators include:
 Interested in Contributing?
 ```````````````````````````
 
-Are you interested in contributing to Auton Universal Viewer? Please see :doc:`contributing`
+Are you interested in contributing to Auton Universal Viewer? Please see :doc:`contributing/motivation`

@@ -1,0 +1,513 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Technical Overview &mdash; Auton Universal Viewer  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="author" title="About these documents" href="../about.html" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Contributing to Auton Universal Viewer" href="motivation.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html">
+          
+
+          
+            
+            <img src="../_static/auv_logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#pypi">PyPI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#building-from-source">Building from Source</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../getstarted.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../getstarted.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getstarted.html#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../getstarted.html#single-file-mode">Single-File Mode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../getstarted.html#regular-mode">Regular Mode</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../getstarted.html#file-format">File Format</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../about.html">About</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../about.html#design-choices">Design Choices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../about.html#tradeoffs-implications">Tradeoffs &amp; Implications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../about.html#created-for-you-by">Created for You By</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../about.html#additional-contributors">Additional Contributors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../about.html#interested-in-contributing">Interested in Contributing?</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../documentation/datadir.html">Data Directory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/auviewer.html">Python API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/auviewer.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/auviewer.api.html">auviewer.api module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/auviewer.file.html">auviewer.file module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/auviewer.patternset.html">auviewer.patternset module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/auviewer.project.html">auviewer.project module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/auviewer.series.html">auviewer.series module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/auviewer.serve.html">auviewer.serve module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Contributing</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="motivation.html">Motivation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="motivation.html#motivation">Motivation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="motivation.html#contributing">Contributing</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Technical Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#building-publishing">Building &amp; Publishing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#build-from-source-install-locally">Build from source &amp; install locally</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#clean-up-source-builds">Clean up source builds</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#generate-sphinx-documentation">Generate Sphinx documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#build-from-source-and-publish-linux-wheels-and-source">Build from source and publish Linux (wheels and source)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#build-from-source-and-publish-mac-wheel">Build from source and publish Mac wheel</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#viewer-use-cases">Viewer Use Cases</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#detailed-viewer-use-cases">Detailed Viewer Use Cases</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#technical-documentation">Technical Documentation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#technical-architecture">Technical Architecture</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#strategies">Strategies</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#patterns-conventions">Patterns &amp; Conventions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#backend-configuration">Backend Configuration</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Source Code</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/autonlab/auviewer/">GitHub</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Auton Universal Viewer</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Technical Overview</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/contributing/technical.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="technical-overview">
+<h1>Technical Overview<a class="headerlink" href="#technical-overview" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>We will cover here technical aspects of the viewer which are important for
+contributing to the project. It is worthwhile to begin by reviewing the Design
+Choices and Tradeoffs &amp; Implications sections on the <a class="reference external" href="about">About</a> page.</p>
+</div>
+<div class="section" id="building-publishing">
+<h2>Building &amp; Publishing<a class="headerlink" href="#building-publishing" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="build-from-source-install-locally">
+<h3>Build from source &amp; install locally<a class="headerlink" href="#build-from-source-install-locally" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">tools</span>
+<span class="o">./</span><span class="n">rebuild</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="clean-up-source-builds">
+<h3>Clean up source builds<a class="headerlink" href="#clean-up-source-builds" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">tools</span>
+<span class="o">./</span><span class="n">clean</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="generate-sphinx-documentation">
+<h3>Generate Sphinx documentation<a class="headerlink" href="#generate-sphinx-documentation" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">tools</span>
+<span class="o">./</span><span class="n">mkdocs</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="build-from-source-and-publish-linux-wheels-and-source">
+<h3>Build from source and publish Linux (wheels and source)<a class="headerlink" href="#build-from-source-and-publish-linux-wheels-and-source" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">tools</span>
+<span class="o">./</span><span class="n">publish_linux</span>
+</pre></div>
+</div>
+<p><em>Note: Requires Docker in order to build with manywheel</em></p>
+</div>
+<div class="section" id="build-from-source-and-publish-mac-wheel">
+<h3>Build from source and publish Mac wheel<a class="headerlink" href="#build-from-source-and-publish-mac-wheel" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">tools</span>
+<span class="o">./</span><span class="n">publish_mac</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="viewer-use-cases">
+<h2>Viewer Use Cases<a class="headerlink" href="#viewer-use-cases" title="Permalink to this headline">¶</a></h2>
+<p>Viewer allows the following primary use cases:</p>
+<ul class="simple">
+<li><p>Visualize &amp; analyze time series data in a Jupyter Notebook</p></li>
+<li><p>Work on a project of time series data in a web-based interface</p></li>
+<li><p>Allow multi-user annotation of time series data in a web-based interface</p></li>
+<li><p>Serve via intranet or internet</p></li>
+</ul>
+<div class="section" id="detailed-viewer-use-cases">
+<h3>Detailed Viewer Use Cases<a class="headerlink" href="#detailed-viewer-use-cases" title="Permalink to this headline">¶</a></h3>
+<p>In detail, from a perspective of technical architecture, the following use cases are accommodated:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>Jupyter Notebook Interface</dt><dd><ul>
+<li><p>Visualize/explore time series data ad-hoc</p></li>
+<li><p>Visualize/explore project data</p></li>
+<li><p>Analyze project data</p></li>
+<li><p>Analyze annotations</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Python Module</dt><dd><ul>
+<li><p>Add project data</p></li>
+<li><p>Analyze project data</p></li>
+<li><p>Analyze annotations</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Web Server</dt><dd><ul>
+<li><p>Visualize/explore and/or annotate project data in single-user mode</p></li>
+<li><p>Perform analytical tasks (e.g. create &amp; manage annotation assignments, etc.)</p></li>
+<li><p>Multi-user visualization &amp; annotation by human subject matter experts</p></li>
+<li><p>Optional user authentication integration</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="technical-documentation">
+<h2>Technical Documentation<a class="headerlink" href="#technical-documentation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="technical-architecture">
+<h3>Technical Architecture<a class="headerlink" href="#technical-architecture" title="Permalink to this headline">¶</a></h3>
+<p>AUViewer is comprised of:
+* A Python codebase in the form of a package built of modules, and
+* A static HTML/JS/CSS codebase which makes up the frontend web application.</p>
+<p>The Python code is organized primarily around classes which represent the most important conceptual components of the data:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><cite>Project</cite></dt><dd><ul>
+<li><dl class="simple">
+<dt><cite>File</cite></dt><dd><ul>
+<li><dl class="simple">
+<dt><cite>Series</cite></dt><dd><ul>
+<li><p><cite>DownsampleSet</cite></p></li>
+<li><p><cite>RawData</cite></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<p>Other conceptual components, in the backend, are represented exclusively by database models (e.g. models.Annotation, models.PatternSet, and models.Pattern). The differentiating factor is that the Python classes, while the application is running, are treated as the primary source of truth for the associated data, and the database is a persistence medium; whereas, for the conceptual components which are only represented by database models, the database is the source of truth while the application is running.</p>
+<p>Other important Python technical components are:
+* Flask web server
+* Cython functions for downsampling
+* Database models and connectivity logic
+* Config module
+* Shared helper functions</p>
+<p>Similar to Python, the web client JavaScript codebase is organized primarily around classes which represent the important conceptual components of the data:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><cite>Project</cite></dt><dd><ul>
+<li><dl class="simple">
+<dt><cite>File</cite></dt><dd><ul>
+<li><dl class="simple">
+<dt><cite>AnnotationSet</cite> (extends <cite>Set</cite>)</dt><dd><ul>
+<li><p><cite>Annotation</cite> (extends <cite>Member</cite>)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><cite>AssignmentSet</cite> (extends <cite>Set</cite>)</dt><dd><ul>
+<li><p><cite>Assignment</cite> (extends <cite>Member</cite>)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><cite>PatternSet</cite> (extends <cite>Set</cite>)</dt><dd><ul>
+<li><p><cite>Pattern</cite> (extends <cite>Member</cite>)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p><cite>Graph</cite></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<p>Additionally, a few technical components are implemented in classes:</p>
+<ul class="simple">
+<li><p><cite>GlobalStateManager</cite> (instantiated as a global variable <cite>globalStateManager</cite>)</p></li>
+<li><p><cite>RequestHandler</cite> (instantiated as a global variable <cite>requestHandler</cite>)</p></li>
+<li><p><cite>TemplateSystem</cite> (instantiated as a global variable <cite>templateSystem</cite>)</p></li>
+</ul>
+<p>No persistence or caching layer is used by the frontend codebase.</p>
+<div class="section" id="strategies">
+<h4>Strategies<a class="headerlink" href="#strategies" title="Permalink to this headline">¶</a></h4>
+<p>Because AUViewer is meant for visualization &amp; annotation of large datasets, one important architectural strategy is to lazy load the data from disk (i.e. no caching in memory) with the exception of metadata which is not likely to grow too large for memory. For example, when the AUViewer web service starts, it loads the projects, file lists, and series lists but not the data contained therein. Each time an API request comes in to load a file, the data is read from disk, served, and then immediately purged from memory.</p>
+</div>
+<div class="section" id="patterns-conventions">
+<h4>Patterns &amp; Conventions<a class="headerlink" href="#patterns-conventions" title="Permalink to this headline">¶</a></h4>
+<p>Communication between the web application frontend and backend takes place via an HTTP REST API interface using GET parameters for client-to-backend requests and JSON for backend-to-client responses. As a general design pattern, the classes (mentioned above) output generalized data structures (e.g. lists, dicts), and the encapsulation of response data into JSON takes place in the http handler functions in the <cite>serve</cite> module. This breakdown makes sense since AUViewer can be used both as a Python/Jupyter Notebook module and a web server.</p>
+<p>As a function naming convention, getters are named <cite>get[Thing]</cite>, but getters which return output structured primarily for web transmission are named <cite>get[Thing]Output</cite> (for API transmission) or <cite>get[Thing]Payload</cite> (for an initial data payload embedded in an html template).</p>
+</div>
+</div>
+<div class="section" id="backend-configuration">
+<h3>Backend Configuration<a class="headerlink" href="#backend-configuration" title="Permalink to this headline">¶</a></h3>
+<p>Backend config consists of the following types of configuration parameters:</p>
+<ul class="simple">
+<li><p>General settings (e.g. verbose output)</p></li>
+<li><p>Tuning parameters (e.g. target data points per series transmission)</p></li>
+<li><p>Asset locations</p></li>
+<li><p>Web server configuration (e.g. root web directory, Flask config)</p></li>
+</ul>
+<p>AUViewer comes with default config parameters for everything except the data directory location, which must be specified. Configuration is loaded and managed by the <cite>auviewer.config</cite> module.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="motivation.html" class="btn btn-neutral float-left" title="Contributing to Auton Universal Viewer" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Auton Lab, Carnegie Mellon University
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

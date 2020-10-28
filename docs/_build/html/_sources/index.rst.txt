@@ -39,8 +39,18 @@ facilitate expert annotation.
    :caption: Documentation
    :name: sec-documentation
 
+   documentation/datadir
    Python API <api/auviewer>
    license
+
+.. toctree::
+   :hidden:
+   :maxdepth: 2
+   :caption: Contributing
+   :name: sec-contributing
+
+   Motivation <contributing/motivation>
+   contributing/technical
 
 .. toctree::
    :hidden:
@@ -49,7 +59,6 @@ facilitate expert annotation.
    :name: sec-sourcecode
 
    GitHub <https://github.com/autonlab/auviewer/>
-   Contributing <contributing>
 
 
 Site Map
