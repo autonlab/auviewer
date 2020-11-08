@@ -5,7 +5,7 @@ from sqlalchemy.orm import joinedload
 import pandas as pd
 
 from . import models
-from .shared import annotationDataFrame
+from .shared import annotationDataFrame, patternDataFrame
 
 class PatternSet:
 
@@ -31,6 +31,9 @@ class PatternSet:
 
         # Subset only the columns we need from the user
         df = df[['file_id', 'series', 'left', 'right', 'top', 'bottom', 'label']]
+
+        # Add the project ID
+        df['project_id'] = self.projparent.id
 
         # Add the id of this pattern set
         df.insert(0, "pattern_set_id", [self.id]*df.shape[0])
@@ -113,21 +116,7 @@ class PatternSet:
 
     def getPatterns(self) -> pd.DataFrame:
         """Returns a DataFrame of the patterns in this set."""
-        pdf = pd.DataFrame(
-            [[
-                pattern.file.id,
-                Path(pattern.file.path).name,
-                pattern.series,
-                pattern.left,
-                pattern.right,
-                pattern.top,
-                pattern.bottom,
-                pattern.label,
-                f"{self.projparent.id}_{pattern.file.id}_{pattern.series}_{pattern.left}_{pattern.right}_{pattern.top}_{pattern.bottom}",
-            ] for pattern in self.dbmodel.patterns],
-            columns=['file_id', 'filename', 'series', 'left', 'right', 'top', 'bottom', 'label', 'pattern_identifier']
-        )
-        return pdf
+        return patternDataFrame(self.dbmodel.patterns)
 
     # Set the pattern set's description
     def setDescription(self, description: str):

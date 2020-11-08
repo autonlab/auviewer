@@ -12,7 +12,7 @@ from . import models
 from .patternset import PatternSet
 from .config import config
 from .file import File
-from .shared import annotationDataFrame, annotationOrPatternOutput, createEmptyJSONFile
+from .shared import annotationDataFrame, annotationOrPatternOutput, patternDataFrame
 
 class Project:
     """Represents an auviewer project."""
@@ -94,18 +94,19 @@ class Project:
 
     def getAnnotations(
             self,
+            annotation_id: Union[int, List[int], None] = None,
             file_id: Union[int, List[int], None] = None,
             pattern_id: Union[int, List[int], None] = None,
             pattern_set_id: Union[int, List[int], None]=None,
             series: Union[AnyStr, List[AnyStr], None]=None,
             user_id: Union[int, List[int], None] = None) -> pd.DataFrame:
         """
-        Returns a dataframe of the annotations for this project, optionally
-        matching specified criteria.
+        Returns a dataframe of annotations for this project, optionally filtered.
         """
 
         # Prepare input
-
+        if not isinstance(annotation_id, List) and annotation_id is not None:
+            annotation_id = [annotation_id]
         if not isinstance(file_id, List) and file_id is not None:
             file_id = [file_id]
         if not isinstance(pattern_id, List) and pattern_id is not None:
@@ -121,6 +122,8 @@ class Project:
         q = models.Annotation.query.options(joinedload('user'))
 
         # Filter query as necessary
+        if annotation_id is not None:
+            q = q.filter(models.Annotation.id.in_(annotation_id))
         if file_id is not None:
             q = q.filter(models.Annotation.file_id.in_(file_id))
         if pattern_id is not None:
@@ -176,6 +179,46 @@ class Project:
             'project_template': self.projectTemplate,
 
         }
+
+    def getPatterns(
+            self,
+            file_id: Union[int, List[int], None] = None,
+            pattern_id: Union[int, List[int], None] = None,
+            pattern_set_id: Union[int, List[int], None] = None,
+            series: Union[AnyStr, List[AnyStr], None] = None,
+            user_id: Union[int, List[int], None] = None) -> pd.DataFrame:
+        """Returns a dataframe of patterns for this project, optionally filtered."""
+
+        # Prepare input
+        if not isinstance(file_id, List) and file_id is not None:
+            file_id = [file_id]
+        if not isinstance(pattern_id, List) and pattern_id is not None:
+            pattern_id = [pattern_id]
+        if not isinstance(pattern_set_id, List) and pattern_set_id is not None:
+            pattern_set_id = [pattern_set_id]
+        if not isinstance(series, List) and series is not None:
+            series = [series]
+        if not isinstance(user_id, List) and user_id is not None:
+            user_id = [user_id]
+
+        # Query
+        q = models.Pattern.query
+
+        # Filter query as necessary
+        if file_id is not None:
+            q = q.filter(models.Pattern.file_id.in_(file_id))
+        if pattern_id is not None:
+            q = q.filter(models.Pattern.pattern_id.in_(pattern_id))
+        if pattern_set_id is not None:
+            q = q.filter(models.Pattern.pattern_set_id.in_(pattern_set_id))
+        if series is not None:
+            q = q.filter(models.Pattern.series.in_(series))
+        if user_id is not None:
+            q = q.filter(models.Pattern.user_id.in_(user_id))
+
+        # Return the dataframe
+        return patternDataFrame(q.filter(models.Pattern.project_id == self.id).all())
+
 
     def getPatternSet(self, id) -> Optional[PatternSet]:
         """
@@ -253,10 +296,10 @@ class Project:
 
         # If processNewFiles is true, then go through and process new files
         if processNewFiles:
-            print('a')
+
             # For each new project file which does not exist in the database...
             for newOrigFilePathObj in [p for p in self.originalsDirPathObj.iterdir() if p.is_file() and p.suffix == '.h5' and not any(map(lambda existingFilePathObj: p.samefile(existingFilePathObj), existingFilePathObjs))]:
-                print('b')
+
                 # Establish the path of the new processed file
                 newProcFilePathObj = self.processedDirPathObj / (newOrigFilePathObj.stem + '_processed.h5')
 

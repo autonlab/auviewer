@@ -225,8 +225,8 @@ def validateProjectFolder(projDirPathObj):
 
     logging.info(f"Validating project folder {projDirPathObj}.")
 
-    # Validate top-level folders
-    for p in [p for p in projDirPathObj.iterdir()]:
+    # Validate top-level folders, excluding dot-files
+    for p in [p for p in projDirPathObj.iterdir() if not p.name.startswith('.')]:
 
         # Project folder should only contain directories
         if not p.is_dir():

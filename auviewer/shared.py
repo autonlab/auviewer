@@ -10,7 +10,7 @@ def createEmptyJSONFile(path_obj):
         with path_obj.open(mode='x') as f:
             f.write("{\n\n}")
 
-def annotationDataFrame(annotationModelsList):
+def annotationDataFrame(annotationModels):
     """Given a list of annotation models, returns a DataFrame in our standard format."""
     return pd.DataFrame(
         [[
@@ -29,11 +29,10 @@ def annotationDataFrame(annotationModelsList):
             a.label,
             a.created_at,
             f"{a.project_id}_{a.file.id}_{a.series}_{a.left}_{a.right}_{a.top}_{a.bottom}",
-        ] for a in annotationModelsList],
+        ] for a in annotationModels],
         columns=['file_id', 'filename', 'user_id', 'user_email', 'user_firstname', 'user_lastname', 'pattern_set_id',
                  'pattern_id', 'series', 'left', 'right', 'top', 'bottom', 'label', 'created', 'pattern_identifier']
     )
-
 
 # Given an Annotation or Pattern model, returns a list formatted for API output.
 # A second parameter, related, may be provided in which case the function will
@@ -58,3 +57,20 @@ def annotationOrPatternOutput(primary, related=None):
                 a.pattern_id if hasattr(a, 'pattern_id') else None
             ]
     return output
+
+def patternDataFrame(patternModels):
+    """Given a list of pattern models, returns a DataFrame in our standard format."""
+    return pd.DataFrame(
+            [[
+                pattern.file.id,
+                Path(pattern.file.path).name,
+                pattern.series,
+                pattern.left,
+                pattern.right,
+                pattern.top,
+                pattern.bottom,
+                pattern.label,
+                f"{pattern.project_id}_{pattern.file.id}_{pattern.series}_{pattern.left}_{pattern.right}_{pattern.top}_{pattern.bottom}",
+            ] for pattern in patternModels],
+            columns=['file_id', 'filename', 'series', 'left', 'right', 'top', 'bottom', 'label', 'pattern_identifier']
+        )

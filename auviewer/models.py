@@ -1,6 +1,8 @@
 """Database models and connectivity."""
+from . import __VERSION__
 from flask_sqlalchemy import SQLAlchemy
 from .flask_user import UserMixin
+from pkg_resources import packaging
 from sqlalchemy.sql import func
 
 db = SQLAlchemy()
@@ -31,6 +33,7 @@ class Pattern(db.Model):
     __tablename__ = 'patterns'
     id = db.Column(db.Integer, primary_key=True)
     pattern_set_id = db.Column(db.Integer, db.ForeignKey('pattern_sets.id', ondelete='CASCADE'), nullable=False)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='RESTRICT'), nullable=False)
     file_id = db.Column(db.Integer, db.ForeignKey('files.id', ondelete='CASCADE'), nullable=False)
     series = db.Column(db.String(255), nullable=False)
     left = db.Column(db.Float, nullable=True)
@@ -123,6 +126,14 @@ class UserInvitation(db.Model):
     token = db.Column(db.String(100), nullable=False, server_default='')
 
 
+# The version table holds a single row with a single column and stores
+# the auviewer version which the database matches.
+class Version(db.Model):
+    __tablename__ = 'version'
+    id = db.Column(db.Integer, primary_key=True)
+    version = db.Column(db.String(255), nullable=False)
+
+
 # Define the UserRoles association model
 class UsersRoles(db.Model):
     __tablename__ = 'users_roles'
@@ -138,6 +149,47 @@ def init_flask_app(app):
     # Create all database tables
     # TODO(gus): Once we remove flask-user and detach this from flask, move this.
     with app.app_context():
+
+        # Create database & tables, if needed
         db.create_all()
+
+        # Perform db upgrades, if needed
+        upgrade_db()
+
     # app.app_context().push()
     # db.create_all()
+
+# Perform any db version upgrades necessary
+def upgrade_db():
+
+    # Get auviewer package version
+    app_version = packaging.version.parse(__VERSION__)
+
+    # Check application version, and upgrade iteratively as needed
+    while True:
+
+        # Get db version
+        dvm = Version.query.first()
+
+        # If there is no version, assume 0.1.1rc4 (after this, db
+        # versioning began) and write this to the database.
+        if dvm is None:
+            db.session.add(Version(id=0, version='0.1.1rc4'))
+            db.session.commit()
+            continue
+
+        db_version = packaging.version.parse(dvm.version)
+
+        # ADD DB UPGRADE STEPS LIKE THIS:
+        # if db_version < packaging.version.parse('x.x.x'):
+        #     do_some_db_upgrade()
+        #     Version.query.first().version = 'x.x.x'
+        #     db.session.commit()
+        #     continue
+
+        if db_version != app_version:
+            Version.query.first().version = __VERSION__
+            db.session.commit()
+
+        # We've completed all db upgrades, so break the loop
+        break

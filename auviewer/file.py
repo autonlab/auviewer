@@ -499,7 +499,7 @@ class File:
             start = time.time()
 
             # Create the file for storing processed data.
-            self.pf = audata.File.new(str(self.procFilePathObj), overwrite=False, return_datetimes=False)
+            self.pf = audata.File.new(str(self.procFilePathObj), overwrite=False, time_reference=self.f.time_reference, return_datetimes=False)
 
             # Process & store numeric series
             for s in self.series:

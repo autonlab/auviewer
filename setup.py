@@ -10,9 +10,6 @@ from auviewer import __VERSION__
 NAME = 'auviewer'
 VERSION = __VERSION__
 
-# TODO(gus): Temp
-VERSION = VERSION + '.rc4'
-
 RECOMPILE_CYTHON = False
 
 # Handle optional cython re-compilation (should be disabled by default for

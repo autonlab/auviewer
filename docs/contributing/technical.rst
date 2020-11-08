@@ -88,6 +88,7 @@ Technical Architecture
 ``````````````````````
 
 AUViewer is comprised of:
+
 * A Python codebase in the form of a package built of modules, and
 * A static HTML/JS/CSS codebase which makes up the frontend web application.
 
@@ -102,6 +103,7 @@ The Python code is organized primarily around classes which represent the most i
 Other conceptual components, in the backend, are represented exclusively by database models (e.g. models.Annotation, models.PatternSet, and models.Pattern). The differentiating factor is that the Python classes, while the application is running, are treated as the primary source of truth for the associated data, and the database is a persistence medium; whereas, for the conceptual components which are only represented by database models, the database is the source of truth while the application is running.
 
 Other important Python technical components are:
+
 * Flask web server
 * Cython functions for downsampling
 * Database models and connectivity logic

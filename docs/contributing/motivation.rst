@@ -26,8 +26,8 @@ Contributing
 
 If you are interested in contributing to any of these projects, please contact
 `Gus Welter`_. Alternatively, feel free to dive in and make a pull request, with
-they are subject to review, change requests, and potential rejection if there
-is not alignment with the viewer's scope & purpose.
+the understanding that they are subject to review, change requests, and
+potential rejection if there is not alignment with the viewer's scope & purpose.
 
 .. _Gus Welter: https://www.ri.cmu.edu/ri-people/gus-welter/
 
