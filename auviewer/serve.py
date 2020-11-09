@@ -464,7 +464,7 @@ def main():
 
         # Create a global project template which shows all series by default
         with prjtmplt.open('x') as f:
-            print('{ "series": { "_default": { "show": true } } }', file=f)
+            print('{ "series": { "_default": { "show": false } } }', file=f)
 
         # Establish symlink to the target file
         symlink_file.symlink_to(target_file)

@@ -83,7 +83,7 @@ def buildNextDownsampleUp(np.ndarray[np.float64_t, ndim=2] intervalsOrig, double
         # 270-330MM data points range.
         while intervalsOrig[cio,0] >= rightboundaryNew:
 
-            print("Using the while heuristic for data point " + str(intervalsOrig[cio,0]))
+            logging.info("Using the while heuristic for data point " + str(intervalsOrig[cio,0]))
 
             # Update left & right boundaries to the next interval
             leftboundaryNew = rightboundaryNew
@@ -136,7 +136,7 @@ def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarr
     # Calculate the interval size in seconds
     cdef double timePerInterval = timespan / numIntervals
 
-    # TODO(gus): FIX THIS BS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    # TODO(gus): FIX THIS BS!
     origNumIntervals = numIntervals
     numIntervals = numIntervals + 1
 
@@ -234,7 +234,9 @@ def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarr
 
     # TODO(gus): TEMP
     if cii >= origNumIntervals:
-        logging.error("EXCEEDED numIntervals!!! origNumIntervals: "+str(origNumIntervals)+", numIntervals: "+str(numIntervals)+", timePerInterval: "+str(timePerInterval)+", cii: "+str(cii)+", leftboundary: "+str(leftboundary)+", rightboundary: "+str(rightboundary)+", cdpi: "+str(cdpi)+", numDataPoints: "+str(numDataPoints)+", rawOffsets[cdpi]: "+str(rawOffsets[cdpi])+", rawValues[cdpi]: "+str(rawValues[cdpi]))
+        # TODO(gus): I've made this an error because it's not relevant for users,
+        # but this should be watched when next working on downsampling.
+        logging.info("Exceeded numIntervals! origNumIntervals: "+str(origNumIntervals)+", numIntervals: "+str(numIntervals)+", timePerInterval: "+str(timePerInterval)+", cii: "+str(cii)+", leftboundary: "+str(leftboundary)+", rightboundary: "+str(rightboundary)+", cdpi: "+str(cdpi)+", numDataPoints: "+str(numDataPoints)+", rawOffsets[cdpi]: "+str(rawOffsets[cdpi])+", rawValues[cdpi]: "+str(rawValues[cdpi]))
 
     # Slice off the unused intervals
     intervals = intervals[:cii+1]
@@ -267,7 +269,7 @@ def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndar
     elif mode == 2:
         pastThresholdIndices = np.nonzero((rawValues < thresholdlow) | (rawValues > thresholdhigh))[0]
     else:
-        print("Invalid mode parameter provided to generateThresholdAlerts.")
+        logging.error("Invalid mode parameter provided to generateThresholdAlerts.")
         return np.array([])
 
     # Holds generated alerts (start & stop time offsets). We assume there can be

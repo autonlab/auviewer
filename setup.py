@@ -1,4 +1,3 @@
-import importlib.resources as pkg_resources
 import os
 
 from setuptools import setup, find_packages, Extension
@@ -55,7 +54,7 @@ setup(
 	ext_modules=extensions,
     package_data={NAME: pkg_files},
     install_requires=[
-        'audata',
+        'audata>=1.0.3',
         'bcrypt',
         'email_validator',
         'flask',
@@ -75,10 +74,12 @@ setup(
     ],
     packages=find_packages(),
     setup_requires=['numpy'],
+    python_requires='>=3.7',
     url='https://github.com/autonlab/auviewer',
     classifiers=[
         "Operating System :: OS Independent",
         "Intended Audience :: Science/Research",
+        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Topic :: Scientific/Engineering",
     ],

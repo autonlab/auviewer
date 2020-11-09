@@ -498,6 +498,9 @@ class File:
             logging.info(f"Processing & storing all series for file {self.origFilePathObj}.")
             start = time.time()
 
+            # Print user message
+            print(f"Downsampling file {self.name}...")
+
             # Create the file for storing processed data.
             self.pf = audata.File.new(str(self.procFilePathObj), overwrite=False, time_reference=self.f.time_reference, return_datetimes=False)
 
@@ -509,6 +512,9 @@ class File:
 
             # Reload series data in memory since we have new downsamples
             self.load()
+
+            # Print user message
+            print("Done.")
 
             end = time.time()
             logging.info(f"Completed processing & storing all series for file {self.origFilePathObj}. Took {str(round((end - start) / 60, 3))} minutes).")

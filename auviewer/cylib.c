@@ -897,7 +897,7 @@ typedef struct {
 } __Pyx_BufFmt_Context;
 
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":689
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":689
  * # in Cython to enable them only on the right systems.
  * 
  * ctypedef npy_int8       int8_t             # <<<<<<<<<<<<<<
@@ -906,7 +906,7 @@ typedef struct {
  */
 typedef npy_int8 __pyx_t_5numpy_int8_t;
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":690
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":690
  * 
  * ctypedef npy_int8       int8_t
  * ctypedef npy_int16      int16_t             # <<<<<<<<<<<<<<
@@ -915,7 +915,7 @@ typedef npy_int8 __pyx_t_5numpy_int8_t;
  */
 typedef npy_int16 __pyx_t_5numpy_int16_t;
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":691
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":691
  * ctypedef npy_int8       int8_t
  * ctypedef npy_int16      int16_t
  * ctypedef npy_int32      int32_t             # <<<<<<<<<<<<<<
@@ -924,7 +924,7 @@ typedef npy_int16 __pyx_t_5numpy_int16_t;
  */
 typedef npy_int32 __pyx_t_5numpy_int32_t;
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":692
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":692
  * ctypedef npy_int16      int16_t
  * ctypedef npy_int32      int32_t
  * ctypedef npy_int64      int64_t             # <<<<<<<<<<<<<<
@@ -933,7 +933,7 @@ typedef npy_int32 __pyx_t_5numpy_int32_t;
  */
 typedef npy_int64 __pyx_t_5numpy_int64_t;
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":696
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":696
  * #ctypedef npy_int128     int128_t
  * 
  * ctypedef npy_uint8      uint8_t             # <<<<<<<<<<<<<<
@@ -942,7 +942,7 @@ typedef npy_int64 __pyx_t_5numpy_int64_t;
  */
 typedef npy_uint8 __pyx_t_5numpy_uint8_t;
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":697
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":697
  * 
  * ctypedef npy_uint8      uint8_t
  * ctypedef npy_uint16     uint16_t             # <<<<<<<<<<<<<<
@@ -951,7 +951,7 @@ typedef npy_uint8 __pyx_t_5numpy_uint8_t;
  */
 typedef npy_uint16 __pyx_t_5numpy_uint16_t;
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":698
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":698
  * ctypedef npy_uint8      uint8_t
  * ctypedef npy_uint16     uint16_t
  * ctypedef npy_uint32     uint32_t             # <<<<<<<<<<<<<<
@@ -960,7 +960,7 @@ typedef npy_uint16 __pyx_t_5numpy_uint16_t;
  */
 typedef npy_uint32 __pyx_t_5numpy_uint32_t;
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":699
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":699
  * ctypedef npy_uint16     uint16_t
  * ctypedef npy_uint32     uint32_t
  * ctypedef npy_uint64     uint64_t             # <<<<<<<<<<<<<<
@@ -969,7 +969,7 @@ typedef npy_uint32 __pyx_t_5numpy_uint32_t;
  */
 typedef npy_uint64 __pyx_t_5numpy_uint64_t;
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":703
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":703
  * #ctypedef npy_uint128    uint128_t
  * 
  * ctypedef npy_float32    float32_t             # <<<<<<<<<<<<<<
@@ -978,7 +978,7 @@ typedef npy_uint64 __pyx_t_5numpy_uint64_t;
  */
 typedef npy_float32 __pyx_t_5numpy_float32_t;
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":704
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":704
  * 
  * ctypedef npy_float32    float32_t
  * ctypedef npy_float64    float64_t             # <<<<<<<<<<<<<<
@@ -987,7 +987,7 @@ typedef npy_float32 __pyx_t_5numpy_float32_t;
  */
 typedef npy_float64 __pyx_t_5numpy_float64_t;
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":713
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":713
  * # The int types are mapped a bit surprising --
  * # numpy.int corresponds to 'l' and numpy.long to 'q'
  * ctypedef npy_long       int_t             # <<<<<<<<<<<<<<
@@ -996,7 +996,7 @@ typedef npy_float64 __pyx_t_5numpy_float64_t;
  */
 typedef npy_long __pyx_t_5numpy_int_t;
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":714
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":714
  * # numpy.int corresponds to 'l' and numpy.long to 'q'
  * ctypedef npy_long       int_t
  * ctypedef npy_longlong   long_t             # <<<<<<<<<<<<<<
@@ -1005,7 +1005,7 @@ typedef npy_long __pyx_t_5numpy_int_t;
  */
 typedef npy_longlong __pyx_t_5numpy_long_t;
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":715
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":715
  * ctypedef npy_long       int_t
  * ctypedef npy_longlong   long_t
  * ctypedef npy_longlong   longlong_t             # <<<<<<<<<<<<<<
@@ -1014,7 +1014,7 @@ typedef npy_longlong __pyx_t_5numpy_long_t;
  */
 typedef npy_longlong __pyx_t_5numpy_longlong_t;
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":717
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":717
  * ctypedef npy_longlong   longlong_t
  * 
  * ctypedef npy_ulong      uint_t             # <<<<<<<<<<<<<<
@@ -1023,7 +1023,7 @@ typedef npy_longlong __pyx_t_5numpy_longlong_t;
  */
 typedef npy_ulong __pyx_t_5numpy_uint_t;
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":718
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":718
  * 
  * ctypedef npy_ulong      uint_t
  * ctypedef npy_ulonglong  ulong_t             # <<<<<<<<<<<<<<
@@ -1032,7 +1032,7 @@ typedef npy_ulong __pyx_t_5numpy_uint_t;
  */
 typedef npy_ulonglong __pyx_t_5numpy_ulong_t;
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":719
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":719
  * ctypedef npy_ulong      uint_t
  * ctypedef npy_ulonglong  ulong_t
  * ctypedef npy_ulonglong  ulonglong_t             # <<<<<<<<<<<<<<
@@ -1041,7 +1041,7 @@ typedef npy_ulonglong __pyx_t_5numpy_ulong_t;
  */
 typedef npy_ulonglong __pyx_t_5numpy_ulonglong_t;
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":721
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":721
  * ctypedef npy_ulonglong  ulonglong_t
  * 
  * ctypedef npy_intp       intp_t             # <<<<<<<<<<<<<<
@@ -1050,7 +1050,7 @@ typedef npy_ulonglong __pyx_t_5numpy_ulonglong_t;
  */
 typedef npy_intp __pyx_t_5numpy_intp_t;
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":722
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":722
  * 
  * ctypedef npy_intp       intp_t
  * ctypedef npy_uintp      uintp_t             # <<<<<<<<<<<<<<
@@ -1059,7 +1059,7 @@ typedef npy_intp __pyx_t_5numpy_intp_t;
  */
 typedef npy_uintp __pyx_t_5numpy_uintp_t;
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":724
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":724
  * ctypedef npy_uintp      uintp_t
  * 
  * ctypedef npy_double     float_t             # <<<<<<<<<<<<<<
@@ -1068,7 +1068,7 @@ typedef npy_uintp __pyx_t_5numpy_uintp_t;
  */
 typedef npy_double __pyx_t_5numpy_float_t;
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":725
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":725
  * 
  * ctypedef npy_double     float_t
  * ctypedef npy_double     double_t             # <<<<<<<<<<<<<<
@@ -1077,7 +1077,7 @@ typedef npy_double __pyx_t_5numpy_float_t;
  */
 typedef npy_double __pyx_t_5numpy_double_t;
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":726
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":726
  * ctypedef npy_double     float_t
  * ctypedef npy_double     double_t
  * ctypedef npy_longdouble longdouble_t             # <<<<<<<<<<<<<<
@@ -1112,7 +1112,7 @@ static CYTHON_INLINE __pyx_t_double_complex __pyx_t_double_complex_from_parts(do
 
 /*--- Type declarations ---*/
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":728
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":728
  * ctypedef npy_longdouble longdouble_t
  * 
  * ctypedef npy_cfloat      cfloat_t             # <<<<<<<<<<<<<<
@@ -1121,7 +1121,7 @@ static CYTHON_INLINE __pyx_t_double_complex __pyx_t_double_complex_from_parts(do
  */
 typedef npy_cfloat __pyx_t_5numpy_cfloat_t;
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":729
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":729
  * 
  * ctypedef npy_cfloat      cfloat_t
  * ctypedef npy_cdouble     cdouble_t             # <<<<<<<<<<<<<<
@@ -1130,7 +1130,7 @@ typedef npy_cfloat __pyx_t_5numpy_cfloat_t;
  */
 typedef npy_cdouble __pyx_t_5numpy_cdouble_t;
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":730
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":730
  * ctypedef npy_cfloat      cfloat_t
  * ctypedef npy_cdouble     cdouble_t
  * ctypedef npy_clongdouble clongdouble_t             # <<<<<<<<<<<<<<
@@ -1139,7 +1139,7 @@ typedef npy_cdouble __pyx_t_5numpy_cdouble_t;
  */
 typedef npy_clongdouble __pyx_t_5numpy_clongdouble_t;
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":732
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":732
  * ctypedef npy_clongdouble clongdouble_t
  * 
  * ctypedef npy_cdouble     complex_t             # <<<<<<<<<<<<<<
@@ -1701,7 +1701,6 @@ extern int __pyx_module_is_main_auviewer__cylib;
 int __pyx_module_is_main_auviewer__cylib = 0;
 
 /* Implementation of 'auviewer.cylib' */
-static PyObject *__pyx_builtin_print;
 static PyObject *__pyx_builtin_RuntimeError;
 static PyObject *__pyx_builtin_ImportError;
 static const char __pyx_k_M[] = "M";
@@ -1717,6 +1716,7 @@ static const char __pyx_k_cdpi[] = ", cdpi: ";
 static const char __pyx_k_cfai[] = "cfai";
 static const char __pyx_k_crai[] = "crai";
 static const char __pyx_k_high[] = "high";
+static const char __pyx_k_info[] = "info";
 static const char __pyx_k_last[] = "last";
 static const char __pyx_k_main[] = "__main__";
 static const char __pyx_k_mode[] = "mode";
@@ -1730,7 +1730,6 @@ static const char __pyx_k_cii_2[] = "cii";
 static const char __pyx_k_error[] = "error";
 static const char __pyx_k_first[] = "first";
 static const char __pyx_k_numpy[] = "numpy";
-static const char __pyx_k_print[] = "print";
 static const char __pyx_k_zeros[] = "zeros";
 static const char __pyx_k_alerts[] = "alerts";
 static const char __pyx_k_cdpi_2[] = "cdpi";
@@ -1802,11 +1801,11 @@ static const char __pyx_k_generateThresholdAlerts[] = "generateThresholdAlerts";
 static const char __pyx_k_Invalid_mode_parameter_provided[] = "Invalid mode parameter provided to generateThresholdAlerts.";
 static const char __pyx_k_Unexpectedly_required_more_than[] = "Unexpectedly required more than numIntervals intervals during downsample building from raw. numIntervals: ";
 static const char __pyx_k_numpy_core_multiarray_failed_to[] = "numpy.core.multiarray failed to import";
-static const char __pyx_k_EXCEEDED_numIntervals_origNumInt[] = "EXCEEDED numIntervals!!! origNumIntervals: ";
+static const char __pyx_k_Exceeded_numIntervals_origNumInt[] = "Exceeded numIntervals! origNumIntervals: ";
 static const char __pyx_k_Unexpectedly_require_more_than_n[] = "Unexpectedly require more than numIntervalsOrig during downsample building from downsample.";
 static const char __pyx_k_Using_the_while_heuristic_for_da[] = "Using the while heuristic for data point ";
 static const char __pyx_k_numpy_core_umath_failed_to_impor[] = "numpy.core.umath failed to import";
-static PyObject *__pyx_kp_u_EXCEEDED_numIntervals_origNumInt;
+static PyObject *__pyx_kp_u_Exceeded_numIntervals_origNumInt;
 static PyObject *__pyx_n_s_ImportError;
 static PyObject *__pyx_kp_u_Invalid_mode_parameter_provided;
 static PyObject *__pyx_n_s_M;
@@ -1846,6 +1845,7 @@ static PyObject *__pyx_n_s_getSliceParam;
 static PyObject *__pyx_n_s_high;
 static PyObject *__pyx_n_s_i;
 static PyObject *__pyx_n_s_import;
+static PyObject *__pyx_n_s_info;
 static PyObject *__pyx_n_s_intervals;
 static PyObject *__pyx_n_s_intervalsNew;
 static PyObject *__pyx_n_s_intervalsOrig;
@@ -1882,7 +1882,6 @@ static PyObject *__pyx_n_s_numtotal;
 static PyObject *__pyx_n_s_origNumIntervals;
 static PyObject *__pyx_n_s_pastThresholdIndices;
 static PyObject *__pyx_n_s_persistence;
-static PyObject *__pyx_n_s_print;
 static PyObject *__pyx_n_s_rawOffsets;
 static PyObject *__pyx_kp_u_rawOffsets_cdpi;
 static PyObject *__pyx_n_s_rawValues;
@@ -1920,16 +1919,15 @@ static PyObject *__pyx_tuple_;
 static PyObject *__pyx_tuple__2;
 static PyObject *__pyx_tuple__3;
 static PyObject *__pyx_tuple__4;
-static PyObject *__pyx_tuple__5;
-static PyObject *__pyx_tuple__7;
-static PyObject *__pyx_tuple__9;
-static PyObject *__pyx_tuple__11;
-static PyObject *__pyx_tuple__13;
-static PyObject *__pyx_codeobj__6;
-static PyObject *__pyx_codeobj__8;
-static PyObject *__pyx_codeobj__10;
-static PyObject *__pyx_codeobj__12;
-static PyObject *__pyx_codeobj__14;
+static PyObject *__pyx_tuple__6;
+static PyObject *__pyx_tuple__8;
+static PyObject *__pyx_tuple__10;
+static PyObject *__pyx_tuple__12;
+static PyObject *__pyx_codeobj__5;
+static PyObject *__pyx_codeobj__7;
+static PyObject *__pyx_codeobj__9;
+static PyObject *__pyx_codeobj__11;
+static PyObject *__pyx_codeobj__13;
 /* Late includes */
 
 /* "auviewer/cylib.pyx":16
@@ -2276,7 +2274,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_buildNextDownsampleUp(CYTHON_UNUSED P
  *         # 270-330MM data points range.
  *         while intervalsOrig[cio,0] >= rightboundaryNew:             # <<<<<<<<<<<<<<
  * 
- *             print("Using the while heuristic for data point " + str(intervalsOrig[cio,0]))
+ *             logging.info("Using the while heuristic for data point " + str(intervalsOrig[cio,0]))
  */
     while (1) {
       __pyx_t_8 = __pyx_v_cio;
@@ -2287,24 +2285,42 @@ static PyObject *__pyx_pf_8auviewer_5cylib_buildNextDownsampleUp(CYTHON_UNUSED P
       /* "auviewer/cylib.pyx":86
  *         while intervalsOrig[cio,0] >= rightboundaryNew:
  * 
- *             print("Using the while heuristic for data point " + str(intervalsOrig[cio,0]))             # <<<<<<<<<<<<<<
+ *             logging.info("Using the while heuristic for data point " + str(intervalsOrig[cio,0]))             # <<<<<<<<<<<<<<
  * 
  *             # Update left & right boundaries to the next interval
  */
+      __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_logging); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 86, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_4);
+      __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_info); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 86, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_5);
+      __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
       __pyx_t_7 = __pyx_v_cio;
       __pyx_t_8 = 0;
-      __pyx_t_2 = PyFloat_FromDouble((*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_intervalsOrig.rcbuffer->pybuffer.buf, __pyx_t_7, __pyx_pybuffernd_intervalsOrig.diminfo[0].strides, __pyx_t_8, __pyx_pybuffernd_intervalsOrig.diminfo[1].strides))); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 86, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_2);
-      __pyx_t_4 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyUnicode_Type)), __pyx_t_2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 86, __pyx_L1_error)
+      __pyx_t_4 = PyFloat_FromDouble((*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_intervalsOrig.rcbuffer->pybuffer.buf, __pyx_t_7, __pyx_pybuffernd_intervalsOrig.diminfo[0].strides, __pyx_t_8, __pyx_pybuffernd_intervalsOrig.diminfo[1].strides))); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 86, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
-      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-      __pyx_t_2 = __Pyx_PyUnicode_Concat(__pyx_kp_u_Using_the_while_heuristic_for_da, __pyx_t_4); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 86, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_2);
+      __pyx_t_3 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyUnicode_Type)), __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 86, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_3);
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-      __pyx_t_4 = __Pyx_PyObject_CallOneArg(__pyx_builtin_print, __pyx_t_2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 86, __pyx_L1_error)
+      __pyx_t_4 = __Pyx_PyUnicode_Concat(__pyx_kp_u_Using_the_while_heuristic_for_da, __pyx_t_3); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 86, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_4);
-      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+      __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+      __pyx_t_3 = NULL;
+      if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_5))) {
+        __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_5);
+        if (likely(__pyx_t_3)) {
+          PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_5);
+          __Pyx_INCREF(__pyx_t_3);
+          __Pyx_INCREF(function);
+          __Pyx_DECREF_SET(__pyx_t_5, function);
+        }
+      }
+      __pyx_t_2 = (__pyx_t_3) ? __Pyx_PyObject_Call2Args(__pyx_t_5, __pyx_t_3, __pyx_t_4) : __Pyx_PyObject_CallOneArg(__pyx_t_5, __pyx_t_4);
+      __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
       __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+      if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 86, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
       /* "auviewer/cylib.pyx":89
  * 
@@ -2351,10 +2367,10 @@ static PyObject *__pyx_pf_8auviewer_5cylib_buildNextDownsampleUp(CYTHON_UNUSED P
  * 
  *         # Prime the min & max of the new interval to the first original interval
  */
-      __pyx_t_4 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 97, __pyx_L1_error)
-      __Pyx_GOTREF(__pyx_t_4);
-      __Pyx_Raise(__pyx_t_4, 0, 0, 0);
-      __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 97, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      __Pyx_Raise(__pyx_t_2, 0, 0, 0);
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
       __PYX_ERR(0, 97, __pyx_L1_error)
 
       /* "auviewer/cylib.pyx":96
@@ -2555,16 +2571,16 @@ static PyObject *__pyx_pf_8auviewer_5cylib_buildNextDownsampleUp(CYTHON_UNUSED P
  * 
  *     # Return the new downsample intervals
  */
-  __pyx_t_4 = __Pyx_PyInt_From_long((__pyx_v_cin + 1)); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 124, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_2 = PySlice_New(Py_None, __pyx_t_4, Py_None); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 124, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_From_long((__pyx_v_cin + 1)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 124, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyObject_GetItem(((PyObject *)__pyx_v_intervalsNew), __pyx_t_2); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 124, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_4);
+  __pyx_t_5 = PySlice_New(Py_None, __pyx_t_2, Py_None); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 124, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  if (!(likely(((__pyx_t_4) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_4, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 124, __pyx_L1_error)
-  __pyx_t_6 = ((PyArrayObject *)__pyx_t_4);
+  __pyx_t_2 = __Pyx_PyObject_GetItem(((PyObject *)__pyx_v_intervalsNew), __pyx_t_5); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 124, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 124, __pyx_L1_error)
+  __pyx_t_6 = ((PyArrayObject *)__pyx_t_2);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_intervalsNew.rcbuffer->pybuffer);
@@ -2583,8 +2599,8 @@ static PyObject *__pyx_pf_8auviewer_5cylib_buildNextDownsampleUp(CYTHON_UNUSED P
     if (unlikely(__pyx_t_14 < 0)) __PYX_ERR(0, 124, __pyx_L1_error)
   }
   __pyx_t_6 = 0;
-  __Pyx_DECREF_SET(__pyx_v_intervalsNew, ((PyArrayObject *)__pyx_t_4));
-  __pyx_t_4 = 0;
+  __Pyx_DECREF_SET(__pyx_v_intervalsNew, ((PyArrayObject *)__pyx_t_2));
+  __pyx_t_2 = 0;
 
   /* "auviewer/cylib.pyx":127
  * 
@@ -2799,13 +2815,13 @@ static PyObject *__pyx_pf_8auviewer_5cylib_2buildDownsampleFromRaw(CYTHON_UNUSED
  *     # Calculate the interval size in seconds
  *     cdef double timePerInterval = timespan / numIntervals             # <<<<<<<<<<<<<<
  * 
- *     # TODO(gus): FIX THIS BS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ *     # TODO(gus): FIX THIS BS!
  */
   __pyx_v_timePerInterval = (__pyx_v_timespan / ((double)__pyx_v_numIntervals));
 
   /* "auviewer/cylib.pyx":140
  * 
- *     # TODO(gus): FIX THIS BS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ *     # TODO(gus): FIX THIS BS!
  *     origNumIntervals = numIntervals             # <<<<<<<<<<<<<<
  *     numIntervals = numIntervals + 1
  * 
@@ -2816,7 +2832,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_2buildDownsampleFromRaw(CYTHON_UNUSED
   __pyx_t_3 = 0;
 
   /* "auviewer/cylib.pyx":141
- *     # TODO(gus): FIX THIS BS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ *     # TODO(gus): FIX THIS BS!
  *     origNumIntervals = numIntervals
  *     numIntervals = numIntervals + 1             # <<<<<<<<<<<<<<
  * 
@@ -3286,8 +3302,8 @@ static PyObject *__pyx_pf_8auviewer_5cylib_2buildDownsampleFromRaw(CYTHON_UNUSED
  * 
  *     # TODO(gus): TEMP
  *     if cii >= origNumIntervals:             # <<<<<<<<<<<<<<
- *         logging.error("EXCEEDED numIntervals!!! origNumIntervals: "+str(origNumIntervals)+", numIntervals: "+str(numIntervals)+", timePerInterval: "+str(timePerInterval)+", cii: "+str(cii)+", leftboundary: "+str(leftboundary)+", rightboundary: "+str(rightboundary)+", cdpi: "+str(cdpi)+", numDataPoints: "+str(numDataPoints)+", rawOffsets[cdpi]: "+str(rawOffsets[cdpi])+", rawValues[cdpi]: "+str(rawValues[cdpi]))
- * 
+ *         # TODO(gus): I've made this an error because it's not relevant for users,
+ *         # but this should be watched when next working on downsampling.
  */
   __pyx_t_6 = __Pyx_PyInt_From_int(__pyx_v_cii); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 236, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
@@ -3297,130 +3313,130 @@ static PyObject *__pyx_pf_8auviewer_5cylib_2buildDownsampleFromRaw(CYTHON_UNUSED
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   if (__pyx_t_8) {
 
-    /* "auviewer/cylib.pyx":237
- *     # TODO(gus): TEMP
- *     if cii >= origNumIntervals:
- *         logging.error("EXCEEDED numIntervals!!! origNumIntervals: "+str(origNumIntervals)+", numIntervals: "+str(numIntervals)+", timePerInterval: "+str(timePerInterval)+", cii: "+str(cii)+", leftboundary: "+str(leftboundary)+", rightboundary: "+str(rightboundary)+", cdpi: "+str(cdpi)+", numDataPoints: "+str(numDataPoints)+", rawOffsets[cdpi]: "+str(rawOffsets[cdpi])+", rawValues[cdpi]: "+str(rawValues[cdpi]))             # <<<<<<<<<<<<<<
+    /* "auviewer/cylib.pyx":239
+ *         # TODO(gus): I've made this an error because it's not relevant for users,
+ *         # but this should be watched when next working on downsampling.
+ *         logging.info("Exceeded numIntervals! origNumIntervals: "+str(origNumIntervals)+", numIntervals: "+str(numIntervals)+", timePerInterval: "+str(timePerInterval)+", cii: "+str(cii)+", leftboundary: "+str(leftboundary)+", rightboundary: "+str(rightboundary)+", cdpi: "+str(cdpi)+", numDataPoints: "+str(numDataPoints)+", rawOffsets[cdpi]: "+str(rawOffsets[cdpi])+", rawValues[cdpi]: "+str(rawValues[cdpi]))             # <<<<<<<<<<<<<<
  * 
  *     # Slice off the unused intervals
  */
-    __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_logging); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_logging); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_error); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_info); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_t_6 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyUnicode_Type)), __pyx_v_origNumIntervals); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyUnicode_Type)), __pyx_v_origNumIntervals); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_4 = __Pyx_PyUnicode_Concat(__pyx_kp_u_EXCEEDED_numIntervals_origNumInt, __pyx_t_6); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyUnicode_Concat(__pyx_kp_u_Exceeded_numIntervals_origNumInt, __pyx_t_6); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_t_6 = __Pyx_PyUnicode_Concat(__pyx_t_4, __pyx_kp_u_numIntervals_2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyUnicode_Concat(__pyx_t_4, __pyx_kp_u_numIntervals_2); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_numIntervals); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_numIntervals); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_11 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyUnicode_Type)), __pyx_t_4); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_11 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyUnicode_Type)), __pyx_t_4); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_11);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = __Pyx_PyUnicode_Concat(__pyx_t_6, __pyx_t_11); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyUnicode_Concat(__pyx_t_6, __pyx_t_11); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-    __pyx_t_11 = __Pyx_PyUnicode_Concat(__pyx_t_4, __pyx_kp_u_timePerInterval); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_11 = __Pyx_PyUnicode_Concat(__pyx_t_4, __pyx_kp_u_timePerInterval); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_11);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = PyFloat_FromDouble(__pyx_v_timePerInterval); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_4 = PyFloat_FromDouble(__pyx_v_timePerInterval); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_6 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyUnicode_Type)), __pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyUnicode_Type)), __pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = __Pyx_PyUnicode_Concat(__pyx_t_11, __pyx_t_6); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyUnicode_Concat(__pyx_t_11, __pyx_t_6); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_t_6 = __Pyx_PyUnicode_Concat(__pyx_t_4, __pyx_kp_u_cii); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyUnicode_Concat(__pyx_t_4, __pyx_kp_u_cii); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_cii); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_cii); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_11 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyUnicode_Type)), __pyx_t_4); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_11 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyUnicode_Type)), __pyx_t_4); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_11);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = __Pyx_PyUnicode_Concat(__pyx_t_6, __pyx_t_11); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyUnicode_Concat(__pyx_t_6, __pyx_t_11); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-    __pyx_t_11 = __Pyx_PyUnicode_Concat(__pyx_t_4, __pyx_kp_u_leftboundary); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_11 = __Pyx_PyUnicode_Concat(__pyx_t_4, __pyx_kp_u_leftboundary); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_11);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = PyFloat_FromDouble(__pyx_v_leftboundary); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_4 = PyFloat_FromDouble(__pyx_v_leftboundary); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_6 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyUnicode_Type)), __pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyUnicode_Type)), __pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = __Pyx_PyUnicode_Concat(__pyx_t_11, __pyx_t_6); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyUnicode_Concat(__pyx_t_11, __pyx_t_6); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_t_6 = __Pyx_PyUnicode_Concat(__pyx_t_4, __pyx_kp_u_rightboundary); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyUnicode_Concat(__pyx_t_4, __pyx_kp_u_rightboundary); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = PyFloat_FromDouble(__pyx_v_rightboundary); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_4 = PyFloat_FromDouble(__pyx_v_rightboundary); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_11 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyUnicode_Type)), __pyx_t_4); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_11 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyUnicode_Type)), __pyx_t_4); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_11);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = __Pyx_PyUnicode_Concat(__pyx_t_6, __pyx_t_11); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyUnicode_Concat(__pyx_t_6, __pyx_t_11); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-    __pyx_t_11 = __Pyx_PyUnicode_Concat(__pyx_t_4, __pyx_kp_u_cdpi); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_11 = __Pyx_PyUnicode_Concat(__pyx_t_4, __pyx_kp_u_cdpi); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_11);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_cdpi); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_cdpi); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_6 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyUnicode_Type)), __pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyUnicode_Type)), __pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = __Pyx_PyUnicode_Concat(__pyx_t_11, __pyx_t_6); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyUnicode_Concat(__pyx_t_11, __pyx_t_6); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_t_6 = __Pyx_PyUnicode_Concat(__pyx_t_4, __pyx_kp_u_numDataPoints); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyUnicode_Concat(__pyx_t_4, __pyx_kp_u_numDataPoints); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_numDataPoints); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_numDataPoints); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_11 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyUnicode_Type)), __pyx_t_4); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_11 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyUnicode_Type)), __pyx_t_4); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_11);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = __Pyx_PyUnicode_Concat(__pyx_t_6, __pyx_t_11); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyUnicode_Concat(__pyx_t_6, __pyx_t_11); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
-    __pyx_t_11 = __Pyx_PyUnicode_Concat(__pyx_t_4, __pyx_kp_u_rawOffsets_cdpi); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_11 = __Pyx_PyUnicode_Concat(__pyx_t_4, __pyx_kp_u_rawOffsets_cdpi); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_11);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __pyx_t_2 = __pyx_v_cdpi;
-    __pyx_t_4 = PyFloat_FromDouble((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_rawOffsets.rcbuffer->pybuffer.buf, __pyx_t_2, __pyx_pybuffernd_rawOffsets.diminfo[0].strides))); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_4 = PyFloat_FromDouble((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_rawOffsets.rcbuffer->pybuffer.buf, __pyx_t_2, __pyx_pybuffernd_rawOffsets.diminfo[0].strides))); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_6 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyUnicode_Type)), __pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyUnicode_Type)), __pyx_t_4); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = __Pyx_PyUnicode_Concat(__pyx_t_11, __pyx_t_6); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyUnicode_Concat(__pyx_t_11, __pyx_t_6); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __pyx_t_6 = __Pyx_PyUnicode_Concat(__pyx_t_4, __pyx_kp_u_rawValues_cdpi); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_6 = __Pyx_PyUnicode_Concat(__pyx_t_4, __pyx_kp_u_rawValues_cdpi); if (unlikely(!__pyx_t_6)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __pyx_t_2 = __pyx_v_cdpi;
-    __pyx_t_4 = PyFloat_FromDouble((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_rawValues.rcbuffer->pybuffer.buf, __pyx_t_2, __pyx_pybuffernd_rawValues.diminfo[0].strides))); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_4 = PyFloat_FromDouble((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_rawValues.rcbuffer->pybuffer.buf, __pyx_t_2, __pyx_pybuffernd_rawValues.diminfo[0].strides))); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_11 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyUnicode_Type)), __pyx_t_4); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_11 = __Pyx_PyObject_CallOneArg(((PyObject *)(&PyUnicode_Type)), __pyx_t_4); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_11);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = __Pyx_PyUnicode_Concat(__pyx_t_6, __pyx_t_11); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 237, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyUnicode_Concat(__pyx_t_6, __pyx_t_11); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
     __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
@@ -3437,7 +3453,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_2buildDownsampleFromRaw(CYTHON_UNUSED
     __pyx_t_3 = (__pyx_t_11) ? __Pyx_PyObject_Call2Args(__pyx_t_5, __pyx_t_11, __pyx_t_4) : __Pyx_PyObject_CallOneArg(__pyx_t_5, __pyx_t_4);
     __Pyx_XDECREF(__pyx_t_11); __pyx_t_11 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 237, __pyx_L1_error)
+    if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 239, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -3446,27 +3462,27 @@ static PyObject *__pyx_pf_8auviewer_5cylib_2buildDownsampleFromRaw(CYTHON_UNUSED
  * 
  *     # TODO(gus): TEMP
  *     if cii >= origNumIntervals:             # <<<<<<<<<<<<<<
- *         logging.error("EXCEEDED numIntervals!!! origNumIntervals: "+str(origNumIntervals)+", numIntervals: "+str(numIntervals)+", timePerInterval: "+str(timePerInterval)+", cii: "+str(cii)+", leftboundary: "+str(leftboundary)+", rightboundary: "+str(rightboundary)+", cdpi: "+str(cdpi)+", numDataPoints: "+str(numDataPoints)+", rawOffsets[cdpi]: "+str(rawOffsets[cdpi])+", rawValues[cdpi]: "+str(rawValues[cdpi]))
- * 
+ *         # TODO(gus): I've made this an error because it's not relevant for users,
+ *         # but this should be watched when next working on downsampling.
  */
   }
 
-  /* "auviewer/cylib.pyx":240
+  /* "auviewer/cylib.pyx":242
  * 
  *     # Slice off the unused intervals
  *     intervals = intervals[:cii+1]             # <<<<<<<<<<<<<<
  * 
  *     # Return the downsampled intervals
  */
-  __pyx_t_3 = __Pyx_PyInt_From_long((__pyx_v_cii + 1)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 240, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_From_long((__pyx_v_cii + 1)); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 242, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_5 = PySlice_New(Py_None, __pyx_t_3, Py_None); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 240, __pyx_L1_error)
+  __pyx_t_5 = PySlice_New(Py_None, __pyx_t_3, Py_None); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 242, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyObject_GetItem(((PyObject *)__pyx_v_intervals), __pyx_t_5); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 240, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetItem(((PyObject *)__pyx_v_intervals), __pyx_t_5); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 242, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 240, __pyx_L1_error)
+  if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 242, __pyx_L1_error)
   __pyx_t_7 = ((PyArrayObject *)__pyx_t_3);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
@@ -3483,13 +3499,13 @@ static PyObject *__pyx_pf_8auviewer_5cylib_2buildDownsampleFromRaw(CYTHON_UNUSED
       __pyx_t_13 = __pyx_t_14 = __pyx_t_15 = 0;
     }
     __pyx_pybuffernd_intervals.diminfo[0].strides = __pyx_pybuffernd_intervals.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_intervals.diminfo[0].shape = __pyx_pybuffernd_intervals.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_intervals.diminfo[1].strides = __pyx_pybuffernd_intervals.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_intervals.diminfo[1].shape = __pyx_pybuffernd_intervals.rcbuffer->pybuffer.shape[1];
-    if (unlikely(__pyx_t_12 < 0)) __PYX_ERR(0, 240, __pyx_L1_error)
+    if (unlikely(__pyx_t_12 < 0)) __PYX_ERR(0, 242, __pyx_L1_error)
   }
   __pyx_t_7 = 0;
   __Pyx_DECREF_SET(__pyx_v_intervals, ((PyArrayObject *)__pyx_t_3));
   __pyx_t_3 = 0;
 
-  /* "auviewer/cylib.pyx":243
+  /* "auviewer/cylib.pyx":245
  * 
  *     # Return the downsampled intervals
  *     return intervals             # <<<<<<<<<<<<<<
@@ -3539,7 +3555,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_2buildDownsampleFromRaw(CYTHON_UNUSED
   return __pyx_r;
 }
 
-/* "auviewer/cylib.pyx":256
+/* "auviewer/cylib.pyx":258
  * # used to filter out alerts which have fewer than min_sample_count values within
  * # the duration timespan.
  * def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarray[np.float64_t, ndim=1] rawValues, double thresholdlow, double thresholdhigh, int mode, double duration, double persistence, double maxgap, int min_sample_count):             # <<<<<<<<<<<<<<
@@ -3603,53 +3619,53 @@ static PyObject *__pyx_pw_8auviewer_5cylib_5generateThresholdAlerts(PyObject *__
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_rawValues)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("generateThresholdAlerts", 1, 9, 9, 1); __PYX_ERR(0, 256, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("generateThresholdAlerts", 1, 9, 9, 1); __PYX_ERR(0, 258, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_thresholdlow)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("generateThresholdAlerts", 1, 9, 9, 2); __PYX_ERR(0, 256, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("generateThresholdAlerts", 1, 9, 9, 2); __PYX_ERR(0, 258, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_thresholdhigh)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("generateThresholdAlerts", 1, 9, 9, 3); __PYX_ERR(0, 256, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("generateThresholdAlerts", 1, 9, 9, 3); __PYX_ERR(0, 258, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  4:
         if (likely((values[4] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_mode)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("generateThresholdAlerts", 1, 9, 9, 4); __PYX_ERR(0, 256, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("generateThresholdAlerts", 1, 9, 9, 4); __PYX_ERR(0, 258, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  5:
         if (likely((values[5] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_duration)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("generateThresholdAlerts", 1, 9, 9, 5); __PYX_ERR(0, 256, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("generateThresholdAlerts", 1, 9, 9, 5); __PYX_ERR(0, 258, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  6:
         if (likely((values[6] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_persistence)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("generateThresholdAlerts", 1, 9, 9, 6); __PYX_ERR(0, 256, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("generateThresholdAlerts", 1, 9, 9, 6); __PYX_ERR(0, 258, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  7:
         if (likely((values[7] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_maxgap)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("generateThresholdAlerts", 1, 9, 9, 7); __PYX_ERR(0, 256, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("generateThresholdAlerts", 1, 9, 9, 7); __PYX_ERR(0, 258, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  8:
         if (likely((values[8] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_min_sample_count)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("generateThresholdAlerts", 1, 9, 9, 8); __PYX_ERR(0, 256, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("generateThresholdAlerts", 1, 9, 9, 8); __PYX_ERR(0, 258, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "generateThresholdAlerts") < 0)) __PYX_ERR(0, 256, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "generateThresholdAlerts") < 0)) __PYX_ERR(0, 258, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 9) {
       goto __pyx_L5_argtuple_error;
@@ -3666,24 +3682,24 @@ static PyObject *__pyx_pw_8auviewer_5cylib_5generateThresholdAlerts(PyObject *__
     }
     __pyx_v_rawOffsets = ((PyArrayObject *)values[0]);
     __pyx_v_rawValues = ((PyArrayObject *)values[1]);
-    __pyx_v_thresholdlow = __pyx_PyFloat_AsDouble(values[2]); if (unlikely((__pyx_v_thresholdlow == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 256, __pyx_L3_error)
-    __pyx_v_thresholdhigh = __pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_thresholdhigh == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 256, __pyx_L3_error)
-    __pyx_v_mode = __Pyx_PyInt_As_int(values[4]); if (unlikely((__pyx_v_mode == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 256, __pyx_L3_error)
-    __pyx_v_duration = __pyx_PyFloat_AsDouble(values[5]); if (unlikely((__pyx_v_duration == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 256, __pyx_L3_error)
-    __pyx_v_persistence = __pyx_PyFloat_AsDouble(values[6]); if (unlikely((__pyx_v_persistence == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 256, __pyx_L3_error)
-    __pyx_v_maxgap = __pyx_PyFloat_AsDouble(values[7]); if (unlikely((__pyx_v_maxgap == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 256, __pyx_L3_error)
-    __pyx_v_min_sample_count = __Pyx_PyInt_As_int(values[8]); if (unlikely((__pyx_v_min_sample_count == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 256, __pyx_L3_error)
+    __pyx_v_thresholdlow = __pyx_PyFloat_AsDouble(values[2]); if (unlikely((__pyx_v_thresholdlow == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 258, __pyx_L3_error)
+    __pyx_v_thresholdhigh = __pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_thresholdhigh == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 258, __pyx_L3_error)
+    __pyx_v_mode = __Pyx_PyInt_As_int(values[4]); if (unlikely((__pyx_v_mode == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 258, __pyx_L3_error)
+    __pyx_v_duration = __pyx_PyFloat_AsDouble(values[5]); if (unlikely((__pyx_v_duration == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 258, __pyx_L3_error)
+    __pyx_v_persistence = __pyx_PyFloat_AsDouble(values[6]); if (unlikely((__pyx_v_persistence == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 258, __pyx_L3_error)
+    __pyx_v_maxgap = __pyx_PyFloat_AsDouble(values[7]); if (unlikely((__pyx_v_maxgap == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 258, __pyx_L3_error)
+    __pyx_v_min_sample_count = __Pyx_PyInt_As_int(values[8]); if (unlikely((__pyx_v_min_sample_count == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 258, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("generateThresholdAlerts", 1, 9, 9, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 256, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("generateThresholdAlerts", 1, 9, 9, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 258, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("auviewer.cylib.generateThresholdAlerts", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_rawOffsets), __pyx_ptype_5numpy_ndarray, 1, "rawOffsets", 0))) __PYX_ERR(0, 256, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_rawValues), __pyx_ptype_5numpy_ndarray, 1, "rawValues", 0))) __PYX_ERR(0, 256, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_rawOffsets), __pyx_ptype_5numpy_ndarray, 1, "rawOffsets", 0))) __PYX_ERR(0, 258, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_rawValues), __pyx_ptype_5numpy_ndarray, 1, "rawValues", 0))) __PYX_ERR(0, 258, __pyx_L1_error)
   __pyx_r = __pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(__pyx_self, __pyx_v_rawOffsets, __pyx_v_rawValues, __pyx_v_thresholdlow, __pyx_v_thresholdhigh, __pyx_v_mode, __pyx_v_duration, __pyx_v_persistence, __pyx_v_maxgap, __pyx_v_min_sample_count);
 
   /* function exit code */
@@ -3770,16 +3786,16 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
   __pyx_pybuffernd_rawValues.rcbuffer = &__pyx_pybuffer_rawValues;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_rawOffsets.rcbuffer->pybuffer, (PyObject*)__pyx_v_rawOffsets, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 256, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_rawOffsets.rcbuffer->pybuffer, (PyObject*)__pyx_v_rawOffsets, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 258, __pyx_L1_error)
   }
   __pyx_pybuffernd_rawOffsets.diminfo[0].strides = __pyx_pybuffernd_rawOffsets.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_rawOffsets.diminfo[0].shape = __pyx_pybuffernd_rawOffsets.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_rawValues.rcbuffer->pybuffer, (PyObject*)__pyx_v_rawValues, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 256, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_rawValues.rcbuffer->pybuffer, (PyObject*)__pyx_v_rawValues, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 258, __pyx_L1_error)
   }
   __pyx_pybuffernd_rawValues.diminfo[0].strides = __pyx_pybuffernd_rawValues.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_rawValues.diminfo[0].shape = __pyx_pybuffernd_rawValues.rcbuffer->pybuffer.shape[0];
 
-  /* "auviewer/cylib.pyx":263
+  /* "auviewer/cylib.pyx":265
  *     # Pull the indices of all data points that exceed the threshold.
  *     # TODO(gus): Is there a more efficient way to do this?
  *     if mode == 0:             # <<<<<<<<<<<<<<
@@ -3789,21 +3805,21 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
   switch (__pyx_v_mode) {
     case 0:
 
-    /* "auviewer/cylib.pyx":264
+    /* "auviewer/cylib.pyx":266
  *     # TODO(gus): Is there a more efficient way to do this?
  *     if mode == 0:
  *         pastThresholdIndices = np.nonzero((rawValues < thresholdlow))[0]             # <<<<<<<<<<<<<<
  *     elif mode == 1:
  *         pastThresholdIndices = np.nonzero((rawValues > thresholdhigh))[0]
  */
-    __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 264, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 266, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_nonzero); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 264, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_nonzero); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 266, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_2 = PyFloat_FromDouble(__pyx_v_thresholdlow); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 264, __pyx_L1_error)
+    __pyx_t_2 = PyFloat_FromDouble(__pyx_v_thresholdlow); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 266, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_4 = PyObject_RichCompare(((PyObject *)__pyx_v_rawValues), __pyx_t_2, Py_LT); __Pyx_XGOTREF(__pyx_t_4); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 264, __pyx_L1_error)
+    __pyx_t_4 = PyObject_RichCompare(((PyObject *)__pyx_v_rawValues), __pyx_t_2, Py_LT); __Pyx_XGOTREF(__pyx_t_4); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 266, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
     __pyx_t_2 = NULL;
     if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_3))) {
@@ -3818,13 +3834,13 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
     __pyx_t_1 = (__pyx_t_2) ? __Pyx_PyObject_Call2Args(__pyx_t_3, __pyx_t_2, __pyx_t_4) : __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_t_4);
     __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 264, __pyx_L1_error)
+    if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 266, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_3 = __Pyx_GetItemInt(__pyx_t_1, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 264, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_GetItemInt(__pyx_t_1, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 266, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 264, __pyx_L1_error)
+    if (!(likely(((__pyx_t_3) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_3, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 266, __pyx_L1_error)
     __pyx_t_5 = ((PyArrayObject *)__pyx_t_3);
     {
       __Pyx_BufFmt_StackElem __pyx_stack[1];
@@ -3841,13 +3857,13 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
         __pyx_t_7 = __pyx_t_8 = __pyx_t_9 = 0;
       }
       __pyx_pybuffernd_pastThresholdIndices.diminfo[0].strides = __pyx_pybuffernd_pastThresholdIndices.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_pastThresholdIndices.diminfo[0].shape = __pyx_pybuffernd_pastThresholdIndices.rcbuffer->pybuffer.shape[0];
-      if (unlikely(__pyx_t_6 < 0)) __PYX_ERR(0, 264, __pyx_L1_error)
+      if (unlikely(__pyx_t_6 < 0)) __PYX_ERR(0, 266, __pyx_L1_error)
     }
     __pyx_t_5 = 0;
     __pyx_v_pastThresholdIndices = ((PyArrayObject *)__pyx_t_3);
     __pyx_t_3 = 0;
 
-    /* "auviewer/cylib.pyx":263
+    /* "auviewer/cylib.pyx":265
  *     # Pull the indices of all data points that exceed the threshold.
  *     # TODO(gus): Is there a more efficient way to do this?
  *     if mode == 0:             # <<<<<<<<<<<<<<
@@ -3857,21 +3873,21 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
     break;
     case 1:
 
-    /* "auviewer/cylib.pyx":266
+    /* "auviewer/cylib.pyx":268
  *         pastThresholdIndices = np.nonzero((rawValues < thresholdlow))[0]
  *     elif mode == 1:
  *         pastThresholdIndices = np.nonzero((rawValues > thresholdhigh))[0]             # <<<<<<<<<<<<<<
  *     elif mode == 2:
  *         pastThresholdIndices = np.nonzero((rawValues < thresholdlow) | (rawValues > thresholdhigh))[0]
  */
-    __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 266, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_1, __pyx_n_s_np); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 268, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_nonzero); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 266, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_1, __pyx_n_s_nonzero); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 268, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = PyFloat_FromDouble(__pyx_v_thresholdhigh); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 266, __pyx_L1_error)
+    __pyx_t_1 = PyFloat_FromDouble(__pyx_v_thresholdhigh); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 268, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_2 = PyObject_RichCompare(((PyObject *)__pyx_v_rawValues), __pyx_t_1, Py_GT); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 266, __pyx_L1_error)
+    __pyx_t_2 = PyObject_RichCompare(((PyObject *)__pyx_v_rawValues), __pyx_t_1, Py_GT); __Pyx_XGOTREF(__pyx_t_2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 268, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __pyx_t_1 = NULL;
     if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_4))) {
@@ -3886,13 +3902,13 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
     __pyx_t_3 = (__pyx_t_1) ? __Pyx_PyObject_Call2Args(__pyx_t_4, __pyx_t_1, __pyx_t_2) : __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_t_2);
     __Pyx_XDECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 266, __pyx_L1_error)
+    if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 268, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = __Pyx_GetItemInt(__pyx_t_3, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 266, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_GetItemInt(__pyx_t_3, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 268, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    if (!(likely(((__pyx_t_4) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_4, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 266, __pyx_L1_error)
+    if (!(likely(((__pyx_t_4) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_4, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 268, __pyx_L1_error)
     __pyx_t_5 = ((PyArrayObject *)__pyx_t_4);
     {
       __Pyx_BufFmt_StackElem __pyx_stack[1];
@@ -3909,13 +3925,13 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
         __pyx_t_9 = __pyx_t_8 = __pyx_t_7 = 0;
       }
       __pyx_pybuffernd_pastThresholdIndices.diminfo[0].strides = __pyx_pybuffernd_pastThresholdIndices.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_pastThresholdIndices.diminfo[0].shape = __pyx_pybuffernd_pastThresholdIndices.rcbuffer->pybuffer.shape[0];
-      if (unlikely(__pyx_t_6 < 0)) __PYX_ERR(0, 266, __pyx_L1_error)
+      if (unlikely(__pyx_t_6 < 0)) __PYX_ERR(0, 268, __pyx_L1_error)
     }
     __pyx_t_5 = 0;
     __pyx_v_pastThresholdIndices = ((PyArrayObject *)__pyx_t_4);
     __pyx_t_4 = 0;
 
-    /* "auviewer/cylib.pyx":265
+    /* "auviewer/cylib.pyx":267
  *     if mode == 0:
  *         pastThresholdIndices = np.nonzero((rawValues < thresholdlow))[0]
  *     elif mode == 1:             # <<<<<<<<<<<<<<
@@ -3925,27 +3941,27 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
     break;
     case 2:
 
-    /* "auviewer/cylib.pyx":268
+    /* "auviewer/cylib.pyx":270
  *         pastThresholdIndices = np.nonzero((rawValues > thresholdhigh))[0]
  *     elif mode == 2:
  *         pastThresholdIndices = np.nonzero((rawValues < thresholdlow) | (rawValues > thresholdhigh))[0]             # <<<<<<<<<<<<<<
  *     else:
- *         print("Invalid mode parameter provided to generateThresholdAlerts.")
+ *         logging.error("Invalid mode parameter provided to generateThresholdAlerts.")
  */
-    __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 268, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 270, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_nonzero); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 268, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_nonzero); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 270, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_3 = PyFloat_FromDouble(__pyx_v_thresholdlow); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 268, __pyx_L1_error)
+    __pyx_t_3 = PyFloat_FromDouble(__pyx_v_thresholdlow); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 270, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_1 = PyObject_RichCompare(((PyObject *)__pyx_v_rawValues), __pyx_t_3, Py_LT); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 268, __pyx_L1_error)
+    __pyx_t_1 = PyObject_RichCompare(((PyObject *)__pyx_v_rawValues), __pyx_t_3, Py_LT); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 270, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_3 = PyFloat_FromDouble(__pyx_v_thresholdhigh); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 268, __pyx_L1_error)
+    __pyx_t_3 = PyFloat_FromDouble(__pyx_v_thresholdhigh); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 270, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_10 = PyObject_RichCompare(((PyObject *)__pyx_v_rawValues), __pyx_t_3, Py_GT); __Pyx_XGOTREF(__pyx_t_10); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 268, __pyx_L1_error)
+    __pyx_t_10 = PyObject_RichCompare(((PyObject *)__pyx_v_rawValues), __pyx_t_3, Py_GT); __Pyx_XGOTREF(__pyx_t_10); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 270, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_t_3 = PyNumber_Or(__pyx_t_1, __pyx_t_10); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 268, __pyx_L1_error)
+    __pyx_t_3 = PyNumber_Or(__pyx_t_1, __pyx_t_10); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 270, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
@@ -3962,13 +3978,13 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
     __pyx_t_4 = (__pyx_t_10) ? __Pyx_PyObject_Call2Args(__pyx_t_2, __pyx_t_10, __pyx_t_3) : __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_3);
     __Pyx_XDECREF(__pyx_t_10); __pyx_t_10 = 0;
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 268, __pyx_L1_error)
+    if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 270, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_2 = __Pyx_GetItemInt(__pyx_t_4, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 268, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_GetItemInt(__pyx_t_4, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 270, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 268, __pyx_L1_error)
+    if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 270, __pyx_L1_error)
     __pyx_t_5 = ((PyArrayObject *)__pyx_t_2);
     {
       __Pyx_BufFmt_StackElem __pyx_stack[1];
@@ -3985,13 +4001,13 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
         __pyx_t_7 = __pyx_t_8 = __pyx_t_9 = 0;
       }
       __pyx_pybuffernd_pastThresholdIndices.diminfo[0].strides = __pyx_pybuffernd_pastThresholdIndices.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_pastThresholdIndices.diminfo[0].shape = __pyx_pybuffernd_pastThresholdIndices.rcbuffer->pybuffer.shape[0];
-      if (unlikely(__pyx_t_6 < 0)) __PYX_ERR(0, 268, __pyx_L1_error)
+      if (unlikely(__pyx_t_6 < 0)) __PYX_ERR(0, 270, __pyx_L1_error)
     }
     __pyx_t_5 = 0;
     __pyx_v_pastThresholdIndices = ((PyArrayObject *)__pyx_t_2);
     __pyx_t_2 = 0;
 
-    /* "auviewer/cylib.pyx":267
+    /* "auviewer/cylib.pyx":269
  *     elif mode == 1:
  *         pastThresholdIndices = np.nonzero((rawValues > thresholdhigh))[0]
  *     elif mode == 2:             # <<<<<<<<<<<<<<
@@ -4001,99 +4017,117 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
     break;
     default:
 
-    /* "auviewer/cylib.pyx":270
+    /* "auviewer/cylib.pyx":272
  *         pastThresholdIndices = np.nonzero((rawValues < thresholdlow) | (rawValues > thresholdhigh))[0]
  *     else:
- *         print("Invalid mode parameter provided to generateThresholdAlerts.")             # <<<<<<<<<<<<<<
+ *         logging.error("Invalid mode parameter provided to generateThresholdAlerts.")             # <<<<<<<<<<<<<<
  *         return np.array([])
  * 
  */
-    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_print, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 270, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_logging); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 272, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_4);
+    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_error); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 272, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    __pyx_t_4 = NULL;
+    if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_3))) {
+      __pyx_t_4 = PyMethod_GET_SELF(__pyx_t_3);
+      if (likely(__pyx_t_4)) {
+        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_3);
+        __Pyx_INCREF(__pyx_t_4);
+        __Pyx_INCREF(function);
+        __Pyx_DECREF_SET(__pyx_t_3, function);
+      }
+    }
+    __pyx_t_2 = (__pyx_t_4) ? __Pyx_PyObject_Call2Args(__pyx_t_3, __pyx_t_4, __pyx_kp_u_Invalid_mode_parameter_provided) : __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_kp_u_Invalid_mode_parameter_provided);
+    __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
+    if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 272, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-    /* "auviewer/cylib.pyx":271
+    /* "auviewer/cylib.pyx":273
  *     else:
- *         print("Invalid mode parameter provided to generateThresholdAlerts.")
+ *         logging.error("Invalid mode parameter provided to generateThresholdAlerts.")
  *         return np.array([])             # <<<<<<<<<<<<<<
  * 
  *     # Holds generated alerts (start & stop time offsets). We assume there can be
  */
     __Pyx_XDECREF(__pyx_r);
-    __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 271, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_array); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 271, __pyx_L1_error)
+    __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 273, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
-    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = PyList_New(0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 271, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_array); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 273, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __pyx_t_3 = PyList_New(0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 273, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
     __pyx_t_10 = NULL;
-    if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_3))) {
-      __pyx_t_10 = PyMethod_GET_SELF(__pyx_t_3);
+    if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_4))) {
+      __pyx_t_10 = PyMethod_GET_SELF(__pyx_t_4);
       if (likely(__pyx_t_10)) {
-        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_3);
+        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_4);
         __Pyx_INCREF(__pyx_t_10);
         __Pyx_INCREF(function);
-        __Pyx_DECREF_SET(__pyx_t_3, function);
+        __Pyx_DECREF_SET(__pyx_t_4, function);
       }
     }
-    __pyx_t_2 = (__pyx_t_10) ? __Pyx_PyObject_Call2Args(__pyx_t_3, __pyx_t_10, __pyx_t_4) : __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_t_4);
+    __pyx_t_2 = (__pyx_t_10) ? __Pyx_PyObject_Call2Args(__pyx_t_4, __pyx_t_10, __pyx_t_3) : __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_t_3);
     __Pyx_XDECREF(__pyx_t_10); __pyx_t_10 = 0;
-    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 271, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 273, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __pyx_r = __pyx_t_2;
     __pyx_t_2 = 0;
     goto __pyx_L0;
     break;
   }
 
-  /* "auviewer/cylib.pyx":275
+  /* "auviewer/cylib.pyx":277
  *     # Holds generated alerts (start & stop time offsets). We assume there can be
  *     # a max of len(pastThresholdIndices) alerts and slice it shorter at the end.
  *     cdef np.ndarray[np.float64_t, ndim=2] alerts = np.zeros((pastThresholdIndices.shape[0], 2))             # <<<<<<<<<<<<<<
  * 
  *     # Holds the index of the current data point we're working on
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 275, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_zeros); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 275, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 277, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyInt_From_Py_intptr_t((__pyx_v_pastThresholdIndices->dimensions[0])); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 275, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_zeros); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 277, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_10 = PyTuple_New(2); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 275, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __pyx_t_4 = __Pyx_PyInt_From_Py_intptr_t((__pyx_v_pastThresholdIndices->dimensions[0])); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 277, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  __pyx_t_10 = PyTuple_New(2); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 277, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_10);
-  __Pyx_GIVEREF(__pyx_t_3);
-  PyTuple_SET_ITEM(__pyx_t_10, 0, __pyx_t_3);
+  __Pyx_GIVEREF(__pyx_t_4);
+  PyTuple_SET_ITEM(__pyx_t_10, 0, __pyx_t_4);
   __Pyx_INCREF(__pyx_int_2);
   __Pyx_GIVEREF(__pyx_int_2);
   PyTuple_SET_ITEM(__pyx_t_10, 1, __pyx_int_2);
-  __pyx_t_3 = 0;
-  __pyx_t_3 = NULL;
-  if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_4))) {
-    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_4);
-    if (likely(__pyx_t_3)) {
-      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_4);
-      __Pyx_INCREF(__pyx_t_3);
+  __pyx_t_4 = 0;
+  __pyx_t_4 = NULL;
+  if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_3))) {
+    __pyx_t_4 = PyMethod_GET_SELF(__pyx_t_3);
+    if (likely(__pyx_t_4)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_3);
+      __Pyx_INCREF(__pyx_t_4);
       __Pyx_INCREF(function);
-      __Pyx_DECREF_SET(__pyx_t_4, function);
+      __Pyx_DECREF_SET(__pyx_t_3, function);
     }
   }
-  __pyx_t_2 = (__pyx_t_3) ? __Pyx_PyObject_Call2Args(__pyx_t_4, __pyx_t_3, __pyx_t_10) : __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_t_10);
-  __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_2 = (__pyx_t_4) ? __Pyx_PyObject_Call2Args(__pyx_t_3, __pyx_t_4, __pyx_t_10) : __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_t_10);
+  __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-  if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 275, __pyx_L1_error)
+  if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 277, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 275, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 277, __pyx_L1_error)
   __pyx_t_11 = ((PyArrayObject *)__pyx_t_2);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_alerts.rcbuffer->pybuffer, (PyObject*)__pyx_t_11, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) {
       __pyx_v_alerts = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_alerts.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 275, __pyx_L1_error)
+      __PYX_ERR(0, 277, __pyx_L1_error)
     } else {__pyx_pybuffernd_alerts.diminfo[0].strides = __pyx_pybuffernd_alerts.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_alerts.diminfo[0].shape = __pyx_pybuffernd_alerts.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_alerts.diminfo[1].strides = __pyx_pybuffernd_alerts.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_alerts.diminfo[1].shape = __pyx_pybuffernd_alerts.rcbuffer->pybuffer.shape[1];
     }
   }
@@ -4101,7 +4135,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
   __pyx_v_alerts = ((PyArrayObject *)__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "auviewer/cylib.pyx":278
+  /* "auviewer/cylib.pyx":280
  * 
  *     # Holds the index of the current data point we're working on
  *     cdef long cdpi = 0             # <<<<<<<<<<<<<<
@@ -4110,7 +4144,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
  */
   __pyx_v_cdpi = 0;
 
-  /* "auviewer/cylib.pyx":281
+  /* "auviewer/cylib.pyx":283
  * 
  *     # Holds the index of the next available unwritten alert
  *     cdef long nuai = 0             # <<<<<<<<<<<<<<
@@ -4119,7 +4153,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
  */
   __pyx_v_nuai = 0;
 
-  /* "auviewer/cylib.pyx":293
+  /* "auviewer/cylib.pyx":295
  *     cdef double sampleduty
  * 
  *     for alertSampleBeginIndex in pastThresholdIndices:             # <<<<<<<<<<<<<<
@@ -4130,55 +4164,55 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
     __pyx_t_2 = ((PyObject *)__pyx_v_pastThresholdIndices); __Pyx_INCREF(__pyx_t_2); __pyx_t_12 = 0;
     __pyx_t_13 = NULL;
   } else {
-    __pyx_t_12 = -1; __pyx_t_2 = PyObject_GetIter(((PyObject *)__pyx_v_pastThresholdIndices)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 293, __pyx_L1_error)
+    __pyx_t_12 = -1; __pyx_t_2 = PyObject_GetIter(((PyObject *)__pyx_v_pastThresholdIndices)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 295, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_13 = Py_TYPE(__pyx_t_2)->tp_iternext; if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 293, __pyx_L1_error)
+    __pyx_t_13 = Py_TYPE(__pyx_t_2)->tp_iternext; if (unlikely(!__pyx_t_13)) __PYX_ERR(0, 295, __pyx_L1_error)
   }
   for (;;) {
     if (likely(!__pyx_t_13)) {
       if (likely(PyList_CheckExact(__pyx_t_2))) {
         if (__pyx_t_12 >= PyList_GET_SIZE(__pyx_t_2)) break;
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        __pyx_t_4 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_12); __Pyx_INCREF(__pyx_t_4); __pyx_t_12++; if (unlikely(0 < 0)) __PYX_ERR(0, 293, __pyx_L1_error)
+        __pyx_t_3 = PyList_GET_ITEM(__pyx_t_2, __pyx_t_12); __Pyx_INCREF(__pyx_t_3); __pyx_t_12++; if (unlikely(0 < 0)) __PYX_ERR(0, 295, __pyx_L1_error)
         #else
-        __pyx_t_4 = PySequence_ITEM(__pyx_t_2, __pyx_t_12); __pyx_t_12++; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 293, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_4);
+        __pyx_t_3 = PySequence_ITEM(__pyx_t_2, __pyx_t_12); __pyx_t_12++; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 295, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_3);
         #endif
       } else {
         if (__pyx_t_12 >= PyTuple_GET_SIZE(__pyx_t_2)) break;
         #if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
-        __pyx_t_4 = PyTuple_GET_ITEM(__pyx_t_2, __pyx_t_12); __Pyx_INCREF(__pyx_t_4); __pyx_t_12++; if (unlikely(0 < 0)) __PYX_ERR(0, 293, __pyx_L1_error)
+        __pyx_t_3 = PyTuple_GET_ITEM(__pyx_t_2, __pyx_t_12); __Pyx_INCREF(__pyx_t_3); __pyx_t_12++; if (unlikely(0 < 0)) __PYX_ERR(0, 295, __pyx_L1_error)
         #else
-        __pyx_t_4 = PySequence_ITEM(__pyx_t_2, __pyx_t_12); __pyx_t_12++; if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 293, __pyx_L1_error)
-        __Pyx_GOTREF(__pyx_t_4);
+        __pyx_t_3 = PySequence_ITEM(__pyx_t_2, __pyx_t_12); __pyx_t_12++; if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 295, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_3);
         #endif
       }
     } else {
-      __pyx_t_4 = __pyx_t_13(__pyx_t_2);
-      if (unlikely(!__pyx_t_4)) {
+      __pyx_t_3 = __pyx_t_13(__pyx_t_2);
+      if (unlikely(!__pyx_t_3)) {
         PyObject* exc_type = PyErr_Occurred();
         if (exc_type) {
           if (likely(__Pyx_PyErr_GivenExceptionMatches(exc_type, PyExc_StopIteration))) PyErr_Clear();
-          else __PYX_ERR(0, 293, __pyx_L1_error)
+          else __PYX_ERR(0, 295, __pyx_L1_error)
         }
         break;
       }
-      __Pyx_GOTREF(__pyx_t_4);
+      __Pyx_GOTREF(__pyx_t_3);
     }
-    __Pyx_XDECREF_SET(__pyx_v_alertSampleBeginIndex, __pyx_t_4);
-    __pyx_t_4 = 0;
+    __Pyx_XDECREF_SET(__pyx_v_alertSampleBeginIndex, __pyx_t_3);
+    __pyx_t_3 = 0;
 
-    /* "auviewer/cylib.pyx":295
+    /* "auviewer/cylib.pyx":297
  *     for alertSampleBeginIndex in pastThresholdIndices:
  * 
  *         cdpi = alertSampleBeginIndex             # <<<<<<<<<<<<<<
  *         leftboundary = rawOffsets[cdpi]
  *         rightboundary = leftboundary + duration
  */
-    __pyx_t_14 = __Pyx_PyInt_As_long(__pyx_v_alertSampleBeginIndex); if (unlikely((__pyx_t_14 == (long)-1) && PyErr_Occurred())) __PYX_ERR(0, 295, __pyx_L1_error)
+    __pyx_t_14 = __Pyx_PyInt_As_long(__pyx_v_alertSampleBeginIndex); if (unlikely((__pyx_t_14 == (long)-1) && PyErr_Occurred())) __PYX_ERR(0, 297, __pyx_L1_error)
     __pyx_v_cdpi = __pyx_t_14;
 
-    /* "auviewer/cylib.pyx":296
+    /* "auviewer/cylib.pyx":298
  * 
  *         cdpi = alertSampleBeginIndex
  *         leftboundary = rawOffsets[cdpi]             # <<<<<<<<<<<<<<
@@ -4188,7 +4222,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
     __pyx_t_15 = __pyx_v_cdpi;
     __pyx_v_leftboundary = (*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_rawOffsets.rcbuffer->pybuffer.buf, __pyx_t_15, __pyx_pybuffernd_rawOffsets.diminfo[0].strides));
 
-    /* "auviewer/cylib.pyx":297
+    /* "auviewer/cylib.pyx":299
  *         cdpi = alertSampleBeginIndex
  *         leftboundary = rawOffsets[cdpi]
  *         rightboundary = leftboundary + duration             # <<<<<<<<<<<<<<
@@ -4197,7 +4231,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
  */
     __pyx_v_rightboundary = (__pyx_v_leftboundary + __pyx_v_duration);
 
-    /* "auviewer/cylib.pyx":300
+    /* "auviewer/cylib.pyx":302
  * 
  *         # Reset sample persistence statistics
  *         numexceed = 0             # <<<<<<<<<<<<<<
@@ -4206,7 +4240,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
  */
     __pyx_v_numexceed = 0;
 
-    /* "auviewer/cylib.pyx":301
+    /* "auviewer/cylib.pyx":303
  *         # Reset sample persistence statistics
  *         numexceed = 0
  *         numtotal = 0             # <<<<<<<<<<<<<<
@@ -4215,7 +4249,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
  */
     __pyx_v_numtotal = 0;
 
-    /* "auviewer/cylib.pyx":305
+    /* "auviewer/cylib.pyx":307
  *         # Iterate through raw data indices until we hit the raw data bound or
  *         # hit the right time boundary for this current alert.
  *         while cdpi < rawOffsets.shape[0] and rawOffsets[cdpi] < rightboundary:             # <<<<<<<<<<<<<<
@@ -4235,7 +4269,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
       __pyx_L7_bool_binop_done:;
       if (!__pyx_t_16) break;
 
-      /* "auviewer/cylib.pyx":308
+      /* "auviewer/cylib.pyx":310
  * 
  *             # Increment the number of total data points
  *             numtotal = numtotal + 1             # <<<<<<<<<<<<<<
@@ -4244,7 +4278,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
  */
       __pyx_v_numtotal = (__pyx_v_numtotal + 1);
 
-      /* "auviewer/cylib.pyx":312
+      /* "auviewer/cylib.pyx":314
  *             # If this data point exceeds the threshold, increment the number of
  *             # threshold-exceed data points.
  *             if (mode == 0 and rawValues[cdpi] < thresholdlow) or \             # <<<<<<<<<<<<<<
@@ -4265,7 +4299,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
       }
       __pyx_L11_next_or:;
 
-      /* "auviewer/cylib.pyx":313
+      /* "auviewer/cylib.pyx":315
  *             # threshold-exceed data points.
  *             if (mode == 0 and rawValues[cdpi] < thresholdlow) or \
  *                 (mode == 1 and rawValues[cdpi] > thresholdhigh) or \             # <<<<<<<<<<<<<<
@@ -4286,7 +4320,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
       }
       __pyx_L13_next_or:;
 
-      /* "auviewer/cylib.pyx":314
+      /* "auviewer/cylib.pyx":316
  *             if (mode == 0 and rawValues[cdpi] < thresholdlow) or \
  *                 (mode == 1 and rawValues[cdpi] > thresholdhigh) or \
  *                 (mode == 2 and (rawValues[cdpi] < thresholdlow or rawValues[cdpi] > thresholdhigh)):             # <<<<<<<<<<<<<<
@@ -4311,7 +4345,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
       __pyx_t_16 = __pyx_t_17;
       __pyx_L10_bool_binop_done:;
 
-      /* "auviewer/cylib.pyx":312
+      /* "auviewer/cylib.pyx":314
  *             # If this data point exceeds the threshold, increment the number of
  *             # threshold-exceed data points.
  *             if (mode == 0 and rawValues[cdpi] < thresholdlow) or \             # <<<<<<<<<<<<<<
@@ -4320,7 +4354,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
  */
       if (__pyx_t_16) {
 
-        /* "auviewer/cylib.pyx":315
+        /* "auviewer/cylib.pyx":317
  *                 (mode == 1 and rawValues[cdpi] > thresholdhigh) or \
  *                 (mode == 2 and (rawValues[cdpi] < thresholdlow or rawValues[cdpi] > thresholdhigh)):
  *                 numexceed = numexceed + 1             # <<<<<<<<<<<<<<
@@ -4329,7 +4363,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
  */
         __pyx_v_numexceed = (__pyx_v_numexceed + 1);
 
-        /* "auviewer/cylib.pyx":312
+        /* "auviewer/cylib.pyx":314
  *             # If this data point exceeds the threshold, increment the number of
  *             # threshold-exceed data points.
  *             if (mode == 0 and rawValues[cdpi] < thresholdlow) or \             # <<<<<<<<<<<<<<
@@ -4338,7 +4372,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
  */
       }
 
-      /* "auviewer/cylib.pyx":318
+      /* "auviewer/cylib.pyx":320
  * 
  *             # Increment to the next data point
  *             cdpi = cdpi + 1             # <<<<<<<<<<<<<<
@@ -4348,7 +4382,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
       __pyx_v_cdpi = (__pyx_v_cdpi + 1);
     }
 
-    /* "auviewer/cylib.pyx":321
+    /* "auviewer/cylib.pyx":323
  * 
  *         # Calculate the sample persistence
  *         sampleduty = <double>numexceed / <double>numtotal             # <<<<<<<<<<<<<<
@@ -4357,7 +4391,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
  */
     __pyx_v_sampleduty = (((double)__pyx_v_numexceed) / ((double)__pyx_v_numtotal));
 
-    /* "auviewer/cylib.pyx":325
+    /* "auviewer/cylib.pyx":327
  *         # If the persistence of the sample exceeds the minimum to qualify for an
  *         # alert, add this to our alerts.
  *         if sampleduty >= persistence and (cdpi-alertSampleBeginIndex) >= min_sample_count:             # <<<<<<<<<<<<<<
@@ -4370,23 +4404,23 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
       __pyx_t_16 = __pyx_t_17;
       goto __pyx_L18_bool_binop_done;
     }
-    __pyx_t_4 = __Pyx_PyInt_From_long(__pyx_v_cdpi); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 325, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_10 = PyNumber_Subtract(__pyx_t_4, __pyx_v_alertSampleBeginIndex); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 325, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyInt_From_long(__pyx_v_cdpi); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 327, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_10 = PyNumber_Subtract(__pyx_t_3, __pyx_v_alertSampleBeginIndex); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 327, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_10);
-    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_min_sample_count); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 325, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_3 = PyObject_RichCompare(__pyx_t_10, __pyx_t_4, Py_GE); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 325, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_17 = __Pyx_PyObject_IsTrue(__pyx_t_3); if (unlikely(__pyx_t_17 < 0)) __PYX_ERR(0, 325, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __pyx_t_3 = __Pyx_PyInt_From_int(__pyx_v_min_sample_count); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 327, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_4 = PyObject_RichCompare(__pyx_t_10, __pyx_t_3, Py_GE); __Pyx_XGOTREF(__pyx_t_4); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 327, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __pyx_t_17 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_17 < 0)) __PYX_ERR(0, 327, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
     __pyx_t_16 = __pyx_t_17;
     __pyx_L18_bool_binop_done:;
     if (__pyx_t_16) {
 
-      /* "auviewer/cylib.pyx":327
+      /* "auviewer/cylib.pyx":329
  *         if sampleduty >= persistence and (cdpi-alertSampleBeginIndex) >= min_sample_count:
  * 
  *             alerts[nuai,0] = leftboundary             # <<<<<<<<<<<<<<
@@ -4397,7 +4431,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
       __pyx_t_18 = 0;
       *__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_alerts.rcbuffer->pybuffer.buf, __pyx_t_15, __pyx_pybuffernd_alerts.diminfo[0].strides, __pyx_t_18, __pyx_pybuffernd_alerts.diminfo[1].strides) = __pyx_v_leftboundary;
 
-      /* "auviewer/cylib.pyx":328
+      /* "auviewer/cylib.pyx":330
  * 
  *             alerts[nuai,0] = leftboundary
  *             alerts[nuai,1] = rawOffsets[cdpi-1]             # <<<<<<<<<<<<<<
@@ -4409,7 +4443,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
       __pyx_t_19 = 1;
       *__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_alerts.rcbuffer->pybuffer.buf, __pyx_t_15, __pyx_pybuffernd_alerts.diminfo[0].strides, __pyx_t_19, __pyx_pybuffernd_alerts.diminfo[1].strides) = (*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_rawOffsets.rcbuffer->pybuffer.buf, __pyx_t_18, __pyx_pybuffernd_rawOffsets.diminfo[0].strides));
 
-      /* "auviewer/cylib.pyx":331
+      /* "auviewer/cylib.pyx":333
  * 
  *             # Increment to the next available unwritten alert
  *             nuai = nuai + 1             # <<<<<<<<<<<<<<
@@ -4418,7 +4452,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
  */
       __pyx_v_nuai = (__pyx_v_nuai + 1);
 
-      /* "auviewer/cylib.pyx":325
+      /* "auviewer/cylib.pyx":327
  *         # If the persistence of the sample exceeds the minimum to qualify for an
  *         # alert, add this to our alerts.
  *         if sampleduty >= persistence and (cdpi-alertSampleBeginIndex) >= min_sample_count:             # <<<<<<<<<<<<<<
@@ -4427,7 +4461,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
  */
     }
 
-    /* "auviewer/cylib.pyx":293
+    /* "auviewer/cylib.pyx":295
  *     cdef double sampleduty
  * 
  *     for alertSampleBeginIndex in pastThresholdIndices:             # <<<<<<<<<<<<<<
@@ -4437,22 +4471,22 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
   }
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "auviewer/cylib.pyx":334
+  /* "auviewer/cylib.pyx":336
  * 
  *     # Slice off unused alerts
  *     alerts = alerts[0:nuai]             # <<<<<<<<<<<<<<
  * 
  *     # Holds the final, consolidated alerts to be returned
  */
-  __pyx_t_2 = __Pyx_PyInt_From_long(__pyx_v_nuai); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 334, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_From_long(__pyx_v_nuai); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 336, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = PySlice_New(__pyx_int_0, __pyx_t_2, Py_None); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 334, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_4 = PySlice_New(__pyx_int_0, __pyx_t_2, Py_None); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 336, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_PyObject_GetItem(((PyObject *)__pyx_v_alerts), __pyx_t_3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 334, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetItem(((PyObject *)__pyx_v_alerts), __pyx_t_4); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 336, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 334, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 336, __pyx_L1_error)
   __pyx_t_11 = ((PyArrayObject *)__pyx_t_2);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
@@ -4469,57 +4503,57 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
       __pyx_t_9 = __pyx_t_8 = __pyx_t_7 = 0;
     }
     __pyx_pybuffernd_alerts.diminfo[0].strides = __pyx_pybuffernd_alerts.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_alerts.diminfo[0].shape = __pyx_pybuffernd_alerts.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_alerts.diminfo[1].strides = __pyx_pybuffernd_alerts.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_alerts.diminfo[1].shape = __pyx_pybuffernd_alerts.rcbuffer->pybuffer.shape[1];
-    if (unlikely(__pyx_t_6 < 0)) __PYX_ERR(0, 334, __pyx_L1_error)
+    if (unlikely(__pyx_t_6 < 0)) __PYX_ERR(0, 336, __pyx_L1_error)
   }
   __pyx_t_11 = 0;
   __Pyx_DECREF_SET(__pyx_v_alerts, ((PyArrayObject *)__pyx_t_2));
   __pyx_t_2 = 0;
 
-  /* "auviewer/cylib.pyx":337
+  /* "auviewer/cylib.pyx":339
  * 
  *     # Holds the final, consolidated alerts to be returned
  *     cdef np.ndarray[np.float64_t, ndim=2] finalalerts = np.zeros((alerts.shape[0], 2))             # <<<<<<<<<<<<<<
  * 
  *     # Holds the index of the current raw alert
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 337, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_zeros); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 337, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 339, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyInt_From_Py_intptr_t((__pyx_v_alerts->dimensions[0])); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 337, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_zeros); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 339, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_10 = PyTuple_New(2); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 337, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __pyx_t_4 = __Pyx_PyInt_From_Py_intptr_t((__pyx_v_alerts->dimensions[0])); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 339, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_4);
+  __pyx_t_10 = PyTuple_New(2); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 339, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_10);
-  __Pyx_GIVEREF(__pyx_t_3);
-  PyTuple_SET_ITEM(__pyx_t_10, 0, __pyx_t_3);
+  __Pyx_GIVEREF(__pyx_t_4);
+  PyTuple_SET_ITEM(__pyx_t_10, 0, __pyx_t_4);
   __Pyx_INCREF(__pyx_int_2);
   __Pyx_GIVEREF(__pyx_int_2);
   PyTuple_SET_ITEM(__pyx_t_10, 1, __pyx_int_2);
-  __pyx_t_3 = 0;
-  __pyx_t_3 = NULL;
-  if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_4))) {
-    __pyx_t_3 = PyMethod_GET_SELF(__pyx_t_4);
-    if (likely(__pyx_t_3)) {
-      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_4);
-      __Pyx_INCREF(__pyx_t_3);
+  __pyx_t_4 = 0;
+  __pyx_t_4 = NULL;
+  if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_3))) {
+    __pyx_t_4 = PyMethod_GET_SELF(__pyx_t_3);
+    if (likely(__pyx_t_4)) {
+      PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_3);
+      __Pyx_INCREF(__pyx_t_4);
       __Pyx_INCREF(function);
-      __Pyx_DECREF_SET(__pyx_t_4, function);
+      __Pyx_DECREF_SET(__pyx_t_3, function);
     }
   }
-  __pyx_t_2 = (__pyx_t_3) ? __Pyx_PyObject_Call2Args(__pyx_t_4, __pyx_t_3, __pyx_t_10) : __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_t_10);
-  __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_2 = (__pyx_t_4) ? __Pyx_PyObject_Call2Args(__pyx_t_3, __pyx_t_4, __pyx_t_10) : __Pyx_PyObject_CallOneArg(__pyx_t_3, __pyx_t_10);
+  __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-  if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 337, __pyx_L1_error)
+  if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 339, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 337, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 339, __pyx_L1_error)
   __pyx_t_20 = ((PyArrayObject *)__pyx_t_2);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
     if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_finalalerts.rcbuffer->pybuffer, (PyObject*)__pyx_t_20, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) {
       __pyx_v_finalalerts = ((PyArrayObject *)Py_None); __Pyx_INCREF(Py_None); __pyx_pybuffernd_finalalerts.rcbuffer->pybuffer.buf = NULL;
-      __PYX_ERR(0, 337, __pyx_L1_error)
+      __PYX_ERR(0, 339, __pyx_L1_error)
     } else {__pyx_pybuffernd_finalalerts.diminfo[0].strides = __pyx_pybuffernd_finalalerts.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_finalalerts.diminfo[0].shape = __pyx_pybuffernd_finalalerts.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_finalalerts.diminfo[1].strides = __pyx_pybuffernd_finalalerts.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_finalalerts.diminfo[1].shape = __pyx_pybuffernd_finalalerts.rcbuffer->pybuffer.shape[1];
     }
   }
@@ -4527,7 +4561,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
   __pyx_v_finalalerts = ((PyArrayObject *)__pyx_t_2);
   __pyx_t_2 = 0;
 
-  /* "auviewer/cylib.pyx":340
+  /* "auviewer/cylib.pyx":342
  * 
  *     # Holds the index of the current raw alert
  *     cdef long crai = 0             # <<<<<<<<<<<<<<
@@ -4536,7 +4570,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
  */
   __pyx_v_crai = 0;
 
-  /* "auviewer/cylib.pyx":343
+  /* "auviewer/cylib.pyx":345
  * 
  *     # Holds the index of the current final alert
  *     cdef long cfai = 0             # <<<<<<<<<<<<<<
@@ -4545,18 +4579,18 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
  */
   __pyx_v_cfai = 0;
 
-  /* "auviewer/cylib.pyx":349
+  /* "auviewer/cylib.pyx":351
  * 
  *     # Handle the special case that there is only zero or one alert
  *     if len(alerts) <= 1:             # <<<<<<<<<<<<<<
  *         return alerts
  * 
  */
-  __pyx_t_12 = PyObject_Length(((PyObject *)__pyx_v_alerts)); if (unlikely(__pyx_t_12 == ((Py_ssize_t)-1))) __PYX_ERR(0, 349, __pyx_L1_error)
+  __pyx_t_12 = PyObject_Length(((PyObject *)__pyx_v_alerts)); if (unlikely(__pyx_t_12 == ((Py_ssize_t)-1))) __PYX_ERR(0, 351, __pyx_L1_error)
   __pyx_t_16 = ((__pyx_t_12 <= 1) != 0);
   if (__pyx_t_16) {
 
-    /* "auviewer/cylib.pyx":350
+    /* "auviewer/cylib.pyx":352
  *     # Handle the special case that there is only zero or one alert
  *     if len(alerts) <= 1:
  *         return alerts             # <<<<<<<<<<<<<<
@@ -4568,7 +4602,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
     __pyx_r = ((PyObject *)__pyx_v_alerts);
     goto __pyx_L0;
 
-    /* "auviewer/cylib.pyx":349
+    /* "auviewer/cylib.pyx":351
  * 
  *     # Handle the special case that there is only zero or one alert
  *     if len(alerts) <= 1:             # <<<<<<<<<<<<<<
@@ -4577,7 +4611,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
  */
   }
 
-  /* "auviewer/cylib.pyx":353
+  /* "auviewer/cylib.pyx":355
  * 
  *     # Prime the while loop with the first alert as candidate alert
  *     candalertbegin = alerts[crai,0]             # <<<<<<<<<<<<<<
@@ -4588,7 +4622,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
   __pyx_t_19 = 0;
   __pyx_v_candalertbegin = (*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_alerts.rcbuffer->pybuffer.buf, __pyx_t_18, __pyx_pybuffernd_alerts.diminfo[0].strides, __pyx_t_19, __pyx_pybuffernd_alerts.diminfo[1].strides));
 
-  /* "auviewer/cylib.pyx":354
+  /* "auviewer/cylib.pyx":356
  *     # Prime the while loop with the first alert as candidate alert
  *     candalertbegin = alerts[crai,0]
  *     candalertend = alerts[crai,1]             # <<<<<<<<<<<<<<
@@ -4599,7 +4633,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
   __pyx_t_18 = 1;
   __pyx_v_candalertend = (*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_alerts.rcbuffer->pybuffer.buf, __pyx_t_19, __pyx_pybuffernd_alerts.diminfo[0].strides, __pyx_t_18, __pyx_pybuffernd_alerts.diminfo[1].strides));
 
-  /* "auviewer/cylib.pyx":355
+  /* "auviewer/cylib.pyx":357
  *     candalertbegin = alerts[crai,0]
  *     candalertend = alerts[crai,1]
  *     crai = crai + 1             # <<<<<<<<<<<<<<
@@ -4608,7 +4642,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
  */
   __pyx_v_crai = (__pyx_v_crai + 1);
 
-  /* "auviewer/cylib.pyx":357
+  /* "auviewer/cylib.pyx":359
  *     crai = crai + 1
  * 
  *     while crai < len(alerts):             # <<<<<<<<<<<<<<
@@ -4616,48 +4650,48 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
  *         # For each iteration, we either extend the candidate time and move on,
  */
   while (1) {
-    __pyx_t_12 = PyObject_Length(((PyObject *)__pyx_v_alerts)); if (unlikely(__pyx_t_12 == ((Py_ssize_t)-1))) __PYX_ERR(0, 357, __pyx_L1_error)
+    __pyx_t_12 = PyObject_Length(((PyObject *)__pyx_v_alerts)); if (unlikely(__pyx_t_12 == ((Py_ssize_t)-1))) __PYX_ERR(0, 359, __pyx_L1_error)
     __pyx_t_16 = ((__pyx_v_crai < __pyx_t_12) != 0);
     if (!__pyx_t_16) break;
 
-    /* "auviewer/cylib.pyx":364
+    /* "auviewer/cylib.pyx":366
  *         # If the next alert is less than maxgap from the previous alert, extend
  *         # the alert window and move on
  *         if alerts[crai][0] <= candalertend + maxgap:             # <<<<<<<<<<<<<<
  *             candalertend = alerts[crai][1]
  * 
  */
-    __pyx_t_2 = __Pyx_GetItemInt(((PyObject *)__pyx_v_alerts), __pyx_v_crai, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 364, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_GetItemInt(((PyObject *)__pyx_v_alerts), __pyx_v_crai, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 366, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_4 = __Pyx_GetItemInt(__pyx_t_2, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 364, __pyx_L1_error)
-    __Pyx_GOTREF(__pyx_t_4);
+    __pyx_t_3 = __Pyx_GetItemInt(__pyx_t_2, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_3)) __PYX_ERR(0, 366, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_3);
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_2 = PyFloat_FromDouble((__pyx_v_candalertend + __pyx_v_maxgap)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 364, __pyx_L1_error)
+    __pyx_t_2 = PyFloat_FromDouble((__pyx_v_candalertend + __pyx_v_maxgap)); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 366, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
-    __pyx_t_10 = PyObject_RichCompare(__pyx_t_4, __pyx_t_2, Py_LE); __Pyx_XGOTREF(__pyx_t_10); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 364, __pyx_L1_error)
-    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    __pyx_t_10 = PyObject_RichCompare(__pyx_t_3, __pyx_t_2, Py_LE); __Pyx_XGOTREF(__pyx_t_10); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 366, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
     __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-    __pyx_t_16 = __Pyx_PyObject_IsTrue(__pyx_t_10); if (unlikely(__pyx_t_16 < 0)) __PYX_ERR(0, 364, __pyx_L1_error)
+    __pyx_t_16 = __Pyx_PyObject_IsTrue(__pyx_t_10); if (unlikely(__pyx_t_16 < 0)) __PYX_ERR(0, 366, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
     if (__pyx_t_16) {
 
-      /* "auviewer/cylib.pyx":365
+      /* "auviewer/cylib.pyx":367
  *         # the alert window and move on
  *         if alerts[crai][0] <= candalertend + maxgap:
  *             candalertend = alerts[crai][1]             # <<<<<<<<<<<<<<
  * 
  *         # Otherwise, add the current candidate as a final alert and start a
  */
-      __pyx_t_10 = __Pyx_GetItemInt(((PyObject *)__pyx_v_alerts), __pyx_v_crai, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 365, __pyx_L1_error)
+      __pyx_t_10 = __Pyx_GetItemInt(((PyObject *)__pyx_v_alerts), __pyx_v_crai, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 367, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_10);
-      __pyx_t_2 = __Pyx_GetItemInt(__pyx_t_10, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 365, __pyx_L1_error)
+      __pyx_t_2 = __Pyx_GetItemInt(__pyx_t_10, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 367, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_2);
       __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-      __pyx_t_21 = __pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_21 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 365, __pyx_L1_error)
+      __pyx_t_21 = __pyx_PyFloat_AsDouble(__pyx_t_2); if (unlikely((__pyx_t_21 == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 367, __pyx_L1_error)
       __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
       __pyx_v_candalertend = __pyx_t_21;
 
-      /* "auviewer/cylib.pyx":364
+      /* "auviewer/cylib.pyx":366
  *         # If the next alert is less than maxgap from the previous alert, extend
  *         # the alert window and move on
  *         if alerts[crai][0] <= candalertend + maxgap:             # <<<<<<<<<<<<<<
@@ -4667,7 +4701,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
       goto __pyx_L23;
     }
 
-    /* "auviewer/cylib.pyx":372
+    /* "auviewer/cylib.pyx":374
  * 
  *             # Write the  candidate alert as a final alert
  *             finalalerts[cfai,0] = candalertbegin             # <<<<<<<<<<<<<<
@@ -4679,7 +4713,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
       __pyx_t_19 = 0;
       *__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_finalalerts.rcbuffer->pybuffer.buf, __pyx_t_18, __pyx_pybuffernd_finalalerts.diminfo[0].strides, __pyx_t_19, __pyx_pybuffernd_finalalerts.diminfo[1].strides) = __pyx_v_candalertbegin;
 
-      /* "auviewer/cylib.pyx":373
+      /* "auviewer/cylib.pyx":375
  *             # Write the  candidate alert as a final alert
  *             finalalerts[cfai,0] = candalertbegin
  *             finalalerts[cfai,1] = candalertend             # <<<<<<<<<<<<<<
@@ -4690,7 +4724,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
       __pyx_t_18 = 1;
       *__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_finalalerts.rcbuffer->pybuffer.buf, __pyx_t_19, __pyx_pybuffernd_finalalerts.diminfo[0].strides, __pyx_t_18, __pyx_pybuffernd_finalalerts.diminfo[1].strides) = __pyx_v_candalertend;
 
-      /* "auviewer/cylib.pyx":374
+      /* "auviewer/cylib.pyx":376
  *             finalalerts[cfai,0] = candalertbegin
  *             finalalerts[cfai,1] = candalertend
  *             cfai = cfai + 1             # <<<<<<<<<<<<<<
@@ -4699,7 +4733,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
  */
       __pyx_v_cfai = (__pyx_v_cfai + 1);
 
-      /* "auviewer/cylib.pyx":377
+      /* "auviewer/cylib.pyx":379
  * 
  *             # Start a new candidate
  *             candalertbegin = alerts[crai,0]             # <<<<<<<<<<<<<<
@@ -4710,7 +4744,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
       __pyx_t_19 = 0;
       __pyx_v_candalertbegin = (*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_alerts.rcbuffer->pybuffer.buf, __pyx_t_18, __pyx_pybuffernd_alerts.diminfo[0].strides, __pyx_t_19, __pyx_pybuffernd_alerts.diminfo[1].strides));
 
-      /* "auviewer/cylib.pyx":378
+      /* "auviewer/cylib.pyx":380
  *             # Start a new candidate
  *             candalertbegin = alerts[crai,0]
  *             candalertend = alerts[crai,1]             # <<<<<<<<<<<<<<
@@ -4723,7 +4757,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
     }
     __pyx_L23:;
 
-    /* "auviewer/cylib.pyx":381
+    /* "auviewer/cylib.pyx":383
  * 
  *         # Increment to the next alert
  *         crai = crai + 1             # <<<<<<<<<<<<<<
@@ -4733,7 +4767,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
     __pyx_v_crai = (__pyx_v_crai + 1);
   }
 
-  /* "auviewer/cylib.pyx":384
+  /* "auviewer/cylib.pyx":386
  * 
  *     # Write the final unwritten candidate as a final alert.
  *     finalalerts[cfai,0] = candalertbegin             # <<<<<<<<<<<<<<
@@ -4744,7 +4778,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
   __pyx_t_19 = 0;
   *__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_finalalerts.rcbuffer->pybuffer.buf, __pyx_t_18, __pyx_pybuffernd_finalalerts.diminfo[0].strides, __pyx_t_19, __pyx_pybuffernd_finalalerts.diminfo[1].strides) = __pyx_v_candalertbegin;
 
-  /* "auviewer/cylib.pyx":385
+  /* "auviewer/cylib.pyx":387
  *     # Write the final unwritten candidate as a final alert.
  *     finalalerts[cfai,0] = candalertbegin
  *     finalalerts[cfai,1] = candalertend             # <<<<<<<<<<<<<<
@@ -4755,7 +4789,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
   __pyx_t_18 = 1;
   *__Pyx_BufPtrStrided2d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_finalalerts.rcbuffer->pybuffer.buf, __pyx_t_19, __pyx_pybuffernd_finalalerts.diminfo[0].strides, __pyx_t_18, __pyx_pybuffernd_finalalerts.diminfo[1].strides) = __pyx_v_candalertend;
 
-  /* "auviewer/cylib.pyx":386
+  /* "auviewer/cylib.pyx":388
  *     finalalerts[cfai,0] = candalertbegin
  *     finalalerts[cfai,1] = candalertend
  *     cfai = cfai + 1             # <<<<<<<<<<<<<<
@@ -4764,22 +4798,22 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
  */
   __pyx_v_cfai = (__pyx_v_cfai + 1);
 
-  /* "auviewer/cylib.pyx":389
+  /* "auviewer/cylib.pyx":391
  * 
  *     # Slice off the unused final alerts array elements
  *     finalalerts = finalalerts[0:cfai]             # <<<<<<<<<<<<<<
  * 
  *     return finalalerts
  */
-  __pyx_t_2 = __Pyx_PyInt_From_long(__pyx_v_cfai); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 389, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_From_long(__pyx_v_cfai); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 391, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_10 = PySlice_New(__pyx_int_0, __pyx_t_2, Py_None); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 389, __pyx_L1_error)
+  __pyx_t_10 = PySlice_New(__pyx_int_0, __pyx_t_2, Py_None); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 391, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_10);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_PyObject_GetItem(((PyObject *)__pyx_v_finalalerts), __pyx_t_10); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 389, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetItem(((PyObject *)__pyx_v_finalalerts), __pyx_t_10); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 391, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
-  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 389, __pyx_L1_error)
+  if (!(likely(((__pyx_t_2) == Py_None) || likely(__Pyx_TypeTest(__pyx_t_2, __pyx_ptype_5numpy_ndarray))))) __PYX_ERR(0, 391, __pyx_L1_error)
   __pyx_t_20 = ((PyArrayObject *)__pyx_t_2);
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
@@ -4796,13 +4830,13 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
       __pyx_t_7 = __pyx_t_8 = __pyx_t_9 = 0;
     }
     __pyx_pybuffernd_finalalerts.diminfo[0].strides = __pyx_pybuffernd_finalalerts.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_finalalerts.diminfo[0].shape = __pyx_pybuffernd_finalalerts.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_finalalerts.diminfo[1].strides = __pyx_pybuffernd_finalalerts.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_finalalerts.diminfo[1].shape = __pyx_pybuffernd_finalalerts.rcbuffer->pybuffer.shape[1];
-    if (unlikely(__pyx_t_6 < 0)) __PYX_ERR(0, 389, __pyx_L1_error)
+    if (unlikely(__pyx_t_6 < 0)) __PYX_ERR(0, 391, __pyx_L1_error)
   }
   __pyx_t_20 = 0;
   __Pyx_DECREF_SET(__pyx_v_finalalerts, ((PyArrayObject *)__pyx_t_2));
   __pyx_t_2 = 0;
 
-  /* "auviewer/cylib.pyx":391
+  /* "auviewer/cylib.pyx":393
  *     finalalerts = finalalerts[0:cfai]
  * 
  *     return finalalerts             # <<<<<<<<<<<<<<
@@ -4814,7 +4848,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
   __pyx_r = ((PyObject *)__pyx_v_finalalerts);
   goto __pyx_L0;
 
-  /* "auviewer/cylib.pyx":256
+  /* "auviewer/cylib.pyx":258
  * # used to filter out alerts which have fewer than min_sample_count values within
  * # the duration timespan.
  * def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarray[np.float64_t, ndim=1] rawValues, double thresholdlow, double thresholdhigh, int mode, double duration, double persistence, double maxgap, int min_sample_count):             # <<<<<<<<<<<<<<
@@ -4858,7 +4892,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_4generateThresholdAlerts(CYTHON_UNUSE
   return __pyx_r;
 }
 
-/* "auviewer/cylib.pyx":396
+/* "auviewer/cylib.pyx":398
  * # downsample or raw data series. The side parameter indicates whether to
  * # approach from the left or right, where 0 indicates left and non-zero is right.
  * def getSliceParam(ds, timecol, unsigned short side, double target):             # <<<<<<<<<<<<<<
@@ -4907,23 +4941,23 @@ static PyObject *__pyx_pw_8auviewer_5cylib_7getSliceParam(PyObject *__pyx_self, 
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_timecol)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("getSliceParam", 1, 4, 4, 1); __PYX_ERR(0, 396, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("getSliceParam", 1, 4, 4, 1); __PYX_ERR(0, 398, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_side)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("getSliceParam", 1, 4, 4, 2); __PYX_ERR(0, 396, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("getSliceParam", 1, 4, 4, 2); __PYX_ERR(0, 398, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
         if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_target)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("getSliceParam", 1, 4, 4, 3); __PYX_ERR(0, 396, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("getSliceParam", 1, 4, 4, 3); __PYX_ERR(0, 398, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "getSliceParam") < 0)) __PYX_ERR(0, 396, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "getSliceParam") < 0)) __PYX_ERR(0, 398, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 4) {
       goto __pyx_L5_argtuple_error;
@@ -4935,12 +4969,12 @@ static PyObject *__pyx_pw_8auviewer_5cylib_7getSliceParam(PyObject *__pyx_self, 
     }
     __pyx_v_ds = values[0];
     __pyx_v_timecol = values[1];
-    __pyx_v_side = __Pyx_PyInt_As_unsigned_short(values[2]); if (unlikely((__pyx_v_side == (unsigned short)-1) && PyErr_Occurred())) __PYX_ERR(0, 396, __pyx_L3_error)
-    __pyx_v_target = __pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_target == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 396, __pyx_L3_error)
+    __pyx_v_side = __Pyx_PyInt_As_unsigned_short(values[2]); if (unlikely((__pyx_v_side == (unsigned short)-1) && PyErr_Occurred())) __PYX_ERR(0, 398, __pyx_L3_error)
+    __pyx_v_target = __pyx_PyFloat_AsDouble(values[3]); if (unlikely((__pyx_v_target == (double)-1) && PyErr_Occurred())) __PYX_ERR(0, 398, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("getSliceParam", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 396, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("getSliceParam", 1, 4, 4, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 398, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("auviewer.cylib.getSliceParam", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
@@ -4972,20 +5006,20 @@ static PyObject *__pyx_pf_8auviewer_5cylib_6getSliceParam(CYTHON_UNUSED PyObject
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("getSliceParam", 0);
 
-  /* "auviewer/cylib.pyx":398
+  /* "auviewer/cylib.pyx":400
  * def getSliceParam(ds, timecol, unsigned short side, double target):
  * 
  *     cdef long numDataPoints = ds.nrow             # <<<<<<<<<<<<<<
  * 
  *     cdef int low = 0
  */
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_ds, __pyx_n_s_nrow); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 398, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_ds, __pyx_n_s_nrow); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 400, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyInt_As_long(__pyx_t_1); if (unlikely((__pyx_t_2 == (long)-1) && PyErr_Occurred())) __PYX_ERR(0, 398, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyInt_As_long(__pyx_t_1); if (unlikely((__pyx_t_2 == (long)-1) && PyErr_Occurred())) __PYX_ERR(0, 400, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_numDataPoints = __pyx_t_2;
 
-  /* "auviewer/cylib.pyx":400
+  /* "auviewer/cylib.pyx":402
  *     cdef long numDataPoints = ds.nrow
  * 
  *     cdef int low = 0             # <<<<<<<<<<<<<<
@@ -4994,7 +5028,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_6getSliceParam(CYTHON_UNUSED PyObject
  */
   __pyx_v_low = 0;
 
-  /* "auviewer/cylib.pyx":401
+  /* "auviewer/cylib.pyx":403
  * 
  *     cdef int low = 0
  *     cdef int high = numDataPoints - 1             # <<<<<<<<<<<<<<
@@ -5003,7 +5037,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_6getSliceParam(CYTHON_UNUSED PyObject
  */
   __pyx_v_high = (__pyx_v_numDataPoints - 1);
 
-  /* "auviewer/cylib.pyx":409
+  /* "auviewer/cylib.pyx":411
  *     cdef int i
  * 
  *     while low <= high:             # <<<<<<<<<<<<<<
@@ -5014,7 +5048,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_6getSliceParam(CYTHON_UNUSED PyObject
     __pyx_t_3 = ((__pyx_v_low <= __pyx_v_high) != 0);
     if (!__pyx_t_3) break;
 
-    /* "auviewer/cylib.pyx":411
+    /* "auviewer/cylib.pyx":413
  *     while low <= high:
  * 
  *         mid = (low + high) / 2             # <<<<<<<<<<<<<<
@@ -5023,31 +5057,31 @@ static PyObject *__pyx_pf_8auviewer_5cylib_6getSliceParam(CYTHON_UNUSED PyObject
  */
     __pyx_v_mid = (((long)(__pyx_v_low + __pyx_v_high)) / 2);
 
-    /* "auviewer/cylib.pyx":413
+    /* "auviewer/cylib.pyx":415
  *         mid = (low + high) / 2
  * 
  *         if target > ds[mid][timecol][0]:             # <<<<<<<<<<<<<<
  *             low = mid + 1
  *         elif target < ds[mid][timecol][0]:
  */
-    __pyx_t_1 = PyFloat_FromDouble(__pyx_v_target); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 413, __pyx_L1_error)
+    __pyx_t_1 = PyFloat_FromDouble(__pyx_v_target); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 415, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
-    __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_ds, __pyx_v_mid, int, 1, __Pyx_PyInt_From_int, 0, 0, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 413, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_ds, __pyx_v_mid, int, 1, __Pyx_PyInt_From_int, 0, 0, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 415, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = __Pyx_PyObject_GetItem(__pyx_t_4, __pyx_v_timecol); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 413, __pyx_L1_error)
+    __pyx_t_5 = __Pyx_PyObject_GetItem(__pyx_t_4, __pyx_v_timecol); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 415, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = __Pyx_GetItemInt(__pyx_t_5, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 413, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_GetItemInt(__pyx_t_5, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 415, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __pyx_t_5 = PyObject_RichCompare(__pyx_t_1, __pyx_t_4, Py_GT); __Pyx_XGOTREF(__pyx_t_5); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 413, __pyx_L1_error)
+    __pyx_t_5 = PyObject_RichCompare(__pyx_t_1, __pyx_t_4, Py_GT); __Pyx_XGOTREF(__pyx_t_5); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 415, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 413, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 415, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     if (__pyx_t_3) {
 
-      /* "auviewer/cylib.pyx":414
+      /* "auviewer/cylib.pyx":416
  * 
  *         if target > ds[mid][timecol][0]:
  *             low = mid + 1             # <<<<<<<<<<<<<<
@@ -5056,7 +5090,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_6getSliceParam(CYTHON_UNUSED PyObject
  */
       __pyx_v_low = (__pyx_v_mid + 1);
 
-      /* "auviewer/cylib.pyx":413
+      /* "auviewer/cylib.pyx":415
  *         mid = (low + high) / 2
  * 
  *         if target > ds[mid][timecol][0]:             # <<<<<<<<<<<<<<
@@ -5066,31 +5100,31 @@ static PyObject *__pyx_pf_8auviewer_5cylib_6getSliceParam(CYTHON_UNUSED PyObject
       goto __pyx_L5;
     }
 
-    /* "auviewer/cylib.pyx":415
+    /* "auviewer/cylib.pyx":417
  *         if target > ds[mid][timecol][0]:
  *             low = mid + 1
  *         elif target < ds[mid][timecol][0]:             # <<<<<<<<<<<<<<
  *             high = mid - 1
  *         else:
  */
-    __pyx_t_5 = PyFloat_FromDouble(__pyx_v_target); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 415, __pyx_L1_error)
+    __pyx_t_5 = PyFloat_FromDouble(__pyx_v_target); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 417, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_ds, __pyx_v_mid, int, 1, __Pyx_PyInt_From_int, 0, 0, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 415, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_ds, __pyx_v_mid, int, 1, __Pyx_PyInt_From_int, 0, 0, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 417, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_1 = __Pyx_PyObject_GetItem(__pyx_t_4, __pyx_v_timecol); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 415, __pyx_L1_error)
+    __pyx_t_1 = __Pyx_PyObject_GetItem(__pyx_t_4, __pyx_v_timecol); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 417, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_1);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_4 = __Pyx_GetItemInt(__pyx_t_1, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 415, __pyx_L1_error)
+    __pyx_t_4 = __Pyx_GetItemInt(__pyx_t_1, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 417, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-    __pyx_t_1 = PyObject_RichCompare(__pyx_t_5, __pyx_t_4, Py_LT); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 415, __pyx_L1_error)
+    __pyx_t_1 = PyObject_RichCompare(__pyx_t_5, __pyx_t_4, Py_LT); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 417, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 415, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_3 < 0)) __PYX_ERR(0, 417, __pyx_L1_error)
     __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
     if (__pyx_t_3) {
 
-      /* "auviewer/cylib.pyx":416
+      /* "auviewer/cylib.pyx":418
  *             low = mid + 1
  *         elif target < ds[mid][timecol][0]:
  *             high = mid - 1             # <<<<<<<<<<<<<<
@@ -5099,7 +5133,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_6getSliceParam(CYTHON_UNUSED PyObject
  */
       __pyx_v_high = (__pyx_v_mid - 1);
 
-      /* "auviewer/cylib.pyx":415
+      /* "auviewer/cylib.pyx":417
  *         if target > ds[mid][timecol][0]:
  *             low = mid + 1
  *         elif target < ds[mid][timecol][0]:             # <<<<<<<<<<<<<<
@@ -5109,7 +5143,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_6getSliceParam(CYTHON_UNUSED PyObject
       goto __pyx_L5;
     }
 
-    /* "auviewer/cylib.pyx":419
+    /* "auviewer/cylib.pyx":421
  *         else:
  * 
  *             i = mid             # <<<<<<<<<<<<<<
@@ -5119,7 +5153,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_6getSliceParam(CYTHON_UNUSED PyObject
     /*else*/ {
       __pyx_v_i = __pyx_v_mid;
 
-      /* "auviewer/cylib.pyx":422
+      /* "auviewer/cylib.pyx":424
  * 
  *             # For left slice param, we want leftmost equal value index
  *             if side == 0:             # <<<<<<<<<<<<<<
@@ -5129,7 +5163,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_6getSliceParam(CYTHON_UNUSED PyObject
       __pyx_t_3 = ((__pyx_v_side == 0) != 0);
       if (__pyx_t_3) {
 
-        /* "auviewer/cylib.pyx":423
+        /* "auviewer/cylib.pyx":425
  *             # For left slice param, we want leftmost equal value index
  *             if side == 0:
  *                 while i > 0 and ds[i][timecol][0] == target:             # <<<<<<<<<<<<<<
@@ -5143,26 +5177,26 @@ static PyObject *__pyx_pf_8auviewer_5cylib_6getSliceParam(CYTHON_UNUSED PyObject
             __pyx_t_3 = __pyx_t_6;
             goto __pyx_L9_bool_binop_done;
           }
-          __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_ds, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 423, __pyx_L1_error)
+          __pyx_t_1 = __Pyx_GetItemInt(__pyx_v_ds, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 425, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_1);
-          __pyx_t_4 = __Pyx_PyObject_GetItem(__pyx_t_1, __pyx_v_timecol); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 423, __pyx_L1_error)
+          __pyx_t_4 = __Pyx_PyObject_GetItem(__pyx_t_1, __pyx_v_timecol); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 425, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_4);
           __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-          __pyx_t_1 = __Pyx_GetItemInt(__pyx_t_4, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 423, __pyx_L1_error)
+          __pyx_t_1 = __Pyx_GetItemInt(__pyx_t_4, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 425, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_1);
           __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-          __pyx_t_4 = PyFloat_FromDouble(__pyx_v_target); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 423, __pyx_L1_error)
+          __pyx_t_4 = PyFloat_FromDouble(__pyx_v_target); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 425, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_4);
-          __pyx_t_5 = PyObject_RichCompare(__pyx_t_1, __pyx_t_4, Py_EQ); __Pyx_XGOTREF(__pyx_t_5); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 423, __pyx_L1_error)
+          __pyx_t_5 = PyObject_RichCompare(__pyx_t_1, __pyx_t_4, Py_EQ); __Pyx_XGOTREF(__pyx_t_5); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 425, __pyx_L1_error)
           __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
           __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-          __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_6 < 0)) __PYX_ERR(0, 423, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_6 < 0)) __PYX_ERR(0, 425, __pyx_L1_error)
           __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
           __pyx_t_3 = __pyx_t_6;
           __pyx_L9_bool_binop_done:;
           if (!__pyx_t_3) break;
 
-          /* "auviewer/cylib.pyx":424
+          /* "auviewer/cylib.pyx":426
  *             if side == 0:
  *                 while i > 0 and ds[i][timecol][0] == target:
  *                     i = i - 1             # <<<<<<<<<<<<<<
@@ -5172,7 +5206,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_6getSliceParam(CYTHON_UNUSED PyObject
           __pyx_v_i = (__pyx_v_i - 1);
         }
 
-        /* "auviewer/cylib.pyx":425
+        /* "auviewer/cylib.pyx":427
  *                 while i > 0 and ds[i][timecol][0] == target:
  *                     i = i - 1
  *                 return i + 1             # <<<<<<<<<<<<<<
@@ -5180,13 +5214,13 @@ static PyObject *__pyx_pf_8auviewer_5cylib_6getSliceParam(CYTHON_UNUSED PyObject
  *             # For right slice param, we want 1 + rightmost equal value index
  */
         __Pyx_XDECREF(__pyx_r);
-        __pyx_t_5 = __Pyx_PyInt_From_long((__pyx_v_i + 1)); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 425, __pyx_L1_error)
+        __pyx_t_5 = __Pyx_PyInt_From_long((__pyx_v_i + 1)); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 427, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_5);
         __pyx_r = __pyx_t_5;
         __pyx_t_5 = 0;
         goto __pyx_L0;
 
-        /* "auviewer/cylib.pyx":422
+        /* "auviewer/cylib.pyx":424
  * 
  *             # For left slice param, we want leftmost equal value index
  *             if side == 0:             # <<<<<<<<<<<<<<
@@ -5195,7 +5229,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_6getSliceParam(CYTHON_UNUSED PyObject
  */
       }
 
-      /* "auviewer/cylib.pyx":429
+      /* "auviewer/cylib.pyx":431
  *             # For right slice param, we want 1 + rightmost equal value index
  *             else:
  *                 while i < numDataPoints and ds[i][timecol][0] == target:             # <<<<<<<<<<<<<<
@@ -5210,26 +5244,26 @@ static PyObject *__pyx_pf_8auviewer_5cylib_6getSliceParam(CYTHON_UNUSED PyObject
             __pyx_t_3 = __pyx_t_6;
             goto __pyx_L13_bool_binop_done;
           }
-          __pyx_t_5 = __Pyx_GetItemInt(__pyx_v_ds, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 0, 0); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 429, __pyx_L1_error)
+          __pyx_t_5 = __Pyx_GetItemInt(__pyx_v_ds, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 0, 0, 0); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 431, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_5);
-          __pyx_t_4 = __Pyx_PyObject_GetItem(__pyx_t_5, __pyx_v_timecol); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 429, __pyx_L1_error)
+          __pyx_t_4 = __Pyx_PyObject_GetItem(__pyx_t_5, __pyx_v_timecol); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 431, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_4);
           __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-          __pyx_t_5 = __Pyx_GetItemInt(__pyx_t_4, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 429, __pyx_L1_error)
+          __pyx_t_5 = __Pyx_GetItemInt(__pyx_t_4, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 0); if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 431, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_5);
           __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-          __pyx_t_4 = PyFloat_FromDouble(__pyx_v_target); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 429, __pyx_L1_error)
+          __pyx_t_4 = PyFloat_FromDouble(__pyx_v_target); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 431, __pyx_L1_error)
           __Pyx_GOTREF(__pyx_t_4);
-          __pyx_t_1 = PyObject_RichCompare(__pyx_t_5, __pyx_t_4, Py_EQ); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 429, __pyx_L1_error)
+          __pyx_t_1 = PyObject_RichCompare(__pyx_t_5, __pyx_t_4, Py_EQ); __Pyx_XGOTREF(__pyx_t_1); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 431, __pyx_L1_error)
           __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
           __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-          __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_6 < 0)) __PYX_ERR(0, 429, __pyx_L1_error)
+          __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_t_1); if (unlikely(__pyx_t_6 < 0)) __PYX_ERR(0, 431, __pyx_L1_error)
           __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
           __pyx_t_3 = __pyx_t_6;
           __pyx_L13_bool_binop_done:;
           if (!__pyx_t_3) break;
 
-          /* "auviewer/cylib.pyx":430
+          /* "auviewer/cylib.pyx":432
  *             else:
  *                 while i < numDataPoints and ds[i][timecol][0] == target:
  *                     i = i + 1             # <<<<<<<<<<<<<<
@@ -5239,7 +5273,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_6getSliceParam(CYTHON_UNUSED PyObject
           __pyx_v_i = (__pyx_v_i + 1);
         }
 
-        /* "auviewer/cylib.pyx":431
+        /* "auviewer/cylib.pyx":433
  *                 while i < numDataPoints and ds[i][timecol][0] == target:
  *                     i = i + 1
  *                 return i             # <<<<<<<<<<<<<<
@@ -5247,7 +5281,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_6getSliceParam(CYTHON_UNUSED PyObject
  *     return low
  */
         __Pyx_XDECREF(__pyx_r);
-        __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_i); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 431, __pyx_L1_error)
+        __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_i); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 433, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_1);
         __pyx_r = __pyx_t_1;
         __pyx_t_1 = 0;
@@ -5257,7 +5291,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_6getSliceParam(CYTHON_UNUSED PyObject
     __pyx_L5:;
   }
 
-  /* "auviewer/cylib.pyx":433
+  /* "auviewer/cylib.pyx":435
  *                 return i
  * 
  *     return low             # <<<<<<<<<<<<<<
@@ -5265,13 +5299,13 @@ static PyObject *__pyx_pf_8auviewer_5cylib_6getSliceParam(CYTHON_UNUSED PyObject
  * # This function calculates the number of downsample levels to build based on the
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_low); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 433, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_low); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 435, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "auviewer/cylib.pyx":396
+  /* "auviewer/cylib.pyx":398
  * # downsample or raw data series. The side parameter indicates whether to
  * # approach from the left or right, where 0 indicates left and non-zero is right.
  * def getSliceParam(ds, timecol, unsigned short side, double target):             # <<<<<<<<<<<<<<
@@ -5292,7 +5326,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_6getSliceParam(CYTHON_UNUSED PyObject
   return __pyx_r;
 }
 
-/* "auviewer/cylib.pyx":445
+/* "auviewer/cylib.pyx":447
  * # the following downsamples should be built: 3000, 6000, 12000, 24000, 48000,
  * # 96000, 192000.
  * def numDownsamplesToBuild(np.ndarray[np.float64_t, ndim=1] rawOffsets, int M, int stepMultiplier):             # <<<<<<<<<<<<<<
@@ -5338,17 +5372,17 @@ static PyObject *__pyx_pw_8auviewer_5cylib_9numDownsamplesToBuild(PyObject *__py
         case  1:
         if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_M)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("numDownsamplesToBuild", 1, 3, 3, 1); __PYX_ERR(0, 445, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("numDownsamplesToBuild", 1, 3, 3, 1); __PYX_ERR(0, 447, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
         if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_stepMultiplier)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("numDownsamplesToBuild", 1, 3, 3, 2); __PYX_ERR(0, 445, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("numDownsamplesToBuild", 1, 3, 3, 2); __PYX_ERR(0, 447, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "numDownsamplesToBuild") < 0)) __PYX_ERR(0, 445, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "numDownsamplesToBuild") < 0)) __PYX_ERR(0, 447, __pyx_L3_error)
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) != 3) {
       goto __pyx_L5_argtuple_error;
@@ -5358,18 +5392,18 @@ static PyObject *__pyx_pw_8auviewer_5cylib_9numDownsamplesToBuild(PyObject *__py
       values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
     }
     __pyx_v_rawOffsets = ((PyArrayObject *)values[0]);
-    __pyx_v_M = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_M == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 445, __pyx_L3_error)
-    __pyx_v_stepMultiplier = __Pyx_PyInt_As_int(values[2]); if (unlikely((__pyx_v_stepMultiplier == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 445, __pyx_L3_error)
+    __pyx_v_M = __Pyx_PyInt_As_int(values[1]); if (unlikely((__pyx_v_M == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 447, __pyx_L3_error)
+    __pyx_v_stepMultiplier = __Pyx_PyInt_As_int(values[2]); if (unlikely((__pyx_v_stepMultiplier == (int)-1) && PyErr_Occurred())) __PYX_ERR(0, 447, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("numDownsamplesToBuild", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 445, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("numDownsamplesToBuild", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 447, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("auviewer.cylib.numDownsamplesToBuild", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_rawOffsets), __pyx_ptype_5numpy_ndarray, 1, "rawOffsets", 0))) __PYX_ERR(0, 445, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_rawOffsets), __pyx_ptype_5numpy_ndarray, 1, "rawOffsets", 0))) __PYX_ERR(0, 447, __pyx_L1_error)
   __pyx_r = __pyx_pf_8auviewer_5cylib_8numDownsamplesToBuild(__pyx_self, __pyx_v_rawOffsets, __pyx_v_M, __pyx_v_stepMultiplier);
 
   /* function exit code */
@@ -5409,11 +5443,11 @@ static PyObject *__pyx_pf_8auviewer_5cylib_8numDownsamplesToBuild(CYTHON_UNUSED 
   __pyx_pybuffernd_rawOffsets.rcbuffer = &__pyx_pybuffer_rawOffsets;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_rawOffsets.rcbuffer->pybuffer, (PyObject*)__pyx_v_rawOffsets, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 445, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_rawOffsets.rcbuffer->pybuffer, (PyObject*)__pyx_v_rawOffsets, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float64_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 447, __pyx_L1_error)
   }
   __pyx_pybuffernd_rawOffsets.diminfo[0].strides = __pyx_pybuffernd_rawOffsets.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_rawOffsets.diminfo[0].shape = __pyx_pybuffernd_rawOffsets.rcbuffer->pybuffer.shape[0];
 
-  /* "auviewer/cylib.pyx":448
+  /* "auviewer/cylib.pyx":450
  * 
  *     # Grab the rawOffsets length
  *     cdef int numDataPoints = rawOffsets.shape[0]             # <<<<<<<<<<<<<<
@@ -5422,7 +5456,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_8numDownsamplesToBuild(CYTHON_UNUSED 
  */
   __pyx_v_numDataPoints = (__pyx_v_rawOffsets->dimensions[0]);
 
-  /* "auviewer/cylib.pyx":451
+  /* "auviewer/cylib.pyx":453
  * 
  *     # Calculate the timespan of the entire dataset
  *     cdef double timespan = rawOffsets[rawOffsets.shape[0]-1] - rawOffsets[0]             # <<<<<<<<<<<<<<
@@ -5433,7 +5467,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_8numDownsamplesToBuild(CYTHON_UNUSED 
   __pyx_t_2 = 0;
   __pyx_v_timespan = ((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_rawOffsets.rcbuffer->pybuffer.buf, __pyx_t_1, __pyx_pybuffernd_rawOffsets.diminfo[0].strides)) - (*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_rawOffsets.rcbuffer->pybuffer.buf, __pyx_t_2, __pyx_pybuffernd_rawOffsets.diminfo[0].strides)));
 
-  /* "auviewer/cylib.pyx":455
+  /* "auviewer/cylib.pyx":457
  *     # If we have fewer than or equal to 2M data points, no downsamples need to
  *     # be built and we can return immediately.
  *     if numDataPoints <= 2*M:             # <<<<<<<<<<<<<<
@@ -5443,7 +5477,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_8numDownsamplesToBuild(CYTHON_UNUSED 
   __pyx_t_3 = ((__pyx_v_numDataPoints <= (2 * __pyx_v_M)) != 0);
   if (__pyx_t_3) {
 
-    /* "auviewer/cylib.pyx":456
+    /* "auviewer/cylib.pyx":458
  *     # be built and we can return immediately.
  *     if numDataPoints <= 2*M:
  *         return 0             # <<<<<<<<<<<<<<
@@ -5455,7 +5489,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_8numDownsamplesToBuild(CYTHON_UNUSED 
     __pyx_r = __pyx_int_0;
     goto __pyx_L0;
 
-    /* "auviewer/cylib.pyx":455
+    /* "auviewer/cylib.pyx":457
  *     # If we have fewer than or equal to 2M data points, no downsamples need to
  *     # be built and we can return immediately.
  *     if numDataPoints <= 2*M:             # <<<<<<<<<<<<<<
@@ -5464,7 +5498,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_8numDownsamplesToBuild(CYTHON_UNUSED 
  */
   }
 
-  /* "auviewer/cylib.pyx":459
+  /* "auviewer/cylib.pyx":461
  * 
  *     # The first & last variables track the sliding window of 2M data points.
  *     cdef int first = 0             # <<<<<<<<<<<<<<
@@ -5473,7 +5507,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_8numDownsamplesToBuild(CYTHON_UNUSED 
  */
   __pyx_v_first = 0;
 
-  /* "auviewer/cylib.pyx":460
+  /* "auviewer/cylib.pyx":462
  *     # The first & last variables track the sliding window of 2M data points.
  *     cdef int first = 0
  *     cdef int last = 2*M-1             # <<<<<<<<<<<<<<
@@ -5482,7 +5516,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_8numDownsamplesToBuild(CYTHON_UNUSED 
  */
   __pyx_v_last = ((2 * __pyx_v_M) - 1);
 
-  /* "auviewer/cylib.pyx":467
+  /* "auviewer/cylib.pyx":469
  *     # 2M data points in the data set, and it is primed with the first window.
  *     cdef double currentTimeWindow
  *     cdef double smallestTimeWindow = rawOffsets[last] - rawOffsets[first]             # <<<<<<<<<<<<<<
@@ -5493,7 +5527,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_8numDownsamplesToBuild(CYTHON_UNUSED 
   __pyx_t_1 = __pyx_v_first;
   __pyx_v_smallestTimeWindow = ((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_rawOffsets.rcbuffer->pybuffer.buf, __pyx_t_2, __pyx_pybuffernd_rawOffsets.diminfo[0].strides)) - (*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_rawOffsets.rcbuffer->pybuffer.buf, __pyx_t_1, __pyx_pybuffernd_rawOffsets.diminfo[0].strides)));
 
-  /* "auviewer/cylib.pyx":470
+  /* "auviewer/cylib.pyx":472
  * 
  *     # Determine the smallest time window of 2M data points
  *     while last < numDataPoints:             # <<<<<<<<<<<<<<
@@ -5504,7 +5538,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_8numDownsamplesToBuild(CYTHON_UNUSED 
     __pyx_t_3 = ((__pyx_v_last < __pyx_v_numDataPoints) != 0);
     if (!__pyx_t_3) break;
 
-    /* "auviewer/cylib.pyx":473
+    /* "auviewer/cylib.pyx":475
  * 
  *         # Calculate the time window of the current window of 2M data points
  *         currentTimeWindow = rawOffsets[last] - rawOffsets[first]             # <<<<<<<<<<<<<<
@@ -5515,7 +5549,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_8numDownsamplesToBuild(CYTHON_UNUSED 
     __pyx_t_2 = __pyx_v_first;
     __pyx_v_currentTimeWindow = ((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_rawOffsets.rcbuffer->pybuffer.buf, __pyx_t_1, __pyx_pybuffernd_rawOffsets.diminfo[0].strides)) - (*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float64_t *, __pyx_pybuffernd_rawOffsets.rcbuffer->pybuffer.buf, __pyx_t_2, __pyx_pybuffernd_rawOffsets.diminfo[0].strides)));
 
-    /* "auviewer/cylib.pyx":476
+    /* "auviewer/cylib.pyx":478
  * 
  *         # Update smallest time window if applicable
  *         if currentTimeWindow < smallestTimeWindow:             # <<<<<<<<<<<<<<
@@ -5525,7 +5559,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_8numDownsamplesToBuild(CYTHON_UNUSED 
     __pyx_t_3 = ((__pyx_v_currentTimeWindow < __pyx_v_smallestTimeWindow) != 0);
     if (__pyx_t_3) {
 
-      /* "auviewer/cylib.pyx":477
+      /* "auviewer/cylib.pyx":479
  *         # Update smallest time window if applicable
  *         if currentTimeWindow < smallestTimeWindow:
  *             smallestTimeWindow = currentTimeWindow             # <<<<<<<<<<<<<<
@@ -5534,7 +5568,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_8numDownsamplesToBuild(CYTHON_UNUSED 
  */
       __pyx_v_smallestTimeWindow = __pyx_v_currentTimeWindow;
 
-      /* "auviewer/cylib.pyx":476
+      /* "auviewer/cylib.pyx":478
  * 
  *         # Update smallest time window if applicable
  *         if currentTimeWindow < smallestTimeWindow:             # <<<<<<<<<<<<<<
@@ -5543,7 +5577,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_8numDownsamplesToBuild(CYTHON_UNUSED 
  */
     }
 
-    /* "auviewer/cylib.pyx":480
+    /* "auviewer/cylib.pyx":482
  * 
  *         # Increment first & last pointers
  *         first = first + 1             # <<<<<<<<<<<<<<
@@ -5552,7 +5586,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_8numDownsamplesToBuild(CYTHON_UNUSED 
  */
     __pyx_v_first = (__pyx_v_first + 1);
 
-    /* "auviewer/cylib.pyx":481
+    /* "auviewer/cylib.pyx":483
  *         # Increment first & last pointers
  *         first = first + 1
  *         last = last + 1             # <<<<<<<<<<<<<<
@@ -5562,7 +5596,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_8numDownsamplesToBuild(CYTHON_UNUSED 
     __pyx_v_last = (__pyx_v_last + 1);
   }
 
-  /* "auviewer/cylib.pyx":487
+  /* "auviewer/cylib.pyx":489
  *     # time-per-interval that the downsample reach (by floor is meant it should
  *     # not actually reach it).
  *     cdef double floorTimePerInterval = smallestTimeWindow / M             # <<<<<<<<<<<<<<
@@ -5571,7 +5605,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_8numDownsamplesToBuild(CYTHON_UNUSED 
  */
   __pyx_v_floorTimePerInterval = (__pyx_v_smallestTimeWindow / ((double)__pyx_v_M));
 
-  /* "auviewer/cylib.pyx":490
+  /* "auviewer/cylib.pyx":492
  * 
  *     # Holds our return value, the number of downsamples to build
  *     cdef int numDownsamplesToBuild = 0             # <<<<<<<<<<<<<<
@@ -5580,7 +5614,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_8numDownsamplesToBuild(CYTHON_UNUSED 
  */
   __pyx_v_numDownsamplesToBuild = 0;
 
-  /* "auviewer/cylib.pyx":497
+  /* "auviewer/cylib.pyx":499
  *     # current number of downsamples, so we stop once that reaches at or below
  *     # floorTimePerInterval.
  *     cdef int currentNumDownsamples = M             # <<<<<<<<<<<<<<
@@ -5589,7 +5623,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_8numDownsamplesToBuild(CYTHON_UNUSED 
  */
   __pyx_v_currentNumDownsamples = __pyx_v_M;
 
-  /* "auviewer/cylib.pyx":498
+  /* "auviewer/cylib.pyx":500
  *     # floorTimePerInterval.
  *     cdef int currentNumDownsamples = M
  *     while timespan/currentNumDownsamples > floorTimePerInterval:             # <<<<<<<<<<<<<<
@@ -5600,7 +5634,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_8numDownsamplesToBuild(CYTHON_UNUSED 
     __pyx_t_3 = (((__pyx_v_timespan / ((double)__pyx_v_currentNumDownsamples)) > __pyx_v_floorTimePerInterval) != 0);
     if (!__pyx_t_3) break;
 
-    /* "auviewer/cylib.pyx":499
+    /* "auviewer/cylib.pyx":501
  *     cdef int currentNumDownsamples = M
  *     while timespan/currentNumDownsamples > floorTimePerInterval:
  *         numDownsamplesToBuild = numDownsamplesToBuild + 1             # <<<<<<<<<<<<<<
@@ -5609,7 +5643,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_8numDownsamplesToBuild(CYTHON_UNUSED 
  */
     __pyx_v_numDownsamplesToBuild = (__pyx_v_numDownsamplesToBuild + 1);
 
-    /* "auviewer/cylib.pyx":500
+    /* "auviewer/cylib.pyx":502
  *     while timespan/currentNumDownsamples > floorTimePerInterval:
  *         numDownsamplesToBuild = numDownsamplesToBuild + 1
  *         currentNumDownsamples = currentNumDownsamples * stepMultiplier             # <<<<<<<<<<<<<<
@@ -5619,19 +5653,19 @@ static PyObject *__pyx_pf_8auviewer_5cylib_8numDownsamplesToBuild(CYTHON_UNUSED 
     __pyx_v_currentNumDownsamples = (__pyx_v_currentNumDownsamples * __pyx_v_stepMultiplier);
   }
 
-  /* "auviewer/cylib.pyx":503
+  /* "auviewer/cylib.pyx":505
  * 
  *     # Return the downsample levels to build.
  *     return numDownsamplesToBuild             # <<<<<<<<<<<<<<
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_numDownsamplesToBuild); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 503, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_numDownsamplesToBuild); if (unlikely(!__pyx_t_4)) __PYX_ERR(0, 505, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __pyx_r = __pyx_t_4;
   __pyx_t_4 = 0;
   goto __pyx_L0;
 
-  /* "auviewer/cylib.pyx":445
+  /* "auviewer/cylib.pyx":447
  * # the following downsamples should be built: 3000, 6000, 12000, 24000, 48000,
  * # 96000, 192000.
  * def numDownsamplesToBuild(np.ndarray[np.float64_t, ndim=1] rawOffsets, int M, int stepMultiplier):             # <<<<<<<<<<<<<<
@@ -5659,7 +5693,7 @@ static PyObject *__pyx_pf_8auviewer_5cylib_8numDownsamplesToBuild(CYTHON_UNUSED 
   return __pyx_r;
 }
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":734
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":734
  * ctypedef npy_cdouble     complex_t
  * 
  * cdef inline object PyArray_MultiIterNew1(a):             # <<<<<<<<<<<<<<
@@ -5676,7 +5710,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew1(PyObject *__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew1", 0);
 
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":735
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":735
  * 
  * cdef inline object PyArray_MultiIterNew1(a):
  *     return PyArray_MultiIterNew(1, <void*>a)             # <<<<<<<<<<<<<<
@@ -5690,7 +5724,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew1(PyObject *__
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":734
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":734
  * ctypedef npy_cdouble     complex_t
  * 
  * cdef inline object PyArray_MultiIterNew1(a):             # <<<<<<<<<<<<<<
@@ -5709,7 +5743,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew1(PyObject *__
   return __pyx_r;
 }
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":737
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":737
  *     return PyArray_MultiIterNew(1, <void*>a)
  * 
  * cdef inline object PyArray_MultiIterNew2(a, b):             # <<<<<<<<<<<<<<
@@ -5726,7 +5760,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew2(PyObject *__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew2", 0);
 
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":738
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":738
  * 
  * cdef inline object PyArray_MultiIterNew2(a, b):
  *     return PyArray_MultiIterNew(2, <void*>a, <void*>b)             # <<<<<<<<<<<<<<
@@ -5740,7 +5774,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew2(PyObject *__
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":737
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":737
  *     return PyArray_MultiIterNew(1, <void*>a)
  * 
  * cdef inline object PyArray_MultiIterNew2(a, b):             # <<<<<<<<<<<<<<
@@ -5759,7 +5793,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew2(PyObject *__
   return __pyx_r;
 }
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":740
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":740
  *     return PyArray_MultiIterNew(2, <void*>a, <void*>b)
  * 
  * cdef inline object PyArray_MultiIterNew3(a, b, c):             # <<<<<<<<<<<<<<
@@ -5776,7 +5810,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew3(PyObject *__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew3", 0);
 
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":741
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":741
  * 
  * cdef inline object PyArray_MultiIterNew3(a, b, c):
  *     return PyArray_MultiIterNew(3, <void*>a, <void*>b, <void*> c)             # <<<<<<<<<<<<<<
@@ -5790,7 +5824,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew3(PyObject *__
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":740
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":740
  *     return PyArray_MultiIterNew(2, <void*>a, <void*>b)
  * 
  * cdef inline object PyArray_MultiIterNew3(a, b, c):             # <<<<<<<<<<<<<<
@@ -5809,7 +5843,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew3(PyObject *__
   return __pyx_r;
 }
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":743
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":743
  *     return PyArray_MultiIterNew(3, <void*>a, <void*>b, <void*> c)
  * 
  * cdef inline object PyArray_MultiIterNew4(a, b, c, d):             # <<<<<<<<<<<<<<
@@ -5826,7 +5860,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew4(PyObject *__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew4", 0);
 
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":744
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":744
  * 
  * cdef inline object PyArray_MultiIterNew4(a, b, c, d):
  *     return PyArray_MultiIterNew(4, <void*>a, <void*>b, <void*>c, <void*> d)             # <<<<<<<<<<<<<<
@@ -5840,7 +5874,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew4(PyObject *__
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":743
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":743
  *     return PyArray_MultiIterNew(3, <void*>a, <void*>b, <void*> c)
  * 
  * cdef inline object PyArray_MultiIterNew4(a, b, c, d):             # <<<<<<<<<<<<<<
@@ -5859,7 +5893,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew4(PyObject *__
   return __pyx_r;
 }
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":746
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":746
  *     return PyArray_MultiIterNew(4, <void*>a, <void*>b, <void*>c, <void*> d)
  * 
  * cdef inline object PyArray_MultiIterNew5(a, b, c, d, e):             # <<<<<<<<<<<<<<
@@ -5876,7 +5910,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew5(PyObject *__
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("PyArray_MultiIterNew5", 0);
 
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":747
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":747
  * 
  * cdef inline object PyArray_MultiIterNew5(a, b, c, d, e):
  *     return PyArray_MultiIterNew(5, <void*>a, <void*>b, <void*>c, <void*> d, <void*> e)             # <<<<<<<<<<<<<<
@@ -5890,7 +5924,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew5(PyObject *__
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":746
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":746
  *     return PyArray_MultiIterNew(4, <void*>a, <void*>b, <void*>c, <void*> d)
  * 
  * cdef inline object PyArray_MultiIterNew5(a, b, c, d, e):             # <<<<<<<<<<<<<<
@@ -5909,7 +5943,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyArray_MultiIterNew5(PyObject *__
   return __pyx_r;
 }
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":749
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":749
  *     return PyArray_MultiIterNew(5, <void*>a, <void*>b, <void*>c, <void*> d, <void*> e)
  * 
  * cdef inline tuple PyDataType_SHAPE(dtype d):             # <<<<<<<<<<<<<<
@@ -5923,7 +5957,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("PyDataType_SHAPE", 0);
 
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":750
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":750
  * 
  * cdef inline tuple PyDataType_SHAPE(dtype d):
  *     if PyDataType_HASSUBARRAY(d):             # <<<<<<<<<<<<<<
@@ -5933,7 +5967,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
   __pyx_t_1 = (PyDataType_HASSUBARRAY(__pyx_v_d) != 0);
   if (__pyx_t_1) {
 
-    /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":751
+    /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":751
  * cdef inline tuple PyDataType_SHAPE(dtype d):
  *     if PyDataType_HASSUBARRAY(d):
  *         return <tuple>d.subarray.shape             # <<<<<<<<<<<<<<
@@ -5945,7 +5979,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
     __pyx_r = ((PyObject*)__pyx_v_d->subarray->shape);
     goto __pyx_L0;
 
-    /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":750
+    /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":750
  * 
  * cdef inline tuple PyDataType_SHAPE(dtype d):
  *     if PyDataType_HASSUBARRAY(d):             # <<<<<<<<<<<<<<
@@ -5954,7 +5988,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
  */
   }
 
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":753
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":753
  *         return <tuple>d.subarray.shape
  *     else:
  *         return ()             # <<<<<<<<<<<<<<
@@ -5968,7 +6002,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
     goto __pyx_L0;
   }
 
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":749
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":749
  *     return PyArray_MultiIterNew(5, <void*>a, <void*>b, <void*>c, <void*> d, <void*> e)
  * 
  * cdef inline tuple PyDataType_SHAPE(dtype d):             # <<<<<<<<<<<<<<
@@ -5983,7 +6017,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_PyDataType_SHAPE(PyArray_Descr *__
   return __pyx_r;
 }
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":868
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":868
  *     int _import_umath() except -1
  * 
  * cdef inline void set_array_base(ndarray arr, object base):             # <<<<<<<<<<<<<<
@@ -5995,7 +6029,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("set_array_base", 0);
 
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":869
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":869
  * 
  * cdef inline void set_array_base(ndarray arr, object base):
  *     Py_INCREF(base) # important to do this before stealing the reference below!             # <<<<<<<<<<<<<<
@@ -6004,7 +6038,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
  */
   Py_INCREF(__pyx_v_base);
 
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":870
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":870
  * cdef inline void set_array_base(ndarray arr, object base):
  *     Py_INCREF(base) # important to do this before stealing the reference below!
  *     PyArray_SetBaseObject(arr, base)             # <<<<<<<<<<<<<<
@@ -6013,7 +6047,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
  */
   (void)(PyArray_SetBaseObject(__pyx_v_arr, __pyx_v_base));
 
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":868
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":868
  *     int _import_umath() except -1
  * 
  * cdef inline void set_array_base(ndarray arr, object base):             # <<<<<<<<<<<<<<
@@ -6025,7 +6059,7 @@ static CYTHON_INLINE void __pyx_f_5numpy_set_array_base(PyArrayObject *__pyx_v_a
   __Pyx_RefNannyFinishContext();
 }
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":872
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":872
  *     PyArray_SetBaseObject(arr, base)
  * 
  * cdef inline object get_array_base(ndarray arr):             # <<<<<<<<<<<<<<
@@ -6040,7 +6074,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
   int __pyx_t_1;
   __Pyx_RefNannySetupContext("get_array_base", 0);
 
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":873
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":873
  * 
  * cdef inline object get_array_base(ndarray arr):
  *     base = PyArray_BASE(arr)             # <<<<<<<<<<<<<<
@@ -6049,7 +6083,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
  */
   __pyx_v_base = PyArray_BASE(__pyx_v_arr);
 
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":874
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":874
  * cdef inline object get_array_base(ndarray arr):
  *     base = PyArray_BASE(arr)
  *     if base is NULL:             # <<<<<<<<<<<<<<
@@ -6059,7 +6093,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
   __pyx_t_1 = ((__pyx_v_base == NULL) != 0);
   if (__pyx_t_1) {
 
-    /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":875
+    /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":875
  *     base = PyArray_BASE(arr)
  *     if base is NULL:
  *         return None             # <<<<<<<<<<<<<<
@@ -6070,7 +6104,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
     __pyx_r = Py_None; __Pyx_INCREF(Py_None);
     goto __pyx_L0;
 
-    /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":874
+    /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":874
  * cdef inline object get_array_base(ndarray arr):
  *     base = PyArray_BASE(arr)
  *     if base is NULL:             # <<<<<<<<<<<<<<
@@ -6079,7 +6113,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
  */
   }
 
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":876
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":876
  *     if base is NULL:
  *         return None
  *     return <object>base             # <<<<<<<<<<<<<<
@@ -6091,7 +6125,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
   __pyx_r = ((PyObject *)__pyx_v_base);
   goto __pyx_L0;
 
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":872
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":872
  *     PyArray_SetBaseObject(arr, base)
  * 
  * cdef inline object get_array_base(ndarray arr):             # <<<<<<<<<<<<<<
@@ -6106,7 +6140,7 @@ static CYTHON_INLINE PyObject *__pyx_f_5numpy_get_array_base(PyArrayObject *__py
   return __pyx_r;
 }
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":880
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":880
  * # Versions of the import_* functions which are more suitable for
  * # Cython code.
  * cdef inline int import_array() except -1:             # <<<<<<<<<<<<<<
@@ -6130,7 +6164,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("import_array", 0);
 
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":881
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":881
  * # Cython code.
  * cdef inline int import_array() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -6146,7 +6180,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
     __Pyx_XGOTREF(__pyx_t_3);
     /*try:*/ {
 
-      /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":882
+      /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":882
  * cdef inline int import_array() except -1:
  *     try:
  *         __pyx_import_array()             # <<<<<<<<<<<<<<
@@ -6155,7 +6189,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
  */
       __pyx_t_4 = _import_array(); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(1, 882, __pyx_L3_error)
 
-      /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":881
+      /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":881
  * # Cython code.
  * cdef inline int import_array() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -6169,7 +6203,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
     goto __pyx_L8_try_end;
     __pyx_L3_error:;
 
-    /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":883
+    /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":883
  *     try:
  *         __pyx_import_array()
  *     except Exception:             # <<<<<<<<<<<<<<
@@ -6184,14 +6218,14 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
       __Pyx_GOTREF(__pyx_t_6);
       __Pyx_GOTREF(__pyx_t_7);
 
-      /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":884
+      /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":884
  *         __pyx_import_array()
  *     except Exception:
  *         raise ImportError("numpy.core.multiarray failed to import")             # <<<<<<<<<<<<<<
  * 
  * cdef inline int import_umath() except -1:
  */
-      __pyx_t_8 = __Pyx_PyObject_Call(__pyx_builtin_ImportError, __pyx_tuple__3, NULL); if (unlikely(!__pyx_t_8)) __PYX_ERR(1, 884, __pyx_L5_except_error)
+      __pyx_t_8 = __Pyx_PyObject_Call(__pyx_builtin_ImportError, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_8)) __PYX_ERR(1, 884, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_8);
       __Pyx_Raise(__pyx_t_8, 0, 0, 0);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
@@ -6200,7 +6234,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
     goto __pyx_L5_except_error;
     __pyx_L5_except_error:;
 
-    /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":881
+    /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":881
  * # Cython code.
  * cdef inline int import_array() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -6215,7 +6249,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
     __pyx_L8_try_end:;
   }
 
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":880
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":880
  * # Versions of the import_* functions which are more suitable for
  * # Cython code.
  * cdef inline int import_array() except -1:             # <<<<<<<<<<<<<<
@@ -6238,7 +6272,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
   return __pyx_r;
 }
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":886
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":886
  *         raise ImportError("numpy.core.multiarray failed to import")
  * 
  * cdef inline int import_umath() except -1:             # <<<<<<<<<<<<<<
@@ -6262,7 +6296,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("import_umath", 0);
 
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":887
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":887
  * 
  * cdef inline int import_umath() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -6278,7 +6312,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
     __Pyx_XGOTREF(__pyx_t_3);
     /*try:*/ {
 
-      /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":888
+      /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":888
  * cdef inline int import_umath() except -1:
  *     try:
  *         _import_umath()             # <<<<<<<<<<<<<<
@@ -6287,7 +6321,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
  */
       __pyx_t_4 = _import_umath(); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(1, 888, __pyx_L3_error)
 
-      /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":887
+      /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":887
  * 
  * cdef inline int import_umath() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -6301,7 +6335,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
     goto __pyx_L8_try_end;
     __pyx_L3_error:;
 
-    /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":889
+    /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":889
  *     try:
  *         _import_umath()
  *     except Exception:             # <<<<<<<<<<<<<<
@@ -6316,14 +6350,14 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
       __Pyx_GOTREF(__pyx_t_6);
       __Pyx_GOTREF(__pyx_t_7);
 
-      /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":890
+      /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":890
  *         _import_umath()
  *     except Exception:
  *         raise ImportError("numpy.core.umath failed to import")             # <<<<<<<<<<<<<<
  * 
  * cdef inline int import_ufunc() except -1:
  */
-      __pyx_t_8 = __Pyx_PyObject_Call(__pyx_builtin_ImportError, __pyx_tuple__4, NULL); if (unlikely(!__pyx_t_8)) __PYX_ERR(1, 890, __pyx_L5_except_error)
+      __pyx_t_8 = __Pyx_PyObject_Call(__pyx_builtin_ImportError, __pyx_tuple__3, NULL); if (unlikely(!__pyx_t_8)) __PYX_ERR(1, 890, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_8);
       __Pyx_Raise(__pyx_t_8, 0, 0, 0);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
@@ -6332,7 +6366,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
     goto __pyx_L5_except_error;
     __pyx_L5_except_error:;
 
-    /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":887
+    /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":887
  * 
  * cdef inline int import_umath() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -6347,7 +6381,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
     __pyx_L8_try_end:;
   }
 
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":886
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":886
  *         raise ImportError("numpy.core.multiarray failed to import")
  * 
  * cdef inline int import_umath() except -1:             # <<<<<<<<<<<<<<
@@ -6370,7 +6404,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
   return __pyx_r;
 }
 
-/* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":892
+/* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":892
  *         raise ImportError("numpy.core.umath failed to import")
  * 
  * cdef inline int import_ufunc() except -1:             # <<<<<<<<<<<<<<
@@ -6394,7 +6428,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("import_ufunc", 0);
 
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":893
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":893
  * 
  * cdef inline int import_ufunc() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -6410,7 +6444,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
     __Pyx_XGOTREF(__pyx_t_3);
     /*try:*/ {
 
-      /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":894
+      /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":894
  * cdef inline int import_ufunc() except -1:
  *     try:
  *         _import_umath()             # <<<<<<<<<<<<<<
@@ -6419,7 +6453,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
  */
       __pyx_t_4 = _import_umath(); if (unlikely(__pyx_t_4 == ((int)-1))) __PYX_ERR(1, 894, __pyx_L3_error)
 
-      /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":893
+      /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":893
  * 
  * cdef inline int import_ufunc() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -6433,7 +6467,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
     goto __pyx_L8_try_end;
     __pyx_L3_error:;
 
-    /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":895
+    /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":895
  *     try:
  *         _import_umath()
  *     except Exception:             # <<<<<<<<<<<<<<
@@ -6448,14 +6482,14 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
       __Pyx_GOTREF(__pyx_t_6);
       __Pyx_GOTREF(__pyx_t_7);
 
-      /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":896
+      /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":896
  *         _import_umath()
  *     except Exception:
  *         raise ImportError("numpy.core.umath failed to import")             # <<<<<<<<<<<<<<
  * 
  * cdef extern from *:
  */
-      __pyx_t_8 = __Pyx_PyObject_Call(__pyx_builtin_ImportError, __pyx_tuple__4, NULL); if (unlikely(!__pyx_t_8)) __PYX_ERR(1, 896, __pyx_L5_except_error)
+      __pyx_t_8 = __Pyx_PyObject_Call(__pyx_builtin_ImportError, __pyx_tuple__3, NULL); if (unlikely(!__pyx_t_8)) __PYX_ERR(1, 896, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_8);
       __Pyx_Raise(__pyx_t_8, 0, 0, 0);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
@@ -6464,7 +6498,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
     goto __pyx_L5_except_error;
     __pyx_L5_except_error:;
 
-    /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":893
+    /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":893
  * 
  * cdef inline int import_ufunc() except -1:
  *     try:             # <<<<<<<<<<<<<<
@@ -6479,7 +6513,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
     __pyx_L8_try_end:;
   }
 
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":892
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":892
  *         raise ImportError("numpy.core.umath failed to import")
  * 
  * cdef inline int import_ufunc() except -1:             # <<<<<<<<<<<<<<
@@ -6548,7 +6582,7 @@ static struct PyModuleDef __pyx_moduledef = {
 #endif
 
 static __Pyx_StringTabEntry __pyx_string_tab[] = {
-  {&__pyx_kp_u_EXCEEDED_numIntervals_origNumInt, __pyx_k_EXCEEDED_numIntervals_origNumInt, sizeof(__pyx_k_EXCEEDED_numIntervals_origNumInt), 0, 1, 0, 0},
+  {&__pyx_kp_u_Exceeded_numIntervals_origNumInt, __pyx_k_Exceeded_numIntervals_origNumInt, sizeof(__pyx_k_Exceeded_numIntervals_origNumInt), 0, 1, 0, 0},
   {&__pyx_n_s_ImportError, __pyx_k_ImportError, sizeof(__pyx_k_ImportError), 0, 0, 1, 1},
   {&__pyx_kp_u_Invalid_mode_parameter_provided, __pyx_k_Invalid_mode_parameter_provided, sizeof(__pyx_k_Invalid_mode_parameter_provided), 0, 1, 0, 0},
   {&__pyx_n_s_M, __pyx_k_M, sizeof(__pyx_k_M), 0, 0, 1, 1},
@@ -6588,6 +6622,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_high, __pyx_k_high, sizeof(__pyx_k_high), 0, 0, 1, 1},
   {&__pyx_n_s_i, __pyx_k_i, sizeof(__pyx_k_i), 0, 0, 1, 1},
   {&__pyx_n_s_import, __pyx_k_import, sizeof(__pyx_k_import), 0, 0, 1, 1},
+  {&__pyx_n_s_info, __pyx_k_info, sizeof(__pyx_k_info), 0, 0, 1, 1},
   {&__pyx_n_s_intervals, __pyx_k_intervals, sizeof(__pyx_k_intervals), 0, 0, 1, 1},
   {&__pyx_n_s_intervalsNew, __pyx_k_intervalsNew, sizeof(__pyx_k_intervalsNew), 0, 0, 1, 1},
   {&__pyx_n_s_intervalsOrig, __pyx_k_intervalsOrig, sizeof(__pyx_k_intervalsOrig), 0, 0, 1, 1},
@@ -6624,7 +6659,6 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_origNumIntervals, __pyx_k_origNumIntervals, sizeof(__pyx_k_origNumIntervals), 0, 0, 1, 1},
   {&__pyx_n_s_pastThresholdIndices, __pyx_k_pastThresholdIndices, sizeof(__pyx_k_pastThresholdIndices), 0, 0, 1, 1},
   {&__pyx_n_s_persistence, __pyx_k_persistence, sizeof(__pyx_k_persistence), 0, 0, 1, 1},
-  {&__pyx_n_s_print, __pyx_k_print, sizeof(__pyx_k_print), 0, 0, 1, 1},
   {&__pyx_n_s_rawOffsets, __pyx_k_rawOffsets, sizeof(__pyx_k_rawOffsets), 0, 0, 1, 1},
   {&__pyx_kp_u_rawOffsets_cdpi, __pyx_k_rawOffsets_cdpi, sizeof(__pyx_k_rawOffsets_cdpi), 0, 1, 0, 0},
   {&__pyx_n_s_rawValues, __pyx_k_rawValues, sizeof(__pyx_k_rawValues), 0, 0, 1, 1},
@@ -6653,7 +6687,6 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {0, 0, 0, 0, 0, 0, 0}
 };
 static CYTHON_SMALL_CODE int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_print = __Pyx_GetBuiltinName(__pyx_n_s_print); if (!__pyx_builtin_print) __PYX_ERR(0, 86, __pyx_L1_error)
   __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) __PYX_ERR(0, 97, __pyx_L1_error)
   __pyx_builtin_ImportError = __Pyx_GetBuiltinName(__pyx_n_s_ImportError); if (!__pyx_builtin_ImportError) __PYX_ERR(1, 884, __pyx_L1_error)
   return 0;
@@ -6676,38 +6709,27 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple_);
   __Pyx_GIVEREF(__pyx_tuple_);
 
-  /* "auviewer/cylib.pyx":270
- *         pastThresholdIndices = np.nonzero((rawValues < thresholdlow) | (rawValues > thresholdhigh))[0]
- *     else:
- *         print("Invalid mode parameter provided to generateThresholdAlerts.")             # <<<<<<<<<<<<<<
- *         return np.array([])
- * 
- */
-  __pyx_tuple__2 = PyTuple_Pack(1, __pyx_kp_u_Invalid_mode_parameter_provided); if (unlikely(!__pyx_tuple__2)) __PYX_ERR(0, 270, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__2);
-  __Pyx_GIVEREF(__pyx_tuple__2);
-
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":884
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":884
  *         __pyx_import_array()
  *     except Exception:
  *         raise ImportError("numpy.core.multiarray failed to import")             # <<<<<<<<<<<<<<
  * 
  * cdef inline int import_umath() except -1:
  */
-  __pyx_tuple__3 = PyTuple_Pack(1, __pyx_kp_u_numpy_core_multiarray_failed_to); if (unlikely(!__pyx_tuple__3)) __PYX_ERR(1, 884, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__3);
-  __Pyx_GIVEREF(__pyx_tuple__3);
+  __pyx_tuple__2 = PyTuple_Pack(1, __pyx_kp_u_numpy_core_multiarray_failed_to); if (unlikely(!__pyx_tuple__2)) __PYX_ERR(1, 884, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__2);
+  __Pyx_GIVEREF(__pyx_tuple__2);
 
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":890
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":890
  *         _import_umath()
  *     except Exception:
  *         raise ImportError("numpy.core.umath failed to import")             # <<<<<<<<<<<<<<
  * 
  * cdef inline int import_ufunc() except -1:
  */
-  __pyx_tuple__4 = PyTuple_Pack(1, __pyx_kp_u_numpy_core_umath_failed_to_impor); if (unlikely(!__pyx_tuple__4)) __PYX_ERR(1, 890, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__4);
-  __Pyx_GIVEREF(__pyx_tuple__4);
+  __pyx_tuple__3 = PyTuple_Pack(1, __pyx_kp_u_numpy_core_umath_failed_to_impor); if (unlikely(!__pyx_tuple__3)) __PYX_ERR(1, 890, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__3);
+  __Pyx_GIVEREF(__pyx_tuple__3);
 
   /* "auviewer/cylib.pyx":16
  * # time-per-interval is 5s and the step multiplier is 3, the new downsample will
@@ -6716,10 +6738,10 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
  * 
  *     # Get the number of intervals in the original downsample.
  */
-  __pyx_tuple__5 = PyTuple_Pack(12, __pyx_n_s_intervalsOrig, __pyx_n_s_timePerIntervalOrig, __pyx_n_s_stepMultiplier, __pyx_n_s_numIntervalsOrig, __pyx_n_s_intervalsNew, __pyx_n_s_timePerIntervalNew, __pyx_n_s_baseOffset, __pyx_n_s_leftboundaryNew, __pyx_n_s_rightboundaryNew, __pyx_n_s_cio, __pyx_n_s_cin, __pyx_n_s_i); if (unlikely(!__pyx_tuple__5)) __PYX_ERR(0, 16, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__5);
-  __Pyx_GIVEREF(__pyx_tuple__5);
-  __pyx_codeobj__6 = (PyObject*)__Pyx_PyCode_New(3, 0, 12, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__5, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_auviewer_cylib_pyx, __pyx_n_s_buildNextDownsampleUp, 16, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__6)) __PYX_ERR(0, 16, __pyx_L1_error)
+  __pyx_tuple__4 = PyTuple_Pack(12, __pyx_n_s_intervalsOrig, __pyx_n_s_timePerIntervalOrig, __pyx_n_s_stepMultiplier, __pyx_n_s_numIntervalsOrig, __pyx_n_s_intervalsNew, __pyx_n_s_timePerIntervalNew, __pyx_n_s_baseOffset, __pyx_n_s_leftboundaryNew, __pyx_n_s_rightboundaryNew, __pyx_n_s_cio, __pyx_n_s_cin, __pyx_n_s_i); if (unlikely(!__pyx_tuple__4)) __PYX_ERR(0, 16, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__4);
+  __Pyx_GIVEREF(__pyx_tuple__4);
+  __pyx_codeobj__5 = (PyObject*)__Pyx_PyCode_New(3, 0, 12, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__4, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_auviewer_cylib_pyx, __pyx_n_s_buildNextDownsampleUp, 16, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__5)) __PYX_ERR(0, 16, __pyx_L1_error)
 
   /* "auviewer/cylib.pyx":131
  * # Given a series of raw values and a time-per-interval parameter, produces and
@@ -6728,46 +6750,46 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
  * 
  *     # Calculate the timespan of the entire dataset
  */
-  __pyx_tuple__7 = PyTuple_Pack(19, __pyx_n_s_rawOffsets, __pyx_n_s_rawValues, __pyx_n_s_numIntervals, __pyx_n_s_timespan, __pyx_n_s_timePerInterval_2, __pyx_n_s_origNumIntervals, __pyx_n_s_intervals, __pyx_n_s_baseOffset, __pyx_n_s_leftboundary_2, __pyx_n_s_rightboundary_2, __pyx_n_s_numDataPoints_2, __pyx_n_s_cdpi_2, __pyx_n_s_cii_2, __pyx_n_s_leftboundaryORIG, __pyx_n_s_rightboundaryORIG, __pyx_n_s_leftboundaryIF, __pyx_n_s_rightboundaryIF, __pyx_n_s_leftboundaryWHILE, __pyx_n_s_rightboundaryWHILE); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(0, 131, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__7);
-  __Pyx_GIVEREF(__pyx_tuple__7);
-  __pyx_codeobj__8 = (PyObject*)__Pyx_PyCode_New(3, 0, 19, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__7, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_auviewer_cylib_pyx, __pyx_n_s_buildDownsampleFromRaw, 131, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__8)) __PYX_ERR(0, 131, __pyx_L1_error)
+  __pyx_tuple__6 = PyTuple_Pack(19, __pyx_n_s_rawOffsets, __pyx_n_s_rawValues, __pyx_n_s_numIntervals, __pyx_n_s_timespan, __pyx_n_s_timePerInterval_2, __pyx_n_s_origNumIntervals, __pyx_n_s_intervals, __pyx_n_s_baseOffset, __pyx_n_s_leftboundary_2, __pyx_n_s_rightboundary_2, __pyx_n_s_numDataPoints_2, __pyx_n_s_cdpi_2, __pyx_n_s_cii_2, __pyx_n_s_leftboundaryORIG, __pyx_n_s_rightboundaryORIG, __pyx_n_s_leftboundaryIF, __pyx_n_s_rightboundaryIF, __pyx_n_s_leftboundaryWHILE, __pyx_n_s_rightboundaryWHILE); if (unlikely(!__pyx_tuple__6)) __PYX_ERR(0, 131, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__6);
+  __Pyx_GIVEREF(__pyx_tuple__6);
+  __pyx_codeobj__7 = (PyObject*)__Pyx_PyCode_New(3, 0, 19, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__6, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_auviewer_cylib_pyx, __pyx_n_s_buildDownsampleFromRaw, 131, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__7)) __PYX_ERR(0, 131, __pyx_L1_error)
 
-  /* "auviewer/cylib.pyx":256
+  /* "auviewer/cylib.pyx":258
  * # used to filter out alerts which have fewer than min_sample_count values within
  * # the duration timespan.
  * def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarray[np.float64_t, ndim=1] rawValues, double thresholdlow, double thresholdhigh, int mode, double duration, double persistence, double maxgap, int min_sample_count):             # <<<<<<<<<<<<<<
  * 
  *     # Holds the indices of all raw values which surpass the threshold(s)
  */
-  __pyx_tuple__9 = PyTuple_Pack(24, __pyx_n_s_rawOffsets, __pyx_n_s_rawValues, __pyx_n_s_thresholdlow, __pyx_n_s_thresholdhigh, __pyx_n_s_mode, __pyx_n_s_duration, __pyx_n_s_persistence, __pyx_n_s_maxgap, __pyx_n_s_min_sample_count, __pyx_n_s_pastThresholdIndices, __pyx_n_s_alerts, __pyx_n_s_cdpi_2, __pyx_n_s_nuai, __pyx_n_s_leftboundary_2, __pyx_n_s_rightboundary_2, __pyx_n_s_numexceed, __pyx_n_s_numtotal, __pyx_n_s_sampleduty, __pyx_n_s_alertSampleBeginIndex, __pyx_n_s_finalalerts, __pyx_n_s_crai, __pyx_n_s_cfai, __pyx_n_s_candalertbegin, __pyx_n_s_candalertend); if (unlikely(!__pyx_tuple__9)) __PYX_ERR(0, 256, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__9);
-  __Pyx_GIVEREF(__pyx_tuple__9);
-  __pyx_codeobj__10 = (PyObject*)__Pyx_PyCode_New(9, 0, 24, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__9, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_auviewer_cylib_pyx, __pyx_n_s_generateThresholdAlerts, 256, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__10)) __PYX_ERR(0, 256, __pyx_L1_error)
+  __pyx_tuple__8 = PyTuple_Pack(24, __pyx_n_s_rawOffsets, __pyx_n_s_rawValues, __pyx_n_s_thresholdlow, __pyx_n_s_thresholdhigh, __pyx_n_s_mode, __pyx_n_s_duration, __pyx_n_s_persistence, __pyx_n_s_maxgap, __pyx_n_s_min_sample_count, __pyx_n_s_pastThresholdIndices, __pyx_n_s_alerts, __pyx_n_s_cdpi_2, __pyx_n_s_nuai, __pyx_n_s_leftboundary_2, __pyx_n_s_rightboundary_2, __pyx_n_s_numexceed, __pyx_n_s_numtotal, __pyx_n_s_sampleduty, __pyx_n_s_alertSampleBeginIndex, __pyx_n_s_finalalerts, __pyx_n_s_crai, __pyx_n_s_cfai, __pyx_n_s_candalertbegin, __pyx_n_s_candalertend); if (unlikely(!__pyx_tuple__8)) __PYX_ERR(0, 258, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__8);
+  __Pyx_GIVEREF(__pyx_tuple__8);
+  __pyx_codeobj__9 = (PyObject*)__Pyx_PyCode_New(9, 0, 24, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__8, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_auviewer_cylib_pyx, __pyx_n_s_generateThresholdAlerts, 258, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__9)) __PYX_ERR(0, 258, __pyx_L1_error)
 
-  /* "auviewer/cylib.pyx":396
+  /* "auviewer/cylib.pyx":398
  * # downsample or raw data series. The side parameter indicates whether to
  * # approach from the left or right, where 0 indicates left and non-zero is right.
  * def getSliceParam(ds, timecol, unsigned short side, double target):             # <<<<<<<<<<<<<<
  * 
  *     cdef long numDataPoints = ds.nrow
  */
-  __pyx_tuple__11 = PyTuple_Pack(9, __pyx_n_s_ds, __pyx_n_s_timecol, __pyx_n_s_side, __pyx_n_s_target, __pyx_n_s_numDataPoints_2, __pyx_n_s_low, __pyx_n_s_high, __pyx_n_s_mid, __pyx_n_s_i); if (unlikely(!__pyx_tuple__11)) __PYX_ERR(0, 396, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__11);
-  __Pyx_GIVEREF(__pyx_tuple__11);
-  __pyx_codeobj__12 = (PyObject*)__Pyx_PyCode_New(4, 0, 9, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__11, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_auviewer_cylib_pyx, __pyx_n_s_getSliceParam, 396, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__12)) __PYX_ERR(0, 396, __pyx_L1_error)
+  __pyx_tuple__10 = PyTuple_Pack(9, __pyx_n_s_ds, __pyx_n_s_timecol, __pyx_n_s_side, __pyx_n_s_target, __pyx_n_s_numDataPoints_2, __pyx_n_s_low, __pyx_n_s_high, __pyx_n_s_mid, __pyx_n_s_i); if (unlikely(!__pyx_tuple__10)) __PYX_ERR(0, 398, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__10);
+  __Pyx_GIVEREF(__pyx_tuple__10);
+  __pyx_codeobj__11 = (PyObject*)__Pyx_PyCode_New(4, 0, 9, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__10, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_auviewer_cylib_pyx, __pyx_n_s_getSliceParam, 398, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__11)) __PYX_ERR(0, 398, __pyx_L1_error)
 
-  /* "auviewer/cylib.pyx":445
+  /* "auviewer/cylib.pyx":447
  * # the following downsamples should be built: 3000, 6000, 12000, 24000, 48000,
  * # 96000, 192000.
  * def numDownsamplesToBuild(np.ndarray[np.float64_t, ndim=1] rawOffsets, int M, int stepMultiplier):             # <<<<<<<<<<<<<<
  * 
  *     # Grab the rawOffsets length
  */
-  __pyx_tuple__13 = PyTuple_Pack(12, __pyx_n_s_rawOffsets, __pyx_n_s_M, __pyx_n_s_stepMultiplier, __pyx_n_s_numDataPoints_2, __pyx_n_s_timespan, __pyx_n_s_first, __pyx_n_s_last, __pyx_n_s_currentTimeWindow, __pyx_n_s_smallestTimeWindow, __pyx_n_s_floorTimePerInterval, __pyx_n_s_numDownsamplesToBuild, __pyx_n_s_currentNumDownsamples); if (unlikely(!__pyx_tuple__13)) __PYX_ERR(0, 445, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__13);
-  __Pyx_GIVEREF(__pyx_tuple__13);
-  __pyx_codeobj__14 = (PyObject*)__Pyx_PyCode_New(3, 0, 12, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__13, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_auviewer_cylib_pyx, __pyx_n_s_numDownsamplesToBuild, 445, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__14)) __PYX_ERR(0, 445, __pyx_L1_error)
+  __pyx_tuple__12 = PyTuple_Pack(12, __pyx_n_s_rawOffsets, __pyx_n_s_M, __pyx_n_s_stepMultiplier, __pyx_n_s_numDataPoints_2, __pyx_n_s_timespan, __pyx_n_s_first, __pyx_n_s_last, __pyx_n_s_currentTimeWindow, __pyx_n_s_smallestTimeWindow, __pyx_n_s_floorTimePerInterval, __pyx_n_s_numDownsamplesToBuild, __pyx_n_s_currentNumDownsamples); if (unlikely(!__pyx_tuple__12)) __PYX_ERR(0, 447, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__12);
+  __Pyx_GIVEREF(__pyx_tuple__12);
+  __pyx_codeobj__13 = (PyObject*)__Pyx_PyCode_New(3, 0, 12, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__12, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_auviewer_cylib_pyx, __pyx_n_s_numDownsamplesToBuild, 447, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__13)) __PYX_ERR(0, 447, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -7131,40 +7153,40 @@ if (!__Pyx_RefNanny) {
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_buildDownsampleFromRaw, __pyx_t_1) < 0) __PYX_ERR(0, 131, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "auviewer/cylib.pyx":256
+  /* "auviewer/cylib.pyx":258
  * # used to filter out alerts which have fewer than min_sample_count values within
  * # the duration timespan.
  * def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarray[np.float64_t, ndim=1] rawValues, double thresholdlow, double thresholdhigh, int mode, double duration, double persistence, double maxgap, int min_sample_count):             # <<<<<<<<<<<<<<
  * 
  *     # Holds the indices of all raw values which surpass the threshold(s)
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_8auviewer_5cylib_5generateThresholdAlerts, NULL, __pyx_n_s_auviewer_cylib); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 256, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_8auviewer_5cylib_5generateThresholdAlerts, NULL, __pyx_n_s_auviewer_cylib); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 258, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_generateThresholdAlerts, __pyx_t_1) < 0) __PYX_ERR(0, 256, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_generateThresholdAlerts, __pyx_t_1) < 0) __PYX_ERR(0, 258, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "auviewer/cylib.pyx":396
+  /* "auviewer/cylib.pyx":398
  * # downsample or raw data series. The side parameter indicates whether to
  * # approach from the left or right, where 0 indicates left and non-zero is right.
  * def getSliceParam(ds, timecol, unsigned short side, double target):             # <<<<<<<<<<<<<<
  * 
  *     cdef long numDataPoints = ds.nrow
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_8auviewer_5cylib_7getSliceParam, NULL, __pyx_n_s_auviewer_cylib); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 396, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_8auviewer_5cylib_7getSliceParam, NULL, __pyx_n_s_auviewer_cylib); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 398, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_getSliceParam, __pyx_t_1) < 0) __PYX_ERR(0, 396, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_getSliceParam, __pyx_t_1) < 0) __PYX_ERR(0, 398, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "auviewer/cylib.pyx":445
+  /* "auviewer/cylib.pyx":447
  * # the following downsamples should be built: 3000, 6000, 12000, 24000, 48000,
  * # 96000, 192000.
  * def numDownsamplesToBuild(np.ndarray[np.float64_t, ndim=1] rawOffsets, int M, int stepMultiplier):             # <<<<<<<<<<<<<<
  * 
  *     # Grab the rawOffsets length
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_8auviewer_5cylib_9numDownsamplesToBuild, NULL, __pyx_n_s_auviewer_cylib); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 445, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_8auviewer_5cylib_9numDownsamplesToBuild, NULL, __pyx_n_s_auviewer_cylib); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 447, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_numDownsamplesToBuild, __pyx_t_1) < 0) __PYX_ERR(0, 445, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_numDownsamplesToBuild, __pyx_t_1) < 0) __PYX_ERR(0, 447, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "auviewer/cylib.pyx":1
@@ -7177,7 +7199,7 @@ if (!__Pyx_RefNanny) {
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_test, __pyx_t_1) < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "../../miniconda3/envs/auv/lib/python3.8/site-packages/numpy/__init__.pxd":892
+  /* "../../miniconda3/envs/auvn/lib/python3.7/site-packages/numpy/__init__.pxd":892
  *         raise ImportError("numpy.core.umath failed to import")
  * 
  * cdef inline int import_ufunc() except -1:             # <<<<<<<<<<<<<<

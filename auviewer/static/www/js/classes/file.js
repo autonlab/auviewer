@@ -390,15 +390,22 @@ function File(parentProject, id, callback=null) {
 
 
 			// Check default-shown graphs in the plot control interface
+			let anyGraphIsShowing = false;
 			const plotControlTreeTable = this.plotControl.getBody();
 			plotControlTreeTable.blockEvent();
 			for (const s of Object.keys(this.graphs)) {
 				const g = this.graphs[s];
 				if (g.isShowing()) {
 					this.plotControl.getBody().checkItem(g.fullName);
+					anyGraphIsShowing = true;
 				}
 			}
 			plotControlTreeTable.unblockEvent();
+
+			// If no graph is showing initially, display the plot control interface
+			if (!anyGraphIsShowing) {
+				this.plotControl.show();
+			}
 
 			// // Process pre-defined pattern detection for all currently-displaying
 			// // series. We gather all displaying series before starting to send the
