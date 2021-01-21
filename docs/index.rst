@@ -50,6 +50,7 @@ facilitate expert annotation.
    :name: sec-contributing
 
    Motivation <contributing/motivation>
+   Getting Started <contributing/getstarteddev>
    contributing/technical
 
 .. toctree::

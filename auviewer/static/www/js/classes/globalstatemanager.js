@@ -1,5 +1,9 @@
 'use strict';
 
+/*
+The GlobalStateManager is a global singleton that manages application state.
+ */
+
 // Class declaration
 function GlobalStateManager() {
 

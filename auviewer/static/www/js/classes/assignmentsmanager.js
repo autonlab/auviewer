@@ -1,3 +1,5 @@
+'use strict';
+
 class AssignmentsManager {
 
 	constructor(parentProject, projectAssignments) {

@@ -1,5 +1,10 @@
 'use strict';
 
+/*
+The TemplateSystem manages the hierarchical templates for interfaces, projects, and series. There are two tiers of
+hierarchy. The first is builtin -> global. The second is project -> interface -> series.
+ */
+
 function TemplateSystem() {
 	
 	// Default placeholders

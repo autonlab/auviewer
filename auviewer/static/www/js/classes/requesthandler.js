@@ -1,5 +1,9 @@
 'use strict';
 
+/*
+The RequestHandler is a global singleton that handles asynchronous API requests.
+ */
+
 // Class declaration
 function RequestHandler() {}
 

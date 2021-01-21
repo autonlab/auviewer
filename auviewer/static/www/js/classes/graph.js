@@ -1,5 +1,9 @@
 'use strict';
 
+/*
+The Graph class manages a single graph.
+ */
+
 // Graph class constructor. Group is an optional parameter which, if the graph
 // represents a group, should be the array of series names inside the group.
 function Graph(seriesOrGroupName, file) {

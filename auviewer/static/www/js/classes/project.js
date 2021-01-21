@@ -1,5 +1,9 @@
 'use strict';
 
+/*
+The Project class manages a project.
+ */
+
 function Project(payload) {
 
 	// Project name & id

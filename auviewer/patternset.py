@@ -44,7 +44,12 @@ class PatternSet:
         # Update count
         self.updateCount()
 
-    def assignToUsers(self, user_ids):
+    def assignToUsers(self, user_ids: Union[int, List[int]]) -> None:
+        """
+        Assign the pattern set to user(s).
+        :param user_ids: May be single user ID or list of user IDs.
+        :return: None
+        """
         if not isinstance(user_ids, list):
             user_ids = [user_ids]
         self.dbmodel.users.extend(
