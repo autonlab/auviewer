@@ -56,6 +56,9 @@ audata format, use the audata_ conversion tool.
 
 .. _audata: https://audata.readthedocs.io/en/latest/
 
+Sample File
+```````````
+
 You may download a `sample file`_ to test the viewer (the file is in the *ccdef* format, which is a superset of the *audata* data standard).
 
 .. _sample file: https://github.com/autonlab/auviewer/blob/master/examples/sample_patient.h5

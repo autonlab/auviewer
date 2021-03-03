@@ -107,6 +107,17 @@ p.assignment-panel-bottom-label { font-size: 0.6em; margin-top: 0; font-style: i
     word-wrap: break-word;
 }
 
+.graph_wrapper > table > tbody > tr > td.graph_title > .webix_icon {
+    color: rgb(71, 84, 102);
+    visibility: hidden;
+    cursor: pointer;
+    margin-left: 8px;
+}
+
+.graph_wrapper > table > tbody > tr:hover > td.graph_title > .webix_icon {
+    visibility: visible !important;
+}
+
 .graph_wrapper > table > tbody > tr > td.legend {
     vertical-align: top;
     /*height: 120px;*/

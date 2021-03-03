@@ -49,11 +49,6 @@ function Graph(seriesOrGroupName, file) {
 
 	}
 
-	// TODO(gus): Temp
-	if (this.isGroup) {
-		console.log("HERE'S JOHNNY!", this.template);
-	}
-
 	// Assemble the alt text
 	this.altText = "";
 	for (let sn of this.members) {
@@ -126,7 +121,7 @@ Graph.prototype.build = function() {
 		'<table>' +
 			'<tbody>' +
 				'<tr>' +
-					'<td class="graph_title" title="'+this.altText+'">'+this.shortName+'</td>' +
+					'<td class="graph_title"><span title="'+this.altText+'">'+this.shortName+'</span><span class="webix_icon mdi mdi-cogs" onclick="showGraphControlPanel(\''+this.fullName+'\');"></span></td>' +
 					'<td rowspan="2">' +
 						'<div class="graph"></div>' +
 					'</td>' +

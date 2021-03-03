@@ -1,3 +1,5 @@
+"""Python API for working with AUViewer."""
+
 import logging
 import traceback
 

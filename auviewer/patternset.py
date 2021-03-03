@@ -3,6 +3,7 @@
 from pathlib import Path
 from sqlalchemy.orm import joinedload
 import pandas as pd
+from typing import Union, List
 
 from . import models
 from .shared import annotationDataFrame, patternDataFrame

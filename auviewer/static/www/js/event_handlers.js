@@ -122,14 +122,24 @@ function handleClick(e, x) {
 	// callback poorly, so we have to get it in a convoluted way.
 	let graph = $(e.path[2]).data('graphClassInstance');
 
-	console.log("Handling canvas click. # Annotations:", e.offsetX, file.annotationsAndPatternsToRender);
+	// console.log("Handling canvas click. # Annotations:", e.offsetX, file.annotationsAndPatternsToRender);
 
 	let highestLayerFound = -1;
 	let annotationFound = null;
 
 	// Iterate through the annotations to look for annotations under the click
 	for (let i = 0; i < file.annotationsAndPatternsToRender.length; i++) {
-		if (e.offsetX >= file.annotationsAndPatternsToRender[i].offsetXLeft && e.offsetX <= file.annotationsAndPatternsToRender[i].offsetXRight) {
+
+		let itemOffsetXLeft = file.annotationsAndPatternsToRender[i].offsetXLeft
+		let itemOffsetXRight = file.annotationsAndPatternsToRender[i].offsetXRight
+
+		// Minimum alert width is 3
+		if (itemOffsetXRight-itemOffsetXLeft < 3) {
+			itemOffsetXLeft--;
+			itemOffsetXRight = itemOffsetXLeft + 3;
+		}
+
+		if (e.offsetX >= itemOffsetXLeft && e.offsetX <= itemOffsetXRight) {
 			if (
 				!file.annotationsAndPatternsToRender[i].series ||
 				(!graph.isGroup && file.annotationsAndPatternsToRender[i].series === graph.fullName) ||
@@ -446,7 +456,11 @@ function handleUnderlayRedraw(canvas, area, g) {
 				// of 1px width so that, at any zoom level, the annotation is visible.
 				x = left;
 				y = area.y;
-				width = Math.max(1, right - left);
+				width = right - left;
+				if (width < 3) {
+					width = 3
+					x--;
+				}
 				height = area.h; //shortHighlights ? area.h/5*.85 : area.h;
 
 				// Prepare styling for the section highlight.

@@ -1,4 +1,4 @@
-from flask import Flask, Blueprint, send_from_directory, request, render_template, render_template_string, abort
+from flask import Flask, Blueprint, send_from_directory, request, render_template, render_template_string, abort, Markup
 from flask_login import current_user
 from flask_mail import Mail
 from htmlmin.main import minify
@@ -10,6 +10,8 @@ import shutil
 import tempfile
 import threading
 import webbrowser
+import json
+from flask import jsonify
 
 # Simplejson package is required in order to "ignore" NaN values and implicitly
 # convert them into null values. RFC JSON spec left out NaN values, even though
@@ -32,6 +34,9 @@ def createApp():
 
     # Instantiate the Flask web application class
     app = Flask(__name__, template_folder=str(config['codeRootPathObj'] / 'static' / 'www' / 'templates'))
+
+    # Auto-reload templates
+    app.jinja_env.auto_reload = True
 
     # Make the root web path available for templates
     @app.context_processor
@@ -147,26 +152,31 @@ def createApp():
         project = getProject(project_id)
         if project is None:
             logging.error(f"Project ID {project_id} not found.")
-            return simplejson.dumps({
-                'success': False
-            })
+            return app.response_class(
+                response=simplejson.dumps({'success': False}),
+                status=200,
+                mimetype='application/json'
+            )
 
         # Get the file
         file = project.getFile(file_id)
         if file is None:
             logging.error(f"File ID {file_id} not found.")
-            return simplejson.dumps({
-                'success': False
-            })
+            return app.response_class(
+                response=simplejson.dumps({'success': False}),
+                status=200,
+                mimetype='application/json'
+            )
 
         # Write the annotation
         newAnnotationID = file.createAnnotation(current_user.id, left, right, top, bottom, seriesID, label, pattern_id)
 
         # Output response
-        return simplejson.dumps({
-            'success': True,
-            'id': newAnnotationID,
-        })
+        return app.response_class(
+            response=simplejson.dumps({'success': True, 'id': newAnnotationID}),
+            status=200,
+            mimetype='application/json'
+        )
 
     @app.route(config['rootWebPath']+'/delete_annotation')
     @login_required
@@ -181,25 +191,31 @@ def createApp():
         project = getProject(project_id)
         if project is None:
             logging.error(f"Project ID {project_id} not found.")
-            return simplejson.dumps({
-                'success': False
-            })
+            return app.response_class(
+                response=simplejson.dumps({'success': False}),
+                status=200,
+                mimetype='application/json'
+            )
 
         # Get the file
         file = project.getFile(file_id)
         if file is None:
             logging.error(f"File ID {file_id} not found.")
-            return simplejson.dumps({
-                'success': False
-            })
+            return app.response_class(
+                response=simplejson.dumps({'success': False}),
+                status=200,
+                mimetype='application/json'
+            )
 
         # Write the annotation
         deletionSuccess = file.deleteAnnotation(current_user.id, id)
 
         # Output response
-        return simplejson.dumps({
-            'success': deletionSuccess,
-        })
+        return app.response_class(
+            response=simplejson.dumps({'success': deletionSuccess}),
+            status=200,
+            mimetype='application/json'
+        )
 
     @app.route(config['rootWebPath']+'/detect_patterns', methods=['GET'])
     @login_required
@@ -229,7 +245,11 @@ def createApp():
         file = project.getFile(file_id)
         if file is None:
             logging.error(f"File ID {file_id} not found.")
-            return simplejson.dumps([])
+            return app.response_class(
+                response=simplejson.dumps([]),
+                status=200,
+                mimetype='application/json'
+            )
 
         # Run pattern detection
         alerts = file.detectPatterns(
@@ -243,7 +263,11 @@ def createApp():
         )
 
         # Output response
-        return simplejson.dumps(alerts, ignore_nan=True)
+        return app.response_class(
+            response=simplejson.dumps(alerts, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
 
     @app.route(config['rootWebPath']+'/get_project_annotations')
     @login_required
@@ -263,7 +287,11 @@ def createApp():
         projectAnnotations = project.getAnnotationsOutput(current_user.id)
 
         # Output response
-        return simplejson.dumps(projectAnnotations, ignore_nan=True)
+        return app.response_class(
+            response=simplejson.dumps(projectAnnotations, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
 
     @app.route(config['rootWebPath']+'/')
     @app.route(config['rootWebPath']+'/index.html')
@@ -298,7 +326,11 @@ def createApp():
         initialFilePayload = file.getInitialPayload(current_user.id)
         
         # Output response
-        return simplejson.dumps(initialFilePayload, ignore_nan=True)
+        return app.response_class(
+            response=simplejson.dumps(initialFilePayload, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
 
     @app.route(config['rootWebPath']+'/project')
     @login_required
@@ -352,7 +384,11 @@ def createApp():
         seriesRangedData = file.getSeriesRangedOutput(series, start, stop)
 
         # Output response
-        return simplejson.dumps(seriesRangedData, ignore_nan=True)
+        return app.response_class(
+            response=simplejson.dumps(seriesRangedData, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
 
     @app.route(config['rootWebPath']+'/update_annotation', methods=['GET'])
     @login_required
@@ -373,25 +409,31 @@ def createApp():
         project = getProject(project_id)
         if project is None:
             logging.error(f"Project ID {project_id} not found.")
-            return simplejson.dumps({
-                'success': False
-            })
+            return app.response_class(
+                response=simplejson.dumps({ 'success': False }),
+                status=200,
+                mimetype='application/json'
+            )
 
         # Get the file
         file = project.getFile(file_id)
         if file is None:
             logging.error(f"File ID {file_id} not found.")
-            return simplejson.dumps({
-                'success': False
-            })
+            return app.response_class(
+                response=simplejson.dumps({ 'success': False }),
+                status=200,
+                mimetype='application/json'
+            )
 
         # Update the annotation
         updateSuccess = file.updateAnnotation(current_user.id, id, left, right, top, bottom, seriesID, label)
 
         # Output the response
-        return simplejson.dumps({
-            'success': updateSuccess,
-        })
+        return app.response_class(
+            response=simplejson.dumps({'success': updateSuccess}),
+            status=200,
+            mimetype='application/json'
+        )
 
     @app.route(config['rootWebPath'] + '/user_manage')
     @login_required

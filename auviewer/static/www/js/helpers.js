@@ -339,6 +339,71 @@ function padDataIfNeeded(data) {
 
 }
 
+// Show the graph control panel for a given graph series (which corresponds to file.graphs[].fullName of the
+// corresponding Graph class instance).
+function showGraphControlPanel(s) {
+	const g = globalStateManager.currentFile.getGraphForSeries(s);
+	const dg = g.dygraphInstance;
+
+	// Setup some handlers
+	const updateRange = function () {
+		const vals = $$('graph_range_form').getValues();
+		g.dygraphInstance.updateOptions({
+			valueRange: [vals['ymin'], vals['ymax']],
+		});
+	};
+	const updateHeight = function() {
+		const vals = $$('graph_height_form').getValues();
+		g.graphWrapperDomElement.style.height = vals['height'] + 'px';
+		if (g.isShowing()) {
+			g.hide();
+			g.show();
+		}
+	};
+
+
+	webix.ui({
+		view: 'window',
+		id: 'graph_config_window',
+		close: true,
+		head: "Graph Options &mdash; "+g.shortName,
+		move: true,
+		//resize: true,
+		//height: 250,
+		//width: 200,
+		position: 'center',
+		body: {
+			cols: [
+				{
+					view: 'form',
+					id: 'graph_range_form',
+					on: { onSubmit: updateRange },
+					elements: [
+						{view: 'template', template: 'Y-Axis Range', type: 'header', borderless: true},
+						{view: 'text', label: 'y min', name: 'ymin', width: 200, value: dg.axes_[0].valueRange[0]},
+						{view: 'text', label: 'y max', name: 'ymax', width: 200, value: dg.axes_[0].valueRange[1]},
+						{
+							view: 'button', value: 'Update', click: updateRange
+						},
+					]
+				},
+				{
+					view: 'form',
+					id: 'graph_height_form',
+					on: { onSubmit: updateHeight },
+					elements: [
+						{view: 'template', template: 'Graph Height', type: 'header', borderless: true},
+						{view: 'text', label: 'Height (px)', name: 'height', width: 150, value: g.graphWrapperDomElement.style.height.slice(0, -2)},
+						{
+							view: 'button', value: 'Update', click: updateHeight
+						},
+					]
+				},
+			]
+		},
+	}).show();
+}
+
 // Returns a simplified name of the series, with the path components removed and
 // the column removed. E.g. /path/to/series:col becomes series:col. If the col
 // name is "value", it is omitted.
