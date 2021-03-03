@@ -9,7 +9,7 @@ if __DEBUG:
     import datetime as dt
     __VERSION_TAGS__ = f"d{dt.datetime.now().strftime('%Y%m%d_%H%M')}"
 else:
-    __VERSION_TAGS__ = 'rc7'
+    __VERSION_TAGS__ = 'rc8'
 
 __VERSION__ = f'{__VERSION_MAJOR__}.{__VERSION_MINOR__}.{__VERSION_BUILD__}{__VERSION_TAGS__}'
 

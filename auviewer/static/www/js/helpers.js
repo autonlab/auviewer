@@ -361,7 +361,6 @@ function showGraphControlPanel(s) {
 		}
 	};
 
-
 	webix.ui({
 		view: 'window',
 		id: 'graph_config_window',
@@ -380,8 +379,22 @@ function showGraphControlPanel(s) {
 					on: { onSubmit: updateRange },
 					elements: [
 						{view: 'template', template: 'Y-Axis Range', type: 'header', borderless: true},
-						{view: 'text', label: 'y min', name: 'ymin', width: 200, value: dg.axes_[0].valueRange[0]},
-						{view: 'text', label: 'y max', name: 'ymax', width: 200, value: dg.axes_[0].valueRange[1]},
+						{
+							view: 'text',
+							label: 'y min',
+							name: 'ymin',
+							width: 200,
+							value: dg.axes_[0].valueRange[0],
+							on: { onFocus: function() { this.getInputNode().select() } },
+						},
+						{
+							view: 'text',
+							label: 'y max',
+							name: 'ymax',
+							width: 200,
+							value: dg.axes_[0].valueRange[1],
+							on: { onFocus: function() { this.getInputNode().select() } },
+						},
 						{
 							view: 'button', value: 'Update', click: updateRange
 						},
@@ -393,7 +406,14 @@ function showGraphControlPanel(s) {
 					on: { onSubmit: updateHeight },
 					elements: [
 						{view: 'template', template: 'Graph Height', type: 'header', borderless: true},
-						{view: 'text', label: 'Height (px)', name: 'height', width: 150, value: g.graphWrapperDomElement.style.height.slice(0, -2)},
+						{
+							view: 'text',
+							label: 'Height (px)',
+							name: 'height',
+							width: 150,
+							value: g.graphWrapperDomElement.style.height.slice(0, -2),
+							on: { onFocus: function() { this.getInputNode().select() } },
+						},
 						{
 							view: 'button', value: 'Update', click: updateHeight
 						},
