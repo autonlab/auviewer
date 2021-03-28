@@ -23,7 +23,7 @@ from flask import jsonify
 import simplejson
 
 from . import models
-from .api import getProject, getProjectsPayload, loadProjects
+from .api import downsampleFile, getProject, getProjectsPayload, loadProjects
 from .patternset import getAssignmentsPayload
 from .config import set_data_path, config, FlaskConfigClass
 
@@ -469,7 +469,14 @@ def main():
     # Parse command-line arguments
     parser = argparse.ArgumentParser(prog='python -m auviewer.serve', description='Auton Lab Universal Viewer')
     parser.add_argument('datapath', type=str, nargs='?', help='Path to data directory (may be empty if starting new)')
+    parser.add_argument('-ds', '--downsample', metavar=('original_file', 'destination_path'), type=str, nargs=2, help='Downsample a single original file to a destination.')
     args = parser.parse_args()
+
+    # Handle a downsample request
+    if args.downsample is not None:
+        print(f"Downsampling file {Path(args.downsample[0]).resolve()} to destination {Path(args.downsample[1]).resolve()}.")
+        downsampleFile(args.downsample[0], args.downsample[1])
+        return
 
     # Handle datapath argument
     if args.datapath is None:

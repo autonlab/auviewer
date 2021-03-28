@@ -10,8 +10,10 @@ function classifyAnnotationInRelationToGraph(annotation, graph) {
 
 	// Determine if the pattern is the current workflow pattern
 	const currentWorkflowPattern = annotation.id === currentAssignmentID;
-	
-	if (annotation.type === 'pattern') {
+
+	if (currentAssignmentID && !currentWorkflowPattern && document.getElementById('assignmentFocusOption').checked) {
+		return 'do_not_render';
+	} else if (annotation.type === 'pattern') {
 		if (annotationBelongsToThisGraph) {
 			if (currentWorkflowPattern) {
 				return 'own_pattern_target_assignment';
@@ -222,12 +224,13 @@ function deepCopy(o) {
 
 function getAnnotationCategoryLayerNumber(category) {
 	switch (category) {
+		case 'do_not_render': return -1; break;
 		case 'other_pattern_not_target_assignment': return 0; break;
 		case 'own_pattern_not_target_assignment': return 1; break;
+		case 'other_annotation': return 2; break;
+		case 'own_annotation': return 3; break;
 		case 'own_pattern_target_assignment':
-		case 'other_pattern_target_assignment': return 2; break;
-		case 'other_annotation': return 3; break;
-		case 'own_annotation': return 4; break;
+		case 'other_pattern_target_assignment': return 4; break;
 		default: console.log("Error! Unrecognized category provided to getAnnotationCategoryLayerNumber():", category);
 	}
 }

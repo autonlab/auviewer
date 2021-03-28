@@ -295,6 +295,9 @@ class AssignmentSet extends Set {
 		// Attach the start button
 		this.assignmentPanelDOMElement.querySelector('.btn-group').appendChild(this.startButtonDOMElement);
 
+		// Ensure that the assignment focus option is showing
+		document.getElementById('assignmentFocusOption').style.display = 'inline-block';
+
 		// Update panel numbers
 		this.updatePanel();
 

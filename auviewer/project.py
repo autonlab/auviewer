@@ -12,7 +12,7 @@ from . import models
 from .patternset import PatternSet
 from .config import config
 from .file import File
-from .shared import annotationDataFrame, annotationOrPatternOutput, patternDataFrame
+from .shared import annotationDataFrame, annotationOrPatternOutput, getProcFNFromOrigFN, patternDataFrame
 
 class Project:
     """Represents an auviewer project."""
@@ -284,7 +284,7 @@ class Project:
                 # TODO(gus): Do something else with this? Like set error state in the database entry and display in GUI?
 
             # Verify the processed file exists on the file system
-            procFilePathObj = self.processedDirPathObj / (origFilePathObj.stem + '_processed.h5')
+            procFilePathObj = self.processedDirPathObj / getProcFNFromOrigFN(origFilePathObj)
             if not procFilePathObj.exists():
                 logging.error(
                     f"File ID {fileDBModel.id} in the database is missing the processed file on the file system at {procFilePathObj}")
@@ -301,7 +301,7 @@ class Project:
             for newOrigFilePathObj in [p for p in self.originalsDirPathObj.iterdir() if p.is_file() and p.suffix == '.h5' and not any(map(lambda existingFilePathObj: p.samefile(existingFilePathObj), existingFilePathObjs))]:
 
                 # Establish the path of the new processed file
-                newProcFilePathObj = self.processedDirPathObj / (newOrigFilePathObj.stem + '_processed.h5')
+                newProcFilePathObj = self.processedDirPathObj / getProcFNFromOrigFN(newOrigFilePathObj)
 
                 # Instantiate the file class with an id of -1, and attach to
                 # this project instance.

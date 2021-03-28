@@ -6,14 +6,35 @@ import traceback
 from flask import Flask
 from pathlib import Path
 from typing import List, Dict, Optional
+from pathlib import Path
 
 from . import models
 from .config import config, set_data_path
+from .file import File
 from .project import Project
-from .shared import createEmptyJSONFile
+from .shared import createEmptyJSONFile, getProcFNFromOrigFN
 
 # Will hold loaded projects
 loadedProjects = []
+
+def downsampleFile(filepath: str, destinationpath: str) -> bool:
+    """
+    Downsamples an original file, placing the processed file in the destination folder.
+    Raises an exception in case of error.
+    :param filepath: path to the original file
+    :param destinationpath: path to the destination folder
+    :return: None
+    """
+
+    fp = Path(filepath)
+    if not (fp.exists() and fp.is_file()):
+        raise Exception(f"File '{filepath}' does not exist or is not a file.")
+
+    dp = Path(destinationpath)
+    if not (dp.exists() and dp.is_dir()):
+        raise Exception(f"Destination '{destinationpath}' does not exist or is not a directory.")
+
+    _ = File(None, -1, fp, dp / getProcFNFromOrigFN(fp), processNewFiles=True)
 
 def getProject(id) -> Optional[Project]:
     """
