@@ -19,7 +19,7 @@ from .shared import annotationOrPatternOutput
 # realtime-mode.
 class File:
 
-    def __init__(self, projparent, id, origFilePathObj, procFilePathObj, processNewFiles=True):
+    def __init__(self, projparent, id, origFilePathObj, procFilePathObj, processNewFiles=True, processOnly=False):
 
         logging.info(f"\n------------------------------------------------\nACCESSING FILE: (ID {id}) {origFilePathObj}\n------------------------------------------------\n")
 
@@ -46,6 +46,10 @@ class File:
             if self.procFilePathObj.exists():
                 logging.info(f"Opening processed file {self.procFilePathObj}.")
                 self.pf = audata.File.open(str(self.procFilePathObj), return_datetimes=False)
+
+                # If we've been asked only to generate the processed file and it already exists, return now.
+                if processOnly:
+                    return
 
             # Load series data into memory
             self.load()

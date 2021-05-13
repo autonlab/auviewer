@@ -34,7 +34,7 @@ def downsampleFile(filepath: str, destinationpath: str) -> bool:
     if not (dp.exists() and dp.is_dir()):
         raise Exception(f"Destination '{destinationpath}' does not exist or is not a directory.")
 
-    _ = File(None, -1, fp, dp / getProcFNFromOrigFN(fp), processNewFiles=True)
+    _ = File(None, -1, fp, dp / getProcFNFromOrigFN(fp), processNewFiles=True, processOnly=True)
 
 def getProject(id) -> Optional[Project]:
     """
