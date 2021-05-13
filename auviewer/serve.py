@@ -133,6 +133,78 @@ def createApp():
     def bokeh():
         return send_from_directory('../www', 'bokeh.html')
 
+    @app.route(config['rootWebPath'] + '/close_all_files', methods=['GET'])
+    @login_required
+    def close_all_files():
+
+        ### To be implemented here...
+        pass
+
+    @app.route(config['rootWebPath'] + '/close_all_project_files', methods=['GET'])
+    @login_required
+    def close_all_project_files():
+
+        # Parse parameters
+        project_id = request.args.get('project_id', type=int)
+
+        # Get the project
+        project = getProject(project_id)
+        if project is None:
+            logging.error(f"Project ID {project_id} not found.")
+            return app.response_class(
+                response=simplejson.dumps({'success': False}),
+                status=200,
+                mimetype='application/json'
+            )
+
+        ### To be implemented here...
+
+        ### This is the success response -- if there is an error you want to catch, just
+        ### the same response below but with success=False!
+        return app.response_class(
+            response=simplejson.dumps({'success': True}),
+            status=200,
+            mimetype='application/json'
+        )
+
+    @app.route(config['rootWebPath'] + '/close_project_file', methods=['GET'])
+    @login_required
+    def close_project_file():
+
+        # Parse parameters
+        project_id = request.args.get('project_id', type=int)
+        file_id = request.args.get('file_id', type=int)
+
+        # Get the project
+        project = getProject(project_id)
+        if project is None:
+            logging.error(f"Project ID {project_id} not found.")
+            return app.response_class(
+                response=simplejson.dumps({'success': False}),
+                status=200,
+                mimetype='application/json'
+            )
+
+        # Get the file
+        file = project.getFile(file_id)
+        if file is None:
+            logging.error(f"File ID {file_id} not found.")
+            return app.response_class(
+                response=simplejson.dumps({'success': False}),
+                status=200,
+                mimetype='application/json'
+            )
+
+        ### To be implemented here...
+
+        ### This is the success response -- if there is an error you want to catch, just
+        ### the same response below but with success=False!
+        return app.response_class(
+            response=simplejson.dumps({'success': True}),
+            status=200,
+            mimetype='application/json'
+        )
+
     @app.route(config['rootWebPath']+'/create_annotation', methods=['GET'])
     @login_required
     def create_annotation():
