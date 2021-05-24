@@ -31,6 +31,10 @@ class File:
         self.origFilePathObj = origFilePathObj
         self.procFilePathObj = procFilePathObj
 
+        # Check if file is open 
+        self.f_open = False
+        self.pf_open = False
+
         # Filename
         self.name = Path(self.origFilePathObj).name
 
@@ -46,6 +50,7 @@ class File:
             if self.procFilePathObj.exists():
                 logging.info(f"Opening processed file {self.procFilePathObj}.")
                 self.pf = audata.File.open(str(self.procFilePathObj), return_datetimes=False)
+                self.pf_open = True
 
                 # If we've been asked only to generate the processed file and it already exists, return now.
                 if processOnly:
@@ -53,12 +58,14 @@ class File:
 
             # Load series data into memory
             self.load()
+            self.f_open = True
 
             # If the processed file does not exist and we're supposed to process
             # new file data, process it.
             if not self.procFilePathObj.exists() and processNewFiles:
                 logging.info(f"Generating processed file for {self.origFilePathObj}")
                 self.process()
+                self.pf_open = True
 
             # If the processed file still does not exist, raise an exception
             if not self.procFilePathObj.exists():
