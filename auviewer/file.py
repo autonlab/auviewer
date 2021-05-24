@@ -35,41 +35,27 @@ class File:
         self.f_open = False
         self.pf_open = False
 
+        # Store file if already read
+        self.file = None
+        self.processed_file = None
+
         # Filename
         self.name = Path(self.origFilePathObj).name
 
         # Will hold the data series from the file
         self.series = []
 
-        if self.mode() == 'file':
+        # Processing flags
+        self.processNewFiles = processNewFiles
+        self.processOnly = processOnly 
 
-            # Open the original file
-            self.f = audata.File.open(str(self.origFilePathObj), return_datetimes=False)
+    @property
+    def f(self):
+        return self.file
 
-            # Load the processed file if it exists
-            if self.procFilePathObj.exists():
-                logging.info(f"Opening processed file {self.procFilePathObj}.")
-                self.pf = audata.File.open(str(self.procFilePathObj), return_datetimes=False)
-                self.pf_open = True
-
-                # If we've been asked only to generate the processed file and it already exists, return now.
-                if processOnly:
-                    return
-
-            # Load series data into memory
-            self.load()
-            self.f_open = True
-
-            # If the processed file does not exist and we're supposed to process
-            # new file data, process it.
-            if not self.procFilePathObj.exists() and processNewFiles:
-                logging.info(f"Generating processed file for {self.origFilePathObj}")
-                self.process()
-                self.pf_open = True
-
-            # If the processed file still does not exist, raise an exception
-            if not self.procFilePathObj.exists():
-                raise Exception(f"File {self.origFilePathObj} has not been processed and therefore cannot be loaded.")
+    @property
+    def pf(self):
+        return self.processed_file
 
     def __del__(self):
 
@@ -77,13 +63,13 @@ class File:
 
         # Close the original file
         try:
-            self.f.close()
+            self.file.close()
         except:
             pass
 
         # Close the processed file
         try:
-            self.pf.close()
+            self.processed_file.close()
         except:
             pass
 
@@ -300,7 +286,7 @@ class File:
         try:
 
             # Prepare references to HDF5 data
-            meds = self.f['ehr/medications'][:]
+            meds = self.file['ehr/medications'][:]
             events['meds'] = meds.apply(catcols, 1, idcol='time').tolist()
 
         except Exception:
@@ -310,7 +296,7 @@ class File:
         try:
 
             # Prepare references to HDF5 data
-            ce = self.f['low_rate'][:]
+            ce = self.file['low_rate'][:]
             events['ce'] = ce.apply(catcols, 1, idcol='date').tolist()
 
         except Exception:
@@ -327,6 +313,38 @@ class File:
 
         logging.info(f"Assembling all series full output for file {self.origFilePathObj}.")
         start = time.time()
+
+        if self.mode() == 'file':
+            if not self.f_open:
+                while True:
+                    # Open the original file
+                    self.file = audata.File.open(str(self.origFilePathObj), return_datetimes=False)
+
+                    # Load the processed file if it exists
+                    if self.procFilePathObj.exists():
+                        logging.info(f"Opening processed file {self.procFilePathObj}.")
+                        self.processed_file = audata.File.open(str(self.procFilePathObj), return_datetimes=False)
+                        self.pf_open = True
+
+                        # If we've been asked only to generate the processed file and it already exists, return now.
+                        if self.processOnly:
+                            break
+
+                    # Load series data into memory
+                    self.load()
+                    self.f_open = True
+
+                    # If the processed file does not exist and we're supposed to process
+                    # new file data, process it.
+                    if not self.procFilePathObj.exists() and self.processNewFiles:
+                        logging.info(f"Generating processed file for {self.origFilePathObj}")
+                        self.process()
+                        self.pf_open = True
+
+                    # If the processed file still does not exist, raise an exception
+                    if not self.procFilePathObj.exists():
+                        raise Exception(f"File {self.origFilePathObj} has not been processed and therefore cannot be loaded.")
+                    break
 
         # Assemble the output object.
         outputObject = {
@@ -387,7 +405,7 @@ class File:
     def getMetadata(self):
         """Returns a dict of file metadata."""
         try:
-            return self.f.file_meta
+            return self.file.file_meta
         except:
             return {}
 
@@ -456,7 +474,7 @@ class File:
         logging.info('Loading series from file.')
 
         # Iteratee through all datasets in the partial file
-        for (ds, _) in self.f.recurse():
+        for (ds, _) in self.file.recurse():
             self.loadSeriesFromDataset(ds)
 
         logging.info('Completed loading series from file.')
@@ -513,13 +531,13 @@ class File:
             print(f"Downsampling file {self.name}...")
 
             # Create the file for storing processed data.
-            self.pf = audata.File.new(str(self.procFilePathObj), overwrite=False, time_reference=self.f.time_reference, return_datetimes=False)
+            self.processed_file = audata.File.new(str(self.procFilePathObj), overwrite=False, time_reference=self.file.time_reference, return_datetimes=False)
 
             # Process & store numeric series
             for s in self.series:
                 s.processAndStore()
 
-            self.pf.flush()
+            self.processed_file.flush()
 
             # Reload series data in memory since we have new downsamples
             self.load()
@@ -537,7 +555,7 @@ class File:
 
             # Close the file
             try:
-                self.pf.close()
+                self.processed_file.close()
             except Exception as e:
                 logging.error(f"Unable to close the processed file.\n{e}\n{traceback.format_exc()}")
 
@@ -555,7 +573,7 @@ class File:
 
             # Close the file
             try:
-                self.pf.close()
+                self.processed_file.close()
             except Exception as e:
                 logging.error(f"Unable to close the processed file.\n{e}\n{traceback.format_exc()}")
 

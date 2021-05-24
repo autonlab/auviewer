@@ -51,4 +51,4 @@ class RawData:
 
     def getDatasetReference(self):
 
-        return self.seriesparent.fileparent.f['/'.join(self.seriesparent.h5path)]
+        return self.seriesparent.fileparent.file['/'.join(self.seriesparent.h5path)]
