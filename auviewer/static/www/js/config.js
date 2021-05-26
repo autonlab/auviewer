@@ -17,6 +17,7 @@ let globalAppConfig = {
 	createAnnotationURL: 'create_annotation',
 	deleteAnnotationURL: 'delete_annotation',
 	detectPatternsURL: 'detect_patterns',
+	featurizeURL: 'featurize',
 	initialFilePayloadURL: 'initial_file_payload',
 	getProjectAnnotationsURL: 'get_project_annotations',
 	seriesRangedDataURL: 'series_ranged_data',
