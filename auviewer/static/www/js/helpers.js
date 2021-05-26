@@ -342,6 +342,70 @@ function padDataIfNeeded(data) {
 
 }
 
+function showFeaturizationPanel(s) {
+	globalAppConfig.verbose && console.log('showFeaturizationPanel('+s+') called.');
+
+	// Setup handler
+	const featurize = function() {
+		const vals = $$('featurize_form').getValues();
+		const params = {
+			'window_size': vals['window_size'],
+			'tolerance': vals['tolerance']
+		}
+		requestHandler.featurize(globalStateManager.currentProject.id, globalStateManager.currentFile.id, s, params, function(data) {
+			if (!data['success']) {
+				console.log('Featurization was not successful.');
+				alert('Featurization was not successful.');
+				return;
+			}
+			globalStateManager.currentFile.addTemporaryFeatureGraph(data);
+		});
+	}
+
+	webix.ui({
+		view: 'window',
+		id: 'graph_config_window',
+		close: true,
+		head: "Featurize",// &mdash; Rolling Window Sample Entropy &mdash; "+s,
+		move: true,
+		position: 'center',
+		width: 350,
+		body: {
+			view: 'form',
+			width: 350,
+			id: 'featurize_form',
+			on: { onSubmit: featurize },
+			elements: [
+				{view: 'template', template: 'Featurize Rolling Window Sample Entropy', type: 'header', borderless: true},
+				{
+					view: 'text',
+					label: 'Window Size (e.g. 10ms, 3s, 5min)',
+					labelWidth: 250,
+					name: 'window_size',
+					// width: 120,
+					on: { onFocus: function() { this.getInputNode().select() } },
+				},
+				{
+					view: 'text',
+					label: 'Tolerance (opt)',
+					tooltip: 'Tolerance distance for which the two vectors can be considered equal (default: std(NNI))',
+					labelWidth: 230,
+					name: 'tolerance',
+					// width: 120,
+					on: { onFocus: function() { this.getInputNode().select() } },
+				},
+				{
+					view: 'button',
+					value: 'Generate',
+					tooltip: 'Generate the featurization and display in the viewer when ready.',
+					click: featurize
+				},
+			]
+		},
+	}).show();
+
+}
+
 // Show the graph control panel for a given graph series (which corresponds to file.graphs[].fullName of the
 // corresponding Graph class instance).
 function showGraphControlPanel(s) {
@@ -349,7 +413,7 @@ function showGraphControlPanel(s) {
 	const dg = g.dygraphInstance;
 
 	// Setup some handlers
-	const updateRange = function () {
+	const updateRange = function() {
 		const vals = $$('graph_range_form').getValues();
 		g.dygraphInstance.updateOptions({
 			valueRange: [vals['ymin'], vals['ymax']],

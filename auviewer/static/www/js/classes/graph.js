@@ -42,7 +42,7 @@ function Graph(seriesOrGroupName, file) {
 		this.isGroup = false;
 
 		// Short name
-		this.shortName = simpleSeriesName(seriesOrGroupName);
+		this.shortName = this.isTemporary() ? this.fullName : simpleSeriesName(seriesOrGroupName);
 
 		// Group members
 		this.members = [seriesOrGroupName];
@@ -79,6 +79,11 @@ function Graph(seriesOrGroupName, file) {
 
 // Add this graph instance to the plot control interface
 Graph.prototype.addSelfToPlotControl = function() {
+
+	// If this series is temporary, do not add to plot control
+	if (this.isTemporary()) {
+		return;
+	}
 
 	// Get array of the containing folder structure names
 	const folderComponents = this.fullName.split('/').slice(1, -1);
@@ -121,7 +126,11 @@ Graph.prototype.build = function() {
 		'<table>' +
 			'<tbody>' +
 				'<tr>' +
-					'<td class="graph_title"><span title="'+this.altText+'">'+this.shortName+'</span><span class="webix_icon mdi mdi-cogs" onclick="showGraphControlPanel(\''+this.fullName+'\');"></span></td>' +
+					'<td class="graph_title">' +
+						'<span title="'+this.altText+'">'+this.shortName+'</span>' +
+						'<span class="webix_icon mdi mdi-cogs" title="Graph Options" onclick="showGraphControlPanel(\''+this.fullName+'\');"></span>' +
+						'<span class="webix_icon mdi mdi-abacus" title="Featurize this series" onclick="showFeaturizationPanel(\''+this.fullName+'\');"></span>' +
+					'</td>' +
 					'<td rowspan="2">' +
 						'<div class="graph"></div>' +
 					'</td>' +
@@ -318,6 +327,16 @@ Graph.prototype.isShowing = function() {
 	return this.dygraphInstance !== null;
 };
 
+// Returns a boolean indicating whether this series is temporary (e.g. a dynamic featurization).
+Graph.prototype.isTemporary = function() {
+	try {
+		if (this.file.fileData['series'][this.fullName].temporary) {
+			return true;
+		}
+	} catch {}
+	return false;
+};
+
 // Replace the data attached to the dygraph. Block redraw of the dygraph by
 // passing in true for the block_redraw optional parameter.
 Graph.prototype.replacePlottedData = function(data, block_redraw=false) {
@@ -375,6 +394,11 @@ Graph.prototype.triggerResize = function() {
 // the former which updates data for all graphs currently appearing and the
 // latter which updates the data only for the single graph.
 Graph.prototype.updateCurrentViewData = function() {
+
+	// If this is a temporary series (e.g. a dynamic featurization), do not update.
+	if (this.isTemporary()) {
+		return;
+	}
 
 	// Get the x-axis range
 	let xRange = this.dygraphInstance.xAxisRange();
