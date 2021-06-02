@@ -1347,10 +1347,12 @@ File.prototype.updateCurrentViewData = function() {
 
 	// Grab the x-axis range from the last showing graph (all graphs should be
 	// showing the same range since they are synchronized).
-	let xRange = lastGraphShowing.dygraphInstance.xAxisRange();
+	const xRange = lastGraphShowing.dygraphInstance.xAxisRange();
+	const left = xRange[0]/1000-this.fileData.baseTime;
+	const right = xRange[1]/1000-this.fileData.baseTime;
 
 	// Request the updated view data from the backend.
-	requestHandler.requestSeriesRangedData(this.parentProject.id, this.id, series, xRange[0]/1000-this.fileData.baseTime, xRange[1]/1000-this.fileData.baseTime, this.getPostloadDataUpdateHandler());
+	requestHandler.requestSeriesRangedData(this.parentProject.id, this.id, series, left, right, this.getPostloadDataUpdateHandler());
 
 };
 

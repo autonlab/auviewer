@@ -1,4 +1,25 @@
 {
+	"annotations": {
+		"_default": {
+			"name": "Default Annotation",
+			"series_specific": true,
+			"series_restrictions": [],
+			"time_type": "all",
+			"fields": [
+				{
+					"id": "confidence",
+					"name": "Confidence",
+					"type": "radio",
+					"options": ["-3", "-2", "-1", "0", "1", "2", "3"]
+				},
+				{
+					"id": "notes",
+					"name": "Notes",
+					"type": "textarea"
+				}
+			]
+		}
+	},
 	"patternDetection": [],
 	"series": {
 		"_default": {
