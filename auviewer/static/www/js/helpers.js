@@ -347,15 +347,33 @@ function showFeaturizationPanel(s) {
 
 	// Setup handler
 	const featurize = function() {
+
+		$$('featurize_window').showProgress();
+
 		const vals = $$('featurize_form').getValues();
 		const params = {
 			'window_size': vals['window_size'],
 			'tolerance': vals['tolerance']
 		}
-		requestHandler.featurize(globalStateManager.currentProject.id, globalStateManager.currentFile.id, s, params, function(data) {
+
+		// Grab the x-axis range from the last showing graph (all graphs should be
+		// showing the same range since they are synchronized).
+		const f = globalStateManager.currentFile;
+		const g = f.getGraphForSeries(s);
+		const xRange = g.dygraphInstance.xAxisRange();
+		const left = xRange[0]/1000-f.fileData.baseTime;
+		const right = xRange[1]/1000-f.fileData.baseTime;
+
+		requestHandler.featurize(globalStateManager.currentProject.id, globalStateManager.currentFile.id, s, left, right, params, function(data) {
+			$$('featurize_window').hideProgress();
+
 			if (!data['success']) {
 				console.log('Featurization was not successful.');
-				alert('Featurization was not successful.');
+				let msg = 'Featurization was not successful.';
+				if (data.hasOwnProperty('error_message')) {
+					msg = data['error_message'];
+				}
+				alert(msg);
 				return;
 			}
 			globalStateManager.currentFile.addTemporaryFeatureGraph(data);
@@ -364,7 +382,7 @@ function showFeaturizationPanel(s) {
 
 	webix.ui({
 		view: 'window',
-		id: 'graph_config_window',
+		id: 'featurize_window',
 		close: true,
 		head: "Featurize",// &mdash; Rolling Window Sample Entropy &mdash; "+s,
 		move: true,
@@ -403,6 +421,8 @@ function showFeaturizationPanel(s) {
 			]
 		},
 	}).show();
+
+	webix.extend($$("featurize_window"), webix.ProgressBar);
 
 }
 
