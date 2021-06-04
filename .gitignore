@@ -9,4 +9,5 @@ build/
 *.egg-info/
 dist/
 data/
+auviewer.code-workspace
 
