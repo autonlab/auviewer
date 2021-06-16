@@ -9,7 +9,7 @@ function classifyAnnotationInRelationToGraph(annotation, graph) {
 	const annotationBelongsToThisGraph = annotation.series && graph.members.includes(annotation.series);
 
 	// Determine if the pattern is the current workflow pattern
-	const currentWorkflowPattern = annotation.id === currentAssignmentID;
+	const currentWorkflowPattern = annotation.id === currentAssignmentID || annotation.pattern_id === currentAssignmentID;
 
 	if (currentAssignmentID && !currentWorkflowPattern && document.getElementById('assignmentFocusOption').checked) {
 		return 'do_not_render';
@@ -228,9 +228,9 @@ function getAnnotationCategoryLayerNumber(category) {
 		case 'other_pattern_not_target_assignment': return 0; break;
 		case 'own_pattern_not_target_assignment': return 1; break;
 		case 'other_annotation': return 2; break;
-		case 'own_annotation': return 3; break;
+		case 'own_annotation': return 4; break;
 		case 'own_pattern_target_assignment':
-		case 'other_pattern_target_assignment': return 4; break;
+		case 'other_pattern_target_assignment': return 3; break;
 		default: console.log("Error! Unrecognized category provided to getAnnotationCategoryLayerNumber():", category);
 	}
 }
