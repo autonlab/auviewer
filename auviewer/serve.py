@@ -386,6 +386,13 @@ def createApp():
             df = s.getDataAsDF().set_index('time')
             window_size = params['window_size']
             tolerance = params['tolerance']
+            if len(tolerance) < 1:
+                tolerance = None
+            dim = params['dim']
+            try:
+                dim = int(dim)
+            except:
+                dim = 2
 
             left = datetime.fromtimestamp(left).astimezone(utc)
             right = datetime.fromtimestamp(right).astimezone(utc)
@@ -397,7 +404,7 @@ def createApp():
             print(df)
             def se(x):
                 try:
-                    return pyhrv.nonlinear.sample_entropy(nni=x)[0] if x.shape[0] > 0 else np.nan
+                    return pyhrv.nonlinear.sample_entropy(nni=x, tolerance=tolerance, dim=dim)[0] if x.shape[0] > 0 else np.nan
                 except Exception as e:
                     print(f"exception: {e}")
                     return np.nan

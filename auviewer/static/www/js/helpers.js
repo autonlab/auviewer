@@ -353,6 +353,7 @@ function showFeaturizationPanel(s) {
 		const vals = $$('featurize_form').getValues();
 		const params = {
 			'window_size': vals['window_size'],
+			'dim': vals['dim'],
 			'tolerance': vals['tolerance']
 		}
 
@@ -400,6 +401,15 @@ function showFeaturizationPanel(s) {
 					label: 'Window Size (e.g. 10ms, 3s, 5min)',
 					labelWidth: 250,
 					name: 'window_size',
+					// width: 120,
+					on: { onFocus: function() { this.getInputNode().select() } },
+				},
+				{
+					view: 'text',
+					label: 'Embedding Dimension (opt)',
+					tooltip: 'The embedding dimension (length of vectors to compare) (default: 2)',
+					labelWidth: 230,
+					name: 'dim',
 					// width: 120,
 					on: { onFocus: function() { this.getInputNode().select() } },
 				},
