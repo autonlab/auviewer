@@ -43,6 +43,14 @@ RequestHandler.prototype.featurize = function(project_id, file_id, series, featu
 	});
 };
 
+RequestHandler.prototype.createSupervisorPrecomputer = function(project_id, filePayload, callback) {
+	this._postRequest(callback, globalAppConfig.createSupervisorPrecomputerUrl, {
+		project_id: project_id
+	},
+	{
+		file_payload: filePayload
+	});
+};
 RequestHandler.prototype.requestPatternDetection = function(project_id, file_id, type, seriesID, tlow, thigh, duration, persistence, maxgap, callback) {
 
 	this._newRequest(callback, globalAppConfig.detectPatternsURL, {
@@ -63,6 +71,12 @@ RequestHandler.prototype.requestInitialFilePayload = function(project_id, file_i
 	this._newRequest(callback, globalAppConfig.initialFilePayloadURL, {
 		project_id: project_id,
 		file_id: file_id
+	});
+};
+
+RequestHandler.prototype.requestInitialSupervisorPayload = function(project_id, callback) {
+	this._newRequest(callback, globalAppConfig.initialSupervisorPayloadURL, {
+		project_id: project_id,
 	});
 };
 
@@ -98,18 +112,8 @@ RequestHandler.prototype.updateAnnotation = function(id, project_id, file_id, le
 
 };
 
-// Executes a backend request. Takes an object params with name/value pairs.
-// The value may be either a string/string-convertible value or an array of
-// such values. In the latter case, the array will be passed in as a GET
-// parameter array of values.
-RequestHandler.prototype._newRequest = function(callback, path, params) {
-
-	globalAppConfig.verbose && console.log("Sending request to " + path, params);
-
-	// Instantiate a new HTTP request object
-	let req = new XMLHttpRequest();
-
-	req.onreadystatechange = function() {
+const callbackCaller = function(callback, path) {
+	return function() {
 
 		if (this.readyState === 4 && this.status === 200) {
 
@@ -133,8 +137,10 @@ RequestHandler.prototype._newRequest = function(callback, path, params) {
 
 		}
 
-	};
+	}
+};
 
+const buildPathWithParams = function(path, params) {
 	// Assemble the parameters on the path
 	let keys = Object.keys(params);
 	for (let i = 0; i < keys.length; i++) {
@@ -156,6 +162,39 @@ RequestHandler.prototype._newRequest = function(callback, path, params) {
 			path += keys[i] + '='
 		}
 	}
+
+	return path;
+}
+
+RequestHandler.prototype._postRequest = function(callback, path, pathParams, objParams) {
+	let req = new XMLHttpRequest();
+
+	req.onreadystatechange = callbackCaller(callback, path);
+	path = buildPathWithParams(path, pathParams);
+	req.open("POST", path);
+	let payload = new FormData();
+	for (let param in objParams) {
+		payload.append(param, objParams[param]);
+	}
+
+	// req.setRequestHeader("content-type", "application/x-www-form-urlencoded");
+	req.send(payload);
+}
+
+// Executes a backend request. Takes an object params with name/value pairs.
+// The value may be either a string/string-convertible value or an array of
+// such values. In the latter case, the array will be passed in as a GET
+// parameter array of values.
+RequestHandler.prototype._newRequest = function(callback, path, params) {
+
+	globalAppConfig.verbose && console.log("Sending request to " + path, params);
+
+	// Instantiate a new HTTP request object
+	let req = new XMLHttpRequest();
+
+	req.onreadystatechange = callbackCaller(callback, path);
+
+	path = buildPathWithParams(path, params);
 
 	req.open("GET", path, true);
 	req.send();

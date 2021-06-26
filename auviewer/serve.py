@@ -621,6 +621,41 @@ def createApp():
             mimetype='application/json'
         )
 
+    @app.route(config['rootWebPath']+'/initial_supervisor_payload')
+    @login_required
+    def initial_supervisor_payload():
+        project_id = request.args.get('project_id', type=int)
+
+        project = getProject(project_id)
+        if project is None:
+            logging.error(f"Project ID {project_id} not found.")
+            abort(404, description="Project not found.")
+            return
+
+        filesPayload = project.getConstituentFilesPayload()
+        fileIds = [fInfo[0] for fInfo in filesPayload['files']]
+        lfVotes, lfNames = project.applyLFs(fileIds)
+        filesPayload['labeling_function_votes'] = lfVotes
+        filesPayload['labeling_function_titles'] = lfNames
+        return app.response_class(
+            response=simplejson.dumps(filesPayload, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
+
+    @app.route(config['rootWebPath']+'/create_supervisor_precomputer', methods=['POST'])
+    @login_required
+    def supervisor_precomputer():
+        project_id = request.args.get('project_id', type=int)
+        request_data = request.files['file_payload']
+        response = request_data.read()#request_data['file_payload']
+        return app.response_class(
+            response=simplejson.dumps(response),
+            status=200,
+            mimetype='application/json'
+        )
+        #receives function that takes in patient series' and returns necessary inputs for LF votes
+
     @app.route(config['rootWebPath']+'/project')
     @login_required
     def project():
@@ -676,6 +711,28 @@ def createApp():
 
 
         return render_template('project.html', project_name=projectPayload['project_name'], payload=projectPayloadJSON, featurizersJSONPayload=featurizersJSONPayload)
+
+    @app.route(config['rootWebPath']+'/supervisor')
+    @login_required
+    def supervisor():
+        # Parse parameters
+        id = request.args.get('id', type=int)
+
+        p = getProject(id)
+        if p is None:
+            logging.error(f"Project ID {id} not found.")
+            abort(404, description="Project not found.")
+            return
+
+        # Project payload data for the HTML template
+        projectPayload = p.getInitialPayload(current_user.id)
+
+        # Assemble the data into a payload. We JSON-encode this twice. The first
+        # one converts the dict into JSON. The second one essentially makes the
+        # JSON string safe to drop straight into JavaScript code, as we are doing.
+        projectPayloadJSON = simplejson.dumps(simplejson.dumps(projectPayload))
+
+        return render_template('supervisor.html', project_name=projectPayload['project_name'], payload=projectPayloadJSON)
 
     @app.route(config['rootWebPath']+'/series_ranged_data', methods=['GET'])
     @login_required

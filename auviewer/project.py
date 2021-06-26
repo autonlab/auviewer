@@ -149,12 +149,87 @@ class Project:
                 return f
         return None
 
+<<<<<<< HEAD
     def getFileByFilename(self, filename):
         """Returns the file with matching filename or None."""
         for f in self.files:
             if f.name == filename:
                 return f
         return None
+=======
+    def getConstituentFilesPayload(self):
+        outputObject = {
+            'files': [[f.id, f.origFilePathObj.name] for f in self.files],
+            'series': [],
+            'events': [],#[f.getEvents() for f in self.files],
+            'metadata': [f.getMetadata() for f in self.files]
+        }
+
+        #must populate outputObject with constituent files' series, events, and metadata
+        for f in self.files:
+            for s in f.series:
+                outputObject['series'].append({s.id: s.getFullOutput()})
+        
+        return outputObject
+
+    def applyLFs(self, fileIds, lfModule="diagnoseEEG"):
+        import importlib
+        import numpy as np
+        labelingFunctionModuleSpec = importlib.util.spec_from_file_location(lfModule, f"EEG_Weak_Supervision_Code/{lfModule}.py")
+        labelingFunctionModule = importlib.util.module_from_spec(labelingFunctionModuleSpec)
+        labelingFunctionModuleSpec.loader.exec_module(labelingFunctionModule)
+        lfModule = getattr(labelingFunctionModule, lfModule)
+
+        #### copied from 'EEG weak supervision.ipynb', Mononito's jupyter notebook
+        thresholds = {
+            'near_zero': 1,
+            'near_zero_duration_tol': 5, # Duration of time that aEEG is near zero
+            'EEG__HIGH_15': 15,
+            'EEG__HIGH_10': 10,
+            'EEG__HIGH_5': 5,
+            'EEG__HIGH_4': 4,
+            'EEG__LOW': 2, # 2
+            'length_EEG__LOW': 25,
+            'min_separation': 4,
+            'n_high_amplitude_peaks_per_hour': 12,
+            'min_fraction_high_amplitude': 0.1, 
+            'splits': 6, # Number of non-overlappying moving windows (1 hour durations)
+        }
+
+        labels = {
+            'ABSTAIN': 'ABSTAIN',
+            'NORMAL': 'NORMAL',
+            'SUPPRESSED': 'SUPPRESSED',
+            'SUPPRESSED_WITH_ICTAL': 'SUPPRESSED_WITH_ICTAL',
+            'BURST_SUPRESSION': 'BURST_SUPRESSION',
+        }
+        #### end of copied vars
+
+        fileSeries = dict()
+        for f in self.files:
+            if f.id in fileIds:
+                fileSeries[f.id] = f.series[0].getFullOutput().get('data') #for now assuming a single series, hence the 0-index
+
+        fileLFOutputs = dict()
+        for fId, series in fileSeries.items():
+            filledNaNs = None # Indices where NaNs present 
+            series = np.array(series)
+            if np.sum(np.isnan(series)) > 0:
+                filledNaNs = series.isna().to_numpy()
+                series = series.fillna(0)
+
+            if (np.sum(series) == 0): continue
+            
+            EEG = series.reshape((-1, 1))
+
+            #apply lfs to series
+            currentLfModule = lfModule(EEG, filledNaNs, thresholds, labels=labels, verbose = False, explain = False)
+            fileLFOutputs[fId] = {'labeling_function_votes': currentLfModule.get_vote_vector()}
+            lfNames = currentLfModule.get_LF_names()
+            break
+        
+        return fileLFOutputs, lfNames
+>>>>>>> edf555e... view and initial LF application
 
     def getInitialPayload(self, user_id):
         """Returns initial project payload data"""

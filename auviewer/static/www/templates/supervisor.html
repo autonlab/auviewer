@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ rootWebPath }}/css/third-party/bootstrap-select.min.css">
+<link rel='stylesheet' href='{{ rootWebPath }}/css/third-party/dygraph.css'/>
+<link rel='stylesheet' href='{{ rootWebPath }}/css/third-party/webix.min.css'/>
+<link rel="stylesheet" href="https://cdn.webix.com/materialdesignicons/5.8.95/css/materialdesignicons.min.css?v=8.1.5" type="text/css" charset="utf-8">
+<link rel='stylesheet' href='{{ rootWebPath }}/css/app.css'/>
+{% endblock %}
+
+{% block js %}
+
+<!-- Backend initial payload -->
+<script type="application/javascript">
+	const payload = JSON.parse({{payload|safe}});
+	console.log('Initial project payload', payload);
+</script>
+
+<script src="{{ rootWebPath }}/js/third-party/bootstrap-select.min.js"></script>
+
+<!-- Dygraphs & Synchronizer -->
+<script src="{{ rootWebPath }}/js/third-party/dygraph.js"></script>
+<script src="{{ rootWebPath }}/js/third-party/synchronizer.js"></script>
+
+<!-- Webix -->
+<script src="{{ rootWebPath }}/js/third-party/webix.min.js"></script>
+
+<!-- Random color generator -->
+<script src="{{ rootWebPath }}/js/third-party/random_color.js"></script>
+
+<!-- Config -->
+<script src="{{ rootWebPath }}/js/config.js"></script>
+
+<!-- Classes -->
+<script src="{{ rootWebPath }}/js/classes/annotation.js"></script>
+<script src="{{ rootWebPath }}/js/classes/annotationset.js"></script>
+<script src="{{ rootWebPath }}/js/classes/assignmentsmanager.js"></script>
+<!-- <script src="{{ rootWebPath }}/js/classes/file.js"></script> -->
+<script src="{{ rootWebPath }}/js/classes/supervisor.js"></script>
+<script src="{{ rootWebPath }}/js/classes/globalstatemanager.js"></script>
+<script src="{{ rootWebPath }}/js/classes/graph.js"></script>
+<script src="{{ rootWebPath }}/js/classes/project.js"></script>
+<script src="{{ rootWebPath }}/js/classes/requesthandler.js"></script>
+<script src="{{ rootWebPath }}/js/classes/templatesystem.js"></script>
+
+<!-- Function Libraries -->
+<script src="{{ rootWebPath }}/js/event_handlers.js"></script>
+<script src="{{ rootWebPath }}/js/helpers.js"></script>
+
+<!-- App Main -->
+<script src="{{ rootWebPath }}/js/supervisorApp.js"></script>
+
+{% endblock %}
+
+{% block content %}
+<div id="controls">
+
+	
+
+	<div id="projectAndFileSelection">
+
+		<h5>{{project_name}}</h5>
+
+		<table id='labelingFunctionTable'>
+
+		</table>
+
+		<!-- <h6>Label function precomputer</h6>
+
+		<div class="form-group">
+			<input id="precompute-file" class="btn btn-sm btn-light" type="file" />
+			<button type="button" class="btn btn-sm btn-light" onclick="globalStateManager.currentSupervisor.uploadFile('precompute-file')">Upload File</button>
+		</div> -->
+
+	</div>
+
+		<!-- <form action = "http://localhost:5000/uploader" method = "POST" 
+		enctype = "multipart/form-data">
+		<input type = "file" name = "file" />
+		<input type = "submit"/>
+	</form>   -->
+
+	<!-- <h6>Plot</h6>
+	<button type="button" class="btn btn-sm btn-light" style="margin-bottom: 18px;" onclick="globalStateManager.currentFile ? globalStateManager.currentFile.plotControl.show() : null;">Show/Hide Graphs</button><br>
+
+	<div id="assignmentPanelArea">
+		<h6>My Assignments</h6>
+	</div>
+	<input id="assignmentFocusOption" type="checkbox" style="display: none;" onclick="if (globalStateManager.currentFile) { globalStateManager.currentFile.triggerRedraw(); }" checked><label for="assignmentFocusOption" style="font-size: 12px; margin-left: 6px;" title="Hide other patterns & annotations">Assignment focus</label> -->
+
+	<!--	<span class="clickable" onclick="globalStateManager.currentFile.annotationWorkflowPrevious();">&lt; Prev</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="clickable" onclick="globalStateManager.currentFile.annotationWorkflowNext();">Next &gt;</span>-->
+	<!--	<div id="annotationWorkflowSubtext"></div>-->
+
+<!--	<h6>Annotations</h6>-->
+<!--	<button type="button" class="btn btn-sm btn-light" data-toggle="modal" data-target="#annotationsListModal" style="margin-bottom: 3px;">View File Annotations</button><br>-->
+<!--	<button type="button" class="btn btn-sm btn-light" data-toggle="modal" data-target="#allAnnotationsListModal">View Project Annotations</button>-->
+<!--	<br><br>-->
+
+	<!-- <h6>Zoom Control</h6>
+	<div id="zoomControl">
+		<div>
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(21600000);" title="6 hours">6hr</button>
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(7200000);" title="2 hours">2hr</button>
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(3600000);" title="1 hour">1hr</button>
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(600000);" title="10 minutes">10m</button>
+		</div>
+		<div>
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(60000);" title="1 minute">1m</button>
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(10000);" title="10 seconds">10s</button>
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(1000);" title="1 second">1s</button>
+		</div>
+		<div>
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.resetZoomToOutermost();" title="Reset zoom to see all data">All</button>
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomBy(0, .1);" title="Zoom out by 10%">-</button>
+			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomBy(1, .1);" title="Zoom in by 10%">+</button>
+		</div>
+	</div> -->
+</div>
+<div id="graphs">
+
+</div>
+{% endblock %}
