@@ -2,6 +2,7 @@
 import logging
 import pandas as pd
 import traceback
+import random
 
 from pathlib import Path
 from sqlalchemy import and_
@@ -180,7 +181,6 @@ class Project:
             # 'labelingFunction': None,
             # 'amount': 10
         if queryObj['randomFiles']:
-            random = True
             chosenFileIds = set()
             chosenFileIds = []
             chosenFileCount = 0
@@ -190,9 +190,15 @@ class Project:
                     nextFile = random.choice(self.files)
                 chosenFileIds.append(nextFile.id)
         else: #category belonging to labeling function
-            #
-            # models.votes.query.filter_by()
-            pass
+            #extract labeler and category from tables
+            labeler = models.Labeler.query.filter_by(title=queryObj['labelingFunction']).first()
+            category = models.Category.query.filter_by(label=queryObj['categorical'][0]).first()
+            # get votes belonging to labeling function, then votes belonging to category
+            filteredVotes = models.Vote.query.filter_by(labeler_id=labeler.id).filter_by(category_id=category.id).all()
+            print(filteredVotes)
+            #basically doing a join w/o using a join here
+            chosenFileIds = [vote.file_id for vote in filteredVotes]
+        return chosenFileIds
 
 
     def applyLFs(self, fileIds, lfModule="diagnoseEEG"):
@@ -228,7 +234,16 @@ class Project:
         }
         #### end of copied vars
 
-        # instantiate categories
+        # add categories to table
+        for label, _ in labels.items():
+            if len(models.Category.query.filter_by(label=label).all()) > 0:
+                continue
+            #else, add to Category table
+            newCategory = models.Category(
+                project_id=self.id,
+                label=label)
+            models.db.session.add(newCategory)
+            models.db.session.commit()
 
         fileSeries = dict()
         print(len(fileIds))
@@ -237,6 +252,8 @@ class Project:
                 fileSeries[f.id] = f.series[0].getFullOutput().get('data') #for now assuming a single series, hence the 0-index
 
         fileLFOutputs = []
+        haveTriedToAddLFNames = False
+        lfNamesToIds = dict()
         for fId, series in fileSeries.items():
             filledNaNs = None # Indices where NaNs present 
             series = np.array([e[-1] for e in series])
@@ -248,10 +265,27 @@ class Project:
             
             EEG = series.reshape((-1, 1))
 
-            #apply lfs to series
+            # apply lfs to series
             currentLfModule = lfModule(EEG, filledNaNs, thresholds, labels=labels, verbose =False, explain =False)
-            fileLFOutputs.append(currentLfModule.get_vote_vector())
+
+            # add label functions to labelers table
             lfNames = currentLfModule.get_LF_names()
+            if (not haveTriedToAddLFNames):
+                haveTriedToAddLFNames = True
+                if (len(models.Labeler.query.filter_by(project_id=self.id).all()) == 0):
+                    newLabelers = []
+                    for lfName in lfNames:
+                        newLabeler = models.Labeler(
+                            project_id=self.id,
+                            title=lfName)
+                        newLabelers.append(newLabeler)
+                    models.db.session.add_all(newLabelers)
+                    models.db.session.commit()
+                    for lfName, labeler in zip(lfNames, newLabelers):
+                        lfNamesToIds[lfName] = labeler.id #once committed, each labeler has an id
+            votes = currentLfModule.get_vote_vector()
+
+            fileLFOutputs.append()
         
         return fileLFOutputs, lfNames
 >>>>>>> edf555e... view and initial LF application
