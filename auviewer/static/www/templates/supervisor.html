@@ -53,17 +53,28 @@
 {% endblock %}
 
 {% block content %}
-<div id="controls">
+<div class="row" id="supervisorPane">
 
-	
+	<div class="col-3">
+		<div class="card">
+			<div class="card-body">
+			<h5 class="card-title">{{project_name}}</h5>
 
-	<div id="projectAndFileSelection">
 
-		<h5>{{project_name}}</h5>
+			<table class="table table-hover table-sm" id='labelingFunctionTable'>
+				<col style="width:80%">
+				<col style="width:20%">
+				<thead>
+					<tr>
+						<th scope="col">Labeling Function</th>
+						<th scope="col">View?</th>
+					</tr>
+				</thead>
+				<tbody>
 
-		<table id='labelingFunctionTable'>
-
-		</table>
+				</tbody>
+			</table>
+			</div>
 
 		<!-- <h6>Label function precomputer</h6>
 
@@ -72,51 +83,18 @@
 			<button type="button" class="btn btn-sm btn-light" onclick="globalStateManager.currentSupervisor.uploadFile('precompute-file')">Upload File</button>
 		</div> -->
 
+		</div>
 	</div>
+	<div class="col-9">
+		<div class="card">
+			<div class="card-body">
+			<h5 class="card-title">Patients</h5>
 
-		<!-- <form action = "http://localhost:5000/uploader" method = "POST" 
-		enctype = "multipart/form-data">
-		<input type = "file" name = "file" />
-		<input type = "submit"/>
-	</form>   -->
-
-	<!-- <h6>Plot</h6>
-	<button type="button" class="btn btn-sm btn-light" style="margin-bottom: 18px;" onclick="globalStateManager.currentFile ? globalStateManager.currentFile.plotControl.show() : null;">Show/Hide Graphs</button><br>
-
-	<div id="assignmentPanelArea">
-		<h6>My Assignments</h6>
+			<div id="supervisorGraphs">
+			</div>
+			</div>
+		</div>
 	</div>
-	<input id="assignmentFocusOption" type="checkbox" style="display: none;" onclick="if (globalStateManager.currentFile) { globalStateManager.currentFile.triggerRedraw(); }" checked><label for="assignmentFocusOption" style="font-size: 12px; margin-left: 6px;" title="Hide other patterns & annotations">Assignment focus</label> -->
-
-	<!--	<span class="clickable" onclick="globalStateManager.currentFile.annotationWorkflowPrevious();">&lt; Prev</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="clickable" onclick="globalStateManager.currentFile.annotationWorkflowNext();">Next &gt;</span>-->
-	<!--	<div id="annotationWorkflowSubtext"></div>-->
-
-<!--	<h6>Annotations</h6>-->
-<!--	<button type="button" class="btn btn-sm btn-light" data-toggle="modal" data-target="#annotationsListModal" style="margin-bottom: 3px;">View File Annotations</button><br>-->
-<!--	<button type="button" class="btn btn-sm btn-light" data-toggle="modal" data-target="#allAnnotationsListModal">View Project Annotations</button>-->
-<!--	<br><br>-->
-
-	<!-- <h6>Zoom Control</h6>
-	<div id="zoomControl">
-		<div>
-			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(21600000);" title="6 hours">6hr</button>
-			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(7200000);" title="2 hours">2hr</button>
-			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(3600000);" title="1 hour">1hr</button>
-			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(600000);" title="10 minutes">10m</button>
-		</div>
-		<div>
-			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(60000);" title="1 minute">1m</button>
-			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(10000);" title="10 seconds">10s</button>
-			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(1000);" title="1 second">1s</button>
-		</div>
-		<div>
-			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.resetZoomToOutermost();" title="Reset zoom to see all data">All</button>
-			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomBy(0, .1);" title="Zoom out by 10%">-</button>
-			<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomBy(1, .1);" title="Zoom in by 10%">+</button>
-		</div>
-	</div> -->
-</div>
-<div id="graphs">
 
 </div>
 {% endblock %}

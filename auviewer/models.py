@@ -30,12 +30,35 @@ class Annotation(db.Model):
     def __repr__(self):
         return f"ID: {self.id}, UID: {self.user_id}, PID: {self.project_id}, FID: {self.file_id}, PID: {self.pattern_id}, Series: {self.series}, Boundaries: {self.left} {self.right} {self.top} {self.bottom}, Label: {self.label}"
 
+<<<<<<< HEAD
 class AnnotationTemplate(db.Model):
     __tablename__ = 'annotation_templates'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False)
     form = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, server_default=func.now())
+=======
+class Labeler(db.Model):
+    __tablename__ = 'labelers'
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
+    title = db.Column(db.String(255), nullable=False)
+
+class Vote(db.Model):
+    __tablename__ = 'votes'
+    id = db.Column(db.Integer, primary_key=True)
+    labeler_id = db.Column(db.Integer, db.ForeignKey('labelers.id', ondelete='CASCADE'), nullable=False)
+    file_id = db.Column(db.Integer, db.ForeignKey('files.id', ondelete='CASCADE'), nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey('categories.id', ondelete='CASCADE'), nullable=False)
+    left = db.Column(db.Float, nullable=True)
+    right = db.Column(db.Float, nullable=True)
+
+class Category(db.Model):
+    __tablename__ = 'categories'
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
+    label = db.Column(db.String(255), nullable=False)
+>>>>>>> a7f4b91... bootstrap incorporation
 
 class Pattern(db.Model):
     __tablename__ = 'patterns'

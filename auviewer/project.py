@@ -158,19 +158,42 @@ class Project:
         return None
 =======
     def getConstituentFilesPayload(self):
+        files = self.files[:5]
         outputObject = {
-            'files': [[f.id, f.origFilePathObj.name] for f in self.files],
+            'files': [[f.id, f.origFilePathObj.name] for f in files],
             'series': [],
             'events': [],#[f.getEvents() for f in self.files],
-            'metadata': [f.getMetadata() for f in self.files]
+            'metadata': [f.getMetadata() for f in files]
         }
 
         #must populate outputObject with constituent files' series, events, and metadata
-        for f in self.files:
+        for f in files:
             for s in f.series:
                 outputObject['series'].append({s.id: s.getFullOutput()})
         
         return outputObject
+
+    def queryWeakSupervision(queryObj):
+        #of form:
+            # 'randomFiles': True,
+            # 'categorical': None,
+            # 'labelingFunction': None,
+            # 'amount': 10
+        if queryObj['randomFiles']:
+            random = True
+            chosenFileIds = set()
+            chosenFileIds = []
+            chosenFileCount = 0
+            while (chosenFileCount < min(len(self.files), queryObj['amount'])):
+                nextFile = random.choice(self.files)
+                while (nextFile.id in chosenFileIds):
+                    nextFile = random.choice(self.files)
+                chosenFileIds.append(nextFile.id)
+        else: #category belonging to labeling function
+            #
+            # models.votes.query.filter_by()
+            pass
+
 
     def applyLFs(self, fileIds, lfModule="diagnoseEEG"):
         import importlib
@@ -205,15 +228,18 @@ class Project:
         }
         #### end of copied vars
 
+        # instantiate categories
+
         fileSeries = dict()
+        print(len(fileIds))
         for f in self.files:
             if f.id in fileIds:
                 fileSeries[f.id] = f.series[0].getFullOutput().get('data') #for now assuming a single series, hence the 0-index
 
-        fileLFOutputs = dict()
+        fileLFOutputs = []
         for fId, series in fileSeries.items():
             filledNaNs = None # Indices where NaNs present 
-            series = np.array(series)
+            series = np.array([e[-1] for e in series])
             if np.sum(np.isnan(series)) > 0:
                 filledNaNs = series.isna().to_numpy()
                 series = series.fillna(0)
@@ -223,10 +249,9 @@ class Project:
             EEG = series.reshape((-1, 1))
 
             #apply lfs to series
-            currentLfModule = lfModule(EEG, filledNaNs, thresholds, labels=labels, verbose = False, explain = False)
-            fileLFOutputs[fId] = {'labeling_function_votes': currentLfModule.get_vote_vector()}
+            currentLfModule = lfModule(EEG, filledNaNs, thresholds, labels=labels, verbose =False, explain =False)
+            fileLFOutputs.append(currentLfModule.get_vote_vector())
             lfNames = currentLfModule.get_LF_names()
-            break
         
         return fileLFOutputs, lfNames
 >>>>>>> edf555e... view and initial LF application

@@ -27,12 +27,38 @@ function Supervisor(payload) {
 
     this.sync = null;
 
+	//Holds the labeling function ids that we'd like to render for visible patients
+	this.activeLFs = [];
+
+	this.active_lf_colors = {
+		'blue': false,
+		'purple': false,
+		'pink': false,
+		'red': false,
+		'orange': false,
+		'yellow': false,
+		'green': false,
+		'teal': false,
+		'cyan': false 
+	};
+
+	//Holds the labeling function titles to their associated colors (more succinct than full title to render)
+	this.lfTitleToColor = {};
+
+	//Maps lf title to idx in votes array
+	this.lfTitleToIdx = {};
+
 	requestHandler.requestInitialSupervisorPayload(this.project_id, function (data) {
 		// Prepare data received from the backend and attach to class instance
 		// new prepareData method needed
 		this.projectData = this.prepareData(data, data.baseTime);
         this.domElementObjs = new Array(this.projectData.files.length);
         this.dygraphs = new Array(this.projectData.files.length);
+		this.lfVotes = this.projectData.labeling_function_votes;
+
+		for (const [idx, lfTitle] of this.projectData.labeling_function_titles.entries()) {
+			this.lfTitleToIdx[lfTitle] = idx;
+		}
 		window.requestAnimationFrame(function() {
 			// // Attach & render file metadata
 			// this.metadata = data.metadata;
@@ -69,7 +95,7 @@ function Supervisor(payload) {
             }
             else {
                 this.sync = Dygraph.synchronize(this.dygraphs, {
-                    range: false,
+                    range: true,
                     selection: true,
                     zoom: true
                 });
@@ -82,13 +108,54 @@ Supervisor.prototype.buildLabelingFunctionTable = function(labelingFunctionTitle
 	for (let lfTitle of labelingFunctionTitles) {
 		let lfTitleDomElement = document.createElement('tr');
 		lfTitleDomElement.innerHTML = 
-			'<td width="50%" >' + lfTitle + '</td>' + 
-			'<td width="50%"> <input type="checkbox" id="' + lfTitle + '" value = "' + lfTitle + '" > </td>';
-		lfTitleDomElement.style.fontSize = 'x-small';
-
-		document.getElementById('labelingFunctionTable').appendChild(lfTitleDomElement);
-		break;
+			'<td >' + lfTitle + '</td>' + 
+			'<td >' +
+				'<input class="btn" type="checkbox" id="' + lfTitle + '" value = "' + lfTitle + '" onclick="globalStateManager.currentSupervisor.onClick(`'+lfTitle+'`)"> </td>';
+		lfTitleDomElement.style.fontSize = 'small';
+		document.getElementById('labelingFunctionTable').getElementsByTagName('tbody')[0].appendChild(lfTitleDomElement);
 	}
+}
+
+Supervisor.prototype.onClick = function(lfTitle) {
+	const divInQuestion = document.getElementById(lfTitle);
+	if (divInQuestion.checked) {
+		this.activeLFs.push(lfTitle);
+		for (const [color, alreadyInUse] of Object.entries(this.active_lf_colors)) {
+			if (!alreadyInUse) {
+				this.active_lf_colors[color] = true;
+				this.lfTitleToColor[lfTitle] = color;
+				divInQuestion.parentElement.parentElement.style.backgroundColor = color;
+				break;
+			}
+		}
+	}
+	else {
+		const isLF = (elem) => elem === lfTitle;
+		let lfIndex = this.activeLFs.findIndex(isLF);
+		this.activeLFs.splice(lfIndex, lfIndex+1);
+		this.active_lf_colors[this.lfTitleToColor[lfTitle]] = false;
+		divInQuestion.parentElement.parentElement.style.backgroundColor = '#888';
+	}
+
+	for (const [seriesIdx, domElementObj] of this.domElementObjs.entries()) {
+		let correspondingVotesSection = domElementObj.graphWrapperDomElement.getElementsByClassName('labelingFunctionVotes')[0];
+		correspondingVotesSection.innerHTML = '';
+		// let correspondingVotesSection = votesSection[0];
+		for (const activeLF of this.activeLFs) {
+			let lfDiv = document.createElement('div');
+			lfDiv.style.backgroundColor = this.lfTitleToColor[activeLF];
+			lfDiv.style.fontSize = 'small';
+			lfDiv.style.color = 'white'
+			lfDiv.innerHTML = this.lfVotes[seriesIdx][this.lfTitleToIdx[activeLF]];
+			correspondingVotesSection.appendChild(lfDiv);
+		}
+	}
+
+	// document.getElementById('labelingFunctionTable').getElementsBy
+}
+
+Supervisor.prototype.getLFColorByTitle = function(lfTitle) {
+	this.lfTitleToColor[lfTitle];
 }
 
 Supervisor.prototype.buildGraph = function(fileName) {
@@ -99,10 +166,14 @@ Supervisor.prototype.buildGraph = function(fileName) {
 	graphWrapperDomElement.style.height = this.template.graphHeight;
 
 	graphWrapperDomElement.innerHTML =
-		'<table>' +
+		'<table class="table">' +
+			'<col style="width:10%">' +
+			'<col style="width:10%">' +
+			'<col style="width:80%">' +
 			'<tbody>' +
 				'<tr>' +
-					'<td class="graph_title"><span title="'+this.altText+'">'+fileName+'</span><span class="webix_icon mdi mdi-cogs" onclick="showGraphControlPanel(\''+fileName+'\');"></span></td>' +
+					'<td rowspan="2" class="labelingFunctionVotes" />' +
+					'<td scope="row" class="graph_title"><span title="'+this.altText+'">'+fileName+'</span><span class="webix_icon mdi mdi-cogs" onclick="showGraphControlPanel(\''+fileName+'\');"></span></td>' +
 					'<td rowspan="2">' +
 						'<div class="graph"></div>' +
 					'</td>' +
@@ -113,7 +184,7 @@ Supervisor.prototype.buildGraph = function(fileName) {
 			'</tbody>' +
 		'</table>';
 
-	document.getElementById('graphs').appendChild(graphWrapperDomElement);
+	document.getElementById('supervisorGraphs').appendChild(graphWrapperDomElement);
 
 	// Grab references to the legend & graph elements so they can be used later.
 	let legendDomElement = graphWrapperDomElement.querySelector('.legend > div');

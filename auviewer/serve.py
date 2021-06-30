@@ -633,6 +633,20 @@ def createApp():
             return
 
         filesPayload = project.getConstituentFilesPayload()
+        # {
+        #     'randomFiles': bool,
+        #     'categorical': List[Category],
+        #     'labelingFunction': str,
+        #     'amount': int,
+        #     # 'sortByConfidence': bool,
+        #     # 'patientSearchString': str,
+        # }
+        # supervisorPayload = project.queryWeakSupervision({
+        #     'randomFiles': True,
+        #     'categorical': None,
+        #     'labelingFunction': None,
+        #     'amount': 10
+        # })
         fileIds = [fInfo[0] for fInfo in filesPayload['files']]
         lfVotes, lfNames = project.applyLFs(fileIds)
         filesPayload['labeling_function_votes'] = lfVotes
