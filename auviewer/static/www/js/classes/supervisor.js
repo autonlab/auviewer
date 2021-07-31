@@ -25,6 +25,25 @@ function Supervisor(payload) {
 	// Holds the dom element of the instantiated graph
 	this.graphDomElement = null;
 
+	requestHandler.requestInitialSupervisorPayload(this.project_id, function (data) {
+		let lfSelector = document.getElementById('lfSelector');
+		for (let lfTitle of data.labeling_function_titles) {
+			let nextOpt = document.createElement('option');
+			nextOpt.innerHTML = lfTitle;
+			lfSelector.appendChild(nextOpt);
+		}
+		let voteSelector = document.getElementById('voteSelector');
+		for (let possibleVote of data.labeling_function_possible_votes) {
+			let nextOpt = document.createElement('option');
+			nextOpt.innerHTML = possibleVote;
+			voteSelector.appendChild(nextOpt);
+		}
+		this.buildLabelingFunctionTable(data.labeling_function_titles);
+		this.initModel(data);
+	}.bind(this));
+}
+
+Supervisor.prototype.initModel = function(data) {
     this.sync = null;
 
 	//Holds the labeling function ids that we'd like to render for visible patients
@@ -48,60 +67,105 @@ function Supervisor(payload) {
 	//Maps lf title to idx in votes array
 	this.lfTitleToIdx = {};
 
-	requestHandler.requestInitialSupervisorPayload(this.project_id, function (data) {
-		// Prepare data received from the backend and attach to class instance
-		// new prepareData method needed
-		this.projectData = this.prepareData(data, data.baseTime);
-        this.domElementObjs = new Array(this.projectData.files.length);
-        this.dygraphs = new Array(this.projectData.files.length);
-		this.lfVotes = this.projectData.labeling_function_votes;
+	// Prepare data received from the backend and attach to class instance
+	// new prepareData method needed
+	this.projectData = this.prepareData(data, data.baseTime || 0);
+	this.lfVotes = this.projectData.labeling_function_votes;
+	this.domElementObjs = new Array(this.projectData.files.length);
+	this.dygraphs = new Array(this.projectData.files.length);
 
-		for (const [idx, lfTitle] of this.projectData.labeling_function_titles.entries()) {
-			this.lfTitleToIdx[lfTitle] = idx;
+	for (const [idx, lfTitle] of this.projectData.labeling_function_titles.entries()) {
+		this.lfTitleToIdx[lfTitle] = idx;
+
+	}
+	window.requestAnimationFrame(function() {
+		// // Attach & render file metadata
+		// this.metadata = data.metadata;
+		// this.renderMetadata();
+
+		// ----- Below is not applicable (?) -----
+		// // Instantiate event graphs
+		// this.renderEventGraphs();
+		this.projectData.labeling_function_possible_votes
+		for (let i = 0; i < this.projectData.files.length; i++) {
+			this.domElementObjs[i] = this.buildGraph(this.projectData.files[i][1]);
+			let series = Object.values(this.projectData.series[i])[0];
+			let events = this.projectData.events[i];
+			let metadata = this.projectData.metadata[i];
+
+			this.dygraphs[i] = this.createDygraph(this.domElementObjs[i], series, events);
 		}
-		window.requestAnimationFrame(function() {
-			// // Attach & render file metadata
-			// this.metadata = data.metadata;
-			// this.renderMetadata();
 
-            // ----- Below is not applicable (?) -----
-			// // Instantiate event graphs
-			// this.renderEventGraphs();
-			this.buildLabelingFunctionTable(this.projectData.labeling_function_titles);
-            for (let i = 0; i < this.projectData.files.length; i++) {
-                this.domElementObjs[i] = this.buildGraph(this.projectData.files[i][1]);
-                let series = Object.values(this.projectData.series[i])[0];
-                let events = this.projectData.events[i];
-                let metadata = this.projectData.metadata[i];
+		// for (let s of Object.keys(this.projectData.series)) {
+		// 	this.graphs[s] = new Graph(s, this);
+		// }
 
-                this.dygraphs[i] = this.createDygraph(this.domElementObjs[i], series, events);
-            }
+		// With all graphs instantiated, trigger resize of all graphs
+		// (this resolves a dygraphs bug where the first few graphs drawn
+		// are wider than the rest due to a scrollbar which initiallly is
+		// not needed and, later, is).
+		for (let dygraphInstance of this.dygraphs) {
+			dygraphInstance.resize();
+		}
 
-			// for (let s of Object.keys(this.projectData.series)) {
-			// 	this.graphs[s] = new Graph(s, this);
-			// }
-
-			// With all graphs instantiated, trigger resize of all graphs
-			// (this resolves a dygraphs bug where the first few graphs drawn
-			// are wider than the rest due to a scrollbar which initiallly is
-			// not needed and, later, is).
-            for (let dygraphInstance of this.dygraphs) {
-                dygraphInstance.resize();
-            }
-
-			// Synchronize the graphs
-            if (this.dygraphs.length < 2) {
-                return;
-            }
-            else {
-                this.sync = Dygraph.synchronize(this.dygraphs, {
-                    range: true,
-                    selection: true,
-                    zoom: true
-                });
-            }
-		}.bind(this));
+		// Synchronize the graphs
+		if (this.dygraphs.length < 2) {
+			return;
+		}
+		else {
+			this.sync = Dygraph.synchronize(this.dygraphs, {
+				range: true,
+				selection: true,
+				zoom: true
+			});
+		}
 	}.bind(this));
+}
+
+Supervisor.prototype.clearModel = function() {
+	for (let domElementObj of this.domElementObjs) {
+		domElementObj.graphDomElement.remove();
+		domElementObj.graphWrapperDomElement.remove();
+	}
+	for (let dygraphInstance of this.dygraphs) {
+		dygraphInstance.destroy();
+	}
+	// let parents = [document.getElementById('labelingFunctionTable').getElementsByTagName('tbody')[0], document.getElementById('lfSelector'), document.getElementById('voteSelector')];
+	// for (let parent of parents) {
+	// 	while (parent.firstChild) {
+	// 		parent.removeChild(parent.firstChild);
+	// 	}
+	// }
+}
+
+Supervisor.prototype.applyQuery = function() {
+	let elements = document.getElementById('supervisorQueryForm').elements;
+	let random = false;
+	let lfSelection;
+	let voteSelection;
+	for (let elem of elements) {
+		if (elem.id==='randomQuery') {
+			random = elem.checked;
+		} else if (elem.id === 'lfSelector') {
+			lfSelection = elem.value;
+		} else if (elem.id === 'voteSelector') {
+			voteSelection = elem.value;
+		}
+	}
+	let self = this;
+	let queryResponse = requestHandler.requestSupervisorSeriesByQuery(this.project_id, {
+         'randomFiles': random,
+         'categorical': voteSelection,
+         'labelingFunction': lfSelection,
+         'amount': 5,
+        // 'sortByConfidence': bool,
+        // 'patientSearchString': str,
+	}, function (data) {
+		self.clearModel();
+		self.initModel(data);
+	});
+
+	console.log("sent off query");
 }
 
 Supervisor.prototype.buildLabelingFunctionTable = function(labelingFunctionTitles) {
@@ -170,7 +234,7 @@ Supervisor.prototype.buildGraph = function(fileName) {
 			'<col style="width:10%">' +
 			'<col style="width:10%">' +
 			'<col style="width:80%">' +
-			'<tbody>' +
+			'<tbody id="seriesTableBody">' +
 				'<tr>' +
 					'<td rowspan="2" class="labelingFunctionVotes" />' +
 					'<td scope="row" class="graph_title"><span title="'+this.altText+'">'+fileName+'</span><span class="webix_icon mdi mdi-cogs" onclick="showGraphControlPanel(\''+fileName+'\');"></span></td>' +
@@ -237,10 +301,8 @@ Supervisor.prototype.createDygraph = function(graphDomElementObj, series, eventD
     let seriesData = new Array(series.data.length);
     // let initialValue;
     for (let i = 0; i < seriesData.length; i++) {
-        // if (i === 0) {
-        //     initialValue = new Date(series.data[i][0]*1000 % 1);
-        // }
-        seriesData[i] = [i/*new Date(series.data[i][0]*1000 % 1) - initialValue*/, series.data[i][2]];
+		// seriesData[i] = [i/*new Date(series.data[i][0]*1000 % 1) - initialValue*/, series.data[i][series.data[i].length -1]];
+		seriesData[i] = [series.data[i][0]/*new Date(series.data[i][0]*1000 % 1) - initialValue*/, series.data[i][series.data[i].length -1]];
     }
     let dygraphInstance = new Dygraph(graphDomElementObj.graphDomElement, seriesData, {
 		// axes: {

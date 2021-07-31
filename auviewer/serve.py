@@ -632,7 +632,10 @@ def createApp():
             abort(404, description="Project not found.")
             return
 
-        filesPayload = project.getConstituentFilesPayload()
+        filesPayload = project.queryWeakSupervision({
+            'randomFiles': True,
+            'amount': 5
+        })
         # {
         #     'randomFiles': bool,
         #     'categorical': List[Category],
@@ -648,11 +651,26 @@ def createApp():
         #     'amount': 10
         # })
         fileIds = [fInfo[0] for fInfo in filesPayload['files']]
-        lfVotes, lfNames = project.applyLFs(fileIds)
-        filesPayload['labeling_function_votes'] = lfVotes
-        filesPayload['labeling_function_titles'] = lfNames
+        _ = project.applyLFsToDict(fileIds, filesPayload)
         return app.response_class(
             response=simplejson.dumps(filesPayload, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
+
+    @app.route(config['rootWebPath']+'/query_supervisor_series', methods=['POST'])
+    @login_required
+    def query_supervisor_series():
+        print(request)
+        project_id = request.args.get('project_id', type=int)
+        request_data = request.get_json()
+        query_payload = request_data['query_payload']
+
+        project = getProject(project_id)
+        query_response = project.queryWeakSupervision(query_payload) 
+        _ = project.applyLFsToDict([f[0] for f in query_response['files']], query_response)
+        return app.response_class(
+            response=simplejson.dumps(query_response),
             status=200,
             mimetype='application/json'
         )

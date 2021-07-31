@@ -150,14 +150,12 @@ class Project:
                 return f
         return None
 
-<<<<<<< HEAD
     def getFileByFilename(self, filename):
         """Returns the file with matching filename or None."""
         for f in self.files:
             if f.name == filename:
                 return f
         return None
-=======
     def getConstituentFilesPayload(self):
         files = self.files[:5]
         outputObject = {
@@ -174,40 +172,65 @@ class Project:
         
         return outputObject
 
-    def queryWeakSupervision(queryObj):
+    def getConstituentFilesPayload(self):
+        files = self.files
+        
+        return self.makeFilesPayload(files)
+
+    def queryWeakSupervision(self, queryObj):
         #of form:
             # 'randomFiles': True,
             # 'categorical': None,
             # 'labelingFunction': None,
-            # 'amount': 10
+            # 'amount': 5
         if queryObj['randomFiles']:
             chosenFileIds = set()
-            chosenFileIds = []
-            chosenFileCount = 0
-            while (chosenFileCount < min(len(self.files), queryObj['amount'])):
+            chosenFiles = []
+            while (len(chosenFiles) < min(len(self.files), queryObj['amount'])):
                 nextFile = random.choice(self.files)
                 while (nextFile.id in chosenFileIds):
                     nextFile = random.choice(self.files)
-                chosenFileIds.append(nextFile.id)
+                chosenFiles.append(nextFile)
+                chosenFileIds.add(nextFile.id)
         else: #category belonging to labeling function
+        #of form:
+            # 'randomFiles': false,
+            # 'categorical': 'ABSTAIN',
+            # 'labelingFunction': 'bimodel_aEEG',
+            # 'amount': 5,
+
             #extract labeler and category from tables
-            labeler = models.Labeler.query.filter_by(title=queryObj['labelingFunction']).first()
-            category = models.Category.query.filter_by(label=queryObj['categorical'][0]).first()
+            print('getting query response')
+            labeler = models.Labeler.query.filter_by(project_id=self.id, title=queryObj['labelingFunction']).first()
+            category = models.Category.query.filter_by(project_id=self.id, label=queryObj['categorical']).first()
+            categories = models.Category.query.filter_by(project_id=self.id, label=queryObj['categorical']).all()
+            print([c.label for c in categories])
+            print(labeler.title, category.label)
+            print(len(self.files))
             # get votes belonging to labeling function, then votes belonging to category
+            print([v for v in models.Vote.query.filter_by(category_id=category.id).all()])
+            print([v for v in models.Vote.query.filter_by(labeler_id=labeler.id, category_id=category.id).all()])
             filteredVotes = models.Vote.query.filter_by(labeler_id=labeler.id).filter_by(category_id=category.id).all()
             print(filteredVotes)
             #basically doing a join w/o using a join here
-            chosenFileIds = [vote.file_id for vote in filteredVotes]
-        return chosenFileIds
+            chosenFiles = [next(f for f in self.files if f.id==vote.file_id) for vote in filteredVotes][:queryObj['amount']]
+        
+        return self.makeFilesPayload(chosenFiles)
 
 
-    def applyLFs(self, fileIds, lfModule="diagnoseEEG"):
+    def applyLFsToDict(self, fileIds, d, lfModule="diagnoseEEG"):
         import importlib
         import numpy as np
         labelingFunctionModuleSpec = importlib.util.spec_from_file_location(lfModule, f"EEG_Weak_Supervision_Code/{lfModule}.py")
         labelingFunctionModule = importlib.util.module_from_spec(labelingFunctionModuleSpec)
         labelingFunctionModuleSpec.loader.exec_module(labelingFunctionModule)
         lfModule = getattr(labelingFunctionModule, lfModule)
+
+        # print('gonna drop_all then create_all')
+        # models.db.drop_all()
+        # models.db.create_all()
+        # print('did it')
+        # print(1/0)
 
         #### copied from 'EEG weak supervision.ipynb', Mononito's jupyter notebook
         thresholds = {
@@ -234,26 +257,27 @@ class Project:
         }
         #### end of copied vars
 
-        # add categories to table
-        for label, _ in labels.items():
-            if len(models.Category.query.filter_by(label=label).all()) > 0:
-                continue
-            #else, add to Category table
-            newCategory = models.Category(
-                project_id=self.id,
-                label=label)
-            models.db.session.add(newCategory)
-            models.db.session.commit()
+
+
+        voteOutputs = []
+        numLabelersInDb = len(models.Labeler.query.filter_by(project_id=self.id).all())
+        shouldConstructLabelers = numLabelersInDb == 0
+        labelerNamesToIds = dict()
+        shouldConstructCategories = len(models.Category.query.filter_by(project_id=self.id).all()) == 0
+        uniqueCategories = set()
+        categoryNamesToIds = dict()
+        numVotesInDb = len(models.Vote.query.filter_by(project_id=self.id).all())
+        shouldConstructVotes = shouldConstructLabelers or (not shouldConstructLabelers and numVotesInDb != len(self.files)*numLabelersInDb)
+        print(shouldConstructLabelers, shouldConstructCategories, shouldConstructVotes, len(self.files)*numLabelersInDb)
 
         fileSeries = dict()
-        print(len(fileIds))
         for f in self.files:
-            if f.id in fileIds:
+            if (shouldConstructVotes): #then add every file to fileSeries
+                fileSeries[f.id] = f.series[0].getFullOutput().get('data') #for now assuming a single series, hence the 0-index
+            elif f.id in fileIds:
                 fileSeries[f.id] = f.series[0].getFullOutput().get('data') #for now assuming a single series, hence the 0-index
 
-        fileLFOutputs = []
-        haveTriedToAddLFNames = False
-        lfNamesToIds = dict()
+        lfNames = None
         for fId, series in fileSeries.items():
             filledNaNs = None # Indices where NaNs present 
             series = np.array([e[-1] for e in series])
@@ -262,7 +286,6 @@ class Project:
                 series = series.fillna(0)
 
             if (np.sum(series) == 0): continue
-            
             EEG = series.reshape((-1, 1))
 
             # apply lfs to series
@@ -270,25 +293,85 @@ class Project:
 
             # add label functions to labelers table
             lfNames = currentLfModule.get_LF_names()
-            if (not haveTriedToAddLFNames):
-                haveTriedToAddLFNames = True
-                if (len(models.Labeler.query.filter_by(project_id=self.id).all()) == 0):
-                    newLabelers = []
-                    for lfName in lfNames:
-                        newLabeler = models.Labeler(
-                            project_id=self.id,
-                            title=lfName)
-                        newLabelers.append(newLabeler)
-                    models.db.session.add_all(newLabelers)
-                    models.db.session.commit()
-                    for lfName, labeler in zip(lfNames, newLabelers):
-                        lfNamesToIds[lfName] = labeler.id #once committed, each labeler has an id
             votes = currentLfModule.get_vote_vector()
-
-            fileLFOutputs.append()
+            if (shouldConstructCategories): uniqueCategories.update(votes)
+            voteOutputs.append(votes)
         
-        return fileLFOutputs, lfNames
->>>>>>> edf555e... view and initial LF application
+        if (not lfNames):
+            series = self.files[0].series[0].getFullOutput().get('data')
+            filledNaNs = None # Indices where NaNs present 
+            series = np.array([e[-1] for e in series])
+            if np.sum(np.isnan(series)) > 0:
+                filledNaNs = series.isna().to_numpy()
+                series = series.fillna(0)
+
+            EEG = series.reshape((-1, 1))
+
+            # apply lfs to series
+            currentLfModule = lfModule(EEG, filledNaNs, thresholds, labels=labels, verbose =False, explain =False)
+
+            # add label functions to labelers table
+            lfNames = currentLfModule.get_LF_names()
+
+        if (shouldConstructLabelers):
+            
+            print('Constructing labelers')
+            newLabelers = []
+            for lfName in lfNames:
+                newLabeler = models.Labeler(
+                    project_id=self.id,
+                    title=lfName)
+                newLabelers.append(newLabeler)
+            models.db.session.add_all(newLabelers)
+            models.db.session.commit()
+            print(f'After labeler construction: {models.Labeler.query.filter_by(project_id=self.id).all()}')
+            for lfName, labeler in zip(lfNames, newLabelers):
+                labelerNamesToIds[lfName] = labeler.id #once committed, each labeler has an id
+
+        if (shouldConstructCategories):
+            print(f'Constructing the following categories: {labels.keys()}')
+            # add categories to table
+            newCategories = list()
+            for label in labels.keys():
+                newCategory = models.Category(
+                    project_id=self.id,
+                    label=label)
+                newCategories.append(newCategory)
+            print(f'Before: {models.Category.query.filter_by(project_id=self.id).all()}')
+            models.db.session.add_all(newCategories)
+            models.db.session.commit()
+            print(f'After: {models.Category.query.filter_by(project_id=self.id).all()}')
+            for categoryLabel, category in zip(uniqueCategories, newCategories):
+                categoryNamesToIds[categoryLabel] = category.id
+        
+        if (shouldConstructVotes):
+            createdVotes = list()
+            print(f'Before vote creation: {models.Vote.query.filter_by(project_id=self.id).all()}')
+            for votes, fileId in zip(voteOutputs, fileSeries.keys()):
+                for vote, labeler in zip(votes, lfNames):
+                    categoryId = categoryNamesToIds[vote]
+                    labelerId = labelerNamesToIds[labeler]
+                    newVote = models.Vote(
+                        project_id=self.id,
+                        labeler_id=labelerId,
+                        category_id=categoryId,
+                        file_id=fileId)
+                    createdVotes.append(newVote)
+            models.db.session.add_all(createdVotes)
+            models.db.session.commit()
+            print(f'After: {models.Vote.query.filter_by(project_id=self.id).all()}')
+
+            #since we added everything to fileSeries so we created all votes, we should now filter out files not present in fileIds
+            votesByFileId = list(zip(fileSeries.keys(), voteOutputs))
+            votesToKeep = list(map(lambda t: t[1], filter(lambda t: t[0] in fileIds, votesByFileId)))
+            voteOutputs = votesToKeep
+            print(f'Trimmed vote output from {len(votesByFileId)} to {len(voteOutputs)}')
+
+
+        d['labeling_function_votes'] = voteOutputs
+        d['labeling_function_titles'] = lfNames
+        d['labeling_function_possible_votes'] = list(labels.keys())
+        return voteOutputs, lfNames, list(labels.keys())
 
     def getInitialPayload(self, user_id):
         """Returns initial project payload data"""

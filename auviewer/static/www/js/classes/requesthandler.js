@@ -80,6 +80,15 @@ RequestHandler.prototype.requestInitialSupervisorPayload = function(project_id, 
 	});
 };
 
+RequestHandler.prototype.requestSupervisorSeriesByQuery = function(project_id, queryObj, callback) {
+	this._postRequest(callback, globalAppConfig.querySupervisorSeriesURL, {
+			project_id: project_id
+		},
+		{
+			query_payload: queryObj			
+		}, true);
+};
+
 RequestHandler.prototype.requestProjectAnnotations = function(project_id, callback) {
 	this._newRequest(callback, globalAppConfig.getProjectAnnotationsURL, {
 		project_id: project_id
@@ -166,7 +175,7 @@ const buildPathWithParams = function(path, params) {
 	return path;
 }
 
-RequestHandler.prototype._postRequest = function(callback, path, pathParams, objParams) {
+RequestHandler.prototype._postRequest = function(callback, path, pathParams, objParams, withJson=false) {
 	let req = new XMLHttpRequest();
 
 	req.onreadystatechange = callbackCaller(callback, path);
@@ -177,7 +186,10 @@ RequestHandler.prototype._postRequest = function(callback, path, pathParams, obj
 		payload.append(param, objParams[param]);
 	}
 
-	// req.setRequestHeader("content-type", "application/x-www-form-urlencoded");
+	if (withJson) {
+		req.setRequestHeader("Content-Type", "application/json");
+		payload = JSON.stringify(objParams);
+	}
 	req.send(payload);
 }
 

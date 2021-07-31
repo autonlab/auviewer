@@ -94,6 +94,34 @@
 			</div>
 			</div>
 		</div>
+		<div class="card">
+			<div class="card-body">
+			<h6 class="card-title">Filter</h6>	
+			<form id="supervisorQueryForm">
+				<div class="row">
+					<div class="col">
+					    <input class="form-check-input" type="checkbox" id="randomQuery" value="option1">
+						<label class="form-check-label" for="randomQuery">Random</label>
+					</div>	
+				</div>
+				<div class="row">
+					<div class="col">
+					<label for="lfSelector">Select labeler</label>
+					<select class="form-control" id="lfSelector">
+					</select>
+					</div>
+					<div class="col">
+					<label for="voteSelector">Select label</label>
+					<select class="form-control" id="voteSelector">
+					</select>
+					</div>
+				</div>
+				<div class="row">
+					<button type="button" class="btn btn-primary btn-block" onclick="globalStateManager.currentSupervisor.applyQuery()">Apply</button>
+				</div>	
+			</form>
+			</div>
+		</div>
 	</div>
 
 </div>
