@@ -186,7 +186,7 @@ class Project:
         if queryObj['randomFiles']:
             chosenFileIds = set()
             chosenFiles = []
-            while (len(chosenFiles) < min(len(self.files), queryObj['amount'])):
+            while (len(chosenFiles) < min(len(self.files), queryObj.get('amount', 100))):
                 nextFile = random.choice(self.files)
                 while (nextFile.id in chosenFileIds):
                     nextFile = random.choice(self.files)

@@ -99,9 +99,44 @@ p.assignment-panel-bottom-label { font-size: 0.6em; margin-top: 0; font-style: i
     font-weight: bold;
 }
 
+.graph_row_wrapper {
+    width: 100%;
+    height: 120px;
+}
+
+.graph_row_wrapper > td.graph_title {
+    width: 120px;
+    padding-left: 4px;
+}
+
+.graph_row_wrapper > td.graph_title {
+    vertical-align: bottom;
+    overflow: hidden;
+    height: 60px;
+    padding-bottom: 4px;
+    font-weight: bold;
+}
+
+
+.graph_row_wrapper:hover > td.graph_title > .webix_icon {
+    visibility: visible !important;
+}
+
+.graph_row_wrapper > td.graph_title > .webix_icon {
+    color: rgb(71, 84, 102);
+    visibility: hidden;
+    cursor: pointer;
+    margin-left: 8px;
+}
 .graph_wrapper {
     width: 100%;
     height: 120px;
+}
+
+.supervisor_table {
+    width: 100%;
+    height: 100%;
+    table-layout: fixed;
 }
 
 .graph_wrapper > table {

@@ -86,9 +86,30 @@ Supervisor.prototype.initModel = function(data) {
 		// ----- Below is not applicable (?) -----
 		// // Instantiate event graphs
 		// this.renderEventGraphs();
-		this.projectData.labeling_function_possible_votes
+
+		this.graphsTableDomElement = document.createElement('table');
+		this.graphsTableDomElement.className = 'supervisor_table';
+
+		this.graphsTableDomElement.innerHTML =
+				'<col style="width:10%">' +
+				'<col style="width:10%">' +
+				'<col style="width:80%">' +
+				'<thead>' +
+					'<tr>' +
+						'<th>LF Votes</th>' +
+						'<th>File</th>' +
+						'<th>Waveform</th>' +
+					'</tr>' +
+				'</thead>' +
+				'<tbody id="seriesTableBody">' +
+				'</tbody>';
+		document.getElementById('supervisorGraphs').appendChild(this.graphsTableDomElement);
+		this.graphsTableBody = document.getElementById('seriesTableBody');
+
 		for (let i = 0; i < this.projectData.files.length; i++) {
 			this.domElementObjs[i] = this.buildGraph(this.projectData.files[i][1]);
+			this.graphsTableBody.appendChild(this.domElementObjs[i].graphWrapperDomElement);
+
 			let series = Object.values(this.projectData.series[i])[0];
 			let events = this.projectData.events[i];
 			let metadata = this.projectData.metadata[i];
@@ -96,6 +117,12 @@ Supervisor.prototype.initModel = function(data) {
 			this.dygraphs[i] = this.createDygraph(this.domElementObjs[i], series, events);
 		}
 
+		$('.supervisor_table').DataTable({
+			"lengthChange": false,
+			"ordering": false,
+			"searching": false,
+			"pageLength": 5,
+		});
 		// for (let s of Object.keys(this.projectData.series)) {
 		// 	this.graphs[s] = new Graph(s, this);
 		// }
@@ -153,7 +180,7 @@ Supervisor.prototype.applyQuery = function() {
 		}
 	}
 	let self = this;
-	let queryResponse = requestHandler.requestSupervisorSeriesByQuery(this.project_id, {
+	requestHandler.requestSupervisorSeriesByQuery(this.project_id, {
          'randomFiles': random,
          'categorical': voteSelection,
          'labelingFunction': lfSelection,
@@ -225,33 +252,29 @@ Supervisor.prototype.getLFColorByTitle = function(lfTitle) {
 Supervisor.prototype.buildGraph = function(fileName) {
 
 	// Create the graph wrapper dom element
-	let graphWrapperDomElement = document.createElement('DIV');
-	graphWrapperDomElement.className = 'graph_wrapper';
+	let graphWrapperDomElement = document.createElement('tr');
+	graphWrapperDomElement.className = 'graph_row_wrapper';
 	graphWrapperDomElement.style.height = this.template.graphHeight;
 
 	graphWrapperDomElement.innerHTML =
-		'<table class="table">' +
-			'<col style="width:10%">' +
-			'<col style="width:10%">' +
-			'<col style="width:80%">' +
-			'<tbody id="seriesTableBody">' +
-				'<tr>' +
-					'<td rowspan="2" class="labelingFunctionVotes" />' +
+				// '<tr>' +
+					// '<td rowspan="2" class="labelingFunctionVotes" />' +
+					'<td class="labelingFunctionVotes" />' +
 					'<td scope="row" class="graph_title"><span title="'+this.altText+'">'+fileName+'</span><span class="webix_icon mdi mdi-cogs" onclick="showGraphControlPanel(\''+fileName+'\');"></span></td>' +
-					'<td rowspan="2">' +
+					'<td>' +
 						'<div class="graph"></div>' +
-					'</td>' +
-				'</tr>' +
-				'<tr>' +
-					'<td class="legend"><div></div></td>' +
-				'</tr>' +
-			'</tbody>' +
-		'</table>';
+					'</td>';
+					// '<td rowspan="2">' +
+					// 	'<div class="graph"></div>' +
+					// '</td>';
+				// '</tr>';
+				// '<tr>' +
+				// 	'<td class="legend"><div></div></td>' +
+				// '</tr>' +
 
-	document.getElementById('supervisorGraphs').appendChild(graphWrapperDomElement);
 
 	// Grab references to the legend & graph elements so they can be used later.
-	let legendDomElement = graphWrapperDomElement.querySelector('.legend > div');
+	let legendDomElement = false;//graphWrapperDomElement.querySelector('.legend > div');
 	let graphDomElement = graphWrapperDomElement.querySelector('.graph');//('.graph .innerLeft');
 	let rightGraphDomElement = false;//this.graphWrapperDomElement.querySelector('.graph .innerRight');
 
@@ -438,7 +461,6 @@ Supervisor.prototype.prepareData = function(data, baseTime) {
 		// reference: http://dygraphs.com/options.html#dateWindow
 		this.globalXExtremes[0] = this.globalXExtremes[0].valueOf();
 		this.globalXExtremes[1] = this.globalXExtremes[1].valueOf();
-
 	}
 
 	let tt = performance.now() - t0;
