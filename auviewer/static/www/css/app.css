@@ -82,10 +82,17 @@ p.assignment-panel-bottom-label { font-size: 0.6em; margin-top: 0; font-style: i
 }
 
 .labelingFunctionVotes {
-    overflow: hidden;
+    /* overflow: hidden; */
     vertical-align: top;
-    overflow-y: scroll;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: auto;
+    /* overflow-y: scroll; */
 }
+
+.top-buffer { margin-top:20px; }
 
 #metadata {
     width: 100%;
@@ -110,7 +117,7 @@ p.assignment-panel-bottom-label { font-size: 0.6em; margin-top: 0; font-style: i
 }
 
 .graph_row_wrapper > td.graph_title {
-    vertical-align: bottom;
+    vertical-align: top;
     overflow: hidden;
     height: 60px;
     padding-bottom: 4px;

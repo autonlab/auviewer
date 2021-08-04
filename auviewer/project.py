@@ -3,6 +3,7 @@ import logging
 import pandas as pd
 import traceback
 import random
+import datetime as dt
 
 from pathlib import Path
 from sqlalchemy import and_
@@ -192,7 +193,7 @@ class Project:
                     nextFile = random.choice(self.files)
                 chosenFiles.append(nextFile)
                 chosenFileIds.add(nextFile.id)
-        else: #category belonging to labeling function
+        elif queryObj.get('labelingFunction'): #category belonging to labeling function
         #of form:
             # 'randomFiles': false,
             # 'categorical': 'ABSTAIN',
@@ -213,12 +214,13 @@ class Project:
             filteredVotes = models.Vote.query.filter_by(labeler_id=labeler.id).filter_by(category_id=category.id).all()
             print(filteredVotes)
             #basically doing a join w/o using a join here
-            chosenFiles = [next(f for f in self.files if f.id==vote.file_id) for vote in filteredVotes][:queryObj['amount']]
+            chosenFiles = [next(f for f in self.files if f.id==vote.file_id) for vote in filteredVotes]
+
         
         return self.makeFilesPayload(chosenFiles)
 
 
-    def applyLFsToDict(self, fileIds, d, lfModule="diagnoseEEG"):
+    def applyLFsToDict(self, fileIds, d, lfModule="diagnoseEEG", timeSegment=None):
         import importlib
         import numpy as np
         labelingFunctionModuleSpec = importlib.util.spec_from_file_location(lfModule, f"EEG_Weak_Supervision_Code/{lfModule}.py")
@@ -279,6 +281,29 @@ class Project:
 
         lfNames = None
         for fId, series in fileSeries.items():
+            if (timeSegment != None):
+                timestamps = np.array([dt.datetime.fromtimestamp(e[0]) for e in series])
+                bucketedSeries = []
+                curStart, curEnd = 0, 0
+                while (curEnd < len(timestamps)):
+                    curDiff = timestamps[curEnd]-timestamps[curStart]
+                    curBucket = []
+                    while (curDiff.total_seconds()*1000 < timeSegment):
+                        curBucket.append(series[curEnd][-1])
+                        curEnd += 1
+                        if (curEnd == len(timestamps)): break
+                        curDiff = timestamps[curEnd] - timestamps[curStart]
+                    curStart = curEnd
+                    bucketedSeries.append(curBucket)
+                # print(len(bucketedSeries), len(bucketedSeries[0]), len(bucketedSeries[-1]))
+                # diff = timestamps[-1] - timestamps[0]
+                # print(diff.total_seconds() * 1000)
+                # print((diff.total_seconds() * 1000) // timeSegment)
+
+            # if (not shouldConstructVotes):
+            #     # get votes from db
+            #     models.Vote.query()
+            # else:
             filledNaNs = None # Indices where NaNs present 
             series = np.array([e[-1] for e in series])
             if np.sum(np.isnan(series)) > 0:

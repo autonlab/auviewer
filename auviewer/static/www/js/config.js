@@ -22,6 +22,7 @@ let globalAppConfig = {
 	createSupervisorPrecomputerUrl: 'create_supervisor_precomputer',
 	initialSupervisorPayloadURL: 'initial_supervisor_payload',
 	querySupervisorSeriesURL: 'query_supervisor_series',
+	updateSupervisorTimeSegmentURL: 'update_supervisor_time_segment',
 	getProjectAnnotationsURL: 'get_project_annotations',
 	seriesRangedDataURL: 'series_ranged_data',
 	updateAnnotationURL: 'update_annotation',

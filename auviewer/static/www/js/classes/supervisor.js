@@ -15,6 +15,9 @@ function Supervisor(payload) {
 	be passed into the options.dateWindow parameter for a dygraph.
 	*/
 	this.globalXExtremes = [];
+	this.globalYExtremes = [0, 0];
+	this.seriesOnPage = 4;
+	this.activeGraphs = [...Array(this.seriesOnPage).keys()];
 
 	// Load the project config
 	this.template = templateSystem.getProjectTemplate(this.project_id);
@@ -24,6 +27,14 @@ function Supervisor(payload) {
 
 	// Holds the dom element of the instantiated graph
 	this.graphDomElement = null;
+
+	this.timeWindow = 0;
+	let self=this;
+	document.getElementById('recalculateVotes').setAttribute('disabled', true);
+	console.log(document.getElementById('30_min'));
+	document.getElementById('30_min').onclick = function () {self.setTimeWindow(30 *60*1000);};
+	document.getElementById('60_min').onclick = function () {self.setTimeWindow(60 *60*1000);};
+	document.getElementById('120_min').onclick = function () {self.setTimeWindow(120 *60*1000);};
 
 	requestHandler.requestInitialSupervisorPayload(this.project_id, function (data) {
 		let lfSelector = document.getElementById('lfSelector');
@@ -74,6 +85,12 @@ Supervisor.prototype.initModel = function(data) {
 	this.domElementObjs = new Array(this.projectData.files.length);
 	this.dygraphs = new Array(this.projectData.files.length);
 
+	this.priorQuerySettings = {
+		'random': false,
+		'lfSelector': this.projectData.labeling_function_titles[0],
+		'voteSelector': this.projectData.labeling_function_votes[0]
+	};
+
 	for (const [idx, lfTitle] of this.projectData.labeling_function_titles.entries()) {
 		this.lfTitleToIdx[lfTitle] = idx;
 
@@ -97,32 +114,43 @@ Supervisor.prototype.initModel = function(data) {
 				'<thead>' +
 					'<tr>' +
 						'<th>LF Votes</th>' +
-						'<th>File</th>' +
-						'<th>Waveform</th>' +
+						'<th></th>' +
+						'<th></th>' +
 					'</tr>' +
 				'</thead>' +
 				'<tbody id="seriesTableBody">' +
 				'</tbody>';
 		document.getElementById('supervisorGraphs').appendChild(this.graphsTableDomElement);
-		this.graphsTableBody = document.getElementById('seriesTableBody');
+		let graphsTableBody = document.getElementById('seriesTableBody');
 
 		for (let i = 0; i < this.projectData.files.length; i++) {
-			this.domElementObjs[i] = this.buildGraph(this.projectData.files[i][1]);
-			this.graphsTableBody.appendChild(this.domElementObjs[i].graphWrapperDomElement);
+			let filename = this.projectData.files[i][1];
+			this.domElementObjs[i] = this.buildGraph(filename);
+			graphsTableBody.appendChild(this.domElementObjs[i].graphWrapperDomElement);
+
 
 			let series = Object.values(this.projectData.series[i])[0];
 			let events = this.projectData.events[i];
 			let metadata = this.projectData.metadata[i];
 
 			this.dygraphs[i] = this.createDygraph(this.domElementObjs[i], series, events);
+			let self=this;
+			document.getElementById('left_'+filename).onclick = function() { self.pan(self.dygraphs[i], -1); };
+			document.getElementById('right_'+filename).onclick = function() { self.pan(self.dygraphs[i], +1); };
 		}
 
-		$('.supervisor_table').DataTable({
+		this.datatable = $('.supervisor_table').DataTable({
 			"lengthChange": false,
 			"ordering": false,
 			"searching": false,
-			"pageLength": 5,
+			"pageLength": this.seriesOnPage
 		});
+		this.activePage = 0;
+		let self=this;
+		this.datatable.on( 'draw', function() {
+			console.log(self.datatable.page());
+			self.regenerateGraphs(self.datatable.page());
+		})
 		// for (let s of Object.keys(this.projectData.series)) {
 		// 	this.graphs[s] = new Graph(s, this);
 		// }
@@ -131,8 +159,11 @@ Supervisor.prototype.initModel = function(data) {
 		// (this resolves a dygraphs bug where the first few graphs drawn
 		// are wider than the rest due to a scrollbar which initiallly is
 		// not needed and, later, is).
+		this.regenerateGraphs(0);
 		for (let dygraphInstance of this.dygraphs) {
-			dygraphInstance.resize();
+			if (dygraphInstance) {
+				dygraphInstance.resize();
+			}
 		}
 
 		// Synchronize the graphs
@@ -140,11 +171,11 @@ Supervisor.prototype.initModel = function(data) {
 			return;
 		}
 		else {
-			this.sync = Dygraph.synchronize(this.dygraphs, {
-				range: true,
-				selection: true,
-				zoom: true
-			});
+			// this.sync = Dygraph.synchronize(this.dygraphs, {
+			// 	range: true,
+			// 	selection: true,
+			// 	zoom: true
+			// });
 		}
 	}.bind(this));
 }
@@ -154,8 +185,12 @@ Supervisor.prototype.clearModel = function() {
 		domElementObj.graphDomElement.remove();
 		domElementObj.graphWrapperDomElement.remove();
 	}
+	this.datatable.destroy();
+	this.graphsTableDomElement.remove();
 	for (let dygraphInstance of this.dygraphs) {
-		dygraphInstance.destroy();
+		if (dygraphInstance) {
+			dygraphInstance.destroy();
+		}
 	}
 	// let parents = [document.getElementById('labelingFunctionTable').getElementsByTagName('tbody')[0], document.getElementById('lfSelector'), document.getElementById('voteSelector')];
 	// for (let parent of parents) {
@@ -163,6 +198,152 @@ Supervisor.prototype.clearModel = function() {
 	// 		parent.removeChild(parent.firstChild);
 	// 	}
 	// }
+}
+
+Supervisor.prototype.regenerateGraphFor = function(filename, idx, curPageIdx) {
+	let graphsTableBody = document.getElementById('seriesTableBody');
+	let graphWrapperDomElement = document.createElement('tr');
+	graphWrapperDomElement.className = 'graph_row_wrapper';
+	graphWrapperDomElement.style.height = this.template.graphHeight;
+
+	console.log(filename);
+
+
+	let leftId = 'left_' + filename;
+	let rightId = 'right_' + filename;
+	graphWrapperDomElement.innerHTML = 
+		'<td >' +
+			'<div class="labelingFunctionVotes"></div>' +
+		'</td>' +
+		'<td class="graph_title"><span title="'+this.altText+'">'+filename+'</span>' + 
+			'<span class="webix_icon mdi mdi-cogs"></span>' + 
+			'<div class="btn-group" role="group" aria-label="Time series navigation">' +
+				'<button type="button" id="'+leftId+'" class="btn btn-primary"><span class="webix_icon wxi-angle-left"></span></button>' +
+				'<button type="button" id="'+rightId+'" class="btn btn-primary"><span class="webix_icon wxi-angle-right"></span></button>' +
+			'</div>' +
+		'</td>' +
+		'<td >' +
+			'<div class="graph"></div>' +
+		'</td>';
+
+	this.dygraphs[idx].destroy();
+
+	let graphDomElement = graphWrapperDomElement.querySelector('.graph');//('.graph .innerLeft');
+	$(graphDomElement).data('graphClassInstance', this);
+	let graphDomElementObj = {
+		graphWrapperDomElement: graphWrapperDomElement,
+		graphDomElement: graphDomElement
+	};
+	graphsTableBody.childNodes[curPageIdx].replaceWith(graphWrapperDomElement);
+	this.domElementObjs[idx] = graphDomElementObj;
+	let series = Object.values(this.projectData.series[idx])[0];
+	let events = this.projectData.events[idx];
+	this.dygraphs[idx] = this.createDygraph(this.domElementObjs[idx], series, events);
+	let self=this;
+	document.getElementById('left_'+filename).onclick = function() { self.pan(self.dygraphs[idx], -1); };
+	document.getElementById('right_'+filename).onclick = function() { self.pan(self.dygraphs[idx], +1); };
+}
+
+Supervisor.prototype.regenerateGraphs = function(pageNum) {
+	let startIdx = pageNum * this.seriesOnPage;
+	let endIdx = Math.min((pageNum + 1) * this.seriesOnPage, this.projectData.files.length);
+	this.globalYExtremes[1] = 0;
+	this.activeGraphs = new Array(this.seriesOnPage);
+	for (let i = startIdx; i < endIdx; i++) {
+		let series = Object.values(this.projectData.series[i])[0].data
+		for (let i = 0; i < series.length; i++) {
+			let yVal = series[i][series[i].length -1];
+			if (yVal > this.globalYExtremes[1]) {
+				this.globalYExtremes[1] = yVal;
+			}
+		}
+	}
+	let j = 0;
+	for (let i = startIdx; i < endIdx; i++) {
+		this.activeGraphs[j] = i;
+		this.regenerateGraphFor(this.projectData.files[i][1], i, j);
+		j++;
+	}
+}
+
+Supervisor.prototype.setTimeWindow = function(newTimeWindow) {
+	if (newTimeWindow !== this.timeWindow) {
+		document.getElementById('recalculateVotes').removeAttribute('disabled'); // since we have a new time slice, it should now be allowed to recalculate
+		this.timeWindow = newTimeWindow;
+		for (let graphIdx of this.activeGraphs) {
+			let curGraph = this.dygraphs[graphIdx];
+			let curRange = curGraph.xAxisRange();
+			let desiredRange = [curRange[0], curRange[0] + this.timeWindow];
+			this.animate(curGraph, desiredRange);
+		}
+	}
+}
+// following three functions copied from third example found [here](https://dygraphs.com/options.html#dateWindow)
+Supervisor.prototype.pan = function(graph, dir) {
+	let curRange = graph.xAxisRange();
+	let scale = curRange[1] - curRange[0];
+	let amount = scale * dir;
+	let desiredRange = [curRange[0] + amount, curRange[1] + amount];
+	this.animate(graph, desiredRange);
+}
+
+Supervisor.prototype.animate = function(graph, desiredRange, maxSteps=20) {
+	let self=this;
+	setTimeout(function() { self.approachRange(graph, desiredRange, maxSteps);}, 50);
+}
+
+Supervisor.prototype.approachRange = function(graph, desiredRange, maxSteps) {
+	let curRange = graph.xAxisRange();
+	if (maxSteps <= 0 || (Math.abs(desiredRange[1] - curRange[1]) < 60 &&
+		Math.abs(desiredRange[0] - curRange[0]) < 60)) {
+		graph.updateOptions({dateWindow: desiredRange});
+	} else {
+		let newRange = [.5 * (desiredRange[0] + curRange[0]),
+						.5 * (desiredRange[1] + curRange[1])];
+		graph.updateOptions({dateWindow: newRange});
+		this.animate(graph, desiredRange, maxSteps-1);
+	}
+}
+
+Supervisor.prototype.recalculateVotes = function () {
+	// ask backend to segment all series' and vote on subsequent segments, then return them all
+	requestHandler.requestSupervisorUpdatedTimeSegmentPayload(this.project_id, this.timeWindow, function(data) {
+		console.log(data);
+	});
+}
+
+Supervisor.prototype.onQueryClick = function() {
+	let elements = document.getElementById('supervisorQueryForm').elements;
+	let randomChanged = false;
+	let lfChanged = false;
+	for (let elem of elements) {
+		if (elem.id==='randomQuery') {
+			if (this.priorQuerySettings.random !== elem.checked) {
+				randomChanged = true;
+			}
+			this.priorQuerySettings.random = elem.checked;
+		} else if (elem.id === 'lfSelector') {
+			if (this.priorQuerySettings.lfSelector !== elem.value) {
+				lfChanged = true;
+			}
+			this.priorQuerySettings.lfSelector = elem.value;
+		} else if (elem.id === 'voteSelector') {
+			if (this.priorQuerySettings.voteSelector !== elem.value) {
+				lfChanged = true;
+			}
+			this.priorQuerySettings.voteSelector = elem.value;
+		}
+	}
+	if (randomChanged) {
+		let randomChecked = document.getElementById('randomQuery').checked;
+		if (randomChecked) {
+			document.getElementById('voteSelector').setAttribute("disabled", randomChecked);
+			document.getElementById('lfSelector').setAttribute("disabled", randomChecked);
+		} else {
+			document.getElementById('voteSelector').removeAttribute("disabled");
+			document.getElementById('lfSelector').removeAttribute("disabled");
+		}
+	}
 }
 
 Supervisor.prototype.applyQuery = function() {
@@ -184,14 +365,13 @@ Supervisor.prototype.applyQuery = function() {
          'randomFiles': random,
          'categorical': voteSelection,
          'labelingFunction': lfSelection,
-         'amount': 5,
+        //  'amount': 5,
         // 'sortByConfidence': bool,
         // 'patientSearchString': str,
 	}, function (data) {
 		self.clearModel();
 		self.initModel(data);
 	});
-
 	console.log("sent off query");
 }
 
@@ -255,43 +435,27 @@ Supervisor.prototype.buildGraph = function(fileName) {
 	let graphWrapperDomElement = document.createElement('tr');
 	graphWrapperDomElement.className = 'graph_row_wrapper';
 	graphWrapperDomElement.style.height = this.template.graphHeight;
-
+	let leftId = 'left_' + fileName;
+	let rightId = 'right_' + fileName;
 	graphWrapperDomElement.innerHTML =
-				// '<tr>' +
-					// '<td rowspan="2" class="labelingFunctionVotes" />' +
-					'<td class="labelingFunctionVotes" />' +
-					'<td scope="row" class="graph_title"><span title="'+this.altText+'">'+fileName+'</span><span class="webix_icon mdi mdi-cogs" onclick="showGraphControlPanel(\''+fileName+'\');"></span></td>' +
-					'<td>' +
-						'<div class="graph"></div>' +
-					'</td>';
-					// '<td rowspan="2">' +
-					// 	'<div class="graph"></div>' +
-					// '</td>';
-				// '</tr>';
-				// '<tr>' +
-				// 	'<td class="legend"><div></div></td>' +
-				// '</tr>' +
+		'<td >' +
+			'<div class="labelingFunctionVotes"></div>' +
+		'</td>' +
+		'<td class="graph_title"><span title="'+this.altText+'">'+fileName+'</span>' + 
+			'<span class="webix_icon mdi mdi-cogs"></span>' + 
+			'<div class="btn-group" role="group" aria-label="Time series navigation">' +
+				'<button type="button" id="'+leftId+'" class="btn btn-primary"><span class="webix_icon wxi-angle-left"></span></button>' +
+				'<button type="button" id="'+rightId+'" class="btn btn-primary"><span class="webix_icon wxi-angle-right"></span></button>' +
+			'</div>' +
+		'</td>' +
+		'<td >' +
+			'<div class="graph"></div>' +
+		'</td>';
 
 
 	// Grab references to the legend & graph elements so they can be used later.
-	let legendDomElement = false;//graphWrapperDomElement.querySelector('.legend > div');
 	let graphDomElement = graphWrapperDomElement.querySelector('.graph');//('.graph .innerLeft');
 	let rightGraphDomElement = false;//this.graphWrapperDomElement.querySelector('.graph .innerRight');
-
-	// let titleDomElement = document.createElement('DIV');
-	// titleDomElement.className = 'graph_title';
-	// titleDomElement.innerText = this.series;
-	// this.graphWrapperDomElement.appendChild(titleDomElement);
-	//
-	// // Create the legend dom element
-	// this.legendDomElement = document.createElement('DIV');
-	// this.legendDomElement.className = 'legend';
-	// this.graphWrapperDomElement.appendChild(this.legendDomElement);
-	//
-	// // Create the graph dom element
-	// this.graphDomElement = document.createElement('DIV');
-	// this.graphDomElement.className = 'graph';
-	// this.graphWrapperDomElement.appendChild(this.graphDomElement);
 
 	// Attach this class instance as a DOM element property (this is for the
 	// click callback handler to work properly since dygraphs implements it
@@ -311,21 +475,21 @@ Supervisor.prototype.buildGraph = function(fileName) {
 
     return {'graphWrapperDomElement': graphWrapperDomElement,
         'graphDomElement': graphDomElement,
-        'legendDomElement': legendDomElement, 
         'rightGraphDomElement': rightGraphDomElement}
 };
 
 Supervisor.prototype.createDygraph = function(graphDomElementObj, series, eventData) {
     let timeWindow = this.globalXExtremes;
-    let yAxisRange = [null, null];
+    let yAxisRange = this.globalYExtremes;
     if (this.template.hasOwnProperty('range')) {
         yAxisRange = this.template.range;
     }
     let seriesData = new Array(series.data.length);
     // let initialValue;
     for (let i = 0; i < seriesData.length; i++) {
+		let yVal = series.data[i][series.data[i].length -1];
 		// seriesData[i] = [i/*new Date(series.data[i][0]*1000 % 1) - initialValue*/, series.data[i][series.data[i].length -1]];
-		seriesData[i] = [series.data[i][0]/*new Date(series.data[i][0]*1000 % 1) - initialValue*/, series.data[i][series.data[i].length -1]];
+		seriesData[i] = [series.data[i][0]/*new Date(series.data[i][0]*1000 % 1) - initialValue*/, yVal];
     }
     let dygraphInstance = new Dygraph(graphDomElementObj.graphDomElement, seriesData, {
 		// axes: {
@@ -352,7 +516,8 @@ Supervisor.prototype.createDygraph = function(graphDomElementObj, series, eventD
 		// 	'mousewheel': handleMouseWheel.bind(this)
 		// },
 		labels: [series.labels[0], series.labels[3]],
-		labelsDiv: graphDomElementObj.legendDomElement,
+		legend: 'follow',
+		ylabel: 'aEEG',
 		// plotter: handlePlotting.bind(this),
 		/*series: {
 		  'Min': { plotter: handlePlotting },
@@ -360,8 +525,7 @@ Supervisor.prototype.createDygraph = function(graphDomElementObj, series, eventD
 		},*/
 		//title: this.series,
 		// underlayCallback: handleUnderlayRedraw.bind(this),
-		// valueRange: yAxisRange
-
+		valueRange: yAxisRange
     });
 
     return dygraphInstance;
@@ -374,6 +538,7 @@ Supervisor.prototype.prepareData = function(data, baseTime) {
 	let t0 = performance.now();
 
     for (let fIdx = 0; fIdx < data.files.length; fIdx++) {
+    // for (let fIdx = 0; fIdx < .length; fIdx++) {
         // let f_id = f_info[0];
 
         // Get array of series
@@ -407,6 +572,7 @@ Supervisor.prototype.prepareData = function(data, baseTime) {
                 if (series[s].data[0][0] < this.globalXExtremes[0]) {
                     this.globalXExtremes[0] = series[s].data[0][0];
                 }
+
 
                 // Update global x-maximumm if warranted
                 if (series[s].data[series[s].data.length - 1][0] > this.globalXExtremes[1]) {

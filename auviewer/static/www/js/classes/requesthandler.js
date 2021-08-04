@@ -80,6 +80,13 @@ RequestHandler.prototype.requestInitialSupervisorPayload = function(project_id, 
 	});
 };
 
+RequestHandler.prototype.requestSupervisorUpdatedTimeSegmentPayload = function(project_id, time_segment, callback) {
+	this._newRequest(callback, globalAppConfig.updateSupervisorTimeSegmentURL, {
+		project_id: project_id,
+		time_segment: time_segment
+	});
+};
+
 RequestHandler.prototype.requestSupervisorSeriesByQuery = function(project_id, queryObj, callback) {
 	this._postRequest(callback, globalAppConfig.querySupervisorSeriesURL, {
 			project_id: project_id

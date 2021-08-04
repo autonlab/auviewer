@@ -657,11 +657,28 @@ def createApp():
             status=200,
             mimetype='application/json'
         )
+    
+    @app.route(config['rootWebPath']+'/update_supervisor_time_segment')
+    @login_required
+    def update_supervisor_time_segment():
+        project_id = request.args.get('project_id', type=int)
+        time_segment = request.args.get('time_segment', type=int)
+
+        project = getProject(project_id)
+        fileIds = [f.id for f in project.files]
+        filesPayload = dict()
+        _ = project.applyLFsToDict(fileIds, filesPayload, timeSegment=30*60*1000)
+        return app.response_class(
+            response=simplejson.dumps(filesPayload, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
+
+
 
     @app.route(config['rootWebPath']+'/query_supervisor_series', methods=['POST'])
     @login_required
     def query_supervisor_series():
-        print(request)
         project_id = request.args.get('project_id', type=int)
         request_data = request.get_json()
         query_payload = request_data['query_payload']
