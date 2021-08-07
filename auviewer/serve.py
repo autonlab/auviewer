@@ -1,5 +1,4 @@
 from flask import Flask, Blueprint, send_from_directory, request, render_template, render_template_string, abort, Markup
-from flask_login import current_user
 from flask_mail import Mail
 from htmlmin.main import minify
 from pathlib import Path
@@ -8,10 +7,6 @@ import argparse
 import logging
 import shutil
 import tempfile
-import threading
-import webbrowser
-import json
-from flask import jsonify
 
 # Simplejson package is required in order to "ignore" NaN values and implicitly
 # convert them into null values. RFC JSON spec left out NaN values, even though
@@ -88,10 +83,20 @@ def createApp():
     # could modify the database.
     #
     with app.app_context():
-        new_admin_email = 'gwelter@gmail.com'
-        new_admin_pass = 'akeminute'
-        if not models.User.query.filter_by(email=new_admin_email).first():
-            u = models.User(email=new_admin_email, active=True, password=user_manager.hash_password(new_admin_pass))
+        if not models.User.query.first():
+            from getpass import getpass
+            print("You must create an admin user.")
+            fn = input("First name: ")
+            ln = input("Last name: ")
+            em = input("E-mail: ")
+            pw = getpass(prompt="Password: ")
+            u = models.User(
+                first_name=fn,
+                last_name=ln,
+                email=em,
+                active=True,
+                password=user_manager.hash_password(pw),
+            )
             u.roles.append(models.Role(name='admin'))
             models.db.session.add(u)
             models.db.session.commit()
@@ -550,13 +555,15 @@ def main():
         downsampleFile(args.downsample[0], args.downsample[1])
         return
 
-    # Handle datapath argument
+    # Handle no data path or file argument
     if args.datapath is None:
-        # If no argument provided, assume ./auvdata
+        # If no argument provided, prompt user
         assumed_datapath = './auvdata'
-        logging.warning(f"No datapath argument provided, assuming: {assumed_datapath}")
-        set_data_path(assumed_datapath)
+        dp = input(f"AUViewer data path [{assumed_datapath}]: ") or assumed_datapath
+        logging.info(f"Using data path {dp}")
+        set_data_path(dp)
 
+    # Handle single file argument
     elif Path(args.datapath).is_file():
 
         # If a file was provided, assume it's one-off view timeseries request
@@ -593,19 +600,22 @@ def main():
         # Set datapath to our temp datapath
         set_data_path(temp_datapath)
 
+    # Handle data path argument
     else:
-        # Otherwise, set the data path provided
+        # Set the data path provided
         set_data_path(args.datapath)
 
     app = createApp()
 
     # Open auviewer in the browser, just before we spin up the server
     browser_url = f"http://{config['host']}{':' + str(config['port']) if str(config['port']) != '80' else ''}/{config['rootWebPath']}".rstrip('/')
+    bannerMsgPrefix = '\033[96m\033[1m\033[4m'
+    fmtEndSuffix = '\033[0m'
     if args.datapath is not None and Path(args.datapath).is_file():
-        logging.warning("AUViewer is running with a temporary data path! If you create patterns, annotations, or anything else stored in the database, they will be lost!")
-        threading.Timer(0.5, lambda: webbrowser.open(browser_url+'/project?id=1#file_id=1')).start()
+        print('\033[93m'+"\nNOTE: AUViewer is running against a single file using a temporary directory for data storage. Any annotations, patterns, etc. will be lost!"+fmtEndSuffix)
+        print(f"\n{bannerMsgPrefix}You may access your file at: {browser_url}/project?id=1#file_id=1\n{fmtEndSuffix}")
     else:
-        threading.Timer(0.5, lambda: webbrowser.open(browser_url)).start()
+        print(f"\n{bannerMsgPrefix}You may access AUViewer at: {browser_url}\n{fmtEndSuffix}")
 
     app.run(host=config['host'], port=config['port'], debug=config['debug'], use_reloader=False)
 

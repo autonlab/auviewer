@@ -2,8 +2,8 @@
 Holds & provides configuration parameters for auviewer.
 """
 
-import os.path
 import json
+import logging
 from pathlib import Path
 
 from .shared import createEmptyJSONFile
@@ -174,7 +174,7 @@ def load_config(cp):
 
     global config
 
-    print(f"Loading config file {cp}.")
+    logging.info(f"Loading config file {cp}.")
 
     # Unmarshal the config file from JSON into a dict
     with cp.open() as f:
