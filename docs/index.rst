@@ -67,7 +67,7 @@ Overview & Installation Video
 
 .. raw:: html
 
-   <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/trO9KTuexD4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+   <iframe style="margin-bottom: 34px;" width="560" height="315" src="https://www.youtube-nocookie.com/embed/trO9KTuexD4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe>
 
 
 Site Map
