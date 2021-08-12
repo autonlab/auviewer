@@ -468,6 +468,13 @@ def numDownsamplesToBuild(np.ndarray[np.float64_t, ndim=1] rawOffsets, int M, in
     cdef double currentTimeWindow
     cdef double smallestTimeWindow = rawOffsets[last] - rawOffsets[first]
 
+    # If all values are at the same point in time and, having passed the if statement above, there are > 2*M data points,
+    # we cannot downsample the file.
+    if smallestTimeWindow == 0:
+        raise Exception('All values are at the same point in time. Cannot downsample.')
+    elif smallestTimeWindow < 0:
+        raise Exception('Series violates assumption of monotonically increasing time values (i.e. series should be ordered in time).')
+
     # Determine the smallest time window of 2M data points
     while last < numDataPoints:
 
@@ -475,8 +482,11 @@ def numDownsamplesToBuild(np.ndarray[np.float64_t, ndim=1] rawOffsets, int M, in
         currentTimeWindow = rawOffsets[last] - rawOffsets[first]
 
         # Update smallest time window if applicable
-        if currentTimeWindow < smallestTimeWindow:
+        if currentTimeWindow < smallestTimeWindow and currentTimeWindow > 0:
             smallestTimeWindow = currentTimeWindow
+
+        if currentTimeWindow < 0:
+            raise Exception('Series violates assumption of monotonically increasing time values (i.e. series should be ordered in time).')
 
         # Increment first & last pointers
         first = first + 1
