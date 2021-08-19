@@ -24,3 +24,17 @@ class Featurizer(ABC):
         :return:
         """
         raise NotImplementedError("Error! Required featurizer method not implemented.")
+
+
+
+
+
+class Featurizer():
+
+    def __init__(self):
+
+        pass
+
+    def featurize(self, data):
+
+        return 5
