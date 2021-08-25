@@ -149,6 +149,13 @@ class Project:
                 return f
         return None
 
+    def getFileByFilename(self, filename):
+        """Returns the file with matching filename or None."""
+        for f in self.files:
+            if f.name == filename:
+                return f
+        return None
+
     def getInitialPayload(self, user_id):
         """Returns initial project payload data"""
 

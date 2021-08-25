@@ -124,13 +124,11 @@ class PatternSet:
         """Returns a DataFrame of the patterns in this set."""
         return patternDataFrame(self.dbmodel.patterns)
 
-    # Set the pattern set's description
     def setDescription(self, description: str):
         """Set the pattern set's description."""
         self.dbmodel.description = description
         models.db.session.commit()
 
-    # Set the pattern set's name
     def setName(self, name: str):
         """Set the pattern set's name."""
         self.dbmodel.name = name
@@ -143,8 +141,11 @@ class PatternSet:
         models.db.session.commit()
         self.showByDefault = show
 
-    # Update the count of patterns belonging to this set
     def updateCount(self):
+        """
+        Update the count of patterns belonging to this set
+        (this is normally an internally-used method).
+        """
         self.count = models.Pattern.query.filter_by(pattern_set_id=self.id).count()
 
 def getAssignmentsPayload(user_id):
