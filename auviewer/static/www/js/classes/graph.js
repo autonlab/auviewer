@@ -121,7 +121,7 @@ Graph.prototype.build = function() {
 		'<table>' +
 			'<tbody>' +
 				'<tr>' +
-					'<td class="graph_title"><span title="'+this.altText+'">'+this.shortName+'</span><span class="webix_icon mdi mdi-cogs" onclick="showGraphControlPanel(\''+this.fullName+'\');"></span></td>' +
+					'<td class="graph_title"><div title="'+this.altText+'">'+this.shortName+'</div><span class="webix_icon mdi mdi-cogs" onclick="showGraphControlPanel(\''+this.fullName+'\');"></span></td>' +
 					'<td rowspan="2">' +
 						'<div class="graph"></div>' +
 					'</td>' +

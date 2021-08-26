@@ -64,7 +64,7 @@ setup(
         'flask-wtf',
         'htmlmin',
         'jsbeautifier',
-        'numpy',
+        'numpy>=1.19.5',
         'pandas',
         'passlib',
         'psutil',

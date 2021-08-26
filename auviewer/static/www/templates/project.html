@@ -73,6 +73,7 @@
 	<div id="assignmentPanelArea">
 		<h6>My Assignments</h6>
 	</div>
+	<input id="assignmentFocusOption" type="checkbox" style="display: none;" onclick="if (globalStateManager.currentFile) { globalStateManager.currentFile.triggerRedraw(); }" checked><label for="assignmentFocusOption" style="font-size: 12px; margin-left: 6px;" title="Hide other patterns & annotations">Assignment focus</label>
 
 	<!--	<span class="clickable" onclick="globalStateManager.currentFile.annotationWorkflowPrevious();">&lt; Prev</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="clickable" onclick="globalStateManager.currentFile.annotationWorkflowNext();">Next &gt;</span>-->
 	<!--	<div id="annotationWorkflowSubtext"></div>-->

@@ -6,13 +6,13 @@ prjroot="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd )"
 
 "${prjroot}"/tools/clean
 
-# Build sdist
-printf "\nBuilding sdist\n"
-(cd "${prjroot}"; python setup.py sdist)
+# Build bdist_wheel
+printf "\nBuilding bdist_wheel\n"
+(cd "${prjroot}"; python setup.py bdist_wheel)
 
 printf "\nTo be uploaded:\n"
 ls -lah "${prjroot}"/dist
 printf "\n"
 
 # Upload to PyPI
-twine upload --repository testpypi "${prjroot}"/dist/*
+twine upload "${prjroot}"/dist/*

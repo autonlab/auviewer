@@ -1,5 +1,4 @@
 from flask import Flask, Blueprint, send_from_directory, request, render_template, render_template_string, abort, Markup
-from flask_login import current_user
 from flask_mail import Mail
 from htmlmin.main import minify
 from pathlib import Path
@@ -8,10 +7,6 @@ import argparse
 import logging
 import shutil
 import tempfile
-import threading
-import webbrowser
-import json
-from flask import jsonify
 
 # Simplejson package is required in order to "ignore" NaN values and implicitly
 # convert them into null values. RFC JSON spec left out NaN values, even though
@@ -23,7 +18,7 @@ from flask import jsonify
 import simplejson
 
 from . import models
-from .api import getProject, getProjectsPayload, loadProjects
+from .api import downsampleFile, getProject, getProjectsPayload, loadProjects
 from .patternset import getAssignmentsPayload
 from .config import set_data_path, config, FlaskConfigClass
 
@@ -88,10 +83,20 @@ def createApp():
     # could modify the database.
     #
     with app.app_context():
-        new_admin_email = 'gwelter@gmail.com'
-        new_admin_pass = 'akeminute'
-        if not models.User.query.filter_by(email=new_admin_email).first():
-            u = models.User(email=new_admin_email, active=True, password=user_manager.hash_password(new_admin_pass))
+        if not models.User.query.first():
+            from getpass import getpass
+            print("You must create an admin user.")
+            fn = input("First name: ")
+            ln = input("Last name: ")
+            em = input("E-mail: ")
+            pw = getpass(prompt="Password: ")
+            u = models.User(
+                first_name=fn,
+                last_name=ln,
+                email=em,
+                active=True,
+                password=user_manager.hash_password(pw),
+            )
             u.roles.append(models.Role(name='admin'))
             models.db.session.add(u)
             models.db.session.commit()
@@ -132,6 +137,78 @@ def createApp():
     @login_required
     def bokeh():
         return send_from_directory('../www', 'bokeh.html')
+
+    @app.route(config['rootWebPath'] + '/close_all_files', methods=['GET'])
+    @login_required
+    def close_all_files():
+
+        ### To be implemented here...
+        pass
+
+    @app.route(config['rootWebPath'] + '/close_all_project_files', methods=['GET'])
+    @login_required
+    def close_all_project_files():
+
+        # Parse parameters
+        project_id = request.args.get('project_id', type=int)
+
+        # Get the project
+        project = getProject(project_id)
+        if project is None:
+            logging.error(f"Project ID {project_id} not found.")
+            return app.response_class(
+                response=simplejson.dumps({'success': False}),
+                status=200,
+                mimetype='application/json'
+            )
+
+        ### To be implemented here...
+
+        ### This is the success response -- if there is an error you want to catch, just
+        ### the same response below but with success=False!
+        return app.response_class(
+            response=simplejson.dumps({'success': True}),
+            status=200,
+            mimetype='application/json'
+        )
+
+    @app.route(config['rootWebPath'] + '/close_project_file', methods=['GET'])
+    @login_required
+    def close_project_file():
+
+        # Parse parameters
+        project_id = request.args.get('project_id', type=int)
+        file_id = request.args.get('file_id', type=int)
+
+        # Get the project
+        project = getProject(project_id)
+        if project is None:
+            logging.error(f"Project ID {project_id} not found.")
+            return app.response_class(
+                response=simplejson.dumps({'success': False}),
+                status=200,
+                mimetype='application/json'
+            )
+
+        # Get the file
+        file = project.getFile(file_id)
+        if file is None:
+            logging.error(f"File ID {file_id} not found.")
+            return app.response_class(
+                response=simplejson.dumps({'success': False}),
+                status=200,
+                mimetype='application/json'
+            )
+
+        ### To be implemented here...
+
+        ### This is the success response -- if there is an error you want to catch, just
+        ### the same response below but with success=False!
+        return app.response_class(
+            response=simplejson.dumps({'success': True}),
+            status=200,
+            mimetype='application/json'
+        )
 
     @app.route(config['rootWebPath']+'/create_annotation', methods=['GET'])
     @login_required
@@ -469,15 +546,24 @@ def main():
     # Parse command-line arguments
     parser = argparse.ArgumentParser(prog='python -m auviewer.serve', description='Auton Lab Universal Viewer')
     parser.add_argument('datapath', type=str, nargs='?', help='Path to data directory (may be empty if starting new)')
+    parser.add_argument('-ds', '--downsample', metavar=('original_file', 'destination_path'), type=str, nargs=2, help='Downsample a single original file to a destination.')
     args = parser.parse_args()
 
-    # Handle datapath argument
-    if args.datapath is None:
-        # If no argument provided, assume ./auvdata
-        assumed_datapath = './auvdata'
-        logging.warning(f"No datapath argument provided, assuming: {assumed_datapath}")
-        set_data_path(assumed_datapath)
+    # Handle a downsample request
+    if args.downsample is not None:
+        print(f"Downsampling file {Path(args.downsample[0]).resolve()} to destination {Path(args.downsample[1]).resolve()}.")
+        downsampleFile(args.downsample[0], args.downsample[1])
+        return
 
+    # Handle no data path or file argument
+    if args.datapath is None:
+        # If no argument provided, prompt user
+        assumed_datapath = './auvdata'
+        dp = input(f"AUViewer data path [{assumed_datapath}]: ") or assumed_datapath
+        logging.info(f"Using data path {dp}")
+        set_data_path(dp)
+
+    # Handle single file argument
     elif Path(args.datapath).is_file():
 
         # If a file was provided, assume it's one-off view timeseries request
@@ -514,19 +600,22 @@ def main():
         # Set datapath to our temp datapath
         set_data_path(temp_datapath)
 
+    # Handle data path argument
     else:
-        # Otherwise, set the data path provided
+        # Set the data path provided
         set_data_path(args.datapath)
 
     app = createApp()
 
     # Open auviewer in the browser, just before we spin up the server
     browser_url = f"http://{config['host']}{':' + str(config['port']) if str(config['port']) != '80' else ''}/{config['rootWebPath']}".rstrip('/')
+    bannerMsgPrefix = '\033[96m\033[1m\033[4m'
+    fmtEndSuffix = '\033[0m'
     if args.datapath is not None and Path(args.datapath).is_file():
-        logging.warning("AUViewer is running with a temporary data path! If you create patterns, annotations, or anything else stored in the database, they will be lost!")
-        threading.Timer(0.5, lambda: webbrowser.open(browser_url+'/project?id=1#file_id=1')).start()
+        print('\033[93m'+"\nNOTE: AUViewer is running against a single file using a temporary directory for data storage. Any annotations, patterns, etc. will be lost!"+fmtEndSuffix)
+        print(f"\n{bannerMsgPrefix}You may access your file at: {browser_url}/project?id=1#file_id=1\n{fmtEndSuffix}")
     else:
-        threading.Timer(0.5, lambda: webbrowser.open(browser_url)).start()
+        print(f"\n{bannerMsgPrefix}You may access AUViewer at: {browser_url}\n{fmtEndSuffix}")
 
     app.run(host=config['host'], port=config['port'], debug=config['debug'], use_reloader=False)
 

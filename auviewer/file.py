@@ -19,7 +19,7 @@ from .shared import annotationOrPatternOutput
 # realtime-mode.
 class File:
 
-    def __init__(self, projparent, id, origFilePathObj, procFilePathObj, processNewFiles=True):
+    def __init__(self, projparent, id, origFilePathObj, procFilePathObj, processNewFiles=True, processOnly=False):
 
         logging.info(f"\n------------------------------------------------\nACCESSING FILE: (ID {id}) {origFilePathObj}\n------------------------------------------------\n")
 
@@ -46,6 +46,10 @@ class File:
             if self.procFilePathObj.exists():
                 logging.info(f"Opening processed file {self.procFilePathObj}.")
                 self.pf = audata.File.open(str(self.procFilePathObj), return_datetimes=False)
+
+                # If we've been asked only to generate the processed file and it already exists, return now.
+                if processOnly:
+                    return
 
             # Load series data into memory
             self.load()
@@ -76,20 +80,22 @@ class File:
         except:
             pass
 
-    # Takes new data to add to one or more data series for the file (currently
-    # works only in realtime-mode). The new data is assumed to occur after any
-    # existing data. The parameter, seriesData, should be a dict of dicts of
-    # lists as follows:
-    #
-    #   {
-    #     'seriesName': {
-    #       'times': [ t1, t2, ... , tn ],
-    #       'values': [ v1, v2, ... , vn ]
-    #     }, ...
-    #   }
-    #
-    # Returns updated file data for transmission to realtime subscribers.
     def addSeriesData(self, seriesData):
+        """
+        Takes new data to add to one or more data series for the file (currently
+        works only in realtime-mode). The new data is assumed to occur after any
+        existing data. The parameter, seriesData, should be a dict of dicts of
+        lists as follows:
+
+          {
+            'seriesName': {
+              'times': [ t1, t2, ... , tn ],
+              'values': [ v1, v2, ... , vn ]
+            }, ...
+          }
+        :param seriesData: dict of dicts
+        :return: updated file data for transmission to realtime subscribers
+        """
 
         logging.info(f"Adding series data: {seriesData}")
 
@@ -132,8 +138,8 @@ class File:
 
         return update
 
-    # Create an annotation for the file
     def createAnnotation(self, user_id, left=None, right=None, top=None, bottom=None, seriesID='', label='', pattern_id=None):
+        """Create an annotation for the file"""
 
         # If the pattern_id is set, determine the pattern_set_id.
         pattern_set_id = None;
@@ -158,9 +164,8 @@ class File:
 
         return newann.id
 
-    # Deletes the annotation with the given ID, after some checks. Returns true
-    # or false to indicate success.
     def deleteAnnotation(self, user_id, id):
+        """Deletes the annotation with the given ID, after some checks. Returns true or false to indicate success."""
 
         # Get the annotation in question
         annotationToDelete = models.Annotation.query.filter_by(id=id).first()
@@ -267,8 +272,8 @@ class File:
         # Having reached this point, we were unable to generate the alerts.
         return []
 
-    # Returns all event series
     def getEvents(self):
+        """Returns all event series"""
 
         logging.info(f"Assembling all event series for file {self.origFilePathObj}.")
         start = time.time()
@@ -310,8 +315,8 @@ class File:
 
         return events
 
-    # Produces JSON output for all series in the file at the maximum time range.
     def getInitialPayload(self, user_id):
+        """Produces JSON output for all series in the file at the maximum time range."""
 
         logging.info(f"Assembling all series full output for file {self.origFilePathObj}.")
         start = time.time()
@@ -372,16 +377,15 @@ class File:
         # Return the output object
         return outputObject
 
-    # Returns a dict of file metadata.
     def getMetadata(self):
+        """Returns a dict of file metadata."""
         try:
             return self.f.file_meta
         except:
             return {}
 
-    # Returns the series instance corresponding to the provided series ID, or
-    # None if the series cannot be found.
     def getSeries(self, seriesid):
+        """Returns the series instance corresponding to the provided series ID, or None if the series cannot be found."""
 
         # TODO(gus): We temporarily have to traverse both nueric and waveform
         # series until this is consolidated.
@@ -390,17 +394,16 @@ class File:
                 return s
         return None
 
-    # Returns a list of series names available in the file.
     def getSeriesNames(self):
+        """Returns a list of series names available in the file."""
 
         seriesNames = []
         for s in self.series:
             seriesNames.append(s.id)
         return seriesNames
 
-    # Retreves or creates & returns the series corresponding to the provided
-    # series ID.
     def getSeriesOrCreate(self, seriesid):
+        """Retreves or creates & returns the series corresponding to the provided series ID."""
 
         # Attempt to retrieve the series
         series = self.getSeries(seriesid)
@@ -416,9 +419,8 @@ class File:
 
         return series
 
-    # Produces JSON output for a given list of series in the file at a specified
-    # time range.
     def getSeriesRangedOutput(self, seriesids, start, stop):
+        """Produces JSON output for a given list of series in the file at a specified time range."""
 
         logging.info(f"Assembling series ranged output for file {self.origFilePathObj}, series [{', '.join(seriesids)}].")
         st = time.time()
@@ -437,10 +439,12 @@ class File:
         # Return the output object
         return outputObject
 
-    # Loads the necessary data into memory for an already-processed data file
-    # (does not load data though).Sets up classes for all series from file but
-    # does not load series data into memory).
     def load(self):
+        """
+        Loads the necessary data into memory for an already-processed data file
+        (does not load data though).Sets up classes for all series from file but
+        does not load series data into memory).
+        """
 
         logging.info('Loading series from file.')
 
@@ -450,8 +454,8 @@ class File:
 
         logging.info('Completed loading series from file.')
 
-    # Load all available series from a dataset
     def loadSeriesFromDataset(self, ds):
+        """Load all available series from a dataset"""
 
         # Grab the columns.
         cols = ds.columns
@@ -485,13 +489,13 @@ class File:
             else:
                 logging.warning(f'  - Skipping unsupported {coltype} series: {valcol}')
 
-    # Returns the mode in which File is operating, either "file" or "realtime".
+    # TODO(gus): When reviving realtime functionality, revise this
     def mode(self):
-        # TODO(gus): When reviving realtime functionality, revise this
+        """Returns the mode in which File is operating, either "file" or "realtime"."""
         return 'file'
 
-    # Process and store all downsamples for all series for the file.
     def process(self):
+        """Process and store all downsamples for all series for the file."""
 
         try:
 
@@ -556,8 +560,8 @@ class File:
             # Re-raise the exception
             raise
 
-    # Update an annotation with new values
     def updateAnnotation(self, user_id, id, left=None, right=None, top=None, bottom=None, seriesID='', label=''):
+        """Update an annotation with new values"""
 
         # Get the annotation in question
         annotationToUpdate = models.Annotation.query.filter_by(id=id).first()

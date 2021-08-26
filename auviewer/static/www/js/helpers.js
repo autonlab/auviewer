@@ -9,9 +9,11 @@ function classifyAnnotationInRelationToGraph(annotation, graph) {
 	const annotationBelongsToThisGraph = annotation.series && graph.members.includes(annotation.series);
 
 	// Determine if the pattern is the current workflow pattern
-	const currentWorkflowPattern = annotation.id === currentAssignmentID;
-	
-	if (annotation.type === 'pattern') {
+	const currentWorkflowPattern = annotation.id === currentAssignmentID || annotation.parent_id === currentAssignmentID;
+
+	if (currentAssignmentID && !currentWorkflowPattern && document.getElementById('assignmentFocusOption').checked) {
+		return 'do_not_render';
+	} else if (annotation.type === 'pattern') {
 		if (annotationBelongsToThisGraph) {
 			if (currentWorkflowPattern) {
 				return 'own_pattern_target_assignment';
@@ -222,11 +224,12 @@ function deepCopy(o) {
 
 function getAnnotationCategoryLayerNumber(category) {
 	switch (category) {
+		case 'do_not_render': return -1; break;
 		case 'other_pattern_not_target_assignment': return 0; break;
 		case 'own_pattern_not_target_assignment': return 1; break;
+		case 'other_annotation': return 2; break;
 		case 'own_pattern_target_assignment':
-		case 'other_pattern_target_assignment': return 2; break;
-		case 'other_annotation': return 3; break;
+		case 'other_pattern_target_assignment': return 3; break;
 		case 'own_annotation': return 4; break;
 		default: console.log("Error! Unrecognized category provided to getAnnotationCategoryLayerNumber():", category);
 	}
@@ -361,7 +364,6 @@ function showGraphControlPanel(s) {
 		}
 	};
 
-
 	webix.ui({
 		view: 'window',
 		id: 'graph_config_window',
@@ -380,8 +382,22 @@ function showGraphControlPanel(s) {
 					on: { onSubmit: updateRange },
 					elements: [
 						{view: 'template', template: 'Y-Axis Range', type: 'header', borderless: true},
-						{view: 'text', label: 'y min', name: 'ymin', width: 200, value: dg.axes_[0].valueRange[0]},
-						{view: 'text', label: 'y max', name: 'ymax', width: 200, value: dg.axes_[0].valueRange[1]},
+						{
+							view: 'text',
+							label: 'y min',
+							name: 'ymin',
+							width: 200,
+							value: dg.axes_[0].valueRange[0],
+							on: { onFocus: function() { this.getInputNode().select() } },
+						},
+						{
+							view: 'text',
+							label: 'y max',
+							name: 'ymax',
+							width: 200,
+							value: dg.axes_[0].valueRange[1],
+							on: { onFocus: function() { this.getInputNode().select() } },
+						},
 						{
 							view: 'button', value: 'Update', click: updateRange
 						},
@@ -393,7 +409,14 @@ function showGraphControlPanel(s) {
 					on: { onSubmit: updateHeight },
 					elements: [
 						{view: 'template', template: 'Graph Height', type: 'header', borderless: true},
-						{view: 'text', label: 'Height (px)', name: 'height', width: 150, value: g.graphWrapperDomElement.style.height.slice(0, -2)},
+						{
+							view: 'text',
+							label: 'Height (px)',
+							name: 'height',
+							width: 150,
+							value: g.graphWrapperDomElement.style.height.slice(0, -2),
+							on: { onFocus: function() { this.getInputNode().select() } },
+						},
 						{
 							view: 'button', value: 'Update', click: updateHeight
 						},

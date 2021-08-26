@@ -58,6 +58,10 @@ def annotationOrPatternOutput(primary, related=None):
             ]
     return output
 
+def getProcFNFromOrigFN(fp):
+    """Returns the processed filename (as Path object, which can be treated as string) from origina filename (as string or Path object)"""
+    return Path(Path(fp).stem + '_processed.h5')
+
 def patternDataFrame(patternModels):
     """Given a list of pattern models, returns a DataFrame in our standard format."""
     return pd.DataFrame(

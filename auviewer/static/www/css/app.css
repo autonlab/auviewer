@@ -100,6 +100,14 @@ p.assignment-panel-bottom-label { font-size: 0.6em; margin-top: 0; font-style: i
     font-weight: bold;
 }
 
+.graph_wrapper > table > tbody > tr > td.graph_title > div {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
 .graph_wrapper > table > tbody > tr > td.graph_title > .graph_subtitle {
     font-weight: normal;
     font-size: .8em;
