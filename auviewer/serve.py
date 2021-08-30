@@ -632,10 +632,11 @@ def createApp():
             abort(404, description="Project not found.")
             return
 
+        fileIds = [f.id for f in project.files]
         filesPayload = project.queryWeakSupervision({
-            'randomFiles': True,
+            'randomFiles': False,
             # 'amount': 5
-        })
+        }, fileIds = fileIds)
         # {
         #     'randomFiles': bool,
         #     'categorical': List[Category],
@@ -650,7 +651,6 @@ def createApp():
         #     'labelingFunction': None,
         #     'amount': 10
         # })
-        fileIds = [fInfo[0] for fInfo in filesPayload['files']]
         _ = project.applyLFsToDict(fileIds, filesPayload)
         return app.response_class(
             response=simplejson.dumps(filesPayload, ignore_nan=True),
@@ -667,7 +667,7 @@ def createApp():
         project = getProject(project_id)
         fileIds = [f.id for f in project.files]
         filesPayload = dict()
-        _ = project.applyLFsToDict(fileIds, filesPayload, timeSegment=30*60*1000)
+        _ = project.applyLFsToDict(fileIds, filesPayload, timeSegment=time_segment)
         return app.response_class(
             response=simplejson.dumps(filesPayload, ignore_nan=True),
             status=200,

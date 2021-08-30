@@ -5,6 +5,7 @@ from .flask_user import UserMixin
 from pkg_resources import packaging
 from sqlalchemy.sql import func
 import logging
+from sqlalchemy.ext.orderinglist import ordering_list
 
 db = SQLAlchemy()
 
@@ -30,19 +31,33 @@ class Annotation(db.Model):
     def __repr__(self):
         return f"ID: {self.id}, UID: {self.user_id}, PID: {self.project_id}, FID: {self.file_id}, PID: {self.pattern_id}, Series: {self.series}, Boundaries: {self.left} {self.right} {self.top} {self.bottom}, Label: {self.label}"
 
-<<<<<<< HEAD
 class AnnotationTemplate(db.Model):
     __tablename__ = 'annotation_templates'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False)
     form = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, server_default=func.now())
-=======
+
+#many to many table joining labelers and thresholds
+labelerThresholds = db.Table('association', db.Base.metadata,
+    db.Column('labeler_id', db.ForeignKey('labelers.id'),
+    db.Column('threshold_id', db.ForeignKey('thresholds.id'))))
+
 class Labeler(db.Model):
     __tablename__ = 'labelers'
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
     title = db.Column(db.String(255), nullable=False)
+
+    thresholds = db.relationship("Threshold", secondary=labelerThresholds)
+    votes = db.relationship("Vote", order_by="Vote.leftIndex", collection_class=ordering_list('leftIndex'))
+
+class Threshold(db.Model):
+    __tablename__ = 'thresholds'
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
+    title = db.Column(db.String(255), nullable=False)
+    value = db.Column(db.Float, nullable=True)
 
 class Vote(db.Model):
     __tablename__ = 'votes'
@@ -51,15 +66,16 @@ class Vote(db.Model):
     labeler_id = db.Column(db.Integer, db.ForeignKey('labelers.id', ondelete='CASCADE'), nullable=False)
     file_id = db.Column(db.Integer, db.ForeignKey('files.id', ondelete='CASCADE'), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id', ondelete='CASCADE'), nullable=False)
-    left = db.Column(db.Float, nullable=True)
-    right = db.Column(db.Float, nullable=True)
+    leftIndex = db.Column(db.Integer, nullable=True)
+    rightIndex = db.Column(db.Integer, nullable=True)
+
+    category = db.relationship("Category")
 
 class Category(db.Model):
     __tablename__ = 'categories'
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
     label = db.Column(db.String(255), nullable=False)
->>>>>>> a7f4b91... bootstrap incorporation
 
 class Pattern(db.Model):
     __tablename__ = 'patterns'

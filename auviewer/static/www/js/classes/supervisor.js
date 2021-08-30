@@ -28,10 +28,9 @@ function Supervisor(payload) {
 	// Holds the dom element of the instantiated graph
 	this.graphDomElement = null;
 
-	this.timeWindow = 0;
+	this.timeWindow = 60 *60*1000;
 	let self=this;
 	document.getElementById('recalculateVotes').setAttribute('disabled', true);
-	console.log(document.getElementById('30_min'));
 	document.getElementById('30_min').onclick = function () {self.setTimeWindow(30 *60*1000);};
 	document.getElementById('60_min').onclick = function () {self.setTimeWindow(60 *60*1000);};
 	document.getElementById('120_min').onclick = function () {self.setTimeWindow(120 *60*1000);};
@@ -82,6 +81,8 @@ Supervisor.prototype.initModel = function(data) {
 	// new prepareData method needed
 	this.projectData = this.prepareData(data, data.baseTime || 0);
 	this.lfVotes = this.projectData.labeling_function_votes;
+	this.lfVotesByTimeSegment = null;
+	this.timeSegmentEndIndices = null;
 	this.domElementObjs = new Array(this.projectData.files.length);
 	this.dygraphs = new Array(this.projectData.files.length);
 
@@ -108,12 +109,12 @@ Supervisor.prototype.initModel = function(data) {
 		this.graphsTableDomElement.className = 'supervisor_table';
 
 		this.graphsTableDomElement.innerHTML =
-				'<col style="width:10%">' +
-				'<col style="width:10%">' +
-				'<col style="width:80%">' +
+				// '<col style="width:10%">' +
+				'<col style="width:15%">' +
+				'<col style="width:85%">' +
 				'<thead>' +
 					'<tr>' +
-						'<th>LF Votes</th>' +
+						// '<th>LF Votes</th>' +
 						'<th></th>' +
 						'<th></th>' +
 					'</tr>' +
@@ -148,7 +149,6 @@ Supervisor.prototype.initModel = function(data) {
 		this.activePage = 0;
 		let self=this;
 		this.datatable.on( 'draw', function() {
-			console.log(self.datatable.page());
 			self.regenerateGraphs(self.datatable.page());
 		})
 		// for (let s of Object.keys(this.projectData.series)) {
@@ -206,15 +206,12 @@ Supervisor.prototype.regenerateGraphFor = function(filename, idx, curPageIdx) {
 	graphWrapperDomElement.className = 'graph_row_wrapper';
 	graphWrapperDomElement.style.height = this.template.graphHeight;
 
-	console.log(filename);
-
-
 	let leftId = 'left_' + filename;
 	let rightId = 'right_' + filename;
 	graphWrapperDomElement.innerHTML = 
-		'<td >' +
-			'<div class="labelingFunctionVotes"></div>' +
-		'</td>' +
+		// '<td >' +
+		// 	'<div class="labelingFunctionVotes"></div>' +
+		// '</td>' +
 		'<td class="graph_title"><span title="'+this.altText+'">'+filename+'</span>' + 
 			'<span class="webix_icon mdi mdi-cogs"></span>' + 
 			'<div class="btn-group" role="group" aria-label="Time series navigation">' +
@@ -249,8 +246,8 @@ Supervisor.prototype.regenerateGraphs = function(pageNum) {
 	let endIdx = Math.min((pageNum + 1) * this.seriesOnPage, this.projectData.files.length);
 	this.globalYExtremes[1] = 0;
 	this.activeGraphs = new Array(this.seriesOnPage);
-	for (let i = startIdx; i < endIdx; i++) {
-		let series = Object.values(this.projectData.series[i])[0].data
+	for (let idx = startIdx; idx < endIdx; idx++) {
+		let series = Object.values(this.projectData.series[idx])[0].data;
 		for (let i = 0; i < series.length; i++) {
 			let yVal = series[i][series[i].length -1];
 			if (yVal > this.globalYExtremes[1]) {
@@ -264,10 +261,15 @@ Supervisor.prototype.regenerateGraphs = function(pageNum) {
 		this.regenerateGraphFor(this.projectData.files[i][1], i, j);
 		j++;
 	}
+
+	if (this.timeSegmentEndIndices) {
+		this.shadeTimeSegmentsWithVotes();
+	}
+	this.setTimeWindow(this.timeWindow, forceAdjustment=true);
 }
 
-Supervisor.prototype.setTimeWindow = function(newTimeWindow) {
-	if (newTimeWindow !== this.timeWindow) {
+Supervisor.prototype.setTimeWindow = function(newTimeWindow, forceAdjustment=false) {
+	if (forceAdjustment || (newTimeWindow !== this.timeWindow)) {
 		document.getElementById('recalculateVotes').removeAttribute('disabled'); // since we have a new time slice, it should now be allowed to recalculate
 		this.timeWindow = newTimeWindow;
 		for (let graphIdx of this.activeGraphs) {
@@ -307,9 +309,89 @@ Supervisor.prototype.approachRange = function(graph, desiredRange, maxSteps) {
 
 Supervisor.prototype.recalculateVotes = function () {
 	// ask backend to segment all series' and vote on subsequent segments, then return them all
+	let self = this;
 	requestHandler.requestSupervisorUpdatedTimeSegmentPayload(this.project_id, this.timeWindow, function(data) {
-		console.log(data);
+		self.lfVotesByTimeSegment = data.labeling_function_votes;
+		self.timeSegmentEndIndices = data.time_segment_end_indices;
+		self.shadeTimeSegmentsWithVotes();
+		// turn off loader now that we've received data
+		$('#loadMe').modal("hide");
 	});
+	// set loader on
+	$('#loadMe').modal({
+		keyboard: false,
+		backdrop: "static",
+		show: true
+	});
+}
+
+Supervisor.prototype.shadeTimeSegmentsWithVotes = function() {
+	for (let activeGraphIdx of this.activeGraphs) {
+		this.shadeGraph(activeGraphIdx);
+	}
+}
+
+Supervisor.prototype.shadeGraph = function(graphIdx) {
+	let graph = this.dygraphs[graphIdx];
+	let endIndices = this.timeSegmentEndIndices[graphIdx];
+	let series = Object.values(this.projectData.series[graphIdx])[0].data;
+	let self = this;
+	graph.updateOptions({
+		underlayCallback: function(canvas, area, g) {
+			let startIdx = 0;
+			let alternating = false;
+			for (let endIdx of endIndices) {
+				if (startIdx === endIdx) {
+					break;
+				}
+				// get start and end timestamps
+				let start = series[startIdx][0];
+				let end = series[endIdx-1][0];
+				let bottomLeft = g.toDomCoords(start, -20);
+				let topRight = g.toDomCoords(end, +20);
+				let left = bottomLeft[0];
+				let right = topRight[0];
+
+				if (alternating) {
+					canvas.fillStyle = "rgba(255, 255, 102, 1.0)";
+				} else {
+					canvas.fillStyle = "rgba(102, 255, 255, 1.0)";
+				}
+				canvas.fillRect(left, area.y, right-left, area.h);
+				startIdx = endIdx;
+				alternating = !alternating;
+			}
+		},
+		legendFormatter: function(data) {
+			return data.series.map(function (series) {
+				return series.dashHTML + ' ' + series.label + ' - ' + series.yHTML
+			}).join('<br>') +
+				'<br>' + 
+				self.activeLFs.map(function (lfTitle) {
+					let lfVote = self.getVoteForGraphAndPoint(graphIdx, data.x, lfTitle);
+					return lfTitle + ' - ' + lfVote; 
+				}).join('<br>');
+		}
+	});
+	console.log('finished shading idx: ' + graphIdx + '!');
+}
+
+Supervisor.prototype.getVoteForGraphAndPoint = function(graphIdx, xPoint, lfTitle) {
+	let startIdx = 0;
+	let bucketIdx = 0;
+	let series = Object.values(this.projectData.series[graphIdx])[0].data;
+	xPoint = new Date(xPoint);
+	for (let endIdx of this.timeSegmentEndIndices[graphIdx]) {
+		// get start and end timestamps
+		let start = series[startIdx][0];
+		let end = series[endIdx-1][0];
+		if (start <= xPoint && xPoint <= end) {
+			break;
+		}
+		bucketIdx++;
+	}
+	let lfIdx = this.lfTitleToIdx[lfTitle];
+	return this.lfVotesByTimeSegment[graphIdx][bucketIdx][lfIdx];
 }
 
 Supervisor.prototype.onQueryClick = function() {
@@ -337,8 +419,8 @@ Supervisor.prototype.onQueryClick = function() {
 	if (randomChanged) {
 		let randomChecked = document.getElementById('randomQuery').checked;
 		if (randomChecked) {
-			document.getElementById('voteSelector').setAttribute("disabled", randomChecked);
-			document.getElementById('lfSelector').setAttribute("disabled", randomChecked);
+			document.getElementById('voteSelector').setAttribute("disabled", true);
+			document.getElementById('lfSelector').setAttribute("disabled", true);
 		} else {
 			document.getElementById('voteSelector').removeAttribute("disabled");
 			document.getElementById('lfSelector').removeAttribute("disabled");
@@ -408,19 +490,19 @@ Supervisor.prototype.onClick = function(lfTitle) {
 		divInQuestion.parentElement.parentElement.style.backgroundColor = '#888';
 	}
 
-	for (const [seriesIdx, domElementObj] of this.domElementObjs.entries()) {
-		let correspondingVotesSection = domElementObj.graphWrapperDomElement.getElementsByClassName('labelingFunctionVotes')[0];
-		correspondingVotesSection.innerHTML = '';
-		// let correspondingVotesSection = votesSection[0];
-		for (const activeLF of this.activeLFs) {
-			let lfDiv = document.createElement('div');
-			lfDiv.style.backgroundColor = this.lfTitleToColor[activeLF];
-			lfDiv.style.fontSize = 'small';
-			lfDiv.style.color = 'white'
-			lfDiv.innerHTML = this.lfVotes[seriesIdx][this.lfTitleToIdx[activeLF]];
-			correspondingVotesSection.appendChild(lfDiv);
-		}
-	}
+	// for (const [seriesIdx, domElementObj] of this.domElementObjs.entries()) {
+	// 	let correspondingVotesSection = domElementObj.graphWrapperDomElement.getElementsByClassName('labelingFunctionVotes')[0];
+	// 	correspondingVotesSection.innerHTML = '';
+	// 	// let correspondingVotesSection = votesSection[0];
+	// 	for (const activeLF of this.activeLFs) {
+	// 		let lfDiv = document.createElement('div');
+	// 		lfDiv.style.backgroundColor = this.lfTitleToColor[activeLF];
+	// 		lfDiv.style.fontSize = 'small';
+	// 		lfDiv.style.color = 'white'
+	// 		lfDiv.innerHTML = this.lfVotes[seriesIdx][this.lfTitleToIdx[activeLF]];
+	// 		correspondingVotesSection.appendChild(lfDiv);
+	// 	}
+	// }
 
 	// document.getElementById('labelingFunctionTable').getElementsBy
 }
@@ -438,9 +520,9 @@ Supervisor.prototype.buildGraph = function(fileName) {
 	let leftId = 'left_' + fileName;
 	let rightId = 'right_' + fileName;
 	graphWrapperDomElement.innerHTML =
-		'<td >' +
-			'<div class="labelingFunctionVotes"></div>' +
-		'</td>' +
+		// '<td >' +
+		// 	'<div class="labelingFunctionVotes"></div>' +
+		// '</td>' +
 		'<td class="graph_title"><span title="'+this.altText+'">'+fileName+'</span>' + 
 			'<span class="webix_icon mdi mdi-cogs"></span>' + 
 			'<div class="btn-group" role="group" aria-label="Time series navigation">' +

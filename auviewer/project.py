@@ -1,5 +1,6 @@
 """Class and related functionality for projects."""
 import logging
+import math
 import pandas as pd
 import traceback
 import random
@@ -178,15 +179,21 @@ class Project:
         
         return self.makeFilesPayload(files)
 
-    def queryWeakSupervision(self, queryObj):
+    def queryWeakSupervision(self, queryObj, fileIds=None):
         #of form:
             # 'randomFiles': True,
             # 'categorical': None,
             # 'labelingFunction': None,
             # 'amount': 5
-        if queryObj['randomFiles']:
+        chosenFiles = []
+        if fileIds:
+            fileDict = dict()
+            for f in self.files:
+                fileDict[f.id] = f
+            for fId in fileIds:
+                chosenFiles.append(fileDict[fId])
+        elif queryObj['randomFiles']:
             chosenFileIds = set()
-            chosenFiles = []
             while (len(chosenFiles) < min(len(self.files), queryObj.get('amount', 100))):
                 nextFile = random.choice(self.files)
                 while (nextFile.id in chosenFileIds):
@@ -215,10 +222,32 @@ class Project:
             print(filteredVotes)
             #basically doing a join w/o using a join here
             chosenFiles = [next(f for f in self.files if f.id==vote.file_id) for vote in filteredVotes]
-
         
         return self.makeFilesPayload(chosenFiles)
 
+    def areSupervisorVotesWithTimeSegmentInDb(self, timeSegment):
+        if (not timeSegment): return False
+        #go through all files and check
+
+        #spot check for single file
+        checkFile = self.files[1]
+        votesForFile = models.Vote.query.filter_by(project_id=self.id, file_id=checkFile.id).all()
+        fileSeries = checkFile.series[0].getFullOutput().get('data') #for now assuming a single series, hence the 0-index
+        smallestDiff = None
+        print(len(votesForFile))
+        for vote in votesForFile:
+            left, right = dt.datetime.fromtimestamp(fileSeries[vote.leftIndex][0]), dt.datetime.fromtimestamp(fileSeries[vote.rightIndex-1][0])
+            diff = right-left
+            difference = abs(diff.total_seconds()*1000 - timeSegment) 
+            if not smallestDiff:
+                smallestDiff = difference
+            else:
+                smallestDiff = min(smallestDiff, difference)
+            if difference <= 5000:
+                #if a vote applies to a timesegment within 5 second of our timesegment length then we probably published these votes
+                return True
+        print(smallestDiff)
+        return False
 
     def applyLFsToDict(self, fileIds, d, lfModule="diagnoseEEG", timeSegment=None):
         import importlib
@@ -268,90 +297,15 @@ class Project:
         shouldConstructCategories = len(models.Category.query.filter_by(project_id=self.id).all()) == 0
         uniqueCategories = set()
         categoryNamesToIds = dict()
-        numVotesInDb = len(models.Vote.query.filter_by(project_id=self.id).all())
-        shouldConstructVotes = shouldConstructLabelers or (not shouldConstructLabelers and numVotesInDb != len(self.files)*numLabelersInDb)
-        print(shouldConstructLabelers, shouldConstructCategories, shouldConstructVotes, len(self.files)*numLabelersInDb)
+        shouldQueryForVotes = self.areSupervisorVotesWithTimeSegmentInDb(timeSegment)#(shouldConstructLabelers or (not shouldConstructLabelers and numVotesInDb != len(self.files)*numLabelersInDb)
+        print(shouldConstructLabelers, shouldConstructCategories, not shouldQueryForVotes, len(self.files)*numLabelersInDb)
 
         fileSeries = dict()
         for f in self.files:
-            if (shouldConstructVotes): #then add every file to fileSeries
+            if (not shouldQueryForVotes): #then add every file to fileSeries
                 fileSeries[f.id] = f.series[0].getFullOutput().get('data') #for now assuming a single series, hence the 0-index
             elif f.id in fileIds:
                 fileSeries[f.id] = f.series[0].getFullOutput().get('data') #for now assuming a single series, hence the 0-index
-
-        lfNames = None
-        for fId, series in fileSeries.items():
-            if (timeSegment != None):
-                timestamps = np.array([dt.datetime.fromtimestamp(e[0]) for e in series])
-                bucketedSeries = []
-                curStart, curEnd = 0, 0
-                while (curEnd < len(timestamps)):
-                    curDiff = timestamps[curEnd]-timestamps[curStart]
-                    curBucket = []
-                    while (curDiff.total_seconds()*1000 < timeSegment):
-                        curBucket.append(series[curEnd][-1])
-                        curEnd += 1
-                        if (curEnd == len(timestamps)): break
-                        curDiff = timestamps[curEnd] - timestamps[curStart]
-                    curStart = curEnd
-                    bucketedSeries.append(curBucket)
-                # print(len(bucketedSeries), len(bucketedSeries[0]), len(bucketedSeries[-1]))
-                # diff = timestamps[-1] - timestamps[0]
-                # print(diff.total_seconds() * 1000)
-                # print((diff.total_seconds() * 1000) // timeSegment)
-
-            # if (not shouldConstructVotes):
-            #     # get votes from db
-            #     models.Vote.query()
-            # else:
-            filledNaNs = None # Indices where NaNs present 
-            series = np.array([e[-1] for e in series])
-            if np.sum(np.isnan(series)) > 0:
-                filledNaNs = series.isna().to_numpy()
-                series = series.fillna(0)
-
-            if (np.sum(series) == 0): continue
-            EEG = series.reshape((-1, 1))
-
-            # apply lfs to series
-            currentLfModule = lfModule(EEG, filledNaNs, thresholds, labels=labels, verbose =False, explain =False)
-
-            # add label functions to labelers table
-            lfNames = currentLfModule.get_LF_names()
-            votes = currentLfModule.get_vote_vector()
-            if (shouldConstructCategories): uniqueCategories.update(votes)
-            voteOutputs.append(votes)
-        
-        if (not lfNames):
-            series = self.files[0].series[0].getFullOutput().get('data')
-            filledNaNs = None # Indices where NaNs present 
-            series = np.array([e[-1] for e in series])
-            if np.sum(np.isnan(series)) > 0:
-                filledNaNs = series.isna().to_numpy()
-                series = series.fillna(0)
-
-            EEG = series.reshape((-1, 1))
-
-            # apply lfs to series
-            currentLfModule = lfModule(EEG, filledNaNs, thresholds, labels=labels, verbose =False, explain =False)
-
-            # add label functions to labelers table
-            lfNames = currentLfModule.get_LF_names()
-
-        if (shouldConstructLabelers):
-            
-            print('Constructing labelers')
-            newLabelers = []
-            for lfName in lfNames:
-                newLabeler = models.Labeler(
-                    project_id=self.id,
-                    title=lfName)
-                newLabelers.append(newLabeler)
-            models.db.session.add_all(newLabelers)
-            models.db.session.commit()
-            print(f'After labeler construction: {models.Labeler.query.filter_by(project_id=self.id).all()}')
-            for lfName, labeler in zip(lfNames, newLabelers):
-                labelerNamesToIds[lfName] = labeler.id #once committed, each labeler has an id
 
         if (shouldConstructCategories):
             print(f'Constructing the following categories: {labels.keys()}')
@@ -366,36 +320,206 @@ class Project:
             models.db.session.add_all(newCategories)
             models.db.session.commit()
             print(f'After: {models.Category.query.filter_by(project_id=self.id).all()}')
-            for categoryLabel, category in zip(uniqueCategories, newCategories):
-                categoryNamesToIds[categoryLabel] = category.id
-        
-        if (shouldConstructVotes):
-            createdVotes = list()
-            print(f'Before vote creation: {models.Vote.query.filter_by(project_id=self.id).all()}')
-            for votes, fileId in zip(voteOutputs, fileSeries.keys()):
-                for vote, labeler in zip(votes, lfNames):
-                    categoryId = categoryNamesToIds[vote]
-                    labelerId = labelerNamesToIds[labeler]
-                    newVote = models.Vote(
-                        project_id=self.id,
-                        labeler_id=labelerId,
-                        category_id=categoryId,
-                        file_id=fileId)
-                    createdVotes.append(newVote)
-            models.db.session.add_all(createdVotes)
-            models.db.session.commit()
-            print(f'After: {models.Vote.query.filter_by(project_id=self.id).all()}')
 
-            #since we added everything to fileSeries so we created all votes, we should now filter out files not present in fileIds
-            votesByFileId = list(zip(fileSeries.keys(), voteOutputs))
-            votesToKeep = list(map(lambda t: t[1], filter(lambda t: t[0] in fileIds, votesByFileId)))
-            voteOutputs = votesToKeep
-            print(f'Trimmed vote output from {len(votesByFileId)} to {len(voteOutputs)}')
+        lfNames = lfModule.get_LF_names()
+        if (shouldConstructLabelers):
+            print('Constructing labelers')
+            newLabelers = []
+            for lfName in lfNames:
+                newLabeler = models.Labeler(
+                    project_id=self.id,
+                    title=lfName)
+                newLabelers.append(newLabeler)
+            models.db.session.add_all(newLabelers)
+            models.db.session.commit()
+            print(f'After labeler construction: {models.Labeler.query.filter_by(project_id=self.id).all()}')
+
+        #construct labelerNamesToIds and categoryNamesToIds, for vote creation
+        for lfName in lfNames:
+            labeler = models.Labeler.query.filter_by(project_id=self.id, title=lfName).first()
+            labelerNamesToIds[lfName] = labeler.id #once committed, each labeler has an id
+
+        for categoryLabel in labels.keys():
+            curCategory = models.Category.query.filter_by(project_id=self.id, label=categoryLabel).first()
+            categoryNamesToIds[categoryLabel] = curCategory.id
+
+        voteOutputs = list() # len(fileSeries) x math.ceil(time_duration_ms / time_segment) x num_labelers
+        endIndicesForFile = list()
+        for fId, series in fileSeries.items():
+            if (timeSegment != None):
+                timestamps = np.array([dt.datetime.fromtimestamp(e[0]) for e in series])
+                bucketedVotes = list() 
+                endIndices = list()
+                if (not shouldQueryForVotes):
+                    # print(series[0][0], series[1][0], series[-1][0])
+                    # print(timestamps[0], timestamps[1], timestamps[-1])
+                    bucketedSeries = list()
+                    curStart, curEnd = 0, 0
+                    while (curEnd < len(timestamps)):
+                        curDiff = timestamps[curEnd] - timestamps[curStart]
+                        curBucket = []
+                        while (curDiff.total_seconds()*1000 < timeSegment):
+                            curBucket.append(series[curEnd][-1])
+                            curEnd += 1
+                            if (curEnd == len(timestamps)):
+                                break
+                            curDiff = timestamps[curEnd] - timestamps[curStart]
+                        curStart = curEnd
+                        endIndices.append(curEnd)
+                        bucketedSeries.append(curBucket)
+                    startIdx = 0
+                    for i, curSeries in enumerate(bucketedSeries):
+                        filledNaNs = None # Indices where NaNs present 
+                        curSeries = np.array(curSeries)
+                        if np.sum(np.isnan(curSeries)) > 0:
+                            filledNaNs = curSeries.isna().to_numpy()
+                            curSeries = curSeries.fillna(0)
+
+                        if (np.sum(curSeries) == 0): continue
+                        EEG = curSeries.reshape((-1, 1))
+
+                        # apply lfs to series
+                        currentLfModule = lfModule(EEG, filledNaNs, thresholds, labels=labels, verbose =False, explain =False)
+
+                        # add label functions to labelers table
+                        votes = currentLfModule.get_vote_vector()
+                        if (shouldConstructCategories): uniqueCategories.update(votes)
+                        bucketedVotes.append(votes)
+
+                        endIdx = endIndices[i]
+                        # print(startIdx, endIdx)
+                        # left, right = series[startIdx][0], series[endIdx-1][0]
+                        #add votes to db
+                        # print(f'Before vote creation for fId {fId}: {len(models.Vote.query.filter_by(project_id=self.id, file_id=fId).all())}')
+                        createdVotes = list()
+                        for vote, labeler in zip(votes, lfNames):
+                            categoryId = categoryNamesToIds[vote]
+                            labelerId = labelerNamesToIds[labeler]
+                            newVote = models.Vote(
+                                project_id=self.id,
+                                labeler_id=labelerId,
+                                category_id=categoryId,
+                                file_id=fId,
+                                leftIndex=startIdx,
+                                rightIndex=endIdx)
+                            createdVotes.append(newVote)
+                        models.db.session.add_all(createdVotes)
+                        models.db.session.commit()
+                        # print(f'After: {len(models.Vote.query.filter_by(project_id=self.id, file_id=fId).all())}')
+
+                        startIdx = endIdx
+                else:
+                    # print('Querying instead:')
+                    firstRunThrough = True
+                    def isOfTimeSegmentLength(leftIdx, rightIdx):
+                        left, right = timestamps[leftIdx], timestamps[rightIdx-1]
+                        diff = right - left
+                        timeDiffInMs = abs(diff.total_seconds()*1000 - timeSegment)
+
+
+                        if timeDiffInMs < 3000:
+                            if firstRunThrough:
+                                endIndices.append(rightIdx)
+                            return True
+                        else:
+                            #left over case is true when 
+                            totalSeriesDuration = (timestamps[-1] - timestamps[0]).total_seconds() * 1000
+                            leftOverSegmentLength = totalSeriesDuration % timeSegment
+                            d = abs(leftOverSegmentLength - diff.total_seconds()*1000)
+                            # print(d)
+                            # print(1/0)
+                            if (d <= 5000):
+                                if firstRunThrough:
+                                    endIndices.append(rightIdx)
+                                return True
+                            return False
+                    # get votes from DB
+                    allVotes = list()
+                    for lfName in lfNames:
+                        labeler = models.Labeler.query.filter_by(id=labelerNamesToIds[lfName]).first()
+                        votesForProjAndFile = list(filter(lambda v: v.project_id == self.id and v.file_id == fId, labeler.votes)) #ordered by startIndex already
+                        votes = list(map(lambda v: v.category.label, filter(lambda v: isOfTimeSegmentLength(v.leftIndex, v.rightIndex), votesForProjAndFile)))
+                        # print(f'\tCulled from {len(votesForProjAndFile)} votes to {len(votes)}')
+                        # print(f'\tvotes: {votes}')
+                        firstRunThrough = False
+                        allVotes.append(votes)
+                    bucketedVotes = zip(*allVotes) #reshape allVotes from lfs x timesegments to timesegments x lfs
+
+                    # allVotes = models.Vote.query.filter_by(project_id=self.id, file_id=fId).all()
+                    # votes = list(filter(lambda v: isOfTimeSegmentLength(v.leftIndex, v.rightIndex), allVotes))
+                    # if (len(votes) != math.ceil(totalSeriesDuration.total_seconds()*1000 / timeSegment)):
+                    #     #need to find left over vote
+                    #     maxRightIndex = votes[0].rightIndex
+                    #     for vote in votes:
+                    #         maxRightIndex = max(vote.rightIndex, maxRightIndex)
+                    #     leftOverVotes = list()
+                    #     for vote in allVotes:
+                    #         if vote.leftIndex == maxRightIndex:
+                    #             leftOverVotes.append(vote)
+
+                endIndicesForFile.append(endIndices)
+                voteOutputs.append(list(bucketedVotes))
+
+
+                # print(len(bucketedSeries), len(bucketedSeries[0]), len(bucketedSeries[-1]))
+                # diff = timestamps[-1] - timestamps[0]
+                # print(diff.total_seconds() * 1000)
+                # print((diff.total_seconds() * 1000) // timeSegment)
+
+            # if (not shouldConstructVotes):
+            #     # get votes from db
+            #     models.Vote.query()
+            # else:
+
+            # filledNaNs = None # Indices where NaNs present 
+            # series = np.array([e[-1] for e in series])
+            # if np.sum(np.isnan(series)) > 0:
+            #     filledNaNs = series.isna().to_numpy()
+            #     series = series.fillna(0)
+
+            # if (np.sum(series) == 0): continue
+            # EEG = series.reshape((-1, 1))
+
+            # # apply lfs to series
+            # currentLfModule = lfModule(EEG, filledNaNs, thresholds, labels=labels, verbose =False, explain =False)
+
+            # votes = currentLfModule.get_vote_vector()
+            # if (shouldConstructCategories): uniqueCategories.update(votes)
+            # voteOutputs.append(votes)
+        
+
+
+        
+        # if (shouldConstructVotes):
+        #     createdVotes = list()
+        #     print(f'Before vote creation: {models.Vote.query.filter_by(project_id=self.id).all()}')
+        #     for votes, fileId in zip(voteOutputs, fileSeries.keys()):
+        #         for vote, labeler in zip(votes, lfNames):
+        #             categoryId = categoryNamesToIds[vote]
+        #             labelerId = labelerNamesToIds[labeler]
+        #             newVote = models.Vote(
+        #                 project_id=self.id,
+        #                 labeler_id=labelerId,
+        #                 category_id=categoryId,
+        #                 file_id=fileId)
+        #             createdVotes.append(newVote)
+        #     models.db.session.add_all(createdVotes)
+        #     models.db.session.commit()
+        #     print(f'After: {models.Vote.query.filter_by(project_id=self.id).all()}')
+
+        #     #since we added everything to fileSeries so we created all votes, we should now filter out files not present in fileIds
+        #     votesByFileId = list(zip(fileSeries.keys(), voteOutputs))
+        #     votesToKeep = list(map(lambda t: t[1], filter(lambda t: t[0] in fileIds, votesByFileId)))
+        #     voteOutputs = votesToKeep
+        #     print(f'Trimmed vote output from {len(votesByFileId)} to {len(voteOutputs)}')
 
 
         d['labeling_function_votes'] = voteOutputs
         d['labeling_function_titles'] = lfNames
         d['labeling_function_possible_votes'] = list(labels.keys())
+        d['thresholds'] = thresholds
+        if (len(endIndicesForFile) > 0):
+            d['time_segment_end_indices'] = endIndicesForFile
         return voteOutputs, lfNames, list(labels.keys())
 
     def getInitialPayload(self, user_id):
