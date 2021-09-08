@@ -39,9 +39,9 @@ class AnnotationTemplate(db.Model):
     created_at = db.Column(db.DateTime, nullable=False, server_default=func.now())
 
 #many to many table joining labelers and thresholds
-labelerThresholds = db.Table('association', db.Base.metadata,
-    db.Column('labeler_id', db.ForeignKey('labelers.id'),
-    db.Column('threshold_id', db.ForeignKey('thresholds.id'))))
+labelerThresholds = db.Table('labeler_thresholds',
+    db.Column('labeler_id', db.Integer, db.ForeignKey('labelers.id'), primary_key=True),
+    db.Column('threshold_id', db.Integer, db.ForeignKey('thresholds.id'), primary_key=True))
 
 class Labeler(db.Model):
     __tablename__ = 'labelers'

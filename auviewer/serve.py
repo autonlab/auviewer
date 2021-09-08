@@ -652,29 +652,69 @@ def createApp():
         #     'amount': 10
         # })
         _ = project.applyLFsToDict(fileIds, filesPayload)
+        filesPayload['thresholds'] = project.getThresholdsPayload()
         return app.response_class(
             response=simplejson.dumps(filesPayload, ignore_nan=True),
             status=200,
             mimetype='application/json'
         )
     
-    @app.route(config['rootWebPath']+'/update_supervisor_time_segment')
+    @app.route(config['rootWebPath']+'/update_threshold', methods=['PUT'])
     @login_required
-    def update_supervisor_time_segment():
+    def put_threshold():
         project_id = request.args.get('project_id', type=int)
-        time_segment = request.args.get('time_segment', type=int)
-
-        project = getProject(project_id)
-        fileIds = [f.id for f in project.files]
-        filesPayload = dict()
-        _ = project.applyLFsToDict(fileIds, filesPayload, timeSegment=time_segment)
+        req = request.get_json()
+        print(req)
         return app.response_class(
-            response=simplejson.dumps(filesPayload, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
+
+    @app.route(config['rootWebPath']+'/preview_threshold_change', methods=['POST'])
+    @login_required
+    def preview_threshold():
+        project_id = request.args.get('project_id', type=int)
+        project = getProject(project_id)
+
+        req = request.get_json()
+        print(req)
+        file_ids = req['files']
+        thresholds = req['thresholds']
+        labeler = req['labeler']
+        timeSegment = req['time_segment']
+
+        voteOutputs, endIndicesOutputs = project.previewThresholds(file_ids, thresholds, labeler, timeSegment)
+        returnLoad = {'votes': voteOutputs,
+            'end_indices': endIndicesOutputs}
+
+        return app.response_class(
+            response=simplejson.dumps(returnLoad, ignore_nan=True),
             status=200,
             mimetype='application/json'
         )
 
 
+    @app.route(config['rootWebPath']+'/update_supervisor_time_segment')
+    @login_required
+    def update_supervisor_time_segment():
+        project_id = request.args.get('project_id', type=int)
+        active_lf = request.args.get('active_lf', type=str)
+        time_segment = request.args.get('time_segment', type=int)
+
+        project = getProject(project_id)
+        fileIds = [f.id for f in project.files]
+        allVotes, allIndices = list(), list()
+        for fileId in fileIds:
+            votes, indices = project.computeVotes(fileId, active_lf, time_segment)
+            allVotes.append(votes); allIndices.append(indices)
+        d = dict()
+        d['labeling_function_votes'] = allVotes
+        d['time_segment_end_indices'] = allIndices
+        return app.response_class(
+            response=simplejson.dumps(d, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
 
     @app.route(config['rootWebPath']+'/query_supervisor_series', methods=['POST'])
     @login_required
@@ -766,7 +806,6 @@ def createApp():
     def supervisor():
         # Parse parameters
         id = request.args.get('id', type=int)
-
         p = getProject(id)
         if p is None:
             logging.error(f"Project ID {id} not found.")

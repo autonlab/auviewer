@@ -42,14 +42,34 @@ RequestHandler.prototype.featurize = function(project_id, file_id, series, featu
 		params: JSON.stringify(params)
 	});
 };
+RequestHandler.prototype.updateThreshold = function(project_id, threshold_title, threshold_value, callback) {
+	this._customRequest(callback, globalAppConfig.updateThresholdURL, {
+		project_id: project_id
+	},
+	{
+		'title': threshold_title,
+		'value': threshold_value
+	}, "PUT", true)
+};
+
+RequestHandler.prototype.previewThreshold = function(project_id, filesToPreview, labelerToPreview, thresholdsToPreview, timesegment, callback) {
+	this._customRequest(callback, globalAppConfig.previewThresholdsURL, {
+		project_id: project_id
+	}, {
+		files: filesToPreview,
+		thresholds: thresholdsToPreview,
+		labeler: labelerToPreview,
+		time_segment: timesegment
+	}, "POST", true)
+};
 
 RequestHandler.prototype.createSupervisorPrecomputer = function(project_id, filePayload, callback) {
-	this._postRequest(callback, globalAppConfig.createSupervisorPrecomputerUrl, {
+	this._customRequest(callback, globalAppConfig.createSupervisorPrecomputerUrl, {
 		project_id: project_id
 	},
 	{
 		file_payload: filePayload
-	});
+	}, "POST");
 };
 RequestHandler.prototype.requestPatternDetection = function(project_id, file_id, type, seriesID, tlow, thigh, duration, persistence, maxgap, callback) {
 
@@ -80,20 +100,21 @@ RequestHandler.prototype.requestInitialSupervisorPayload = function(project_id, 
 	});
 };
 
-RequestHandler.prototype.requestSupervisorUpdatedTimeSegmentPayload = function(project_id, time_segment, callback) {
+RequestHandler.prototype.requestSupervisorUpdatedTimeSegmentPayload = function(project_id, active_lf, time_segment, callback) {
 	this._newRequest(callback, globalAppConfig.updateSupervisorTimeSegmentURL, {
 		project_id: project_id,
+		active_lf: active_lf,
 		time_segment: time_segment
 	});
 };
 
 RequestHandler.prototype.requestSupervisorSeriesByQuery = function(project_id, queryObj, callback) {
-	this._postRequest(callback, globalAppConfig.querySupervisorSeriesURL, {
+	this._customRequest(callback, globalAppConfig.querySupervisorSeriesURL, {
 			project_id: project_id
 		},
 		{
 			query_payload: queryObj			
-		}, true);
+		}, "POST", true);
 };
 
 RequestHandler.prototype.requestProjectAnnotations = function(project_id, callback) {
@@ -182,12 +203,12 @@ const buildPathWithParams = function(path, params) {
 	return path;
 }
 
-RequestHandler.prototype._postRequest = function(callback, path, pathParams, objParams, withJson=false) {
+RequestHandler.prototype._customRequest = function(callback, path, pathParams, objParams, method, withJson=false) {
 	let req = new XMLHttpRequest();
 
 	req.onreadystatechange = callbackCaller(callback, path);
 	path = buildPathWithParams(path, pathParams);
-	req.open("POST", path);
+	req.open(method, path);
 	let payload = new FormData();
 	for (let param in objParams) {
 		payload.append(param, objParams[param]);

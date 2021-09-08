@@ -16,6 +16,8 @@ let globalAppConfig = {
 	// Backend request URLs
 	createAnnotationURL: 'create_annotation',
 	deleteAnnotationURL: 'delete_annotation',
+	updateThresholdURL: 'update_threshold',
+	previewThresholdsURL: 'preview_threshold_change',
 	detectPatternsURL: 'detect_patterns',
 	featurizeURL: 'featurize',
 	initialFilePayloadURL: 'initial_file_payload',

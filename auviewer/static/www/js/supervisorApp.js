@@ -151,12 +151,12 @@ let templateSystem = new TemplateSystem();
 globalStateManager.currentSupervisor = new Supervisor(payload);
 
 // Detect & handle hash variables
-var hash = window.location.hash.substr(1);
-var result = hash.split('&').reduce(function (result, item) {
-    var parts = item.split('=');
-    result[parts[0]] = parts[1];
-    return result;
-}, {});
-if (result.hasOwnProperty('file_id')) {
-	globalStateManager.loadFile(result['file_id'])
-}
+// var hash = window.location.hash.substr(1);
+// var result = hash.split('&').reduce(function (result, item) {
+//     var parts = item.split('=');
+//     result[parts[0]] = parts[1];
+//     return result;
+// }, {});
+// if (result.hasOwnProperty('file_id')) {
+// 	globalStateManager.loadFile(result['file_id'])
+// }

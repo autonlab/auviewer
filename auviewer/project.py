@@ -1,4 +1,7 @@
 """Class and related functionality for projects."""
+import importlib
+import numpy as np
+
 import logging
 import math
 import pandas as pd
@@ -249,9 +252,104 @@ class Project:
         print(smallestDiff)
         return False
 
+    def previewThresholds(self, fileIds, thresholds, labeler, timesegment):
+        voteOutput = list()
+        endIndicesOutput = list()
+        for fileId in fileIds:
+            votes, endIndices = self.computeVotes(fileId, labeler, timesegment, thresholds)
+            voteOutput.append(votes)
+            endIndicesOutput.append(endIndices)
+        return voteOutput, endIndicesOutput
+
+
+    def computeVotes(self, fileId, labelerTitle, timeSegment, modifiedThresholds=None):
+        #find file corresponding to fileId
+        for f in self.files:
+            if f.id == fileId:
+                series = f.series[0].getFullOutput().get('data') #for now assuming a single series, hence the 0-index
+
+        lfModule = 'diagnoseEEG'
+        labelingFunctionModuleSpec = importlib.util.spec_from_file_location(lfModule, f"EEG_Weak_Supervision_Code/{lfModule}.py")
+        labelingFunctionModule = importlib.util.module_from_spec(labelingFunctionModuleSpec)
+        labelingFunctionModuleSpec.loader.exec_module(labelingFunctionModule)
+        lfModule = getattr(labelingFunctionModule, lfModule)
+
+        thresholds = lfModule.getInitialThresholds()
+
+        if (modifiedThresholds):
+            for thresholdDict in modifiedThresholds:
+                title, value = thresholdDict['title'], thresholdDict['value']
+                print(type(value), value)
+                thresholds[title] = float(value)
+        labels = {
+            'ABSTAIN': 'ABSTAIN',
+            'NORMAL': 'NORMAL',
+            'SUPPRESSED': 'SUPPRESSED',
+            'SUPPRESSED_WITH_ICTAL': 'SUPPRESSED_WITH_ICTAL',
+            'BURST_SUPRESSION': 'BURST_SUPRESSION',
+        }
+
+        timestamps = np.array([dt.datetime.fromtimestamp(e[0]) for e in series])
+
+        bucketedSeries = list()
+        bucketedVotes = list()
+        endIndices = list()
+        curStart, curEnd = 0, 0
+        while (curEnd < len(timestamps)):
+            curDiff = timestamps[curEnd] - timestamps[curStart]
+            curBucket = []
+            while (curDiff.total_seconds()*1000 < timeSegment):
+                curBucket.append(series[curEnd][-1])
+                curEnd += 1
+                if (curEnd == len(timestamps)):
+                    break
+                curDiff = timestamps[curEnd] - timestamps[curStart]
+            curStart = curEnd
+            endIndices.append(curEnd)
+            bucketedSeries.append(curBucket)
+        startIdx = 0
+        for i, curSeries in enumerate(bucketedSeries):
+            filledNaNs = None # Indices where NaNs present 
+            curSeries = np.array(curSeries)
+            if np.sum(np.isnan(curSeries)) > 0:
+                filledNaNs = curSeries.isna().to_numpy()
+                curSeries = curSeries.fillna(0)
+
+            if (np.sum(curSeries) == 0): continue
+            EEG = curSeries.reshape((-1, 1))
+
+            # apply lfs to series
+            currentLfModule = lfModule(EEG, filledNaNs, thresholds, labels=labels, verbose =False, explain =False)
+
+            labeler = getattr(currentLfModule, labelerTitle)
+            # add label functions to labelers table
+            votes = labeler()
+            bucketedVotes.append(votes)
+        return bucketedVotes, endIndices
+    
+    def getLFCode(self, lfNames, lfModule, thresholds, labels):
+        curSeries = self.files[0].series[0].getFullOutput().get('data') #for now assuming a single series, hence the 0-index
+        curSeries = np.array([x[-1] for x in curSeries])
+        filledNaNs = None
+        if np.sum(np.isnan(curSeries)) > 0:
+            filledNaNs = curSeries.isna().to_numpy()
+            curSeries = curSeries.fillna(0)
+
+        EEG = curSeries.reshape((-1, 1))
+
+        # apply lfs to series
+        currentLfModule = lfModule(EEG, filledNaNs, thresholds, labels=labels, verbose =False, explain =False)
+        namesToCode = dict()
+        import inspect
+        for lfName in lfNames:
+            try:
+                lf = getattr(currentLfModule, lfName)
+                namesToCode[lfName] = inspect.getsource(lf)
+            except:
+                continue
+        return namesToCode
+
     def applyLFsToDict(self, fileIds, d, lfModule="diagnoseEEG", timeSegment=None):
-        import importlib
-        import numpy as np
         labelingFunctionModuleSpec = importlib.util.spec_from_file_location(lfModule, f"EEG_Weak_Supervision_Code/{lfModule}.py")
         labelingFunctionModule = importlib.util.module_from_spec(labelingFunctionModuleSpec)
         labelingFunctionModuleSpec.loader.exec_module(labelingFunctionModule)
@@ -288,17 +386,19 @@ class Project:
         }
         #### end of copied vars
 
-
-
         voteOutputs = []
         numLabelersInDb = len(models.Labeler.query.filter_by(project_id=self.id).all())
         shouldConstructLabelers = numLabelersInDb == 0
+
+        shouldConstructThresholds = len(models.Threshold.query.filter_by(project_id=self.id).all()) == 0
+
         labelerNamesToIds = dict()
         shouldConstructCategories = len(models.Category.query.filter_by(project_id=self.id).all()) == 0
+
         uniqueCategories = set()
         categoryNamesToIds = dict()
         shouldQueryForVotes = self.areSupervisorVotesWithTimeSegmentInDb(timeSegment)#(shouldConstructLabelers or (not shouldConstructLabelers and numVotesInDb != len(self.files)*numLabelersInDb)
-        print(shouldConstructLabelers, shouldConstructCategories, not shouldQueryForVotes, len(self.files)*numLabelersInDb)
+        # print(shouldConstructLabelers, shouldConstructCategories, not shouldQueryForVotes, len(self.files)*numLabelersInDb)
 
         fileSeries = dict()
         for f in self.files:
@@ -333,6 +433,7 @@ class Project:
             models.db.session.add_all(newLabelers)
             models.db.session.commit()
             print(f'After labeler construction: {models.Labeler.query.filter_by(project_id=self.id).all()}')
+        
 
         #construct labelerNamesToIds and categoryNamesToIds, for vote creation
         for lfName in lfNames:
@@ -342,6 +443,28 @@ class Project:
         for categoryLabel in labels.keys():
             curCategory = models.Category.query.filter_by(project_id=self.id, label=categoryLabel).first()
             categoryNamesToIds[categoryLabel] = curCategory.id
+
+        if (shouldConstructThresholds):
+            print('Constructing thresholds and associations')
+            labelersToThresholds = lfModule.getThresholdsForLabelers()
+            thresholdVals = lfModule.getInitialThresholds()
+            newThresholds = list()
+            for threshold, value in thresholdVals.items():
+                newThreshold = models.Threshold(
+                    project_id = self.id,
+                    title = threshold,
+                    value = value
+                )
+                newThresholds.append(newThreshold)
+            models.db.session.add_all(newThresholds)
+            models.db.session.commit()
+            print(f'Added {len(newThresholds)} new thresholds')
+
+            thresholdToObj = dict(zip(thresholdVals.keys(), newThresholds))
+            for labeler in newLabelers:
+                for threshold in labelersToThresholds[labeler.title]:
+                    labeler.thresholds.append(thresholdToObj[threshold])
+                    models.db.session.commit()
 
         voteOutputs = list() # len(fileSeries) x math.ceil(time_duration_ms / time_segment) x num_labelers
         endIndicesForFile = list()
@@ -428,7 +551,7 @@ class Project:
                             d = abs(leftOverSegmentLength - diff.total_seconds()*1000)
                             # print(d)
                             # print(1/0)
-                            if (d <= 5000):
+                            if (d <= 3000):
                                 if firstRunThrough:
                                     endIndices.append(rightIdx)
                                 return True
@@ -443,6 +566,7 @@ class Project:
                         # print(f'\tvotes: {votes}')
                         firstRunThrough = False
                         allVotes.append(votes)
+                        # print(f'got {len(votes)} votes')
                     bucketedVotes = zip(*allVotes) #reshape allVotes from lfs x timesegments to timesegments x lfs
 
                     # allVotes = models.Vote.query.filter_by(project_id=self.id, file_id=fId).all()
@@ -517,10 +641,19 @@ class Project:
         d['labeling_function_votes'] = voteOutputs
         d['labeling_function_titles'] = lfNames
         d['labeling_function_possible_votes'] = list(labels.keys())
-        d['thresholds'] = thresholds
+        d['labelers_to_thresholds'] = lfModule.getThresholdsForLabelers()
+        namesToCode = self.getLFCode(lfNames, lfModule, thresholds, labels)
+        d['labeler_code'] = namesToCode 
+
+        
         if (len(endIndicesForFile) > 0):
             d['time_segment_end_indices'] = endIndicesForFile
         return voteOutputs, lfNames, list(labels.keys())
+    
+    def getThresholdsPayload(self):
+        thresholds = models.Threshold.query.filter_by(project_id=self.id).all()
+        thresholds = dict(map(lambda x: (x.title, x.value), thresholds))
+        return thresholds
 
     def getInitialPayload(self, user_id):
         """Returns initial project payload data"""

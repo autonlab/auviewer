@@ -1,6 +1,68 @@
 /*
 Supervisor class manages the process of loading project files, labeling functions, and resultant annotations
 */
+// Handle mouse-down for pan & zoom
+function handleMouseDown(event, g, context) {
+
+	context.initializeMouseDown(event, g, context);
+
+	if (event.altKey) {
+		handleAnnotationHighlightStart(event, g, context);
+	}
+	else if (event.shiftKey) {
+		Dygraph.startZoom(event, g, context);
+	} else {
+		context.medViewPanningMouseMoved = false;
+		Dygraph.startPan(event, g, context);
+	}
+
+}
+
+// Handle mouse-up for pan & zoom.
+function handleMouseUp(event, g, context) {
+	console.log(event, context);
+
+	// if (context.mvIsAnnotating) {
+	// 	handleAnnotationHighlightEnd(event, g, context, this);
+	// }
+	// else if (context.isZooming) {
+	// 	Dygraph.endZoom(event, g, context);
+	// 	if ('file' in this) {
+	// 		this.file.updateCurrentViewData();
+	// 	} else {
+	// 		this.updateCurrentViewData();
+	// 	}
+	// }
+	// else if (context.isPanning) {
+	// 	if (context.medViewPanningMouseMoved) {
+	// 		if ('file' in this) {
+	// 			this.file.updateCurrentViewData();
+	// 		} else {
+	// 			this.updateCurrentViewData();
+	// 		}
+	// 		context.medViewPanningMouseMoved = false;
+	// 	}
+	// 	Dygraph.endPan(event, g, context);
+	// }
+
+}
+
+// Handle mouse-move for pan & zoom.
+function handleMouseMove(event, g, context) {
+
+	Dygraph.moveZoom(event, g, context);
+	// if (context.mvIsAnnotating) {
+	// 	handleAnnotationHighlightMove(event, g, context);
+	// }
+	// else if (context.isZooming) {
+	// 	Dygraph.moveZoom(event, g, context);
+	// }
+	// else if (context.isPanning) {
+	// 	context.medViewPanningMouseMoved = true;
+	// 	Dygraph.movePan(event, g, context);
+	// }
+
+}
 
 function Supervisor(payload) {
     this.project_id = payload['project_id']
@@ -19,6 +81,8 @@ function Supervisor(payload) {
 	this.seriesOnPage = 4;
 	this.activeGraphs = [...Array(this.seriesOnPage).keys()];
 
+	this.shade_colors = ['white', 'purple', 'pink',  'orange', 'yellow', 'red', 'green', 'teal', 'cyan'];
+
 	// Load the project config
 	this.template = templateSystem.getProjectTemplate(this.project_id);
 
@@ -30,10 +94,13 @@ function Supervisor(payload) {
 
 	this.timeWindow = 60 *60*1000;
 	let self=this;
-	document.getElementById('recalculateVotes').setAttribute('disabled', true);
+	// document.getElementById('recalculateVotes').setAttribute('disabled', true);
 	document.getElementById('30_min').onclick = function () {self.setTimeWindow(30 *60*1000);};
 	document.getElementById('60_min').onclick = function () {self.setTimeWindow(60 *60*1000);};
 	document.getElementById('120_min').onclick = function () {self.setTimeWindow(120 *60*1000);};
+	document.getElementById('30_min_vote').onclick = function () {self.voteWindow = 30 *60*1000;};
+	document.getElementById('60_min_vote').onclick = function () {self.voteWindow = 60 *60*1000;};
+	document.getElementById('120_min_vote').onclick = function (){self.voteWindow = 120 *60*1000;};
 
 	requestHandler.requestInitialSupervisorPayload(this.project_id, function (data) {
 		let lfSelector = document.getElementById('lfSelector');
@@ -43,11 +110,36 @@ function Supervisor(payload) {
 			lfSelector.appendChild(nextOpt);
 		}
 		let voteSelector = document.getElementById('voteSelector');
+		let colorIdx = 0;
+		this.votesToColors = {};
+		let rowStrings = [];
 		for (let possibleVote of data.labeling_function_possible_votes) {
 			let nextOpt = document.createElement('option');
 			nextOpt.innerHTML = possibleVote;
 			voteSelector.appendChild(nextOpt);
+			// create 
+			this.votesToColors[possibleVote] = this.shade_colors[colorIdx];
+			rowStrings.push(`<td style="background-color:${this.shade_colors[colorIdx]}">${possibleVote}</td>`)
+			colorIdx++;
 		}
+		rowStrings = rowStrings.join(' ');
+		let shading_legend = document.createElement('table');
+		let width = 100 / colorIdx;
+
+		shading_legend.innerHTML =
+				// '<col style="width:10%">' +
+				`<col style="width:${width}%">`.repeat(colorIdx) +
+				'<thead>' +
+					'<tr>' +
+						// '<th>LF Votes</th>' +
+						'<th></th>'.repeat(colorIdx) +
+					'</tr>' +
+				'</thead>' +
+				'<tbody >' +
+					'<tr>' + rowStrings + '</tr>'
+				'</tbody>';
+
+		document.getElementById('shadingLegend').appendChild(shading_legend);
 		this.buildLabelingFunctionTable(data.labeling_function_titles);
 		this.initModel(data);
 	}.bind(this));
@@ -55,21 +147,6 @@ function Supervisor(payload) {
 
 Supervisor.prototype.initModel = function(data) {
     this.sync = null;
-
-	//Holds the labeling function ids that we'd like to render for visible patients
-	this.activeLFs = [];
-
-	this.active_lf_colors = {
-		'blue': false,
-		'purple': false,
-		'pink': false,
-		'red': false,
-		'orange': false,
-		'yellow': false,
-		'green': false,
-		'teal': false,
-		'cyan': false 
-	};
 
 	//Holds the labeling function titles to their associated colors (more succinct than full title to render)
 	this.lfTitleToColor = {};
@@ -81,8 +158,8 @@ Supervisor.prototype.initModel = function(data) {
 	// new prepareData method needed
 	this.projectData = this.prepareData(data, data.baseTime || 0);
 	this.lfVotes = this.projectData.labeling_function_votes;
-	this.lfVotesByTimeSegment = null;
-	this.timeSegmentEndIndices = null;
+	this.lfVotesByTimeSegment = new Array(this.projectData.files.length);
+	this.timeSegmentEndIndices = new Array(this.projectData.files.length);
 	this.domElementObjs = new Array(this.projectData.files.length);
 	this.dygraphs = new Array(this.projectData.files.length);
 
@@ -94,8 +171,10 @@ Supervisor.prototype.initModel = function(data) {
 
 	for (const [idx, lfTitle] of this.projectData.labeling_function_titles.entries()) {
 		this.lfTitleToIdx[lfTitle] = idx;
-
 	}
+
+	this.activeLF = this.projectData.labeling_function_titles[0];
+	this.createThresholds(this.activeLF);
 	window.requestAnimationFrame(function() {
 		// // Attach & render file metadata
 		// this.metadata = data.metadata;
@@ -126,6 +205,7 @@ Supervisor.prototype.initModel = function(data) {
 
 		for (let i = 0; i < this.projectData.files.length; i++) {
 			let filename = this.projectData.files[i][1];
+			let fileId = this.projectData.files[i][0];
 			this.domElementObjs[i] = this.buildGraph(filename);
 			graphsTableBody.appendChild(this.domElementObjs[i].graphWrapperDomElement);
 
@@ -138,6 +218,7 @@ Supervisor.prototype.initModel = function(data) {
 			let self=this;
 			document.getElementById('left_'+filename).onclick = function() { self.pan(self.dygraphs[i], -1); };
 			document.getElementById('right_'+filename).onclick = function() { self.pan(self.dygraphs[i], +1); };
+			document.getElementById('breakout_'+filename).onclick = function() { self.breakout(fileid); };
 		}
 
 		this.datatable = $('.supervisor_table').DataTable({
@@ -208,12 +289,13 @@ Supervisor.prototype.regenerateGraphFor = function(filename, idx, curPageIdx) {
 
 	let leftId = 'left_' + filename;
 	let rightId = 'right_' + filename;
+	let breakoutButtonId = 'breakout_' + filename;
 	graphWrapperDomElement.innerHTML = 
 		// '<td >' +
 		// 	'<div class="labelingFunctionVotes"></div>' +
 		// '</td>' +
 		'<td class="graph_title"><span title="'+this.altText+'">'+filename+'</span>' + 
-			'<span class="webix_icon mdi mdi-cogs"></span>' + 
+			'<span id="'+breakoutButtonId+'" class="webix_icon wxi-plus"></span>' +
 			'<div class="btn-group" role="group" aria-label="Time series navigation">' +
 				'<button type="button" id="'+leftId+'" class="btn btn-primary"><span class="webix_icon wxi-angle-left"></span></button>' +
 				'<button type="button" id="'+rightId+'" class="btn btn-primary"><span class="webix_icon wxi-angle-right"></span></button>' +
@@ -239,6 +321,7 @@ Supervisor.prototype.regenerateGraphFor = function(filename, idx, curPageIdx) {
 	let self=this;
 	document.getElementById('left_'+filename).onclick = function() { self.pan(self.dygraphs[idx], -1); };
 	document.getElementById('right_'+filename).onclick = function() { self.pan(self.dygraphs[idx], +1); };
+	document.getElementById('breakout_'+filename).onclick = function() { self.breakout(self.projectData.files[idx][0]); };
 }
 
 Supervisor.prototype.regenerateGraphs = function(pageNum) {
@@ -262,7 +345,7 @@ Supervisor.prototype.regenerateGraphs = function(pageNum) {
 		j++;
 	}
 
-	if (this.timeSegmentEndIndices) {
+	if (this.timeSegmentEndIndices[startIdx]) {
 		this.shadeTimeSegmentsWithVotes();
 	}
 	this.setTimeWindow(this.timeWindow, forceAdjustment=true);
@@ -270,7 +353,7 @@ Supervisor.prototype.regenerateGraphs = function(pageNum) {
 
 Supervisor.prototype.setTimeWindow = function(newTimeWindow, forceAdjustment=false) {
 	if (forceAdjustment || (newTimeWindow !== this.timeWindow)) {
-		document.getElementById('recalculateVotes').removeAttribute('disabled'); // since we have a new time slice, it should now be allowed to recalculate
+		// document.getElementById('recalculateVotes').removeAttribute('disabled'); // since we have a new time slice, it should now be allowed to recalculate
 		this.timeWindow = newTimeWindow;
 		for (let graphIdx of this.activeGraphs) {
 			let curGraph = this.dygraphs[graphIdx];
@@ -280,6 +363,14 @@ Supervisor.prototype.setTimeWindow = function(newTimeWindow, forceAdjustment=fal
 		}
 	}
 }
+
+Supervisor.prototype.breakout = function(fileid) {
+	window.open(
+		`project?id=${this.project_id}#file_id=${fileid}`,
+		'_blank'
+		);
+}
+
 // following three functions copied from third example found [here](https://dygraphs.com/options.html#dateWindow)
 Supervisor.prototype.pan = function(graph, dir) {
 	let curRange = graph.xAxisRange();
@@ -310,9 +401,8 @@ Supervisor.prototype.approachRange = function(graph, desiredRange, maxSteps) {
 Supervisor.prototype.recalculateVotes = function () {
 	// ask backend to segment all series' and vote on subsequent segments, then return them all
 	let self = this;
-	requestHandler.requestSupervisorUpdatedTimeSegmentPayload(this.project_id, this.timeWindow, function(data) {
-		self.lfVotesByTimeSegment = data.labeling_function_votes;
-		self.timeSegmentEndIndices = data.time_segment_end_indices;
+	requestHandler.requestSupervisorUpdatedTimeSegmentPayload(this.project_id, this.activeLF, this.voteWindow, function(data) {
+		self.replaceShadeState(data.labeling_function_votes, data.time_segment_end_indices, 0);
 		self.shadeTimeSegmentsWithVotes();
 		// turn off loader now that we've received data
 		$('#loadMe').modal("hide");
@@ -326,6 +416,7 @@ Supervisor.prototype.recalculateVotes = function () {
 }
 
 Supervisor.prototype.shadeTimeSegmentsWithVotes = function() {
+	document.getElementById('shadingLegend').style.display = 'inline-block';
 	for (let activeGraphIdx of this.activeGraphs) {
 		this.shadeGraph(activeGraphIdx);
 	}
@@ -340,7 +431,7 @@ Supervisor.prototype.shadeGraph = function(graphIdx) {
 		underlayCallback: function(canvas, area, g) {
 			let startIdx = 0;
 			let alternating = false;
-			for (let endIdx of endIndices) {
+			for (let [bucketIdx, endIdx] of endIndices.entries()) {
 				if (startIdx === endIdx) {
 					break;
 				}
@@ -352,11 +443,13 @@ Supervisor.prototype.shadeGraph = function(graphIdx) {
 				let left = bottomLeft[0];
 				let right = topRight[0];
 
-				if (alternating) {
-					canvas.fillStyle = "rgba(255, 255, 102, 1.0)";
-				} else {
-					canvas.fillStyle = "rgba(102, 255, 255, 1.0)";
-				}
+				let vote = self.lfVotesByTimeSegment[graphIdx][bucketIdx];
+				let color = self.votesToColors[vote];
+				canvas.fillStyle = color;
+				// if (alternating) {
+				// } else {
+				// 	canvas.fillStyle = "rgba(102, 255, 255, 1.0)";
+				// }
 				canvas.fillRect(left, area.y, right-left, area.h);
 				startIdx = endIdx;
 				alternating = !alternating;
@@ -365,15 +458,11 @@ Supervisor.prototype.shadeGraph = function(graphIdx) {
 		legendFormatter: function(data) {
 			return data.series.map(function (series) {
 				return series.dashHTML + ' ' + series.label + ' - ' + series.yHTML
-			}).join('<br>') +
+				}).join('<br>') +
 				'<br>' + 
-				self.activeLFs.map(function (lfTitle) {
-					let lfVote = self.getVoteForGraphAndPoint(graphIdx, data.x, lfTitle);
-					return lfTitle + ' - ' + lfVote; 
-				}).join('<br>');
+				self.activeLF + ' - ' + self.getVoteForGraphAndPoint(graphIdx, data.x, self.activeLF);
 		}
 	});
-	console.log('finished shading idx: ' + graphIdx + '!');
 }
 
 Supervisor.prototype.getVoteForGraphAndPoint = function(graphIdx, xPoint, lfTitle) {
@@ -381,6 +470,10 @@ Supervisor.prototype.getVoteForGraphAndPoint = function(graphIdx, xPoint, lfTitl
 	let bucketIdx = 0;
 	let series = Object.values(this.projectData.series[graphIdx])[0].data;
 	xPoint = new Date(xPoint);
+	if (isNaN(xPoint.getTime()) || this.lfVotesByTimeSegment[graphIdx].length === 0) {
+		// means date of x point isn't valid
+		return 'N/A';
+	}
 	for (let endIdx of this.timeSegmentEndIndices[graphIdx]) {
 		// get start and end timestamps
 		let start = series[startIdx][0];
@@ -390,8 +483,7 @@ Supervisor.prototype.getVoteForGraphAndPoint = function(graphIdx, xPoint, lfTitl
 		}
 		bucketIdx++;
 	}
-	let lfIdx = this.lfTitleToIdx[lfTitle];
-	return this.lfVotesByTimeSegment[graphIdx][bucketIdx][lfIdx];
+	return this.lfVotesByTimeSegment[graphIdx][bucketIdx];
 }
 
 Supervisor.prototype.onQueryClick = function() {
@@ -458,53 +550,142 @@ Supervisor.prototype.applyQuery = function() {
 }
 
 Supervisor.prototype.buildLabelingFunctionTable = function(labelingFunctionTitles) {
+	let lfSelection = document.getElementById('lfSelection');
 	for (let lfTitle of labelingFunctionTitles) {
-		let lfTitleDomElement = document.createElement('tr');
-		lfTitleDomElement.innerHTML = 
-			'<td >' + lfTitle + '</td>' + 
-			'<td >' +
-				'<input class="btn" type="checkbox" id="' + lfTitle + '" value = "' + lfTitle + '" onclick="globalStateManager.currentSupervisor.onClick(`'+lfTitle+'`)"> </td>';
-		lfTitleDomElement.style.fontSize = 'small';
-		document.getElementById('labelingFunctionTable').getElementsByTagName('tbody')[0].appendChild(lfTitleDomElement);
+		let nextOpt = document.createElement('option');
+		nextOpt.innerHTML = lfTitle;
+		lfSelection.appendChild(nextOpt);
+		// let lfTitleDomElement = document.createElement('tr');
+		// lfTitleDomElement.innerHTML = 
+		// 	'<td >' + lfTitle + '</td>' + 
+		// 	'<td >' +
+		// 		'<input class="btn" type="checkbox" id="' + lfTitle + '" value = "' + lfTitle + '" onclick="globalStateManager.currentSupervisor.onClick(`'+lfTitle+'`)"> </td>';
+		// lfTitleDomElement.style.fontSize = 'small';
+		// document.getElementById('labelingFunctionTable').getElementsByTagName('tbody')[0].appendChild(lfTitleDomElement);
 	}
 }
 
-Supervisor.prototype.onClick = function(lfTitle) {
-	const divInQuestion = document.getElementById(lfTitle);
-	if (divInQuestion.checked) {
-		this.activeLFs.push(lfTitle);
-		for (const [color, alreadyInUse] of Object.entries(this.active_lf_colors)) {
-			if (!alreadyInUse) {
-				this.active_lf_colors[color] = true;
-				this.lfTitleToColor[lfTitle] = color;
-				divInQuestion.parentElement.parentElement.style.backgroundColor = color;
-				break;
-			}
+Supervisor.prototype.clearThresholds = function() {
+	let thresholdsInputPane = document.getElementById('threshold_pane');
+	while (thresholdsInputPane.firstChild) {
+		if (thresholdsInputPane.firstChild.id === 'submitThresholds') {
+			break;
 		}
+		thresholdsInputPane.removeChild(thresholdsInputPane.firstChild);
 	}
-	else {
-		const isLF = (elem) => elem === lfTitle;
-		let lfIndex = this.activeLFs.findIndex(isLF);
-		this.activeLFs.splice(lfIndex, lfIndex+1);
-		this.active_lf_colors[this.lfTitleToColor[lfTitle]] = false;
-		divInQuestion.parentElement.parentElement.style.backgroundColor = '#888';
-	}
+}
 
-	// for (const [seriesIdx, domElementObj] of this.domElementObjs.entries()) {
-	// 	let correspondingVotesSection = domElementObj.graphWrapperDomElement.getElementsByClassName('labelingFunctionVotes')[0];
-	// 	correspondingVotesSection.innerHTML = '';
-	// 	// let correspondingVotesSection = votesSection[0];
-	// 	for (const activeLF of this.activeLFs) {
-	// 		let lfDiv = document.createElement('div');
-	// 		lfDiv.style.backgroundColor = this.lfTitleToColor[activeLF];
-	// 		lfDiv.style.fontSize = 'small';
-	// 		lfDiv.style.color = 'white'
-	// 		lfDiv.innerHTML = this.lfVotes[seriesIdx][this.lfTitleToIdx[activeLF]];
-	// 		correspondingVotesSection.appendChild(lfDiv);
+Supervisor.prototype.cleanCode = function(codeText) {
+	let result = [];
+	let firstLine = true;
+	let whitespaceIdx = 0;
+	// finds the amount space on the first line, and removes that much whitespace on all lines
+	for (let line of codeText.split('\n')) {
+		if (firstLine) {
+			for (let i = 0; i < line.length; i++) {
+				if (line[i] !== ' ') {
+					whitespaceIdx = i;
+					break;
+				}
+			}
+			firstLine = false;
+		}
+		line = line.slice(whitespaceIdx);
+		result.push(line);
+	}
+	return result.join('\n');
+}
+
+Supervisor.prototype.createThresholds = function(lfTitle) {
+	let thresholdsInputPane = document.getElementById('threshold_pane');
+	for (let threshold of this.projectData.labelers_to_thresholds[lfTitle]) {
+		let thresholdValue = this.projectData.thresholds[threshold];
+		let newElem = document.createElement('div');
+		newElem.classList.add('input-group');
+		newElem.classList.add('mb-1');
+		newElem.innerHTML =
+			'<div class="input-group-prepend">' +
+				'<span class="input-group-text">' + threshold + '</span>' +
+			'</div>' +
+			'<input type="text" class="form-control" id="' + threshold + '">';
+		thresholdsInputPane.prepend(newElem);
+		document.getElementById(threshold).value = thresholdValue;
+	}
+	newElem = document.createElement('pre');
+	newElem.innerHTML = 
+			'<code>'+
+			this.cleanCode(this.projectData.labeler_code[this.activeLF]) +
+			'</code>';
+	thresholdsInputPane.prepend(newElem);
+}
+
+Supervisor.prototype.previewThresholds = function() {
+	let thresholds = [];
+	// collect current thresholds and values and send them off to update backend
+	for (let threshold of this.projectData.labelers_to_thresholds[this.activeLF]) {
+		let value = document.getElementById(threshold).value;
+		thresholds.push({'title': threshold, 'value': value});
+	}
+	let labeler = this.activeLF;
+	let files = [];
+	this.activeGraphs.forEach((activeGraphIdx) => {
+		let file_id = this.projectData.files[activeGraphIdx][0];
+		files.push(file_id);
+	});
+	let self = this;
+	requestHandler.previewThreshold(this.project_id, files, labeler, thresholds, this.voteWindow, function(data) {
+		self.replaceShadeState(data.votes, data.end_indices, self.activeGraphs[0]);
+		self.shadeTimeSegmentsWithVotes();
+	});
+}
+
+Supervisor.prototype.replaceShadeState = function(votes, endIndices, startIdx) {
+	for (let idx = startIdx; idx < (startIdx+votes.length); idx++) {
+		let endIndexSet = endIndices[idx-startIdx];
+		let voteSet = votes[idx-startIdx];
+		this.lfVotesByTimeSegment[idx] = voteSet;
+		this.timeSegmentEndIndices[idx] = endIndexSet;
+	}
+}
+
+Supervisor.prototype.submitThresholds = function() {
+	// collect current thresholds and values and send them off to update backend
+	for (let threshold of this.projectData.labelers_to_thresholds[this.activeLF]) {
+		let value = document.getElementById(threshold).value;
+		console.log(threshold, value);
+		requestHandler.updateThreshold(self.project_id, threshold, value, function () {
+			console.log(threshold + ' successfully updated to value of ' + value);
+		});
+	}
+}
+
+Supervisor.prototype.onLabelerSelect = function() {
+	let lfSelection = document.getElementById('lfSelection');
+	this.activeLF = lfSelection.value;
+	// tear down threshold pane
+	this.clearThresholds();
+	// replace threshold pane
+	this.createThresholds(lfSelection.value);
+	return;
+	// const divInQuestion = document.getElementById(lfTitle);
+	// if (divInQuestion.checked) {
+	// 	this.activeLFs.push(lfTitle);
+	// 	for (const [color, alreadyInUse] of Object.entries(this.active_lf_colors)) {
+	// 		if (!alreadyInUse) {
+	// 			this.active_lf_colors[color] = true;
+	// 			this.lfTitleToColor[lfTitle] = color;
+	// 			divInQuestion.parentElement.parentElement.style.backgroundColor = color;
+	// 			break;
+	// 		}
 	// 	}
 	// }
-
-	// document.getElementById('labelingFunctionTable').getElementsBy
+	// else {
+	// 	const isLF = (elem) => elem === lfTitle;
+	// 	let lfIndex = this.activeLFs.findIndex(isLF);
+	// 	this.activeLFs.splice(lfIndex, lfIndex+1);
+	// 	this.active_lf_colors[this.lfTitleToColor[lfTitle]] = false;
+	// 	divInQuestion.parentElement.parentElement.style.backgroundColor = '#888';
+	// }
 }
 
 Supervisor.prototype.getLFColorByTitle = function(lfTitle) {
@@ -519,12 +700,13 @@ Supervisor.prototype.buildGraph = function(fileName) {
 	graphWrapperDomElement.style.height = this.template.graphHeight;
 	let leftId = 'left_' + fileName;
 	let rightId = 'right_' + fileName;
+	let breakoutButtonId = 'breakout_' + fileName;
 	graphWrapperDomElement.innerHTML =
 		// '<td >' +
 		// 	'<div class="labelingFunctionVotes"></div>' +
 		// '</td>' +
-		'<td class="graph_title"><span title="'+this.altText+'">'+fileName+'</span>' + 
-			'<span class="webix_icon mdi mdi-cogs"></span>' + 
+		'<td class="graph_title"><span title="'+this.altText+'">'+fileName+'</span>' +
+			'<span id="'+breakoutButtonId+'" class="webix_icon wxi-plus"></span>' +
 			'<div class="btn-group" role="group" aria-label="Time series navigation">' +
 				'<button type="button" id="'+leftId+'" class="btn btn-primary"><span class="webix_icon wxi-angle-left"></span></button>' +
 				'<button type="button" id="'+rightId+'" class="btn btn-primary"><span class="webix_icon wxi-angle-right"></span></button>' +
@@ -584,12 +766,16 @@ Supervisor.prototype.createDygraph = function(graphDomElementObj, series, eventD
 		// 		independentTicks: true
 		// 	}
 		// },
-		clickCallback: handleClick,
+		// clickCallback: handleClick,
 		// colors: [this.template.lineColor],//'#5253FF'],
         colors: ['#5253FF'],
 		// dateWindow: timeWindow,
 		drawPoints: true,
 		// gridLineColor: this.template.gridColor,
+		interactionModel: {
+			'mousedown': handleMouseDown.bind(this),
+			'mouseup': handleMouseUp.bind(this),
+		},
 		// interactionModel: {
 		// 	'mousedown': handleMouseDown.bind(this),
 		// 	'mousemove': handleMouseMove.bind(this),
