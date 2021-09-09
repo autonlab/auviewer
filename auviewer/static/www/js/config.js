@@ -23,6 +23,7 @@ let globalAppConfig = {
 	initialFilePayloadURL: 'initial_file_payload',
 	createSupervisorPrecomputerUrl: 'create_supervisor_precomputer',
 	initialSupervisorPayloadURL: 'initial_supervisor_payload',
+	requestLabelerStatsURL: 'get_labeler_statistics',
 	querySupervisorSeriesURL: 'query_supervisor_series',
 	updateSupervisorTimeSegmentURL: 'update_supervisor_time_segment',
 	getProjectAnnotationsURL: 'get_project_annotations',

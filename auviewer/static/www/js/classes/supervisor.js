@@ -398,6 +398,20 @@ Supervisor.prototype.approachRange = function(graph, desiredRange, maxSteps) {
 	}
 }
 
+Supervisor.prototype.calculateStats = function () {
+	let self=this;
+	requestHandler.requestAggregateLabelerStats(this.project_id, this.activeLF, function (data) {
+		self.labelerStatistics = data;
+		self.renderStatsFor(self.activeLF);
+	});
+}
+
+Supervisor.prototype.renderStatsFor = function(labeler) {
+	let stats = this.labelerStatistics[labeler];
+	let x = document.createElement('h5');
+	x.innerText = `Coverage: ${stats.coverage}`;
+	document.getElementById('stats_pane').appendChild(x);
+}
 Supervisor.prototype.recalculateVotes = function () {
 	// ask backend to segment all series' and vote on subsequent segments, then return them all
 	let self = this;

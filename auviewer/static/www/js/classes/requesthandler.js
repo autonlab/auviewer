@@ -100,6 +100,13 @@ RequestHandler.prototype.requestInitialSupervisorPayload = function(project_id, 
 	});
 };
 
+RequestHandler.prototype.requestAggregateLabelerStats = function(project_id, active_lf, callback) {
+	this._newRequest(callback, globalAppConfig.requestLabelerStatsURL, {
+		project_id: project_id,
+		labeler: active_lf
+	});
+}
+
 RequestHandler.prototype.requestSupervisorUpdatedTimeSegmentPayload = function(project_id, active_lf, time_segment, callback) {
 	this._newRequest(callback, globalAppConfig.updateSupervisorTimeSegmentURL, {
 		project_id: project_id,

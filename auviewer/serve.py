@@ -658,6 +658,20 @@ def createApp():
             status=200,
             mimetype='application/json'
         )
+
+    @app.route(config['rootWebPath']+'/get_labeler_statistics')
+    @login_required
+    def get_labeler_stats():
+        project_id = request.args.get('project_id', type=int)
+
+        project = getProject(project_id)
+        stats = project.getLFStats()
+
+        return app.response_class(
+            response=simplejson.dumps(stats, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
     
     @app.route(config['rootWebPath']+'/update_threshold', methods=['PUT'])
     @login_required

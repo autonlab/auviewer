@@ -349,7 +349,36 @@ class Project:
                 continue
         return namesToCode
 
-    def applyLFsToDict(self, fileIds, d, lfModule="diagnoseEEG", timeSegment=None):
+    def getLFStats(self, lfModule="diagnoseEEG", timeSegment=30*60*1000):
+        _ = self.calculateAll(timeSegment, lfModule)
+        labelingFunctionModuleSpec = importlib.util.spec_from_file_location(lfModule, f"EEG_Weak_Supervision_Code/{lfModule}.py")
+        labelingFunctionModule = importlib.util.module_from_spec(labelingFunctionModuleSpec)
+        labelingFunctionModuleSpec.loader.exec_module(labelingFunctionModule)
+        lfModule = getattr(labelingFunctionModule, lfModule)
+        lfs = lfModule.get_LF_names()
+        res = dict()
+        for lfName in lfs:
+            statsDict = {
+                'coverage': None,
+                'overlaps': None,
+                'conflicts': None
+            }
+            labeler = models.Labeler.query.filter_by(project_id=self.id,title=lfName).first()
+            nonAbstains = len(list(filter(lambda v: v.category.label != 'ABSTAIN', labeler.votes)))
+            print(nonAbstains, len(labeler.votes), lfName)
+            statsDict['coverage'] = nonAbstains / len(labeler.votes)
+            #overlaps
+            #conflicts
+            #coverage
+
+            res[lfName] = statsDict
+        return res
+    
+    def calculateAll(self, timeSegment, lfModule="diagnoseEEG"):
+        self.applyLFsToDict([], {}, lfModule, timeSegment, constructAll=True)
+        return
+
+    def applyLFsToDict(self, fileIds, d, lfModule="diagnoseEEG", timeSegment=None, constructAll=False):
         labelingFunctionModuleSpec = importlib.util.spec_from_file_location(lfModule, f"EEG_Weak_Supervision_Code/{lfModule}.py")
         labelingFunctionModule = importlib.util.module_from_spec(labelingFunctionModuleSpec)
         labelingFunctionModuleSpec.loader.exec_module(labelingFunctionModule)
@@ -387,18 +416,25 @@ class Project:
         #### end of copied vars
 
         voteOutputs = []
-        numLabelersInDb = len(models.Labeler.query.filter_by(project_id=self.id).all())
-        shouldConstructLabelers = numLabelersInDb == 0
-
-        shouldConstructThresholds = len(models.Threshold.query.filter_by(project_id=self.id).all()) == 0
-
         labelerNamesToIds = dict()
-        shouldConstructCategories = len(models.Category.query.filter_by(project_id=self.id).all()) == 0
-
         uniqueCategories = set()
         categoryNamesToIds = dict()
-        shouldQueryForVotes = self.areSupervisorVotesWithTimeSegmentInDb(timeSegment)#(shouldConstructLabelers or (not shouldConstructLabelers and numVotesInDb != len(self.files)*numLabelersInDb)
-        # print(shouldConstructLabelers, shouldConstructCategories, not shouldQueryForVotes, len(self.files)*numLabelersInDb)
+        if (constructAll):
+            shouldConstructLabelers = True
+            shouldConstructThresholds = True
+            shouldConstructCategories = True
+            shouldQueryForVotes = False
+        else:
+
+            numLabelersInDb = len(models.Labeler.query.filter_by(project_id=self.id).all())
+            shouldConstructLabelers = numLabelersInDb == 0
+
+            shouldConstructThresholds = len(models.Threshold.query.filter_by(project_id=self.id).all()) == 0
+
+            shouldConstructCategories = len(models.Category.query.filter_by(project_id=self.id).all()) == 0
+
+            shouldQueryForVotes = self.areSupervisorVotesWithTimeSegmentInDb(timeSegment)#(shouldConstructLabelers or (not shouldConstructLabelers and numVotesInDb != len(self.files)*numLabelersInDb)
+        print(shouldConstructLabelers, shouldConstructCategories, not shouldQueryForVotes)
 
         fileSeries = dict()
         for f in self.files:
@@ -422,9 +458,9 @@ class Project:
             print(f'After: {models.Category.query.filter_by(project_id=self.id).all()}')
 
         lfNames = lfModule.get_LF_names()
+        newLabelers = []
         if (shouldConstructLabelers):
             print('Constructing labelers')
-            newLabelers = []
             for lfName in lfNames:
                 newLabeler = models.Labeler(
                     project_id=self.id,
@@ -469,6 +505,7 @@ class Project:
         voteOutputs = list() # len(fileSeries) x math.ceil(time_duration_ms / time_segment) x num_labelers
         endIndicesForFile = list()
         for fId, series in fileSeries.items():
+            print(fId)
             if (timeSegment != None):
                 timestamps = np.array([dt.datetime.fromtimestamp(e[0]) for e in series])
                 bucketedVotes = list() 
@@ -502,7 +539,10 @@ class Project:
                         EEG = curSeries.reshape((-1, 1))
 
                         # apply lfs to series
-                        currentLfModule = lfModule(EEG, filledNaNs, thresholds, labels=labels, verbose =False, explain =False)
+                        try:
+                            currentLfModule = lfModule(EEG, filledNaNs, thresholds, labels=labels, verbose =False, explain =False)
+                        except:
+                            break
 
                         # add label functions to labelers table
                         votes = currentLfModule.get_vote_vector()

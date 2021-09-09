@@ -79,6 +79,9 @@
 				<label for="lfSelection">Select labeler:</label>
 				<select class="form-control mb-3" id="lfSelection" onchange="globalStateManager.currentSupervisor.onLabelerSelect()">
 				</select>
+					<div id="stats_pane">
+							<button type="button" id="calculate_stats" class="btn btn-primary" onclick="globalStateManager.currentSupervisor.calculateStats()">Calculate Stats</button>
+					</div>
 
 					<div id="threshold_pane" >
 
