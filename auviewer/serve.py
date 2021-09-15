@@ -653,6 +653,7 @@ def createApp():
         # })
         _ = project.applyLFsToDict(fileIds, filesPayload)
         filesPayload['thresholds'] = project.getThresholdsPayload()
+        filesPayload['existent_segments'] = project.getSegments()
         return app.response_class(
             response=simplejson.dumps(filesPayload, ignore_nan=True),
             status=200,
@@ -684,6 +685,28 @@ def createApp():
             mimetype='application/json'
         )
 
+    @app.route(config['rootWebPath']+'/create_vote_segments', methods=['POST'])
+    @login_required
+    def create_vote_segments():
+        project_id = request.args.get('project_id', type=int)
+        project = getProject(project_id)
+
+        payload = request.get_json()
+        voteSegments = payload['vote_segments']
+        createdSegments, success, numAdded = project.createSegments(voteSegments)
+
+        returnPayload = {
+            'newly_created_segments': createdSegments,
+            'success': success,
+            'num_added': numAdded
+            }
+
+        return app.response_class(
+            response=simplejson.dumps(returnPayload, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
+
     @app.route(config['rootWebPath']+'/preview_threshold_change', methods=['POST'])
     @login_required
     def preview_threshold():
@@ -691,7 +714,6 @@ def createApp():
         project = getProject(project_id)
 
         req = request.get_json()
-        print(req)
         file_ids = req['files']
         thresholds = req['thresholds']
         labeler = req['labeler']
@@ -708,7 +730,7 @@ def createApp():
         )
 
 
-    @app.route(config['rootWebPath']+'/update_supervisor_time_segment')
+    @app.route(config['rootWebPath']+'/get_votes')
     @login_required
     def update_supervisor_time_segment():
         project_id = request.args.get('project_id', type=int)

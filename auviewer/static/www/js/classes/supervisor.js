@@ -1,72 +1,13 @@
 /*
 Supervisor class manages the process of loading project files, labeling functions, and resultant annotations
 */
-// Handle mouse-down for pan & zoom
-function handleMouseDown(event, g, context) {
-
-	context.initializeMouseDown(event, g, context);
-
-	if (event.altKey) {
-		handleAnnotationHighlightStart(event, g, context);
-	}
-	else if (event.shiftKey) {
-		Dygraph.startZoom(event, g, context);
-	} else {
-		context.medViewPanningMouseMoved = false;
-		Dygraph.startPan(event, g, context);
-	}
-
-}
-
-// Handle mouse-up for pan & zoom.
-function handleMouseUp(event, g, context) {
-	console.log(event, context);
-
-	// if (context.mvIsAnnotating) {
-	// 	handleAnnotationHighlightEnd(event, g, context, this);
-	// }
-	// else if (context.isZooming) {
-	// 	Dygraph.endZoom(event, g, context);
-	// 	if ('file' in this) {
-	// 		this.file.updateCurrentViewData();
-	// 	} else {
-	// 		this.updateCurrentViewData();
-	// 	}
-	// }
-	// else if (context.isPanning) {
-	// 	if (context.medViewPanningMouseMoved) {
-	// 		if ('file' in this) {
-	// 			this.file.updateCurrentViewData();
-	// 		} else {
-	// 			this.updateCurrentViewData();
-	// 		}
-	// 		context.medViewPanningMouseMoved = false;
-	// 	}
-	// 	Dygraph.endPan(event, g, context);
-	// }
-
-}
-
-// Handle mouse-move for pan & zoom.
-function handleMouseMove(event, g, context) {
-
-	Dygraph.moveZoom(event, g, context);
-	// if (context.mvIsAnnotating) {
-	// 	handleAnnotationHighlightMove(event, g, context);
-	// }
-	// else if (context.isZooming) {
-	// 	Dygraph.moveZoom(event, g, context);
-	// }
-	// else if (context.isPanning) {
-	// 	context.medViewPanningMouseMoved = true;
-	// 	Dygraph.movePan(event, g, context);
-	// }
-
-}
 
 function Supervisor(payload) {
     this.project_id = payload['project_id']
     this.project_name = payload['project_name']
+
+	this.prospectiveSegmentShade = '#D3D3D3'; // light grey
+	this.existentSegmentShade = '#A9A9A9'; // dark grey
 
 	/*
 	Holds the min [0] and max [1] x-value across all graphs currently displayed.
@@ -98,9 +39,6 @@ function Supervisor(payload) {
 	document.getElementById('30_min').onclick = function () {self.setTimeWindow(30 *60*1000);};
 	document.getElementById('60_min').onclick = function () {self.setTimeWindow(60 *60*1000);};
 	document.getElementById('120_min').onclick = function () {self.setTimeWindow(120 *60*1000);};
-	document.getElementById('30_min_vote').onclick = function () {self.voteWindow = 30 *60*1000;};
-	document.getElementById('60_min_vote').onclick = function () {self.voteWindow = 60 *60*1000;};
-	document.getElementById('120_min_vote').onclick = function (){self.voteWindow = 120 *60*1000;};
 
 	requestHandler.requestInitialSupervisorPayload(this.project_id, function (data) {
 		let lfSelector = document.getElementById('lfSelector');
@@ -143,6 +81,12 @@ function Supervisor(payload) {
 		this.buildLabelingFunctionTable(data.labeling_function_titles);
 		this.initModel(data);
 	}.bind(this));
+
+	toastr.options.timeOut = 1000;
+	toastr.options.positionClass = "toast-bottom-center";
+	toastr.options.showMethod = 'show';
+	toastr.options.hideMethod = 'hide';
+	toastr.options.preventDuplicates = true;
 }
 
 Supervisor.prototype.initModel = function(data) {
@@ -157,11 +101,19 @@ Supervisor.prototype.initModel = function(data) {
 	// Prepare data received from the backend and attach to class instance
 	// new prepareData method needed
 	this.projectData = this.prepareData(data, data.baseTime || 0);
+	this.filenamesToIdxs = {};
+	for (let i = 0; i < this.projectData.files.length; i++) {
+		this.filenamesToIdxs[this.projectData.files[i][1]] = i;
+	}
+	console.log(this.filenamesToIdxs);
 	this.lfVotes = this.projectData.labeling_function_votes;
 	this.lfVotesByTimeSegment = new Array(this.projectData.files.length);
 	this.timeSegmentEndIndices = new Array(this.projectData.files.length);
 	this.domElementObjs = new Array(this.projectData.files.length);
 	this.dygraphs = new Array(this.projectData.files.length);
+
+	this.existentSegments = this.projectData.existent_segments;
+	this.createdSegments = null;
 
 	this.priorQuerySettings = {
 		'random': false,
@@ -172,6 +124,7 @@ Supervisor.prototype.initModel = function(data) {
 	for (const [idx, lfTitle] of this.projectData.labeling_function_titles.entries()) {
 		this.lfTitleToIdx[lfTitle] = idx;
 	}
+
 
 	this.activeLF = this.projectData.labeling_function_titles[0];
 	this.createThresholds(this.activeLF);
@@ -206,7 +159,8 @@ Supervisor.prototype.initModel = function(data) {
 		for (let i = 0; i < this.projectData.files.length; i++) {
 			let filename = this.projectData.files[i][1];
 			let fileId = this.projectData.files[i][0];
-			this.domElementObjs[i] = this.buildGraph(filename);
+			let seriesId = Object.keys(this.projectData.series[i])[0];
+			this.domElementObjs[i] = this.buildGraph(filename, seriesId);
 			graphsTableBody.appendChild(this.domElementObjs[i].graphWrapperDomElement);
 
 
@@ -287,6 +241,7 @@ Supervisor.prototype.regenerateGraphFor = function(filename, idx, curPageIdx) {
 	graphWrapperDomElement.className = 'graph_row_wrapper';
 	graphWrapperDomElement.style.height = this.template.graphHeight;
 
+	let seriesId = Object.keys(this.projectData.series[idx])[0];
 	let leftId = 'left_' + filename;
 	let rightId = 'right_' + filename;
 	let breakoutButtonId = 'breakout_' + filename;
@@ -302,7 +257,7 @@ Supervisor.prototype.regenerateGraphFor = function(filename, idx, curPageIdx) {
 			'</div>' +
 		'</td>' +
 		'<td >' +
-			'<div class="graph"></div>' +
+			`<div class="graph" id="${filename};${seriesId}"></div>` +
 		'</td>';
 
 	this.dygraphs[idx].destroy();
@@ -322,6 +277,8 @@ Supervisor.prototype.regenerateGraphFor = function(filename, idx, curPageIdx) {
 	document.getElementById('left_'+filename).onclick = function() { self.pan(self.dygraphs[idx], -1); };
 	document.getElementById('right_'+filename).onclick = function() { self.pan(self.dygraphs[idx], +1); };
 	document.getElementById('breakout_'+filename).onclick = function() { self.breakout(self.projectData.files[idx][0]); };
+
+	this.shadeGraphSegmentsForFile(filename, this.existentSegmentShade);
 }
 
 Supervisor.prototype.regenerateGraphs = function(pageNum) {
@@ -371,6 +328,54 @@ Supervisor.prototype.breakout = function(fileid) {
 		);
 }
 
+Supervisor.prototype.coalesceSegmentsAndShade = function(incomingSegments) {
+	for (let [filename, seriesMap] of Object.entries(incomingSegments)) {
+		if (!(filename in this.existentSegments)) {
+			this.existentSegments[filename] = {};
+		}
+
+		for (let [seriesId, dataBounds] of Object.entries(seriesMap)) {
+			if (!(seriesId in this.existentSegments[filename])) {
+				this.existentSegments[filename][seriesId] = new Array();
+			}
+
+			this.existentSegments[filename][seriesId] =
+				this.existentSegments[filename][seriesId].concat(dataBounds);
+
+			this.existentSegments[filename][seriesId].sort(function (a, b) {
+				return a[0] - b[0];
+			})
+		}
+
+		if (this.filenamesToIdxs[filename] in this.activeGraphs) {
+			this.shadeGraphSegmentsForFile(filename, this.existentSegmentShade);
+		}
+	}
+}
+
+Supervisor.prototype.activateSegmentCreationMode = function() {
+	this.createdSegments = {};
+	$('#create_segments').attr('disabled', true);
+	$('#submit_segments').attr('disabled', false);
+}
+
+Supervisor.prototype.submitCreatedSegments = function() {
+	if (jQuery.isEmptyObject(this.createdSegments)) {
+		toastr.warning('No created segments to submit!');
+	} else {
+		let self = this;
+		requestHandler.submitVoteSegments(this.project_id, this.createdSegments, function (data) {
+			if (data.success) {
+				self.coalesceSegmentsAndShade(data.newly_created_segments);
+				toastr.success(`Successfully added ${data.num_added} segments`);
+			}
+		});
+	}
+	$('#create_segments').attr('disabled', false);
+	$('#submit_segments').attr('disabled', true);
+	this.createdSegments = null;
+}
+
 // following three functions copied from third example found [here](https://dygraphs.com/options.html#dateWindow)
 Supervisor.prototype.pan = function(graph, dir) {
 	let curRange = graph.xAxisRange();
@@ -415,7 +420,7 @@ Supervisor.prototype.renderStatsFor = function(labeler) {
 Supervisor.prototype.recalculateVotes = function () {
 	// ask backend to segment all series' and vote on subsequent segments, then return them all
 	let self = this;
-	requestHandler.requestSupervisorUpdatedTimeSegmentPayload(this.project_id, this.activeLF, this.voteWindow, function(data) {
+	requestHandler.getVotes(this.project_id, this.activeLF, function(data) {
 		self.replaceShadeState(data.labeling_function_votes, data.time_segment_end_indices, 0);
 		self.shadeTimeSegmentsWithVotes();
 		// turn off loader now that we've received data
@@ -436,6 +441,34 @@ Supervisor.prototype.shadeTimeSegmentsWithVotes = function() {
 	}
 }
 
+Supervisor.prototype.shadeGraphSegmentsForFile = function(filename, color) {
+	if (filename in this.existentSegments) {
+		for (let [seriesId, dataBoundsArr] of Object.entries(this.existentSegments[filename])) {
+			this.shadeGraphSegments(this.dygraphs[this.filenamesToIdxs[filename]], dataBoundsArr, color);
+		}
+	}
+}
+Supervisor.prototype.shadeGraphSegments = function(graph, dataBoundsArray, color) {
+	let self = this;
+	graph.updateOptions({
+		underlayCallback: function(canvas, area, g) {
+			for (let [leftData, rightData] of dataBoundsArray) {
+				let bottomLeft = g.toDomCoords(leftData, -20);
+				let topRight = g.toDomCoords(rightData, +20);
+				left = bottomLeft[0];
+				right = topRight[0];
+				canvas.fillStyle = color;
+				canvas.fillRect(left, area.y, right-left, area.h);
+			}
+			// get start and end timestamps
+			// let bottomLeft = g.toDomCoords(left, -20);
+			// let topRight = g.toDomCoords(right, +20);
+			// left = bottomLeft[0];
+			// right = topRight[0];
+		}
+	});
+}
+
 Supervisor.prototype.shadeGraph = function(graphIdx) {
 	let graph = this.dygraphs[graphIdx];
 	let endIndices = this.timeSegmentEndIndices[graphIdx];
@@ -444,7 +477,6 @@ Supervisor.prototype.shadeGraph = function(graphIdx) {
 	graph.updateOptions({
 		underlayCallback: function(canvas, area, g) {
 			let startIdx = 0;
-			let alternating = false;
 			for (let [bucketIdx, endIdx] of endIndices.entries()) {
 				if (startIdx === endIdx) {
 					break;
@@ -460,13 +492,8 @@ Supervisor.prototype.shadeGraph = function(graphIdx) {
 				let vote = self.lfVotesByTimeSegment[graphIdx][bucketIdx];
 				let color = self.votesToColors[vote];
 				canvas.fillStyle = color;
-				// if (alternating) {
-				// } else {
-				// 	canvas.fillStyle = "rgba(102, 255, 255, 1.0)";
-				// }
 				canvas.fillRect(left, area.y, right-left, area.h);
 				startIdx = endIdx;
-				alternating = !alternating;
 			}
 		},
 		legendFormatter: function(data) {
@@ -706,7 +733,7 @@ Supervisor.prototype.getLFColorByTitle = function(lfTitle) {
 	this.lfTitleToColor[lfTitle];
 }
 
-Supervisor.prototype.buildGraph = function(fileName) {
+Supervisor.prototype.buildGraph = function(fileName, seriesId) {
 
 	// Create the graph wrapper dom element
 	let graphWrapperDomElement = document.createElement('tr');
@@ -727,7 +754,7 @@ Supervisor.prototype.buildGraph = function(fileName) {
 			'</div>' +
 		'</td>' +
 		'<td >' +
-			'<div class="graph"></div>' +
+			`<div class="graph" id="${fileName};${seriesId}"></div>` +
 		'</td>';
 
 
@@ -755,6 +782,98 @@ Supervisor.prototype.buildGraph = function(fileName) {
         'graphDomElement': graphDomElement,
         'rightGraphDomElement': rightGraphDomElement}
 };
+
+// Handle mouse-down for pan & zoom
+Supervisor.prototype.handleMouseDown = function(event, g, context) {
+
+	context.initializeMouseDown(event, g, context);
+
+	if (event.altKey) {
+		handleAnnotationHighlightStart(event, g, context);
+	}
+	else if (event.shiftKey) {
+		Dygraph.startZoom(event, g, context);
+	} else {
+		context.medViewPanningMouseMoved = false;
+		Dygraph.startPan(event, g, context);
+	}
+
+}
+
+function get(obj, key, defaultVal) {
+
+}
+
+// Handle mouse-up for pan & zoom.
+Supervisor.prototype.handleMouseUp = function(event, g, context) {
+	if (this.createdSegments !== null) {
+		// in segment creation mode
+
+		//add segment bounds to corresponding file > series list
+		const [fileName, seriesId] = g.maindiv_.id.split(';');
+		if (!(fileName in this.createdSegments)) {
+			// add it
+			this.createdSegments[fileName] = {};
+		}
+		if (!(seriesId in this.createdSegments[fileName])) {
+			this.createdSegments[fileName][seriesId] = new Array();
+		}
+		let left = g.toDataXCoord(context.dragStartX);
+		let right = g.toDataXCoord(context.dragEndX);
+		this.createdSegments[fileName][seriesId].push([left, right])
+		this.shadeGraphSegments(g, this.createdSegments[fileName][seriesId], this.prospectiveSegmentShade);
+	} else {
+		// perform normal zooming behavior
+		Dygraph.endZoom(event, g, context);
+	}
+
+	// Dygraph.startZoom(event, g, context);
+	// Dygraph.endZoom(event, g, context);
+	// if (context.mvIsAnnotating) {
+	// 	handleAnnotationHighlightEnd(event, g, context, this);
+	// }
+	// else if (context.isZooming) {
+	// 	Dygraph.endZoom(event, g, context);
+	// 	if ('file' in this) {
+	// 		this.file.updateCurrentViewData();
+	// 	} else {
+	// 		this.updateCurrentViewData();
+	// 	}
+	// }
+	// else if (context.isPanning) {
+	// 	if (context.medViewPanningMouseMoved) {
+	// 		if ('file' in this) {
+	// 			this.file.updateCurrentViewData();
+	// 		} else {
+	// 			this.updateCurrentViewData();
+	// 		}
+	// 		context.medViewPanningMouseMoved = false;
+	// 	}
+	// 	Dygraph.endPan(event, g, context);
+	// }
+
+}
+
+// Handle mouse-move for pan & zoom.
+Supervisor.prototype.handleMouseMove = function(event, g, context) {
+
+	// Dygraph.moveZoom(event, g, context);
+	Dygraph.moveZoom(event, g, context);
+	// console.log(event, context);
+	// Dygraph.startZoom(event, g, context);
+	// Dygraph.endZoom(event, g, context);
+	// if (context.mvIsAnnotating) {
+	// 	handleAnnotationHighlightMove(event, g, context);
+	// }
+	// else if (context.isZooming) {
+	// 	Dygraph.moveZoom(event, g, context);
+	// }
+	// else if (context.isPanning) {
+		// context.medViewPanningMouseMoved = true;
+		// Dygraph.movePan(event, g, context);
+	// }
+
+}
 
 Supervisor.prototype.createDygraph = function(graphDomElementObj, series, eventData) {
     let timeWindow = this.globalXExtremes;
@@ -787,8 +906,9 @@ Supervisor.prototype.createDygraph = function(graphDomElementObj, series, eventD
 		drawPoints: true,
 		// gridLineColor: this.template.gridColor,
 		interactionModel: {
-			'mousedown': handleMouseDown.bind(this),
-			'mouseup': handleMouseUp.bind(this),
+			'mousedown': this.handleMouseDown.bind(this),
+			'mouseup': this.handleMouseUp.bind(this),
+			'mousemove': this.handleMouseMove.bind(this),
 		},
 		// interactionModel: {
 		// 	'mousedown': handleMouseDown.bind(this),

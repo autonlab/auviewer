@@ -60,17 +60,9 @@
 			<h5 class="card-title">{{project_name}}</h5>
 			<ul class="list-group list-group-flush">
 			<li class="list-group-item">
-				<h7 class="top-buffer">Slice size to vote on</h7>
-				<div class="btn-group btn-block btn-group-toggle" data-toggle="buttons">
-					<label class="btn btn-primary" id="30_min_vote">
-						<input type="radio" name="options"  autocomplete="off" checked> 30 min</input>
-					</label>
-					<label class="btn btn-primary" id="60_min_vote" >
-						<input type="radio" name="options" autocomplete="off"> 1 hr</input>
-					</label>
-					<label class="btn btn-primary" id="120_min_vote">
-						<input type="radio" name="options" autocomplete="off"> 2 hr</input>
-					</label>
+				<div class="btn-group btn-block">
+					<button type="button" id="create_segments" onclick="globalStateManager.currentSupervisor.activateSegmentCreationMode()" class="btn btn-primary">Add segments</button>
+					<button type="button" id="submit_segments" onclick="globalStateManager.currentSupervisor.submitCreatedSegments()" class="btn btn-primary" disabled>Submit created segments</button>
 				</div>
 				
 			</li>
@@ -92,7 +84,7 @@
 					</div>
 			</li>
 			<li class="list-group-item">
-				<button type="button" id="recalculateVotes" class="btn btn-primary btn-block" onclick="globalStateManager.currentSupervisor.recalculateVotes()">Calculate votes on time slice</button>
+				<button type="button" id="recalculateVotes" class="btn btn-primary btn-block" onclick="globalStateManager.currentSupervisor.recalculateVotes()">Calculate votes on created segments</button>
 			</li>
 			</ul>
 
@@ -191,6 +183,7 @@
     </div>
   </div>
 </div>
+
 
 </div>
 {% endblock %}

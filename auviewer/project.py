@@ -155,14 +155,14 @@ class Project:
                 return f
         return None
 
-    def getFileByFilename(self, filename):
-        """Returns the file with matching filename or None."""
+    def getFileByName(self, name):
+        """Returns the file with matching ID or None."""
         for f in self.files:
-            if f.name == filename:
+            if f.name == name:
                 return f
         return None
-    def getConstituentFilesPayload(self):
-        files = self.files[:5]
+
+    def makeFilesPayload(self, files):
         outputObject = {
             'files': [[f.id, f.origFilePathObj.name] for f in files],
             'series': [],
@@ -326,6 +326,58 @@ class Project:
             votes = labeler()
             bucketedVotes.append(votes)
         return bucketedVotes, endIndices
+
+    def getVotes(self):
+        pass
+
+    def getSegments(self):
+        allSegments = models.Segment.query.filter_by(project_id=self.id).all()
+        res = dict()
+        for segment in allSegments:
+            filename = self.getFile(segment.file_id).name
+            series = segment.series
+            bound = [segment.left, segment.right]
+            res[filename] = res.get(filename, dict())
+            print(res)
+            res[filename][series] = res[filename].get(series, list())
+            res[filename][series].append(bound)
+        return res
+
+    def createSegments(self, segmentsMap):
+        beforeNum = len(models.Segment.query.filter_by(project_id=self.id).all())
+        '''
+        segmentsMap expected to be of form:
+            { fId1: { seriesId1: [[left1, right1],
+                                  [left2, right2]
+                                 ],
+                      seriesId2: [ ...,
+                                   ...
+                                 ]
+                    },
+              fId2: {...}
+            }
+        '''
+        newSegments = []
+        for filename, seriesMap in segmentsMap.items():
+            for seriesId, spans in seriesMap.items():
+                for span in spans:
+                    left, right = span
+                    newSegment = models.Segment(
+                        project_id=self.id,
+                        file_id=self.getFileByName(filename).id,
+                        series=seriesId,
+                        left=left,
+                        right=right
+                    )
+                    newSegments.append(newSegment)
+        models.db.session.add_all(newSegments)
+        models.db.session.commit()
+
+        afterNum = len(models.Segment.query.filter_by(project_id=self.id).all())
+        success = (afterNum-beforeNum)==len(newSegments)
+        print(beforeNum, afterNum, len(newSegments))
+        print(f'It is {success} that we made as many segments as we intended')
+        return segmentsMap, True, len(newSegments)
     
     def getLFCode(self, lfNames, lfModule, thresholds, labels):
         curSeries = self.files[0].series[0].getFullOutput().get('data') #for now assuming a single series, hence the 0-index

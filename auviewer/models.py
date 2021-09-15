@@ -43,6 +43,17 @@ labelerThresholds = db.Table('labeler_thresholds',
     db.Column('labeler_id', db.Integer, db.ForeignKey('labelers.id'), primary_key=True),
     db.Column('threshold_id', db.Integer, db.ForeignKey('thresholds.id'), primary_key=True))
 
+class Segment(db.Model):
+    __tablename__ = 'segments'
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='RESTRICT'), nullable=False)
+    file_id = db.Column(db.Integer, db.ForeignKey('files.id', ondelete='RESTRICT'), nullable=False)
+    series = db.Column(db.String(255), nullable=False)
+    left = db.Column(db.Float, nullable=True)
+    right = db.Column(db.Float, nullable=True)
+
+    votes = db.relationship("Vote")
+
 class Labeler(db.Model):
     __tablename__ = 'labelers'
     id = db.Column(db.Integer, primary_key=True)
@@ -50,7 +61,7 @@ class Labeler(db.Model):
     title = db.Column(db.String(255), nullable=False)
 
     thresholds = db.relationship("Threshold", secondary=labelerThresholds)
-    votes = db.relationship("Vote", order_by="Vote.leftIndex", collection_class=ordering_list('leftIndex'))
+    # votes = db.relationship("Vote", order_by="Vote.leftIndex", collection_class=ordering_list('leftIndex'))
 
 class Threshold(db.Model):
     __tablename__ = 'thresholds'
@@ -66,8 +77,7 @@ class Vote(db.Model):
     labeler_id = db.Column(db.Integer, db.ForeignKey('labelers.id', ondelete='CASCADE'), nullable=False)
     file_id = db.Column(db.Integer, db.ForeignKey('files.id', ondelete='CASCADE'), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id', ondelete='CASCADE'), nullable=False)
-    leftIndex = db.Column(db.Integer, nullable=True)
-    rightIndex = db.Column(db.Integer, nullable=True)
+    segment_id = db.Column(db.Integer, db.ForeignKey('segments.id', ondelete='CASCADE'), nullable=False)
 
     category = db.relationship("Category")
 

@@ -107,11 +107,19 @@ RequestHandler.prototype.requestAggregateLabelerStats = function(project_id, act
 	});
 }
 
-RequestHandler.prototype.requestSupervisorUpdatedTimeSegmentPayload = function(project_id, active_lf, time_segment, callback) {
-	this._newRequest(callback, globalAppConfig.updateSupervisorTimeSegmentURL, {
+RequestHandler.prototype.submitVoteSegments = function(project_id, created_segments, callback) {
+	this._customRequest(callback, globalAppConfig.submitVoteSegmentsURL, {
+		project_id: project_id
+	},
+	{
+		vote_segments: created_segments
+	}, "POST", true);
+};
+
+RequestHandler.prototype.getVotes = function(project_id, active_lf, callback) {
+	this._newRequest(callback, globalAppConfig.getVotesURL, {
 		project_id: project_id,
-		active_lf: active_lf,
-		time_segment: time_segment
+		active_lf: active_lf
 	});
 };
 
