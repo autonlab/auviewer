@@ -8,6 +8,7 @@ function Supervisor(payload) {
 
 	this.prospectiveSegmentShade = '#D3D3D3'; // light grey
 	this.existentSegmentShade = '#A9A9A9'; // dark grey
+	this.toBeDeletedShade = '#E97451'; //burnt sienna, shade of red
 
 	/*
 	Holds the min [0] and max [1] x-value across all graphs currently displayed.
@@ -112,8 +113,9 @@ Supervisor.prototype.initModel = function(data) {
 	this.domElementObjs = new Array(this.projectData.files.length);
 	this.dygraphs = new Array(this.projectData.files.length);
 
-	this.existentSegments = this.projectData.existent_segments;
+	this.existentSegments = this.addColorToSegments(this.projectData.existent_segments, this.existentSegmentShade);
 	this.createdSegments = null;
+	this.allSegments = JSON.parse(JSON.stringify(this.existentSegments));
 
 	this.priorQuerySettings = {
 		'random': false,
@@ -215,6 +217,32 @@ Supervisor.prototype.initModel = function(data) {
 	}.bind(this));
 }
 
+Supervisor.prototype.addColorToSegments = function(segments, color) {
+	for (let [fileId, seriesBounds] of Object.entries(segments)) {
+		for (let [seriesId, bounds] of Object.entries(seriesBounds)) {
+			let newBounds = new Array(bounds.length);
+			for (let i = 0; i < bounds.length; i++) {
+				newBounds[i] = [bounds[i][0], bounds[i][1], color];
+			}
+			segments[fileId][seriesId] = newBounds;
+		}
+	}
+	return segments;
+}
+
+Supervisor.prototype.clearColorFromSegments = function(segments) {
+	for (let [fileId, seriesBounds] of Object.entries(segments)) {
+		for (let [seriesId, bounds] of Object.entries(seriesBounds)) {
+			let newBounds = new Array(bounds.length);
+			for (let i = 0; i < bounds.length; i++) {
+				newBounds[i] = [bounds[i][0], bounds[i][1]];
+			}
+			segments[fileId][seriesId] = newBounds;
+		}
+	}
+	return segments;
+}
+
 Supervisor.prototype.clearModel = function() {
 	for (let domElementObj of this.domElementObjs) {
 		domElementObj.graphDomElement.remove();
@@ -278,7 +306,7 @@ Supervisor.prototype.regenerateGraphFor = function(filename, idx, curPageIdx) {
 	document.getElementById('right_'+filename).onclick = function() { self.pan(self.dygraphs[idx], +1); };
 	document.getElementById('breakout_'+filename).onclick = function() { self.breakout(self.projectData.files[idx][0]); };
 
-	this.shadeGraphSegmentsForFile(filename, this.existentSegmentShade);
+	this.shadeGraphSegmentsForFile(filename);
 }
 
 Supervisor.prototype.regenerateGraphs = function(pageNum) {
@@ -328,7 +356,7 @@ Supervisor.prototype.breakout = function(fileid) {
 		);
 }
 
-Supervisor.prototype.coalesceSegmentsAndShade = function(incomingSegments) {
+Supervisor.prototype.coalesceSegmentsAndShade = function(incomingSegments, color) {
 	for (let [filename, seriesMap] of Object.entries(incomingSegments)) {
 		if (!(filename in this.existentSegments)) {
 			this.existentSegments[filename] = {};
@@ -339,8 +367,10 @@ Supervisor.prototype.coalesceSegmentsAndShade = function(incomingSegments) {
 				this.existentSegments[filename][seriesId] = new Array();
 			}
 
+			let newDataBounds = [dataBounds[0], dataBounds[1], color];
+
 			this.existentSegments[filename][seriesId] =
-				this.existentSegments[filename][seriesId].concat(dataBounds);
+				this.existentSegments[filename][seriesId].concat(newDataBounds);
 
 			this.existentSegments[filename][seriesId].sort(function (a, b) {
 				return a[0] - b[0];
@@ -348,7 +378,7 @@ Supervisor.prototype.coalesceSegmentsAndShade = function(incomingSegments) {
 		}
 
 		if (this.filenamesToIdxs[filename] in this.activeGraphs) {
-			this.shadeGraphSegmentsForFile(filename, this.existentSegmentShade);
+			this.shadeGraphSegmentsForFile(filename);
 		}
 	}
 }
@@ -364,9 +394,16 @@ Supervisor.prototype.submitCreatedSegments = function() {
 		toastr.warning('No created segments to submit!');
 	} else {
 		let self = this;
-		requestHandler.submitVoteSegments(this.project_id, this.createdSegments, function (data) {
+		requestHandler.submitVoteSegments(this.project_id, this.clearColorFromSegments(this.createdSegments), function (data) {
 			if (data.success) {
-				self.coalesceSegmentsAndShade(data.newly_created_segments);
+				// self.coalesceSegmentsAndShade(data.newly_created_segments, this.existentSegmentShade);
+				self.allSegments = self.addColorToSegments(self.allSegments, self.existentSegmentShade);
+				self.existentSegments = JSON.parse(JSON.stringify(self.allSegments));
+				for (let filename of Object.keys(self.existentSegments)) {
+					if (self.filenamesToIdxs[filename] in self.activeGraphs) {
+						self.shadeGraphSegmentsForFile(filename);
+					}
+				}
 				toastr.success(`Successfully added ${data.num_added} segments`);
 			}
 		});
@@ -441,18 +478,18 @@ Supervisor.prototype.shadeTimeSegmentsWithVotes = function() {
 	}
 }
 
-Supervisor.prototype.shadeGraphSegmentsForFile = function(filename, color) {
+Supervisor.prototype.shadeGraphSegmentsForFile = function(filename) {
 	if (filename in this.existentSegments) {
 		for (let [seriesId, dataBoundsArr] of Object.entries(this.existentSegments[filename])) {
-			this.shadeGraphSegments(this.dygraphs[this.filenamesToIdxs[filename]], dataBoundsArr, color);
+			this.shadeGraphSegments(this.dygraphs[this.filenamesToIdxs[filename]], dataBoundsArr);
 		}
 	}
 }
-Supervisor.prototype.shadeGraphSegments = function(graph, dataBoundsArray, color) {
+Supervisor.prototype.shadeGraphSegments = function(graph, dataBoundsArray) {
 	let self = this;
 	graph.updateOptions({
 		underlayCallback: function(canvas, area, g) {
-			for (let [leftData, rightData] of dataBoundsArray) {
+			for (let [leftData, rightData, color] of dataBoundsArray) {
 				let bottomLeft = g.toDomCoords(leftData, -20);
 				let topRight = g.toDomCoords(rightData, +20);
 				left = bottomLeft[0];
@@ -804,6 +841,17 @@ function get(obj, key, defaultVal) {
 
 }
 
+Supervisor.prototype.addSegmentTo = function(segmentObj, filename, seriesId, newSegment) {
+	if (!(filename in segmentObj)) {
+		// add it
+		segmentObj[filename] = {};
+	}
+	if (!(seriesId in segmentObj[filename])) {
+		segmentObj[filename][seriesId] = new Array();
+	}
+	segmentObj[filename][seriesId].push(newSegment);
+}
+
 // Handle mouse-up for pan & zoom.
 Supervisor.prototype.handleMouseUp = function(event, g, context) {
 	if (this.createdSegments !== null) {
@@ -811,17 +859,11 @@ Supervisor.prototype.handleMouseUp = function(event, g, context) {
 
 		//add segment bounds to corresponding file > series list
 		const [fileName, seriesId] = g.maindiv_.id.split(';');
-		if (!(fileName in this.createdSegments)) {
-			// add it
-			this.createdSegments[fileName] = {};
-		}
-		if (!(seriesId in this.createdSegments[fileName])) {
-			this.createdSegments[fileName][seriesId] = new Array();
-		}
 		let left = g.toDataXCoord(context.dragStartX);
 		let right = g.toDataXCoord(context.dragEndX);
-		this.createdSegments[fileName][seriesId].push([left, right])
-		this.shadeGraphSegments(g, this.createdSegments[fileName][seriesId], this.prospectiveSegmentShade);
+		this.addSegmentTo(this.createdSegments, fileName, seriesId, [left, right, this.prospectiveSegmentShade]);
+		this.addSegmentTo(this.allSegments, fileName, seriesId, [left, right, this.prospectiveSegmentShade]);
+		this.shadeGraphSegments(g, this.allSegments[fileName][seriesId]);
 	} else {
 		// perform normal zooming behavior
 		Dygraph.endZoom(event, g, context);
