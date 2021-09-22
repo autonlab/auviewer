@@ -10,6 +10,9 @@ function Supervisor(payload) {
 	this.existentSegmentShade = '#A9A9A9'; // dark grey
 	this.toBeDeletedShade = '#E97451'; //burnt sienna, shade of red
 
+	this.votesCalculated=false;
+	this.statsCalculated=false;
+
 	/*
 	Holds the min [0] and max [1] x-value across all graphs currently displayed.
 	This is calculated in the convertToDateObjsAndUpdateExtremes() function. The
@@ -83,7 +86,7 @@ function Supervisor(payload) {
 		this.initModel(data);
 	}.bind(this));
 
-	toastr.options.timeOut = 1000;
+	toastr.options.timeOut = 3000;
 	toastr.options.positionClass = "toast-bottom-center";
 	toastr.options.showMethod = 'show';
 	toastr.options.hideMethod = 'hide';
@@ -106,21 +109,19 @@ Supervisor.prototype.initModel = function(data) {
 	for (let i = 0; i < this.projectData.files.length; i++) {
 		this.filenamesToIdxs[this.projectData.files[i][1]] = i;
 	}
-	console.log(this.filenamesToIdxs);
 	this.lfVotes = this.projectData.labeling_function_votes;
-	this.lfVotesByTimeSegment = new Array(this.projectData.files.length);
-	this.timeSegmentEndIndices = new Array(this.projectData.files.length);
+
 	this.domElementObjs = new Array(this.projectData.files.length);
 	this.dygraphs = new Array(this.projectData.files.length);
 
-	this.existentSegments = this.addColorToSegments(this.projectData.existent_segments, this.existentSegmentShade);
+	this.allSegments = this.addColorToSegments(this.projectData.existent_segments, this.existentSegmentShade);
 	this.createdSegments = null;
-	this.allSegments = JSON.parse(JSON.stringify(this.existentSegments));
+	this.segmentsToDelete = null;
 
 	this.priorQuerySettings = {
 		'random': false,
 		'lfSelector': this.projectData.labeling_function_titles[0],
-		'voteSelector': this.projectData.labeling_function_votes[0]
+		'voteSelector': this.projectData.labeling_function_possible_votes[0]
 	};
 
 	for (const [idx, lfTitle] of this.projectData.labeling_function_titles.entries()) {
@@ -217,25 +218,32 @@ Supervisor.prototype.initModel = function(data) {
 	}.bind(this));
 }
 
-Supervisor.prototype.addColorToSegments = function(segments, color) {
-	for (let [fileId, seriesBounds] of Object.entries(segments)) {
+Supervisor.prototype.addIdToSegments = function(targetSegments, sourceSegments) {
+	for (let [fileId, seriesBounds] of Object.entries(sourceSegments)) {
 		for (let [seriesId, bounds] of Object.entries(seriesBounds)) {
-			let newBounds = new Array(bounds.length);
-			for (let i = 0; i < bounds.length; i++) {
-				newBounds[i] = [bounds[i][0], bounds[i][1], color];
+			for (let sourceBounds of bounds) {
+				for (let [i, targetBounds] of targetSegments[fileId][seriesId].entries()) {
+					//find corresponding targetBound and add sourceBound.id to it
+					if (targetBounds.left == sourceBounds.left && targetBounds.right == sourceBounds.right) {
+						Object.assign(targetBounds, {'id': sourceBounds.id});
+					}
+				}
 			}
-			segments[fileId][seriesId] = newBounds;
 		}
 	}
-	return segments;
+	return targetSegments;
 }
 
-Supervisor.prototype.clearColorFromSegments = function(segments) {
+Supervisor.prototype.addColorToSegments = function(segments, color) {
+	let colorObj = {
+		'color': color
+	};
 	for (let [fileId, seriesBounds] of Object.entries(segments)) {
 		for (let [seriesId, bounds] of Object.entries(seriesBounds)) {
-			let newBounds = new Array(bounds.length);
-			for (let i = 0; i < bounds.length; i++) {
-				newBounds[i] = [bounds[i][0], bounds[i][1]];
+			let newBounds = new Array();
+			for (let bound of bounds) {
+				let newBound = Object.assign(bound, colorObj);
+				newBounds.push(newBound)
 			}
 			segments[fileId][seriesId] = newBounds;
 		}
@@ -306,14 +314,14 @@ Supervisor.prototype.regenerateGraphFor = function(filename, idx, curPageIdx) {
 	document.getElementById('right_'+filename).onclick = function() { self.pan(self.dygraphs[idx], +1); };
 	document.getElementById('breakout_'+filename).onclick = function() { self.breakout(self.projectData.files[idx][0]); };
 
-	this.shadeGraphSegmentsForFile(filename);
+	this.shadeGraphSegmentsForFile(filename, this.votesCalculated);
 }
 
 Supervisor.prototype.regenerateGraphs = function(pageNum) {
 	let startIdx = pageNum * this.seriesOnPage;
 	let endIdx = Math.min((pageNum + 1) * this.seriesOnPage, this.projectData.files.length);
 	this.globalYExtremes[1] = 0;
-	this.activeGraphs = new Array(this.seriesOnPage);
+	// this.activeGraphs = new Array(this.seriesOnPage);
 	for (let idx = startIdx; idx < endIdx; idx++) {
 		let series = Object.values(this.projectData.series[idx])[0].data;
 		for (let i = 0; i < series.length; i++) {
@@ -330,9 +338,6 @@ Supervisor.prototype.regenerateGraphs = function(pageNum) {
 		j++;
 	}
 
-	if (this.timeSegmentEndIndices[startIdx]) {
-		this.shadeTimeSegmentsWithVotes();
-	}
 	this.setTimeWindow(this.timeWindow, forceAdjustment=true);
 }
 
@@ -356,61 +361,87 @@ Supervisor.prototype.breakout = function(fileid) {
 		);
 }
 
-Supervisor.prototype.coalesceSegmentsAndShade = function(incomingSegments, color) {
-	for (let [filename, seriesMap] of Object.entries(incomingSegments)) {
-		if (!(filename in this.existentSegments)) {
-			this.existentSegments[filename] = {};
-		}
+Supervisor.prototype.activateSegmentCreationMode = function() {
+	if (this.segmentsToDelete !== null) {
+		toastr.warning('Exit segment deletion mode to create segments!');
+	} else {
+		this.createdSegments = {};
+		$('#create_segments').attr('onclick','globalStateManager.currentSupervisor.submitCreatedSegments()');
+		$('#create_segments').text('Submit created segments');
+	}
+}
 
-		for (let [seriesId, dataBounds] of Object.entries(seriesMap)) {
-			if (!(seriesId in this.existentSegments[filename])) {
-				this.existentSegments[filename][seriesId] = new Array();
+Supervisor.prototype.activateSegmentDeletionMode = function () {
+	if (this.createdSegments !== null) {
+		toastr.warning('Exit segment creation mode to delete segments!');
+	} else {
+		this.segmentsToDelete = {};
+		$('#delete_segments').attr('onclick','globalStateManager.currentSupervisor.deleteSegments()');
+		$('#delete_segments').text('Delete selected segments');
+	}
+}
+
+Supervisor.prototype.deleteSegments = function () {
+	if (this.createdSegments !== null) {
+		toastr.warning('Exit segment creation mode to delete segments!');
+	} else if (jQuery.isEmptyObject(this.segmentsToDelete)) {
+		toastr.warning('No segments selected for deletion!');
+	} else {
+		let self = this;
+		requestHandler.deleteVoteSegments(this.project_id, this.segmentsToDelete, function (data) {
+			if (data.success) {
+				self.removeSegmentsByColor(self.allSegments, self.toBeDeletedShade);
+				self.reshadeActiveGraphs(self.votesCalculated);
+				toastr.success(`Successfully deleted ${data.number_deleted} segments`);
 			}
+			$('#delete_segments').attr('onclick','globalStateManager.currentSupervisor.activateSegmentDeletionMode()');
+			$('#delete_segments').text('Delete segments');
+			self.segmentsToDelete = null;
+		})
+	}
+}
 
-			let newDataBounds = [dataBounds[0], dataBounds[1], color];
-
-			this.existentSegments[filename][seriesId] =
-				this.existentSegments[filename][seriesId].concat(newDataBounds);
-
-			this.existentSegments[filename][seriesId].sort(function (a, b) {
-				return a[0] - b[0];
-			})
-		}
-
-		if (this.filenamesToIdxs[filename] in this.activeGraphs) {
-			this.shadeGraphSegmentsForFile(filename);
+Supervisor.prototype.removeSegmentsByColor = function(segmentObj, color) {
+	for (let [filename, seriesObj] of Object.entries(segmentObj)) {
+		for (let [series, boundsArr] of Object.entries(seriesObj)) {
+			let newBoundsArr = new Array();
+			for (let bounds of boundsArr) {
+				if (bounds.color !== color) {
+					newBoundsArr.push(bounds);
+				}
+			}
+			segmentObj[filename][series] = newBoundsArr;
 		}
 	}
 }
 
-Supervisor.prototype.activateSegmentCreationMode = function() {
-	this.createdSegments = {};
-	$('#create_segments').attr('disabled', true);
-	$('#submit_segments').attr('disabled', false);
+Supervisor.prototype.reshadeActiveGraphs = function(withVotes=false) {
+	for (let filename of Object.keys(this.allSegments)) {
+		if (this.activeGraphs.includes(this.filenamesToIdxs[filename])) {
+			this.shadeGraphSegmentsForFile(filename, withVotes);
+		} 
+	}
 }
 
 Supervisor.prototype.submitCreatedSegments = function() {
-	if (jQuery.isEmptyObject(this.createdSegments)) {
+	if (this.segmentsToDelete !== null) {
+		toastr.warning('Exit segment deletion mode to create segments!');
+	} else if (jQuery.isEmptyObject(this.createdSegments)) {
 		toastr.warning('No created segments to submit!');
 	} else {
 		let self = this;
-		requestHandler.submitVoteSegments(this.project_id, this.clearColorFromSegments(this.createdSegments), function (data) {
+		requestHandler.submitVoteSegments(this.project_id, this.createdSegments, function (data) {
 			if (data.success) {
-				// self.coalesceSegmentsAndShade(data.newly_created_segments, this.existentSegmentShade);
 				self.allSegments = self.addColorToSegments(self.allSegments, self.existentSegmentShade);
-				self.existentSegments = JSON.parse(JSON.stringify(self.allSegments));
-				for (let filename of Object.keys(self.existentSegments)) {
-					if (self.filenamesToIdxs[filename] in self.activeGraphs) {
-						self.shadeGraphSegmentsForFile(filename);
-					}
-				}
+				self.allSegments = self.addIdToSegments(self.allSegments, data.newly_created_segments);
+				self.reshadeActiveGraphs(self.votesCalculated);
 				toastr.success(`Successfully added ${data.num_added} segments`);
 			}
+			self.createdSegments = null;
+			$('#create_segments').attr('onclick','globalStateManager.currentSupervisor.activateSegmentCreationMode()');
+			$('#create_segments').text('Add segments');
 		});
 	}
-	$('#create_segments').attr('disabled', false);
-	$('#submit_segments').attr('disabled', true);
-	this.createdSegments = null;
 }
 
 // following three functions copied from third example found [here](https://dygraphs.com/options.html#dateWindow)
@@ -444,22 +475,53 @@ Supervisor.prototype.calculateStats = function () {
 	let self=this;
 	requestHandler.requestAggregateLabelerStats(this.project_id, this.activeLF, function (data) {
 		self.labelerStatistics = data;
-		self.renderStatsFor(self.activeLF);
+		if (self.statsCalculated) {
+			self.clearStatsPane();
+		}
+		self.renderStats();
+		self.statsCalculated = true;
 	});
 }
 
-Supervisor.prototype.renderStatsFor = function(labeler) {
-	let stats = this.labelerStatistics[labeler];
-	let x = document.createElement('h5');
-	x.innerText = `Coverage: ${stats.coverage}`;
+Supervisor.prototype.renderStats = function() {
+	let stats = this.labelerStatistics[this.activeLF];
+	let trStringList = [];
+	for (let [statTitle, statValue] of Object.entries(stats)) {
+		if (statValue !== null) {
+			trStringList.push(
+			'<tr>'+
+				`<th scope="row">${statTitle}</th>`+
+				`<td>${statValue.toFixed(3)}</td>` +
+			'</tr>'
+			);
+		}
+	}
+	let x = document.createElement('table');
+	x.className = 'table table-sm table-striped table-bordered mb-2';
+	x.innerHTML = 
+		'<tbody>' +
+			trStringList.join('');
+		'</tbody>';
 	document.getElementById('stats_pane').appendChild(x);
 }
+
+Supervisor.prototype.clearStatsPane = function() {
+	document.getElementById('stats_pane').removeChild(document.getElementById('stats_pane').lastChild);
+}
+
 Supervisor.prototype.recalculateVotes = function () {
 	// ask backend to segment all series' and vote on subsequent segments, then return them all
 	let self = this;
-	requestHandler.getVotes(this.project_id, this.activeLF, function(data) {
-		self.replaceShadeState(data.labeling_function_votes, data.time_segment_end_indices, 0);
-		self.shadeTimeSegmentsWithVotes();
+	requestHandler.getVotes(this.project_id, [], function(data) {
+		self.labeling_function_votes = data.labeling_function_votes;
+		self.votesCalculated = true;
+		$('#calculate_stats').removeAttr('disabled');
+		if (self.statsCalculated) {
+			self.clearStatsPane();
+			self.renderStats();
+		}
+		document.getElementById('shadingLegend').style.display = 'inline-block';
+		self.reshadeActiveGraphs(withVotes=true);
 		// turn off loader now that we've received data
 		$('#loadMe').modal("hide");
 	});
@@ -472,30 +534,36 @@ Supervisor.prototype.recalculateVotes = function () {
 }
 
 Supervisor.prototype.shadeTimeSegmentsWithVotes = function() {
-	document.getElementById('shadingLegend').style.display = 'inline-block';
 	for (let activeGraphIdx of this.activeGraphs) {
 		this.shadeGraph(activeGraphIdx);
 	}
 }
 
-Supervisor.prototype.shadeGraphSegmentsForFile = function(filename) {
-	if (filename in this.existentSegments) {
-		for (let [seriesId, dataBoundsArr] of Object.entries(this.existentSegments[filename])) {
-			this.shadeGraphSegments(this.dygraphs[this.filenamesToIdxs[filename]], dataBoundsArr);
+Supervisor.prototype.shadeGraphSegmentsForFile = function(filename, withVotes=false) {
+	if (filename in this.allSegments) {
+		for (let [seriesId, dataBoundsArr] of Object.entries(this.allSegments[filename])) {
+			this.shadeGraphSegments(this.dygraphs[this.filenamesToIdxs[filename]], dataBoundsArr, withVotes);
 		}
 	}
 }
-Supervisor.prototype.shadeGraphSegments = function(graph, dataBoundsArray) {
+Supervisor.prototype.shadeGraphSegments = function(graph, dataBoundsArray, withVotes=false) {
 	let self = this;
 	graph.updateOptions({
 		underlayCallback: function(canvas, area, g) {
-			for (let [leftData, rightData, color] of dataBoundsArray) {
-				let bottomLeft = g.toDomCoords(leftData, -20);
-				let topRight = g.toDomCoords(rightData, +20);
+			for (let bounds of dataBoundsArray) {
+				let bottomLeft = g.toDomCoords(bounds.left, -20);
+				let topRight = g.toDomCoords(bounds.right, +20);
 				left = bottomLeft[0];
 				right = topRight[0];
-				canvas.fillStyle = color;
-				canvas.fillRect(left, area.y, right-left, area.h);
+				if (withVotes && (bounds.color !== self.toBeDeletedShade) && (bounds.id in self.labeling_function_votes)) {
+					let vote = self.labeling_function_votes[bounds.id][self.lfTitleToIdx[self.activeLF]];
+					let color = self.votesToColors[vote];
+					canvas.fillStyle = color;
+					canvas.fillRect(left, area.y, right-left, area.h);
+				} else {
+					canvas.fillStyle = bounds.color;
+					canvas.fillRect(left, area.y, right-left, area.h);
+				}
 			}
 			// get start and end timestamps
 			// let bottomLeft = g.toDomCoords(left, -20);
@@ -728,11 +796,17 @@ Supervisor.prototype.replaceShadeState = function(votes, endIndices, startIdx) {
 
 Supervisor.prototype.submitThresholds = function() {
 	// collect current thresholds and values and send them off to update backend
+	let self = this;
 	for (let threshold of this.projectData.labelers_to_thresholds[this.activeLF]) {
-		let value = document.getElementById(threshold).value;
-		console.log(threshold, value);
-		requestHandler.updateThreshold(self.project_id, threshold, value, function () {
-			console.log(threshold + ' successfully updated to value of ' + value);
+		let value = parseFloat(document.getElementById(threshold).value);
+		requestHandler.updateThreshold(this.project_id, threshold, value, function (data) {
+			if (data.success) {
+				toastr.success(`Successfully updated ${threshold}`);
+				self.projectData.thresholds[threshold] = value;
+				self.recalculateVotes();
+			} else {
+				toastr.error(`Something went wrong, failed to update ${threshold}`);
+			}
 		});
 	}
 }
@@ -742,8 +816,20 @@ Supervisor.prototype.onLabelerSelect = function() {
 	this.activeLF = lfSelection.value;
 	// tear down threshold pane
 	this.clearThresholds();
+	if (this.statsCalculated) {
+		this.clearStatsPane();
+	}
 	// replace threshold pane
 	this.createThresholds(lfSelection.value);
+	if (this.votesCalculated) {
+		if (this.statsCalculated) {
+			this.renderStats();
+			toastr.success(`Now showing votes and aggregate statistics for ${this.activeLF}`);
+		} else {
+			toastr.success(`Now showing votes for ${this.activeLF}`);
+		}
+		this.reshadeActiveGraphs(withVotes=true);
+	}
 	return;
 	// const divInQuestion = document.getElementById(lfTitle);
 	// if (divInQuestion.checked) {
@@ -770,20 +856,20 @@ Supervisor.prototype.getLFColorByTitle = function(lfTitle) {
 	this.lfTitleToColor[lfTitle];
 }
 
-Supervisor.prototype.buildGraph = function(fileName, seriesId) {
+Supervisor.prototype.buildGraph = function(filename, seriesId) {
 
 	// Create the graph wrapper dom element
 	let graphWrapperDomElement = document.createElement('tr');
 	graphWrapperDomElement.className = 'graph_row_wrapper';
 	graphWrapperDomElement.style.height = this.template.graphHeight;
-	let leftId = 'left_' + fileName;
-	let rightId = 'right_' + fileName;
-	let breakoutButtonId = 'breakout_' + fileName;
+	let leftId = 'left_' + filename;
+	let rightId = 'right_' + filename;
+	let breakoutButtonId = 'breakout_' + filename;
 	graphWrapperDomElement.innerHTML =
 		// '<td >' +
 		// 	'<div class="labelingFunctionVotes"></div>' +
 		// '</td>' +
-		'<td class="graph_title"><span title="'+this.altText+'">'+fileName+'</span>' +
+		'<td class="graph_title"><span title="'+this.altText+'">'+filename+'</span>' +
 			'<span id="'+breakoutButtonId+'" class="webix_icon wxi-plus"></span>' +
 			'<div class="btn-group" role="group" aria-label="Time series navigation">' +
 				'<button type="button" id="'+leftId+'" class="btn btn-primary"><span class="webix_icon wxi-angle-left"></span></button>' +
@@ -791,7 +877,7 @@ Supervisor.prototype.buildGraph = function(fileName, seriesId) {
 			'</div>' +
 		'</td>' +
 		'<td >' +
-			`<div class="graph" id="${fileName};${seriesId}"></div>` +
+			`<div class="graph" id="${filename};${seriesId}"></div>` +
 		'</td>';
 
 
@@ -820,6 +906,39 @@ Supervisor.prototype.buildGraph = function(fileName, seriesId) {
         'rightGraphDomElement': rightGraphDomElement}
 };
 
+Supervisor.prototype.reshadeSegmentIfClicked = function(segmentObj, filename, seriesId, x, color) {
+	if (!(filename in segmentObj)) {
+		return null;
+	}
+	if (!(seriesId in segmentObj[filename])) {
+		return null;
+	}
+	for (let [i, segment] of segmentObj[filename][seriesId].entries()) {
+		if (segment.left <= x && x <= segment.right) {
+			//in bounds
+			let result = Object.assign(segment, {'color': color});
+			segmentObj[filename][seriesId][i] = result;
+			return result;
+		}
+	}
+
+	// no hit
+	return null;
+}
+
+Supervisor.prototype.handleClick = function(event, g, context) {
+
+	if (this.segmentsToDelete !== null) {
+		const [filename, seriesId] = g.maindiv_.id.split(';');
+		let segmentToBeDeleted = this.reshadeSegmentIfClicked(this.allSegments, filename, seriesId, g.toDataXCoord(event.layerX), this.toBeDeletedShade);
+		if (segmentToBeDeleted !== null) {
+			this.addSegmentTo(this.segmentsToDelete, filename, seriesId, segmentToBeDeleted);
+		}
+		console.log(segmentToBeDeleted);
+		this.shadeGraphSegments(g, this.allSegments[filename][seriesId], this.votesCalculated);
+	}
+}
+
 // Handle mouse-down for pan & zoom
 Supervisor.prototype.handleMouseDown = function(event, g, context) {
 
@@ -834,10 +953,6 @@ Supervisor.prototype.handleMouseDown = function(event, g, context) {
 		context.medViewPanningMouseMoved = false;
 		Dygraph.startPan(event, g, context);
 	}
-
-}
-
-function get(obj, key, defaultVal) {
 
 }
 
@@ -858,12 +973,12 @@ Supervisor.prototype.handleMouseUp = function(event, g, context) {
 		// in segment creation mode
 
 		//add segment bounds to corresponding file > series list
-		const [fileName, seriesId] = g.maindiv_.id.split(';');
+		const [filename, seriesId] = g.maindiv_.id.split(';');
 		let left = g.toDataXCoord(context.dragStartX);
 		let right = g.toDataXCoord(context.dragEndX);
-		this.addSegmentTo(this.createdSegments, fileName, seriesId, [left, right, this.prospectiveSegmentShade]);
-		this.addSegmentTo(this.allSegments, fileName, seriesId, [left, right, this.prospectiveSegmentShade]);
-		this.shadeGraphSegments(g, this.allSegments[fileName][seriesId]);
+		this.addSegmentTo(this.createdSegments, filename, seriesId, {left, right, 'color':this.prospectiveSegmentShade});
+		this.addSegmentTo(this.allSegments, filename, seriesId, {left, right, 'color':this.prospectiveSegmentShade});
+		this.shadeGraphSegments(g, this.allSegments[filename][seriesId], this.votesCalculated);
 	} else {
 		// perform normal zooming behavior
 		Dygraph.endZoom(event, g, context);
@@ -941,7 +1056,7 @@ Supervisor.prototype.createDygraph = function(graphDomElementObj, series, eventD
 		// 		independentTicks: true
 		// 	}
 		// },
-		// clickCallback: handleClick,
+		// clickCallback: this.handleClick.bind(this),
 		// colors: [this.template.lineColor],//'#5253FF'],
         colors: ['#5253FF'],
 		// dateWindow: timeWindow,
@@ -951,6 +1066,7 @@ Supervisor.prototype.createDygraph = function(graphDomElementObj, series, eventD
 			'mousedown': this.handleMouseDown.bind(this),
 			'mouseup': this.handleMouseUp.bind(this),
 			'mousemove': this.handleMouseMove.bind(this),
+			'click': this.handleClick.bind(this)
 		},
 		// interactionModel: {
 		// 	'mousedown': handleMouseDown.bind(this),

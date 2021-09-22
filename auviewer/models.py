@@ -52,7 +52,7 @@ class Segment(db.Model):
     left = db.Column(db.Float, nullable=True)
     right = db.Column(db.Float, nullable=True)
 
-    votes = db.relationship("Vote")
+    votes = db.relationship("Vote", cascade="all, delete-orphan")
 
 class Labeler(db.Model):
     __tablename__ = 'labelers'
@@ -61,7 +61,7 @@ class Labeler(db.Model):
     title = db.Column(db.String(255), nullable=False)
 
     thresholds = db.relationship("Threshold", secondary=labelerThresholds)
-    # votes = db.relationship("Vote", order_by="Vote.leftIndex", collection_class=ordering_list('leftIndex'))
+    votes = db.relationship("Vote")
 
 class Threshold(db.Model):
     __tablename__ = 'thresholds'

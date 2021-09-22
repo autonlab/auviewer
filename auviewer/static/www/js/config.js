@@ -19,6 +19,7 @@ let globalAppConfig = {
 	updateThresholdURL: 'update_threshold',
 	previewThresholdsURL: 'preview_threshold_change',
 	submitVoteSegmentsURL: 'create_vote_segments',
+	deleteVoteSegmentsURL: 'delete_vote_segments',
 	detectPatternsURL: 'detect_patterns',
 	featurizeURL: 'featurize',
 	initialFilePayloadURL: 'initial_file_payload',

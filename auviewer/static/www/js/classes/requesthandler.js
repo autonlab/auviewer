@@ -107,6 +107,15 @@ RequestHandler.prototype.requestAggregateLabelerStats = function(project_id, act
 	});
 }
 
+RequestHandler.prototype.deleteVoteSegments = function(project_id, segments, callback) {
+	this._customRequest(callback, globalAppConfig.deleteVoteSegmentsURL, {
+		project_id: project_id
+	},
+	{
+		vote_segments: segments
+	}, "POST", true);
+};
+
 RequestHandler.prototype.submitVoteSegments = function(project_id, created_segments, callback) {
 	this._customRequest(callback, globalAppConfig.submitVoteSegmentsURL, {
 		project_id: project_id
@@ -116,10 +125,10 @@ RequestHandler.prototype.submitVoteSegments = function(project_id, created_segme
 	}, "POST", true);
 };
 
-RequestHandler.prototype.getVotes = function(project_id, active_lf, callback) {
+RequestHandler.prototype.getVotes = function(project_id, files, callback) {
 	this._newRequest(callback, globalAppConfig.getVotesURL, {
 		project_id: project_id,
-		active_lf: active_lf
+		files: files
 	});
 };
 

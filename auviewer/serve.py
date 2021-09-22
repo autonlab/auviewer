@@ -651,7 +651,7 @@ def createApp():
         #     'labelingFunction': None,
         #     'amount': 10
         # })
-        _ = project.applyLFsToDict(fileIds, filesPayload)
+        _ = project.populateInitialSupervisorValuesToDict(fileIds, filesPayload)
         filesPayload['thresholds'] = project.getThresholdsPayload()
         filesPayload['existent_segments'] = project.getSegments()
         return app.response_class(
@@ -678,9 +678,33 @@ def createApp():
     @login_required
     def put_threshold():
         project_id = request.args.get('project_id', type=int)
+        p = getProject(project_id)
         req = request.get_json()
-        print(req)
+        success = p.updateThreshold(req)
+        print(success)
         return app.response_class(
+            response=simplejson.dumps({'success': success}, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
+
+    @app.route(config['rootWebPath']+'/delete_vote_segments', methods=['POST'])
+    @login_required
+    def delete_vote_segments():
+        project_id = request.args.get('project_id', type=int)
+        project = getProject(project_id)
+
+        payload = request.get_json()
+        voteSegments = payload['vote_segments']
+        numDeleted, success = project.deleteSegments(voteSegments)
+
+        returnPayload = {
+            'success': success,
+            'number_deleted': numDeleted
+        }
+
+        return app.response_class(
+            response=simplejson.dumps(returnPayload, ignore_nan=True),
             status=200,
             mimetype='application/json'
         )
@@ -732,20 +756,21 @@ def createApp():
 
     @app.route(config['rootWebPath']+'/get_votes')
     @login_required
-    def update_supervisor_time_segment():
+    def get_votes():
         project_id = request.args.get('project_id', type=int)
-        active_lf = request.args.get('active_lf', type=str)
-        time_segment = request.args.get('time_segment', type=int)
+        files = request.args.getlist('file_ids')
 
         project = getProject(project_id)
-        fileIds = [f.id for f in project.files]
-        allVotes, allIndices = list(), list()
-        for fileId in fileIds:
-            votes, indices = project.computeVotes(fileId, active_lf, time_segment)
-            allVotes.append(votes); allIndices.append(indices)
+        if (len(files) == 0):
+            fileIds = [f.id for f in project.files]
+        else:
+            #convert files to fileids
+            fileIds = [f.id if f.name in files else None for f in project.files]
+            fileIds = list(filter(lambda x: x, fileIds))
+        print(len(fileIds))
+        votes = project.computeVotes(fileIds)
         d = dict()
-        d['labeling_function_votes'] = allVotes
-        d['time_segment_end_indices'] = allIndices
+        d['labeling_function_votes'] = votes
         return app.response_class(
             response=simplejson.dumps(d, ignore_nan=True),
             status=200,
@@ -761,7 +786,7 @@ def createApp():
 
         project = getProject(project_id)
         query_response = project.queryWeakSupervision(query_payload) 
-        _ = project.applyLFsToDict([f[0] for f in query_response['files']], query_response)
+        _ = project.populateInitialSupervisorValuesToDict([f[0] for f in query_response['files']], query_response)
         return app.response_class(
             response=simplejson.dumps(query_response),
             status=200,
