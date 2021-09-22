@@ -31,6 +31,17 @@ RequestHandler.prototype.deleteAnnotation = function(id, project_id, file_id, ca
 	});
 };
 
+RequestHandler.prototype.featurize = function(project_id, file_id, series, left, right, params, callback) {
+	this._newRequest(callback, globalAppConfig.featurizeURL, {
+		project_id: project_id,
+		file_id: file_id,
+		series: series,
+		left: left,
+		right: right,
+		params: JSON.stringify(params)
+	});
+};
+
 RequestHandler.prototype.requestPatternDetection = function(project_id, file_id, type, seriesID, tlow, thigh, duration, persistence, maxgap, callback) {
 
 	this._newRequest(callback, globalAppConfig.detectPatternsURL, {

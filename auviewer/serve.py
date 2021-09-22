@@ -346,6 +346,113 @@ def createApp():
             mimetype='application/json'
         )
 
+    @app.route(config['rootWebPath'] + '/featurize')
+    @login_required
+    def featurize():
+
+        # Parse parameters
+        project_id = request.args.get('project_id', type=int)
+        file_id = request.args.get('file_id', type=int)
+        series = request.args.get('series')
+        left = request.args.get('left', type=float)
+        right = request.args.get('right', type=float)
+        params = json.loads(request.args.get('params'));
+        print('featurize', project_id, file_id, series, params)
+
+        try:
+
+            # Get the project
+            project = getProject(project_id)
+            if project is None:
+                logging.error(f"Project ID {project_id} not found.")
+                abort(404, description="Project not found.")
+                return
+
+            # Get the file
+            file = project.getFile(file_id)
+            if file is None:
+                logging.error(f"File ID {file_id} not found.")
+                return app.response_class(
+                    response=simplejson.dumps({'success': False}),
+                    status=200,
+                    mimetype='application/json'
+                )
+
+            from datetime import datetime
+            import pyhrv
+            import pandas as pd
+            import numpy as np
+            import pytz
+            utc = pytz.UTC
+
+            s = file.getSeries(series)
+            if s is None:
+                raise Exception('series not found')
+            df = s.getDataAsDF().set_index('time')
+            window_size = params['window_size']
+            tolerance = params['tolerance']
+            if len(tolerance) < 1:
+                tolerance = None
+            dim = params['dim']
+            try:
+                dim = int(dim)
+            except:
+                dim = 2
+
+            left = datetime.fromtimestamp(left).astimezone(utc)
+            right = datetime.fromtimestamp(right).astimezone(utc)
+            print('left', left)
+            print('right', right)
+            df = df[(df.index >= left) & (df.index <= right)]
+
+            print("BEFORE")
+            print(df)
+            def se(x):
+                try:
+                    return pyhrv.nonlinear.sample_entropy(nni=x, tolerance=tolerance, dim=dim)[0] if x.shape[0] > 0 else np.nan
+                except Exception as e:
+                    print(f"exception: {e}")
+                    return np.nan
+            featurization = df.resample(window_size).agg(se).replace(np.inf, np.nan).replace(-np.inf, np.nan).dropna()
+            print("AFTER")
+            print(featurization)
+            # featurization = df.resample(window_size).agg(lambda x: x.mean()).dropna()
+            featurization.reset_index(inplace=True)
+            featurization['time'] = ((featurization['time'].dt.tz_convert(utc) - pd.Timestamp("1970-01-01").replace(tzinfo=utc)) // pd.Timedelta("1ms")) / 1000
+
+            nones = [None] * featurization.shape[0]
+            data = [list(i) for i in zip(featurization['time'], nones, nones, featurization['value'])]
+            response = {
+                'id': f"{window_size}_sample_entropy_{series}",
+                'success': True,
+                'labels': ['Date/Offset', 'Min', 'Max', 'Sample Entropy for '+series],
+                'data': data,
+                'output_type': 'real',
+                'temporary': True,
+            }
+
+            # Output response
+            return app.response_class(
+                response=simplejson.dumps(response, ignore_nan=True),
+                status=200,
+                mimetype='application/json',
+            )
+
+        except Exception as e:
+
+            logging.error("There was an exception while featurizing.", exc_info=True)
+
+            response = {
+                'success': False,
+                'error_message': f"There was an error while featurizing: {e}",
+            }
+
+            return app.response_class(
+                response=simplejson.dumps(response, ignore_nan=True),
+                status=200,
+                mimetype='application/json',
+            )
+
     @app.route(config['rootWebPath']+'/get_project_annotations')
     @login_required
     def get_project_annotations():

@@ -104,6 +104,13 @@ class Series:
 
         return alerts
 
+    def getDataAsDF(self):
+        """
+        Returns the series data as a Pandas DataFrame, with columns time and value.
+        Does not cache data in the class instance after returning.
+        """
+        return self.fileparent.f['/'.join(self.h5path)].get(datetimes=True)[[self.timecol, self.valcol]].rename(columns={self.timecol: 'time', self.valcol: 'value'})
+
     # Produces JSON output for the series at the maximum time range.
     def getFullOutput(self):
 
@@ -211,10 +218,12 @@ class Series:
         end = time.time()
         logging.info(f"Completed processing & storing all downsamples for the series {self.id}. Took {round((end - start) / 60, 3)} minutes.")
 
-    # Pulls the raw data for the series from the file into memory (self.rawTimeOffsets
-    # and self.rawValues). If the returnValuesOnly is set, the function will return
-    # a tuple with the times & values and not hold them in the class instance.
     def pullRawDataIntoMemory(self, returnValuesOnly=False):
+        """
+        Pulls the raw data for the series from the file into memory (self.rawTimeOffsets and self.rawValues).
+        If the returnValuesOnly is set, the function will return a tuple with the times & values and not hold
+        them in the class instance.
+        """
 
         logging.info(f"Reading raw series data into memory for {self.id}.")
         start = time.time()

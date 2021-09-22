@@ -23,20 +23,6 @@ function File(parentProject, id, callback=null) {
 	// Holds the initial payload data for the file
 	this.fileData = {};
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	this.annotationSets = [];
 	this.patternSets = [];
 
@@ -47,12 +33,6 @@ function File(parentProject, id, callback=null) {
 	// array gets updated.
 	this.annotationsAndPatternsToRender = []
 
-
-
-
-
-
-
 	// Holds annotations for the file
 	this.annotations = [];
 
@@ -62,24 +42,6 @@ function File(parentProject, id, callback=null) {
 
 	// Indicates user is at the i'th pattern, during the annotation workflow.
 	this.annotationWorkflowPatternNumber = 0;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 	// Used for realtime-mode to buffer incoming new data
 	this.newDataBuffer = null;
@@ -104,104 +66,6 @@ function File(parentProject, id, callback=null) {
 	be passed into the options.dateWindow parameter for a dygraph.
 	*/
 	this.globalXExtremes = [];
-
-
-
-
-	// this.annotationInterface = null;
-	//
-	// this.annotationInterfaceConfig = {
-	// 	view: "window",
-	// 	close: true,
-	// 	head: "Annotation...........",
-	// 	move: true,
-	// 	body: {
-	// 		view:"form", elements: [{
-	// 			view:"abslayout",
-	// 			cells: [
-	// 				{
-	// 					view: "text",
-	// 					left: 490,
-	// 					top: 150,
-	// 					width: 500,
-	// 					label: "File",
-	// 					labelWidth: 100,
-	// 					labelPosition: "top"
-	// 				},
-	// 				{
-	// 					view: "text",
-	// 					left: 490,
-	// 					top: 212,
-	// 					width: 500,
-	// 					label: "Series",
-	// 					labelWidth: 100,
-	// 					labelPosition: "top"
-	// 				},
-	// 				{
-	// 					options: [
-	// 						"-3",
-	// 						"-2",
-	// 						"-1",
-	// 						"0",
-	// 						"+1",
-	// 						"+2",
-	// 						"+3"
-	// 					],
-	// 					view: "radio",
-	// 					left: 490,
-	// 					top: 274,
-	// 					width: 500,
-	// 					label: "Confidence",
-	// 					name: "confidence",
-	// 					labelWidth: 100,
-	// 					value: "-3",
-	// 					labelPosition: "top"
-	// 				},
-	// 				{
-	// 					view: "textarea",
-	// 					left: 490,
-	// 					top: 336,
-	// 					width: 500,
-	// 					labelPosition: "top",
-	// 					label: "Notes",
-	// 					name: "notes",
-	// 					height: 150,
-	// 					labelWidth: 100
-	// 				},
-	// 				{
-	// 					view: "datepicker",
-	// 					left: 490,
-	// 					top: 490,
-	// 					width: 225,
-	// 					label: "Start Time",
-	// 					labelPosition: "top",
-	// 					value: null
-	// 				},
-	// 				{
-	// 					view: "datepicker",
-	// 					left: 765,
-	// 					top: 490,
-	// 					width: 225,
-	// 					label: "End Time",
-	// 					labelPosition: "top"
-	// 				},
-	// 				{
-	// 					view: "daterangepicker",
-	// 					left: 490,
-	// 					top: 560,
-	// 					width: 500,
-	// 					label: "Test Range Picker",
-	// 					labelPosition: "top"
-	// 				}
-	// 			]
-	// 		}]
-	// 	}
-	// }
-
-
-
-
-
 
 	// Will hold a reference to the plot control Webix instance
 	this.plotControl = null;
@@ -435,6 +299,17 @@ function File(parentProject, id, callback=null) {
 	}.bind(this));
 
 }
+
+File.prototype.addTemporaryFeatureGraph = function(data) {
+
+	globalAppConfig.verbose && console.log('addTemporaryFeatureGraph() called.');
+	const s = data['id'];
+	this.fileData['series'][s] = data;
+	convertFirstColumnToDate(data['data'], this.fileData.baseTime);
+	this.graphs[s] = new Graph(s, this);
+	this.graphs[s].show();
+
+};
 
 // Go to the next annotation in the workflow.
 File.prototype.annotationWorkflowNext = function() {
@@ -1472,10 +1347,12 @@ File.prototype.updateCurrentViewData = function() {
 
 	// Grab the x-axis range from the last showing graph (all graphs should be
 	// showing the same range since they are synchronized).
-	let xRange = lastGraphShowing.dygraphInstance.xAxisRange();
+	const xRange = lastGraphShowing.dygraphInstance.xAxisRange();
+	const left = xRange[0]/1000-this.fileData.baseTime;
+	const right = xRange[1]/1000-this.fileData.baseTime;
 
 	// Request the updated view data from the backend.
-	requestHandler.requestSeriesRangedData(this.parentProject.id, this.id, series, xRange[0]/1000-this.fileData.baseTime, xRange[1]/1000-this.fileData.baseTime, this.getPostloadDataUpdateHandler());
+	requestHandler.requestSeriesRangedData(this.parentProject.id, this.id, series, left, right, this.getPostloadDataUpdateHandler());
 
 };
 

@@ -36,6 +36,11 @@ $('#annotationModal button.deleteButton').click(function() {
 		$('#annotationModal').data('callingAnnotation').delete();
 	}
 });
+$("#annotationModal").on('keyup', function(e, e2) {
+	if (e.key === "Escape") {
+		$('#annotationModal').data('callingAnnotation').cancel();
+	}
+});
 
 $('#annotationsListModal').on('show.bs.modal', function (e) {
 

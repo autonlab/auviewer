@@ -9,7 +9,7 @@ function classifyAnnotationInRelationToGraph(annotation, graph) {
 	const annotationBelongsToThisGraph = annotation.series && graph.members.includes(annotation.series);
 
 	// Determine if the pattern is the current workflow pattern
-	const currentWorkflowPattern = annotation.id === currentAssignmentID || annotation.parent_id === currentAssignmentID;
+	const currentWorkflowPattern = annotation.id === currentAssignmentID || annotation.pattern_id === currentAssignmentID;
 
 	if (currentAssignmentID && !currentWorkflowPattern && document.getElementById('assignmentFocusOption').checked) {
 		return 'do_not_render';
@@ -228,9 +228,9 @@ function getAnnotationCategoryLayerNumber(category) {
 		case 'other_pattern_not_target_assignment': return 0; break;
 		case 'own_pattern_not_target_assignment': return 1; break;
 		case 'other_annotation': return 2; break;
+		case 'own_annotation': return 4; break;
 		case 'own_pattern_target_assignment':
 		case 'other_pattern_target_assignment': return 3; break;
-		case 'own_annotation': return 4; break;
 		default: console.log("Error! Unrecognized category provided to getAnnotationCategoryLayerNumber():", category);
 	}
 }
@@ -342,6 +342,100 @@ function padDataIfNeeded(data) {
 
 }
 
+function showFeaturizationPanel(s) {
+	globalAppConfig.verbose && console.log('showFeaturizationPanel('+s+') called.');
+
+	// Setup handler
+	const featurize = function() {
+
+		$$('featurize_window').showProgress();
+
+		const vals = $$('featurize_form').getValues();
+		const params = {
+			'window_size': vals['window_size'],
+			'dim': vals['dim'],
+			'tolerance': vals['tolerance']
+		}
+
+		// Grab the x-axis range from the last showing graph (all graphs should be
+		// showing the same range since they are synchronized).
+		const f = globalStateManager.currentFile;
+		const g = f.getGraphForSeries(s);
+		const xRange = g.dygraphInstance.xAxisRange();
+		const left = xRange[0]/1000-f.fileData.baseTime;
+		const right = xRange[1]/1000-f.fileData.baseTime;
+
+		requestHandler.featurize(globalStateManager.currentProject.id, globalStateManager.currentFile.id, s, left, right, params, function(data) {
+			$$('featurize_window').hideProgress();
+
+			if (!data['success']) {
+				console.log('Featurization was not successful.');
+				let msg = 'Featurization was not successful.';
+				if (data.hasOwnProperty('error_message')) {
+					msg = data['error_message'];
+				}
+				alert(msg);
+				return;
+			}
+			globalStateManager.currentFile.addTemporaryFeatureGraph(data);
+		});
+	}
+
+	webix.ui({
+		view: 'window',
+		id: 'featurize_window',
+		close: true,
+		head: "Featurize",// &mdash; Rolling Window Sample Entropy &mdash; "+s,
+		move: true,
+		position: 'center',
+		width: 350,
+		body: {
+			view: 'form',
+			width: 350,
+			id: 'featurize_form',
+			on: { onSubmit: featurize },
+			elements: [
+				{view: 'template', template: 'Featurize Rolling Window Sample Entropy', type: 'header', borderless: true},
+				{
+					view: 'text',
+					label: 'Window Size (e.g. 10ms, 3s, 5min)',
+					labelWidth: 250,
+					name: 'window_size',
+					// width: 120,
+					on: { onFocus: function() { this.getInputNode().select() } },
+				},
+				{
+					view: 'text',
+					label: 'Embedding Dimension (opt)',
+					tooltip: 'The embedding dimension (length of vectors to compare) (default: 2)',
+					labelWidth: 230,
+					name: 'dim',
+					// width: 120,
+					on: { onFocus: function() { this.getInputNode().select() } },
+				},
+				{
+					view: 'text',
+					label: 'Tolerance (opt)',
+					tooltip: 'Tolerance distance for which the two vectors can be considered equal (default: std(NNI))',
+					labelWidth: 230,
+					name: 'tolerance',
+					// width: 120,
+					on: { onFocus: function() { this.getInputNode().select() } },
+				},
+				{
+					view: 'button',
+					value: 'Generate',
+					tooltip: 'Generate the featurization and display in the viewer when ready.',
+					click: featurize
+				},
+			]
+		},
+	}).show();
+
+	webix.extend($$("featurize_window"), webix.ProgressBar);
+
+}
+
 // Show the graph control panel for a given graph series (which corresponds to file.graphs[].fullName of the
 // corresponding Graph class instance).
 function showGraphControlPanel(s) {
@@ -349,7 +443,7 @@ function showGraphControlPanel(s) {
 	const dg = g.dygraphInstance;
 
 	// Setup some handlers
-	const updateRange = function () {
+	const updateRange = function() {
 		const vals = $$('graph_range_form').getValues();
 		g.dygraphInstance.updateOptions({
 			valueRange: [vals['ymin'], vals['ymax']],
