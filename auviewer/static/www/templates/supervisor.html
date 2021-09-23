@@ -59,13 +59,30 @@
 			<div class="card-body">
 			<h5 class="card-title">{{project_name}}</h5>
 			<ul class="list-group list-group-flush">
-			<li class="list-group-item">
-				<div class="btn-group btn-block">
+			<li class="list-group-item" >
+				<div class="custom-control custom-switch mb-3">
+					<input class="custom-control-input" type="checkbox" id="segment_type_switch">
+					<label class="custom-control-label" for="segment_type_switch" id="segment_type_label">Create custom segments</label>
+				</div>
+
+				<div id="custom_segment_creation" class="btn-group btn-block">
 					<button type="button" id="create_segments" onclick="globalStateManager.currentSupervisor.activateSegmentCreationMode()" class="btn btn-primary">Add segments</button>
 					<button type="button" id="delete_segments" onclick="globalStateManager.currentSupervisor.activateSegmentDeletionMode()" class="btn btn-danger">Delete segments</button>
 				</div>
-				
+
+				<div id="window_segment_creation" class="input-group" style="display:none">
+					<div class="input-group mb-1">
+						<div class="input-group-prepend"><span class="input-group-text">Window Size</span></div>
+						<input type="text" class="form-control" placeholder="2hr, 30m, 120s" id="window_size">
+					</div>
+					<div class="input-group mb-1">
+						<div class="input-group-prepend"><span class="input-group-text">Stride Length</span></div>
+						<input type="text" class="form-control" placeholder="2hr, 30m, 120s" id="window_roll">
+					</div>
+					<button type="button" class="btn btn-primary btn-block" onclick="globalStateManager.currentSupervisor.submitWindowSegments()">Apply</button>
+				</div>	
 			</li>
+
 
 			<li class="list-group-item">
 				<label for="lfSelection">Select labeler:</label>
@@ -115,18 +132,12 @@
 		<div class="card">
 			<div class="card-body">
 			<h5 class="card-title">Patients</h5>
-				<h7 class="top-buffer">View segment</h7>
-				<div class="btn-group btn-block btn-group-toggle" data-toggle="buttons">
-					<label class="btn btn-primary" id="30_min">
-						<input type="radio" name="options"  autocomplete="off" checked> 30 min</input>
-					</label>
-					<label  class="btn btn-primary active" id="60_min" >
-						<input type="radio" name="options" autocomplete="off"> 1 hr</input>
-					</label>
-					<label class="btn btn-primary" id="120_min">
-						<input type="radio" name="options" autocomplete="off"> 2 hr</input>
-					</label>
+				<form>
+				<div class="form-group mb-2">
+					<label for="view_segment">View segment</label>
+					<input type="range" min="1" max="20" class="form-control-range" id="view_segment">
 				</div>
+				</form>
 
 			<div id="supervisorGraphs">
 			</div>
@@ -159,20 +170,16 @@
 
 	<!-- Modal 
 	   Loader div is from [here](https://tobiasahlin.com/spinkit/)  -->
-<div class="modal fade" id="loadMe" tabindex="-1" role="dialog" aria-labelledby="loadMeLabel">
-  <div class="modal-dialog modal-sm" role="document">
-    <div class="modal-content">
-      <div class="modal-body text-center">
-		<div class="sk-folding-cube">
-			<div class="sk-cube1 sk-cube"></div>
-			<div class="sk-cube2 sk-cube"></div>
-			<div class="sk-cube4 sk-cube"></div>
-			<div class="sk-cube3 sk-cube"></div>
+		<div style="display:none;position:absolute; top:50%; left:50%" id="modal">
+			<div class="sk-chase">
+				<div class="sk-chase-dot"></div>
+				<div class="sk-chase-dot"></div>
+				<div class="sk-chase-dot"></div>
+				<div class="sk-chase-dot"></div>
+				<div class="sk-chase-dot"></div>
+				<div class="sk-chase-dot"></div>
+			</div>
 		</div>
-        <div class="loader-txt">
-          <p>Retrieving votes for adjusted time segments</p>
-        </div>
-      </div>
     </div>
   </div>
 </div>

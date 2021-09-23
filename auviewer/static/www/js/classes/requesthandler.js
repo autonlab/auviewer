@@ -100,10 +100,10 @@ RequestHandler.prototype.requestInitialSupervisorPayload = function(project_id, 
 	});
 };
 
-RequestHandler.prototype.requestAggregateLabelerStats = function(project_id, active_lf, callback) {
+RequestHandler.prototype.requestAggregateLabelerStats = function(project_id, segment_type, callback) {
 	this._newRequest(callback, globalAppConfig.requestLabelerStatsURL, {
 		project_id: project_id,
-		labeler: active_lf
+		segment_type: segment_type
 	});
 }
 
@@ -116,19 +116,31 @@ RequestHandler.prototype.deleteVoteSegments = function(project_id, segments, cal
 	}, "POST", true);
 };
 
-RequestHandler.prototype.submitVoteSegments = function(project_id, created_segments, callback) {
+RequestHandler.prototype.submitVoteSegments = function(project_id, created_segments, window_info, callback) {
 	this._customRequest(callback, globalAppConfig.submitVoteSegmentsURL, {
 		project_id: project_id
 	},
 	{
-		vote_segments: created_segments
+		vote_segments: created_segments,
+		window_info: window_info
 	}, "POST", true);
 };
 
-RequestHandler.prototype.getVotes = function(project_id, files, callback) {
-	this._newRequest(callback, globalAppConfig.getVotesURL, {
+RequestHandler.prototype.getVotes = function(project_id, files, window_info, callback) {
+	console.log(files);
+	this._customRequest(callback, globalAppConfig.getVotesURL, {
 		project_id: project_id,
-		files: files
+		file_ids: files
+	},
+	{
+		window_info: window_info
+	}, "POST", true);
+};
+
+RequestHandler.prototype.getSegments = function(project_id, segment_type, callback) {
+	this._newRequest(callback, globalAppConfig.getSegmentsURL, {
+		project_id: project_id,
+		segment_type: segment_type 
 	});
 };
 

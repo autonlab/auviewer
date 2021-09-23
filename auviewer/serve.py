@@ -653,9 +653,22 @@ def createApp():
         # })
         _ = project.populateInitialSupervisorValuesToDict(fileIds, filesPayload)
         filesPayload['thresholds'] = project.getThresholdsPayload()
-        filesPayload['existent_segments'] = project.getSegments()
+        filesPayload['existent_segments'], _ = project.getSegments()
         return app.response_class(
             response=simplejson.dumps(filesPayload, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
+
+    @app.route(config['rootWebPath']+'/get_segments')
+    @login_required
+    def get_segments():
+        project_id = request.args.get('project_id', type=int)
+        type = request.args.get('segment_type', type=str)
+
+        segments, windowInfo = getProject(project_id).getSegments(type)
+        return app.response_class(
+            response=simplejson.dumps({'segments': segments, 'window_info': windowInfo}, ignore_nan=True),
             status=200,
             mimetype='application/json'
         )
@@ -664,9 +677,10 @@ def createApp():
     @login_required
     def get_labeler_stats():
         project_id = request.args.get('project_id', type=int)
+        segment_type = request.args.get('segment_type', type=str)
 
         project = getProject(project_id)
-        stats = project.getLFStats()
+        stats = project.getLFStats(segment_type)
 
         return app.response_class(
             response=simplejson.dumps(stats, ignore_nan=True),
@@ -755,12 +769,11 @@ def createApp():
         )
 
 
-    @app.route(config['rootWebPath']+'/get_votes')
+    @app.route(config['rootWebPath']+'/get_votes', methods=["GET", "POST"])
     @login_required
     def get_votes():
         project_id = request.args.get('project_id', type=int)
-        files = request.args.getlist('file_ids')
-
+        fileIds = request.args.getlist('file_ids[]')
         windowInfo = request.get_json()['window_info']
         '''
             window_info: {
@@ -770,14 +783,11 @@ def createApp():
         '''
 
         project = getProject(project_id)
-        if (len(files) == 0):
+        if (len(fileIds) == 0):
             fileIds = [f.id for f in project.files]
-        else:
-            #convert files to fileids
-            fileIds = [f.id if f.name in files else None for f in project.files]
-            fileIds = list(filter(lambda x: x, fileIds))
-        print(len(fileIds))
-        votes = project.computeVotes(fileIds)
+        print(fileIds, windowInfo)
+        fileIds = [int(fileId) for fileId in fileIds]
+        votes = project.computeVotes(fileIds, windowInfo)
         d = dict()
         d['labeling_function_votes'] = votes
         return app.response_class(

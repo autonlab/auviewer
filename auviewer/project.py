@@ -273,6 +273,9 @@ class Project:
                     # then we are looking for end index
                     if timestamps[i-1] <= seg.right and timestamps[i] >= seg.right:
                         correspondingIndices[j][1] = i
+                    elif (i == len(timestamps) - 1):
+                        # case where given segment spans out of bounds, so clamp
+                        correspondingIndices[j][1] = i
                 else: 
                     # then we are looking for start index
                     if timestamps[i-1] <= seg.left and timestamps[i] >= seg.left:
@@ -328,11 +331,11 @@ class Project:
                     type='CUSTOM'
                 ).all()
             #iterate through user defined segments
+            if (len(segmentsForFile) == 0): continue
             correspondingIndexBounds = self.getIndicesForSegments(segmentsForFile, series)
-            series = [e[-1] for e in series]
             for i, segment in enumerate(segmentsForFile):
                 startIdx, endIdx = correspondingIndexBounds[i]
-                curSeries = np.array(series[startIdx:endIdx])
+                curSeries = np.array([series[idx][-1] for idx in range(startIdx, endIdx)])
 
                 filledNaNs = None
                 if np.sum(np.isnan(curSeries)) > 0:
@@ -361,8 +364,8 @@ class Project:
         print(len(newVotes))
         return resultingVotes
 
-    def getSegments(self):
-        allSegments = models.Segment.query.filter_by(project_id=self.id).all()
+    def getSegments(self, type='CUSTOM'):
+        allSegments = models.Segment.query.filter_by(project_id=self.id, type=type).all()
         res = dict()
         for segment in allSegments:
             filename = self.getFile(segment.file_id).name
@@ -371,7 +374,16 @@ class Project:
             res[filename] = res.get(filename, dict())
             res[filename][series] = res[filename].get(series, list())
             res[filename][series].append(bound)
-        return res
+
+        if type=='CUSTOM':
+            windowInfo = None
+        else:
+            sampleSeg = models.Segment.query.filter_by(project_id=self.id, type='WINDOW').first()
+            windowInfo = {
+                'window_size_ms': sampleSeg.window_size_ms,
+                'window_roll_ms': sampleSeg.window_roll_ms
+            }
+        return res, windowInfo
 
     def deleteSegments(self, segmentsMap):
         beforeNum = len(models.Segment.query.filter_by(project_id=self.id).all())
@@ -391,21 +403,68 @@ class Project:
 
 
 
-    def createSegments(self, segmentsMap, windowInfo):
+    def createSegments(self, segmentsMap, windowInfo, files=None):
         '''
             one of segmentsMap or windowInfo will be undefined
                 if segmentsMap, then use windowInfo to create rolling segments of
-                 the specified size and with the specifiec stride
+                 the specified size and with the specific stride
                 if windowInfo, then use segmentsMap to create segments of the
                  specified left and right timestamps
         '''
         if (segmentsMap):
             return self._createSegmentsCustom(segmentsMap)
         else:
-            return self._createSegmentsWindows(windowInfo)
+            return self._createSegmentsWindows(windowInfo, files)
 
-    def _createSegmentsWindows(self, windowInfo):
-        pass
+    def _deleteWindowSegments(self):
+        allWindows = models.Segment.query.filter_by(project_id=self.id, type="WINDOW").all()
+        if (len(allWindows) > 0):
+            for window in allWindows:
+                models.db.session.delete(window)
+            models.db.session.commit()
+
+    def _createSegmentsWindows(self, windowInfo, files=None):
+        self._deleteWindowSegments()
+        beforeNum = len(models.Segment.query.filter_by(project_id=self.id).all())
+        newSegments=list()
+        segmentsMap = dict() #where we're going to store the segments so they can be rendered
+
+        windowSize_ms = windowInfo['window_size_ms']
+        windowSlide_ms = windowInfo['window_roll_ms']
+        if (files == None):
+            files = self.files
+        for file in files:
+            series = file.series[0]
+            seriesData = series.getFullOutput().get('data')
+
+            segmentsMap[file.name] = {series.id:list()}
+
+            windowStart_ms = seriesData[0][0] * 1000
+            windowEnd_ms = windowStart_ms + windowSize_ms
+            lastTimestamp_ms = seriesData[-1][0] * 1000
+            while (windowEnd_ms < lastTimestamp_ms):
+                newSegment = models.Segment(
+                    project_id=self.id,
+                    file_id=file.id,
+                    series=series.id,
+                    left=windowStart_ms,
+                    right=windowEnd_ms,
+                    type="WINDOW",
+                    window_size_ms=windowSize_ms,
+                    window_roll_ms=windowSlide_ms
+                )
+                newSegments.append(newSegment)
+                models.db.session.add(newSegment)
+                models.db.session.commit()
+                segmentsMap[file.name][series.id].append({'id':newSegment.id, 'left':windowStart_ms,'right':windowEnd_ms})
+
+                windowStart_ms += windowSlide_ms
+                windowEnd_ms += windowSlide_ms
+        afterNum = len(models.Segment.query.filter_by(project_id=self.id).all())
+
+        success = (afterNum-beforeNum)==len(newSegments)
+        return segmentsMap, success, len(newSegments)
+
     def _createSegmentsCustom(self, segmentsMap):
         beforeNum = len(models.Segment.query.filter_by(project_id=self.id).all())
         '''
@@ -430,18 +489,18 @@ class Project:
                         file_id=self.getFileByName(filename).id,
                         series=seriesId,
                         left=left,
-                        right=right
+                        right=right,
+                        type="CUSTOM"
                     )
                     newSegments.append(newSegment)
-                    models.db.session.add(newSegment)
-                    models.db.session.commit()
 
                     span['id'] = newSegment.id
+        models.db.session.add_all(newSegments)
+        models.db.session.commit()
         afterNum = len(models.Segment.query.filter_by(project_id=self.id).all())
         success = (afterNum-beforeNum)==len(newSegments)
-        print(beforeNum, afterNum, len(newSegments))
-        print(f'It is {success} that we made as many segments as we intended')
-        return segmentsMap, True, len(newSegments)
+        return segmentsMap, success, len(newSegments)
+
     def getLFCode(self, lfNames, lfModule, thresholds, labels):
         curSeries = self.files[0].series[0].getFullOutput().get('data') #for now assuming a single series, hence the 0-index
         curSeries = np.array([x[-1] for x in curSeries])
@@ -464,7 +523,7 @@ class Project:
                 continue
         return namesToCode
 
-    def getLFStats(self):
+    def getLFStats(self, type='CUSTOM'):
         lfModule = self.getLFModule()
         lfs = list(map(lambda x: models.Labeler.query.filter_by(project_id=self.id, title=x).first(), lfModule.get_LF_names()))
         res = dict()
@@ -479,8 +538,8 @@ class Project:
             statsDict['coverage'] = nonAbstains / len(labeler.votes)
             res[labeler.title] = statsDict
 
-        allSegments = models.Segment.query.filter_by(project_id=self.id).all()
-        
+        allSegments = models.Segment.query.filter_by(project_id=self.id, type=type).all()
+        print(len(allSegments)) 
         for segment in allSegments:
             #create presentVotes
             presentVotes = Counter()
@@ -489,6 +548,8 @@ class Project:
                     presentVotes[vote.category.label] += 1
             for labeler in lfs:
                 thisVote = models.Vote.query.filter_by(project_id=self.id, labeler_id=labeler.id, segment_id=segment.id).first()
+                if (thisVote==None):
+                    continue
                 curLabel = thisVote.category.label
                 if curLabel == 'ABSTAIN':
                     continue #if a labeler doesn't vote then it can't conflict or overlap

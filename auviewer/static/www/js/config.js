@@ -28,6 +28,7 @@ let globalAppConfig = {
 	requestLabelerStatsURL: 'get_labeler_statistics',
 	querySupervisorSeriesURL: 'query_supervisor_series',
 	getVotesURL: 'get_votes',
+	getSegmentsURL: 'get_segments',
 	getProjectAnnotationsURL: 'get_project_annotations',
 	seriesRangedDataURL: 'series_ranged_data',
 	updateAnnotationURL: 'update_annotation',

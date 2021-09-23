@@ -6,12 +6,17 @@ function Supervisor(payload) {
     this.project_id = payload['project_id']
     this.project_name = payload['project_name']
 
-	this.prospectiveSegmentShade = '#D3D3D3'; // light grey
-	this.existentSegmentShade = '#A9A9A9'; // dark grey
-	this.toBeDeletedShade = '#E97451'; //burnt sienna, shade of red
+	this.prospectiveSegmentShade = 'rgba(211, 211, 211, .33)'; //'#D3D3D3'; // light grey
+	this.existentSegmentShade = 'rgba(169, 169, 169, .33)'; //'#A9A9A9'; // dark grey
+	this.toBeDeletedShade = 'rgba(233, 116, 81, .33)'; //'#E97451'; //burnt sienna red
 
 	this.votesCalculated=false;
 	this.statsCalculated=false;
+	this.segmentType = 'CUSTOM';
+	this.windowInfo = null;
+
+
+	$('#modal').css('display', 'inline-block');
 
 	/*
 	Holds the min [0] and max [1] x-value across all graphs currently displayed.
@@ -26,7 +31,7 @@ function Supervisor(payload) {
 	this.seriesOnPage = 4;
 	this.activeGraphs = [...Array(this.seriesOnPage).keys()];
 
-	this.shade_colors = ['white', 'purple', 'pink',  'orange', 'yellow', 'red', 'green', 'teal', 'cyan'];
+	this.shade_colors = ['white', 'rgba(188, 86, 208, .33)', 'rgba(222, 27, 95, .33)',  'rgba(27, 189, 222, .33)', 'rgba(27, 222, 76, .33)','orange', 'yellow', 'red', 'green', 'teal', 'cyan'];
 
 	// Load the project config
 	this.template = templateSystem.getProjectTemplate(this.project_id);
@@ -40,9 +45,8 @@ function Supervisor(payload) {
 	this.timeWindow = 60 *60*1000;
 	let self=this;
 	// document.getElementById('recalculateVotes').setAttribute('disabled', true);
-	document.getElementById('30_min').onclick = function () {self.setTimeWindow(30 *60*1000);};
-	document.getElementById('60_min').onclick = function () {self.setTimeWindow(60 *60*1000);};
-	document.getElementById('120_min').onclick = function () {self.setTimeWindow(120 *60*1000);};
+
+	document.getElementById('segment_type_switch').onclick = function() {self.toggleSegmentType()}
 
 	requestHandler.requestInitialSupervisorPayload(this.project_id, function (data) {
 		let lfSelector = document.getElementById('lfSelector');
@@ -84,6 +88,15 @@ function Supervisor(payload) {
 		document.getElementById('shadingLegend').appendChild(shading_legend);
 		this.buildLabelingFunctionTable(data.labeling_function_titles);
 		this.initModel(data);
+		$(document).on('mousemove', function(e){
+			$('#modal').css('top', e.pageY);
+			$('#modal').css('left', e.pageX);
+		});
+		$('#modal').css('display', 'none');
+		let self=this;
+		$('#view_segment').on('input', function () {
+			self.setTimeWindow($('#view_segment').val()*15*60*1000, false, 0);
+		});
 	}.bind(this));
 
 	toastr.options.timeOut = 3000;
@@ -218,6 +231,40 @@ Supervisor.prototype.initModel = function(data) {
 	}.bind(this));
 }
 
+Supervisor.prototype.toggleSegmentType = function() {
+	if (this.segmentType === 'CUSTOM')
+	{
+		// hide custom creation pane and render window creation pane
+		$('#custom_segment_creation').css('display', 'none');
+
+		this.segmentType = 'WINDOW';
+		this.windowInfo = {};
+		$('#segment_type_label').text('Create window segments')
+		$('#window_segment_creation').css('display', 'flex');
+
+	}
+	else if (this.segmentType == 'WINDOW')
+	{
+		// hide window creation pane and render custom creation pane
+		$('#window_segment_creation').css('display', 'none');
+
+		this.segmentType = 'CUSTOM';
+		$('#segment_type_label').text('Create custom segments')
+		$('#custom_segment_creation').css('display', 'flex');
+	}
+
+	let self = this;
+	requestHandler.getSegments(this.project_id, this.segmentType, function (data) {
+		self.allSegments = self.addColorToSegments(data.segments, self.existentSegmentShade);
+		self.windowInfo = data.window_info;
+		self.reshadeActiveGraphs(self.votesCalculated);
+		if (self.segmentType === 'WINDOW') {
+			$('#window_size').val(`${Math.round(data.window_info['window_size_ms']/(60*1000))}m`)
+			$('#window_roll').val(`${Math.round(data.window_info['window_roll_ms']/(1000*60))}m`)
+		}
+	});
+}
+
 Supervisor.prototype.addIdToSegments = function(targetSegments, sourceSegments) {
 	for (let [fileId, seriesBounds] of Object.entries(sourceSegments)) {
 		for (let [seriesId, bounds] of Object.entries(seriesBounds)) {
@@ -338,10 +385,14 @@ Supervisor.prototype.regenerateGraphs = function(pageNum) {
 		j++;
 	}
 
-	this.setTimeWindow(this.timeWindow, forceAdjustment=true);
+	if (this.votesCalculated && this.segmentType==='WINDOW') {
+		this.updateVotesWithActiveGraphs();
+	}
+
+	this.setTimeWindow(this.timeWindow, forceAdjustment=true, 10);
 }
 
-Supervisor.prototype.setTimeWindow = function(newTimeWindow, forceAdjustment=false) {
+Supervisor.prototype.setTimeWindow = function(newTimeWindow, forceAdjustment=false, maxSteps=10) {
 	if (forceAdjustment || (newTimeWindow !== this.timeWindow)) {
 		// document.getElementById('recalculateVotes').removeAttribute('disabled'); // since we have a new time slice, it should now be allowed to recalculate
 		this.timeWindow = newTimeWindow;
@@ -349,7 +400,7 @@ Supervisor.prototype.setTimeWindow = function(newTimeWindow, forceAdjustment=fal
 			let curGraph = this.dygraphs[graphIdx];
 			let curRange = curGraph.xAxisRange();
 			let desiredRange = [curRange[0], curRange[0] + this.timeWindow];
-			this.animate(curGraph, desiredRange);
+			this.animate(curGraph, desiredRange, maxSteps);
 		}
 	}
 }
@@ -416,11 +467,77 @@ Supervisor.prototype.removeSegmentsByColor = function(segmentObj, color) {
 }
 
 Supervisor.prototype.reshadeActiveGraphs = function(withVotes=false) {
-	for (let filename of Object.keys(this.allSegments)) {
-		if (this.activeGraphs.includes(this.filenamesToIdxs[filename])) {
-			this.shadeGraphSegmentsForFile(filename, withVotes);
-		} 
+	for (let file_idx of this.activeGraphs) {
+		this.shadeGraphSegmentsForFile(this.projectData.files[file_idx][1], withVotes);
 	}
+}
+
+Supervisor.prototype.charIsAlpha = function(char) {
+	const code = char.charCodeAt(0); // user must pass length 1 string
+	if ((code > 64 && code < 91) || // upper alpha (A-Z)
+        (code > 96 && code < 123)) // lower alpha (a-z)
+	{
+		return true;
+	}
+	return false;
+}
+
+Supervisor.prototype.convertTimeStringToInt_ms = function(timeString) {
+	// extract time int from beginning of string
+	let res = [];
+	let i = 0;
+	while (!this.charIsAlpha(timeString[i]))
+	{
+		res.push(timeString[i]);
+		i += 1;
+	}
+	res = parseInt(res.join(''));
+
+	let time_ms = null;
+	if (timeString.endsWith('hr'))
+	{
+		time_ms = res * 60 * 60 * 1000;
+	}
+	else if (timeString.endsWith('m'))
+	{
+		time_ms = res * 60 * 1000;
+	}
+	else if (timeString.endsWith('s'))
+	{
+		time_ms = res * 1000;
+	}
+
+	return time_ms;
+
+}
+
+Supervisor.prototype.populateWindowInfoFromForm = function() {
+	let window_size_ms = this.convertTimeStringToInt_ms($('#window_size').val());
+	let window_roll_ms = this.convertTimeStringToInt_ms($('#window_roll').val());
+	this.windowInfo = {
+		'window_size_ms': window_size_ms,
+		'window_roll_ms': window_roll_ms
+	};
+}
+
+Supervisor.prototype.submitWindowSegments = function() {
+	// extract window_size_ms && window_roll_ms
+	this.populateWindowInfoFromForm();
+
+	// submit for segment creation
+	let self = this;
+	$('#modal').css('display', 'flex');
+	requestHandler.submitVoteSegments(this.project_id, /*created_segments*/null, this.windowInfo, function (data) {
+		if (data.success) {
+			self.allSegments = self.addColorToSegments(data.newly_created_segments, self.existentSegmentShade);
+			self.reshadeActiveGraphs(self.votesCalculated);
+			$('#modal').css('display', 'none');
+			toastr.success(`Successfully added ${data.num_added} segments`);
+			if (self.votesCalculated) {
+				self.updateVotesWithActiveGraphs();
+			}
+		}
+	});
 }
 
 Supervisor.prototype.submitCreatedSegments = function() {
@@ -430,7 +547,7 @@ Supervisor.prototype.submitCreatedSegments = function() {
 		toastr.warning('No created segments to submit!');
 	} else {
 		let self = this;
-		requestHandler.submitVoteSegments(this.project_id, this.createdSegments, function (data) {
+		requestHandler.submitVoteSegments(this.project_id, this.createdSegments, /*window_info*/null, function (data) {
 			if (data.success) {
 				self.allSegments = self.addColorToSegments(self.allSegments, self.existentSegmentShade);
 				self.allSegments = self.addIdToSegments(self.allSegments, data.newly_created_segments);
@@ -453,7 +570,7 @@ Supervisor.prototype.pan = function(graph, dir) {
 	this.animate(graph, desiredRange);
 }
 
-Supervisor.prototype.animate = function(graph, desiredRange, maxSteps=20) {
+Supervisor.prototype.animate = function(graph, desiredRange, maxSteps=7) {
 	let self=this;
 	setTimeout(function() { self.approachRange(graph, desiredRange, maxSteps);}, 50);
 }
@@ -473,7 +590,7 @@ Supervisor.prototype.approachRange = function(graph, desiredRange, maxSteps) {
 
 Supervisor.prototype.calculateStats = function () {
 	let self=this;
-	requestHandler.requestAggregateLabelerStats(this.project_id, this.activeLF, function (data) {
+	requestHandler.requestAggregateLabelerStats(this.project_id, this.segmentType, function (data) {
 		self.labelerStatistics = data;
 		if (self.statsCalculated) {
 			self.clearStatsPane();
@@ -509,10 +626,45 @@ Supervisor.prototype.clearStatsPane = function() {
 	document.getElementById('stats_pane').removeChild(document.getElementById('stats_pane').lastChild);
 }
 
+Supervisor.prototype.updateVotesWithActiveGraphs = function () {
+	let files = [];
+	this.activeGraphs.forEach((activeGraphIdx) => {
+		let file_id = this.projectData.files[activeGraphIdx][0];
+		files.push(file_id);
+	});
+	let windowInfo = this.segmentType==='WINDOW' ? this.windowInfo : null;
+	$('#modal').css('display', 'flex');
+	let self = this;
+	requestHandler.getVotes(this.project_id, files, windowInfo, function(data) {
+		for (const [segId, votes] of Object.entries(data.labeling_function_votes)) {
+			self.labeling_function_votes[segId] = votes;
+		}
+		self.votesCalculated = true;
+		$('#calculate_stats').removeAttr('disabled');
+		if (self.statsCalculated) {
+			self.clearStatsPane();
+			self.renderStats();
+		}
+		document.getElementById('shadingLegend').style.display = 'inline-block';
+		self.reshadeActiveGraphs(withVotes=true);
+		// turn off loader now that we've received data
+		$('#modal').css('display', 'none')
+	});
+}
+
 Supervisor.prototype.recalculateVotes = function () {
 	// ask backend to segment all series' and vote on subsequent segments, then return them all
 	let self = this;
-	requestHandler.getVotes(this.project_id, [], function(data) {
+	let files = [];
+	let windowInfo = null;
+	if (this.segmentType==='WINDOW') {
+		this.activeGraphs.forEach((activeGraphIdx) => {
+			let file_id = this.projectData.files[activeGraphIdx][0];
+			files.push(file_id);
+		});
+		windowInfo = this.windowInfo;
+	}
+	requestHandler.getVotes(this.project_id, files, windowInfo, function(data) {
 		self.labeling_function_votes = data.labeling_function_votes;
 		self.votesCalculated = true;
 		$('#calculate_stats').removeAttr('disabled');
@@ -523,14 +675,10 @@ Supervisor.prototype.recalculateVotes = function () {
 		document.getElementById('shadingLegend').style.display = 'inline-block';
 		self.reshadeActiveGraphs(withVotes=true);
 		// turn off loader now that we've received data
-		$('#loadMe').modal("hide");
+		$('#modal').css('display', 'none')
 	});
 	// set loader on
-	$('#loadMe').modal({
-		keyboard: false,
-		backdrop: "static",
-		show: true
-	});
+	$('#modal').css('display', 'flex')
 }
 
 Supervisor.prototype.shadeTimeSegmentsWithVotes = function() {
@@ -544,41 +692,52 @@ Supervisor.prototype.shadeGraphSegmentsForFile = function(filename, withVotes=fa
 		for (let [seriesId, dataBoundsArr] of Object.entries(this.allSegments[filename])) {
 			this.shadeGraphSegments(this.dygraphs[this.filenamesToIdxs[filename]], dataBoundsArr, withVotes);
 		}
+	} else {
+		console.log(filename);
+		this.shadeGraphSegments(this.dygraphs[this.filenamesToIdxs[filename]], [], null);
 	}
 }
 Supervisor.prototype.shadeGraphSegments = function(graph, dataBoundsArray, withVotes=false) {
 	let self = this;
-	graph.updateOptions({
-		underlayCallback: function(canvas, area, g) {
-			for (let bounds of dataBoundsArray) {
-				let bottomLeft = g.toDomCoords(bounds.left, -20);
-				let topRight = g.toDomCoords(bounds.right, +20);
-				left = bottomLeft[0];
-				right = topRight[0];
-				// border on both sides
-				canvas.fillStyle = 'black';
-				let borderWidth = 2;
-				canvas.fillRect(left-borderWidth/2, area.y, borderWidth, area.h);
-				canvas.fillRect(right-borderWidth/2, area.y, borderWidth, area.h);
-				// canvas.fillRect(left, area.y, right-left, borderWidth);
-				// canvas.fillRect(left, borderWidth, right-left, borderWidth);
-				if (withVotes && (bounds.color !== self.toBeDeletedShade) && (bounds.id in self.labeling_function_votes)) {
-					let vote = self.labeling_function_votes[bounds.id][self.lfTitleToIdx[self.activeLF]];
-					let color = self.votesToColors[vote];
-					canvas.fillStyle = color;
-					canvas.fillRect(left, area.y, right-left, area.h);
-				} else {
-					canvas.fillStyle = bounds.color;
-					canvas.fillRect(left, area.y, right-left, area.h);
+	if (dataBoundsArray.length === 0) {
+		graph.updateOptions({
+			underlayCallback: null
+		});
+	}
+	else {
+		graph.updateOptions({
+			underlayCallback: function(canvas, area, g) {
+				for (let bounds of dataBoundsArray) {
+					let bottomLeft = g.toDomCoords(bounds.left, -20);
+					let topRight = g.toDomCoords(bounds.right, +20);
+					left = bottomLeft[0];
+					right = topRight[0];
+					// border on both sides
+					canvas.fillStyle = 'black';
+					let borderWidth = 2;
+					canvas.fillRect(left-borderWidth/2, area.y, borderWidth, area.h);
+					canvas.fillRect(right-borderWidth/2, area.y, borderWidth, area.h);
+					// canvas.fillRect(left, area.y, right-left, borderWidth);
+					// canvas.fillRect(left, borderWidth, right-left, borderWidth);
+					if (withVotes && (bounds.color !== self.toBeDeletedShade) && (bounds.id in self.labeling_function_votes)) {
+						let vote = self.labeling_function_votes[bounds.id][self.lfTitleToIdx[self.activeLF]];
+						let color = self.votesToColors[vote];
+						canvas.fillStyle = color;
+						canvas.fillRect(left, area.y, right-left, area.h);
+					} else {
+						canvas.fillStyle = bounds.color;
+						canvas.fillRect(left, area.y, right-left, area.h);
+					}
 				}
+				// get start and end timestamps
+				// let bottomLeft = g.toDomCoords(left, -20);
+				// let topRight = g.toDomCoords(right, +20);
+				// left = bottomLeft[0];
+				// right = topRight[0];
 			}
-			// get start and end timestamps
-			// let bottomLeft = g.toDomCoords(left, -20);
-			// let topRight = g.toDomCoords(right, +20);
-			// left = bottomLeft[0];
-			// right = topRight[0];
-		}
 	});
+
+	}
 }
 
 Supervisor.prototype.shadeGraph = function(graphIdx) {
