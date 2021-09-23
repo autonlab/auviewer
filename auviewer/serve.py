@@ -716,8 +716,9 @@ def createApp():
         project = getProject(project_id)
 
         payload = request.get_json()
-        voteSegments = payload['vote_segments']
-        createdSegments, success, numAdded = project.createSegments(voteSegments)
+        voteSegments = payload.get('vote_segments')
+        windowInfo = payload.get('window_info')
+        createdSegments, success, numAdded = project.createSegments(voteSegments, windowInfo)
 
         returnPayload = {
             'newly_created_segments': createdSegments,
@@ -759,6 +760,14 @@ def createApp():
     def get_votes():
         project_id = request.args.get('project_id', type=int)
         files = request.args.getlist('file_ids')
+
+        windowInfo = request.get_json()['window_info']
+        '''
+            window_info: {
+                window_size_ms: 30*60*1000,
+                window_roll_ms: 30*60*1000 
+            }
+        '''
 
         project = getProject(project_id)
         if (len(files) == 0):

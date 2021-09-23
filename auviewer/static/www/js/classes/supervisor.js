@@ -88,8 +88,8 @@ function Supervisor(payload) {
 
 	toastr.options.timeOut = 3000;
 	toastr.options.positionClass = "toast-bottom-center";
-	toastr.options.showMethod = 'show';
-	toastr.options.hideMethod = 'hide';
+	toastr.options.showMethod = 'slideDown';
+	toastr.options.hideMethod = 'slideUp';
 	toastr.options.preventDuplicates = true;
 }
 
@@ -392,7 +392,7 @@ Supervisor.prototype.deleteSegments = function () {
 			if (data.success) {
 				self.removeSegmentsByColor(self.allSegments, self.toBeDeletedShade);
 				self.reshadeActiveGraphs(self.votesCalculated);
-				toastr.success(`Successfully deleted ${data.number_deleted} segments`);
+				toastr.success(`Successfully deleted ${data.number_deleted} segment${data.number_deleted === 1 ? '' : 's'}`);
 			}
 			$('#delete_segments').attr('onclick','globalStateManager.currentSupervisor.activateSegmentDeletionMode()');
 			$('#delete_segments').text('Delete segments');
@@ -555,6 +555,13 @@ Supervisor.prototype.shadeGraphSegments = function(graph, dataBoundsArray, withV
 				let topRight = g.toDomCoords(bounds.right, +20);
 				left = bottomLeft[0];
 				right = topRight[0];
+				// border on both sides
+				canvas.fillStyle = 'black';
+				let borderWidth = 2;
+				canvas.fillRect(left-borderWidth/2, area.y, borderWidth, area.h);
+				canvas.fillRect(right-borderWidth/2, area.y, borderWidth, area.h);
+				// canvas.fillRect(left, area.y, right-left, borderWidth);
+				// canvas.fillRect(left, borderWidth, right-left, borderWidth);
 				if (withVotes && (bounds.color !== self.toBeDeletedShade) && (bounds.id in self.labeling_function_votes)) {
 					let vote = self.labeling_function_votes[bounds.id][self.lfTitleToIdx[self.activeLF]];
 					let color = self.votesToColors[vote];

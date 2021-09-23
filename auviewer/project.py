@@ -285,7 +285,7 @@ class Project:
             models.db.session.delete(vote)
         models.db.session.commit()
 
-    def computeVotes(self, fileIds):
+    def computeVotes(self, fileIds, windowInfo=None):
         lfModule = self.getLFModule()
         thresholds = self.getThresholdsPayload()
         labels = {
@@ -310,8 +310,24 @@ class Project:
             f = self.getFile(fileId)
             series = f.series[0].getFullOutput().get('data') #for now assuming a single series, hence the 0-index
 
+            if (windowInfo):
+                segmentsForFile = models.Segment.query.\
+                    filter_by(
+                        project_id=self.id,
+                        file_id=fileId,
+                        type='WINDOW',
+                        window_size_ms=windowInfo['window_size_ms'],
+                        window_roll_ms=windowInfo['window_roll_ms']).\
+                    order_by(
+                        models.Segment.left.asc() #ascending
+                ).all()
+            else:
+                segmentsForFile = models.Segment.query.filter_by(
+                    project_id=self.id,
+                    file_id=fileId,
+                    type='CUSTOM'
+                ).all()
             #iterate through user defined segments
-            segmentsForFile = models.Segment.query.filter_by(project_id=self.id, file_id=fileId).all()
             correspondingIndexBounds = self.getIndicesForSegments(segmentsForFile, series)
             series = [e[-1] for e in series]
             for i, segment in enumerate(segmentsForFile):
@@ -375,7 +391,22 @@ class Project:
 
 
 
-    def createSegments(self, segmentsMap):
+    def createSegments(self, segmentsMap, windowInfo):
+        '''
+            one of segmentsMap or windowInfo will be undefined
+                if segmentsMap, then use windowInfo to create rolling segments of
+                 the specified size and with the specifiec stride
+                if windowInfo, then use segmentsMap to create segments of the
+                 specified left and right timestamps
+        '''
+        if (segmentsMap):
+            return self._createSegmentsCustom(segmentsMap)
+        else:
+            return self._createSegmentsWindows(windowInfo)
+
+    def _createSegmentsWindows(self, windowInfo):
+        pass
+    def _createSegmentsCustom(self, segmentsMap):
         beforeNum = len(models.Segment.query.filter_by(project_id=self.id).all())
         '''
         segmentsMap expected to be of form:
@@ -411,7 +442,6 @@ class Project:
         print(beforeNum, afterNum, len(newSegments))
         print(f'It is {success} that we made as many segments as we intended')
         return segmentsMap, True, len(newSegments)
-    
     def getLFCode(self, lfNames, lfModule, thresholds, labels):
         curSeries = self.files[0].series[0].getFullOutput().get('data') #for now assuming a single series, hence the 0-index
         curSeries = np.array([x[-1] for x in curSeries])

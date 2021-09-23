@@ -52,6 +52,10 @@ class Segment(db.Model):
     left = db.Column(db.Float, nullable=True)
     right = db.Column(db.Float, nullable=True)
 
+    type = db.Column(db.String(255), nullable=False) # CUSTOM | WINDOW, used purely for querying purposes
+    window_size_ms = db.Column(db.Integer, nullable=True) #only defined if type=='WINDOW'
+    window_roll_ms = db.Column(db.Integer, nullable=True) #only defined if type=='WINDOW'
+
     votes = db.relationship("Vote", cascade="all, delete-orphan")
 
 class Labeler(db.Model):
