@@ -241,7 +241,7 @@ def setDataPath(path, load_projects=False) -> None:
     app.app_context().push()
 
     if load_projects:
-        project.loadProjects()
+        loadProjects()
 
 def validateProjectFolder(projDirPathObj):
     """Raises an exception if the project folder is invalid"""
@@ -260,7 +260,7 @@ def validateProjectFolder(projDirPathObj):
             raise Exception(f'Project folder contains invalid folder: {p}')
 
     # Validate expected template files if they exist.
-    tp = p / "templates"
+    tp = projDirPathObj / "templates"
     if tp.exists():
         for p in [p for p in tp.iterdir()]:
             if p.name not in ['project_template.json', 'interface_templates.json']:

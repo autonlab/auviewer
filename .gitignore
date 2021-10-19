@@ -9,6 +9,7 @@ build/
 *.egg-info/
 dist/
 data/
+auviewer.code-workspace
 ._.DS_Store
 .DS_Store
 ._*

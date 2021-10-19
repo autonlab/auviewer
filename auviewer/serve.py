@@ -1,5 +1,4 @@
 from flask import Flask, Blueprint, send_from_directory, request, render_template, render_template_string, abort, Markup
-from flask_login import current_user
 from flask_mail import Mail
 from htmlmin.main import minify
 from pathlib import Path
@@ -8,10 +7,7 @@ import argparse
 import logging
 import shutil
 import tempfile
-import threading
-import webbrowser
 import json
-from flask import jsonify
 
 # Simplejson package is required in order to "ignore" NaN values and implicitly
 # convert them into null values. RFC JSON spec left out NaN values, even though
@@ -29,6 +25,27 @@ from .config import set_data_path, config, FlaskConfigClass
 
 from .flask_user import confirm_email_required, current_user, login_required, UserManager, SQLAlchemyAdapter
 from .flask_user.signals import user_sent_invitation, user_registered
+
+
+
+
+
+
+##### IMPORTS FOR FEATURIZERS
+from sklearn.linear_model import LinearRegression
+
+from datetime import datetime
+import pyhrv
+import pandas as pd
+import numpy as np
+import pytz
+
+from .modules.featurization.mean import MeanFeaturizer
+from functools import partial
+
+
+
+
 
 def createApp():
 
@@ -88,10 +105,20 @@ def createApp():
     # could modify the database.
     #
     with app.app_context():
-        new_admin_email = 'gwelter@gmail.com'
-        new_admin_pass = 'akeminute'
-        if not models.User.query.filter_by(email=new_admin_email).first():
-            u = models.User(email=new_admin_email, active=True, password=user_manager.hash_password(new_admin_pass))
+        if not models.User.query.first():
+            from getpass import getpass
+            print("You must create an admin user.")
+            fn = input("First name: ")
+            ln = input("Last name: ")
+            em = input("E-mail: ")
+            pw = getpass(prompt="Password: ")
+            u = models.User(
+                first_name=fn,
+                last_name=ln,
+                email=em,
+                active=True,
+                password=user_manager.hash_password(pw),
+            )
             u.roles.append(models.Role(name='admin'))
             models.db.session.add(u)
             models.db.session.commit()
@@ -387,6 +414,12 @@ def createApp():
     @login_required
     def featurize():
 
+        # featurizers = {
+        #     "sample_entropy"
+        # }
+        featurizer = request.args.get('featurizer')
+        print("FEATURIZER", featurizer)
+
         # Parse parameters
         project_id = request.args.get('project_id', type=int)
         file_id = request.args.get('file_id', type=int)
@@ -395,6 +428,50 @@ def createApp():
         right = request.args.get('right', type=float)
         params = json.loads(request.args.get('params'));
         print('featurize', project_id, file_id, series, params)
+
+        if featurizer == 'sample_entropy':
+            tolerance = params['tolerance']
+            if len(tolerance) < 1:
+                tolerance = None
+            dim = params['dim']
+            try:
+                dim = int(dim)
+            except:
+                dim = 2
+            def se(x):
+                try:
+                    return pyhrv.nonlinear.sample_entropy(nni=x, tolerance=tolerance, dim=dim)[0] if x.shape[0] > 0 else np.nan
+                except Exception as e:
+                    print(f"exception: {e}")
+                    return np.nan
+        elif featurizer == 'mean':
+            fi = MeanFeaturizer()
+            se = partial(fi.featurize, params=params)
+            # TODO: exception catching?
+            # def se(x):
+            #     try:
+            #         return x.mean()
+            #     except Exception as e:
+            #         print(f"exception: {e}")
+            #         return np.nan
+        elif featurizer == 'standard_deviation':
+            def se(x):
+                try:
+                    return x.std()
+                except Exception as e:
+                    print(f"exception: {e}")
+                    return np.nan
+        elif featurizer == 'regression':
+            def se(x):
+                try:
+                    slrm = LinearRegression()
+                    slrm.fit(data[['time']], data['value'])
+                    return slrm.coef_[0] # slope
+                except Exception as e:
+                    print(f"exception: {e}")
+                    return np.nan
+        else:
+            raise Exception(f"Unknown featurizer requested: {featurizer}")
 
         try:
 
@@ -415,11 +492,6 @@ def createApp():
                     mimetype='application/json'
                 )
 
-            from datetime import datetime
-            import pyhrv
-            import pandas as pd
-            import numpy as np
-            import pytz
             utc = pytz.UTC
 
             s = file.getSeries(series)
@@ -427,35 +499,29 @@ def createApp():
                 raise Exception('series not found')
             df = s.getDataAsDF().set_index('time')
             window_size = params['window_size']
-            tolerance = params['tolerance']
-            if len(tolerance) < 1:
-                tolerance = None
-            dim = params['dim']
-            try:
-                dim = int(dim)
-            except:
-                dim = 2
 
-            left = datetime.fromtimestamp(left).astimezone(utc)
-            right = datetime.fromtimestamp(right).astimezone(utc)
+            # left = datetime.fromtimestamp(left).astimezone(utc)
+            # right = datetime.fromtimestamp(right).astimezone(utc)
+            # left = pd.to_datetime(datetime.fromtimestamp(left).astimezone(utc))
+            # right = pd.to_datetime(datetime.fromtimestamp(right).astimezone(utc))
+            left = np.datetime64(datetime.fromtimestamp(left).astimezone(utc))
+            right = np.datetime64(datetime.fromtimestamp(right).astimezone(utc))
             print('left', left)
             print('right', right)
             df = df[(df.index >= left) & (df.index <= right)]
 
             print("BEFORE")
             print(df)
-            def se(x):
-                try:
-                    return pyhrv.nonlinear.sample_entropy(nni=x, tolerance=tolerance, dim=dim)[0] if x.shape[0] > 0 else np.nan
-                except Exception as e:
-                    print(f"exception: {e}")
-                    return np.nan
-            featurization = df.resample(window_size).agg(se).replace(np.inf, np.nan).replace(-np.inf, np.nan).dropna()
+
+            # TODO: Might make label side configurable
+
+            featurization = df.resample(window_size, label='right').agg(se).replace(np.inf, np.nan).replace(-np.inf, np.nan).dropna()
             print("AFTER")
             print(featurization)
             # featurization = df.resample(window_size).agg(lambda x: x.mean()).dropna()
             featurization.reset_index(inplace=True)
-            featurization['time'] = ((featurization['time'].dt.tz_convert(utc) - pd.Timestamp("1970-01-01").replace(tzinfo=utc)) // pd.Timedelta("1ms")) / 1000
+            # featurization['time'] = ((featurization['time'].dt.tz_convert(utc) - pd.Timestamp("1970-01-01").replace(tzinfo=utc)) // pd.Timedelta("1ms")) / 1000
+            featurization['time'] = ((featurization['time'].dt.tz_localize('UTC') - pd.Timestamp("1970-01-01").replace(tzinfo=utc)) // pd.Timedelta("1ms")) / 1000
 
             nones = [None] * featurization.shape[0]
             data = [list(i) for i in zip(featurization['time'], nones, nones, featurization['value'])]
@@ -573,7 +639,29 @@ def createApp():
         # JSON string safe to drop straight into JavaScript code, as we are doing.
         projectPayloadJSON = simplejson.dumps(simplejson.dumps(projectPayload))
 
-        return render_template('project.html', project_name=projectPayload['project_name'], payload=projectPayloadJSON)
+
+
+
+
+
+
+
+        #### TEMP FOR FEATURIZERS
+
+        m = MeanFeaturizer()
+
+        # Assemble the data into a payload. We JSON-encode this twice. The first
+        # one converts the dict into JSON. The second one essentially makes the
+        # JSON string safe to drop straight into JavaScript code, as we are doing.
+        featurizersJSONPayload = simplejson.dumps(simplejson.dumps(m.getFields()))
+
+
+
+
+
+
+
+        return render_template('project.html', project_name=projectPayload['project_name'], payload=projectPayloadJSON, featurizersJSONPayload=featurizersJSONPayload)
 
     @app.route(config['rootWebPath']+'/series_ranged_data', methods=['GET'])
     @login_required
@@ -698,13 +786,15 @@ def main():
         downsampleFile(args.downsample[0], args.downsample[1])
         return
 
-    # Handle datapath argument
+    # Handle no data path or file argument
     if args.datapath is None:
-        # If no argument provided, assume ./auvdata
+        # If no argument provided, prompt user
         assumed_datapath = './auvdata'
-        logging.warning(f"No datapath argument provided, assuming: {assumed_datapath}")
-        set_data_path(assumed_datapath)
+        dp = input(f"AUViewer data path [{assumed_datapath}]: ") or assumed_datapath
+        logging.info(f"Using data path {dp}")
+        set_data_path(dp)
 
+    # Handle single file argument
     elif Path(args.datapath).is_file():
 
         # If a file was provided, assume it's one-off view timeseries request
@@ -741,19 +831,22 @@ def main():
         # Set datapath to our temp datapath
         set_data_path(temp_datapath)
 
+    # Handle data path argument
     else:
-        # Otherwise, set the data path provided
+        # Set the data path provided
         set_data_path(args.datapath)
 
     app = createApp()
 
     # Open auviewer in the browser, just before we spin up the server
     browser_url = f"http://{config['host']}{':' + str(config['port']) if str(config['port']) != '80' else ''}/{config['rootWebPath']}".rstrip('/')
+    bannerMsgPrefix = '\033[96m\033[1m\033[4m'
+    fmtEndSuffix = '\033[0m'
     if args.datapath is not None and Path(args.datapath).is_file():
-        logging.warning("AUViewer is running with a temporary data path! If you create patterns, annotations, or anything else stored in the database, they will be lost!")
-        threading.Timer(0.5, lambda: webbrowser.open(browser_url+'/project?id=1#file_id=1')).start()
+        print('\033[93m'+"\nNOTE: AUViewer is running against a single file using a temporary directory for data storage. Any annotations, patterns, etc. will be lost!"+fmtEndSuffix)
+        print(f"\n{bannerMsgPrefix}You may access your file at: {browser_url}/project?id=1#file_id=1\n{fmtEndSuffix}")
     else:
-        threading.Timer(0.5, lambda: webbrowser.open(browser_url)).start()
+        print(f"\n{bannerMsgPrefix}You may access AUViewer at: {browser_url}\n{fmtEndSuffix}")
 
     app.run(host=config['host'], port=config['port'], debug=config['debug'], use_reloader=False)
 

@@ -351,11 +351,9 @@ function showFeaturizationPanel(s) {
 		$$('featurize_window').showProgress();
 
 		const vals = $$('featurize_form').getValues();
-		const params = {
-			'window_size': vals['window_size'],
-			'dim': vals['dim'],
-			'tolerance': vals['tolerance']
-		}
+		const featurizer = vals['_featurizer'];
+		delete vals['_featurizer'];
+		const params = vals;
 
 		// Grab the x-axis range from the last showing graph (all graphs should be
 		// showing the same range since they are synchronized).
@@ -365,7 +363,7 @@ function showFeaturizationPanel(s) {
 		const left = xRange[0]/1000-f.fileData.baseTime;
 		const right = xRange[1]/1000-f.fileData.baseTime;
 
-		requestHandler.featurize(globalStateManager.currentProject.id, globalStateManager.currentFile.id, s, left, right, params, function(data) {
+		requestHandler.featurize(globalStateManager.currentProject.id, globalStateManager.currentFile.id, s, featurizer, left, right, params, function(data) {
 			$$('featurize_window').hideProgress();
 
 			if (!data['success']) {
@@ -388,39 +386,108 @@ function showFeaturizationPanel(s) {
 		head: "Featurize",// &mdash; Rolling Window Sample Entropy &mdash; "+s,
 		move: true,
 		position: 'center',
-		width: 350,
+		width: 400,
 		body: {
 			view: 'form',
-			width: 350,
+			//width: 650,
+			//height: 500,
 			id: 'featurize_form',
 			on: { onSubmit: featurize },
 			elements: [
-				{view: 'template', template: 'Featurize Rolling Window Sample Entropy', type: 'header', borderless: true},
 				{
-					view: 'text',
-					label: 'Window Size (e.g. 10ms, 3s, 5min)',
-					labelWidth: 250,
-					name: 'window_size',
-					// width: 120,
-					on: { onFocus: function() { this.getInputNode().select() } },
+					view: "combo",
+					id: '_featurizer',
+					//width:300,
+					labelWidth: 'auto',
+					label: 'Featurizer',
+					name:"_featurizer",
+					options:[
+						{ id: "mean", value: "Mean" },
+						{ id: "standard_deviation", value: "Standard Deviation" },
+						{ id: "sample_entropy", value: "Sample Entropy" },
+					],
+					on: {
+						onChange: function() {
+							const featurizerID = this.getValue();
+							/*if (featurizerID === 'sample_entropy') {
+								console.log('hiding');
+								$$('featurizer_param_dim').show();
+								$$('featurizer_param_tolerance').show();
+							} else {
+								$$('featurizer_param_dim').hide();
+								$$('featurizer_param_tolerance').hide();
+							}*/
+							$$('featurizer_params_fieldset')
+						}
+					}
 				},
 				{
-					view: 'text',
-					label: 'Embedding Dimension (opt)',
-					tooltip: 'The embedding dimension (length of vectors to compare) (default: 2)',
-					labelWidth: 230,
-					name: 'dim',
-					// width: 120,
-					on: { onFocus: function() { this.getInputNode().select() } },
+					view: 'fieldset',
+					id: 'rw_params_fieldset',
+					label: 'Rolling Window Parameters',
+					paddingY: 48,
+					body: {
+						rows: [
+							{
+								view: 'text',
+								label: 'Window Size (e.g. 10ms, 3s, 5min)',
+								//labelWidth: 250,
+								labelWidth: 'auto',
+								labelAlign: 'left',
+								inputAlign: 'right',
+								name: 'window_size',
+								id: 'window_size',
+								// width: 120,
+								on: {
+									onFocus: function () {
+										this.getInputNode().select()
+									}
+								},
+							},
+						],
+					},
 				},
 				{
-					view: 'text',
-					label: 'Tolerance (opt)',
-					tooltip: 'Tolerance distance for which the two vectors can be considered equal (default: std(NNI))',
-					labelWidth: 230,
-					name: 'tolerance',
-					// width: 120,
-					on: { onFocus: function() { this.getInputNode().select() } },
+					view: 'fieldset',
+					id: 'featurizer_params_fieldset',
+					label: 'Featurizer Parameters',
+					paddingY: 40,
+					body: {
+						rows: featurizersPayload,
+
+							/*[
+							{
+								view: 'text',
+								label: 'Embedding Dimension (opt)',
+								tooltip: 'The embedding dimension (length of vectors to compare) (default: 2)',
+								labelWidth: 230,
+								name: 'dim',
+								id: 'featurizer_param_dim',
+								// width: 120,
+								hidden: false,
+								on: {
+									onFocus: function () {
+										this.getInputNode().select()
+									}
+								},
+							},
+							{
+								view: 'text',
+								label: 'Tolerance (opt)',
+								tooltip: 'Tolerance distance for which the two vectors can be considered equal (default: std(NNI))',
+								labelWidth: 230,
+								name: 'tolerance',
+								id: 'featurizer_param_tolerance',
+								// width: 120,
+								hidden: false,
+								on: {
+									onFocus: function () {
+										this.getInputNode().select()
+									}
+								},
+							},
+						],//*/
+					}
 				},
 				{
 					view: 'button',

@@ -28,9 +28,8 @@ facilitate expert annotation.
    :caption: Getting Started
    :name: sec-getstarted
 
-   installation
    getstarted
-   about
+   installation
 
 
 .. toctree::
@@ -40,8 +39,8 @@ facilitate expert annotation.
    :name: sec-documentation
 
    documentation/datadir
+   documentation/templates
    Python API <api/auviewer>
-   license
 
 .. toctree::
    :hidden:
@@ -53,6 +52,17 @@ facilitate expert annotation.
    contributing/getstarteddev
    contributing/technical
 
+
+.. toctree::
+   :hidden:
+   :maxdepth: 2
+   :caption: About
+   :name: sec-about
+
+   about
+   license
+
+
 .. toctree::
    :hidden:
    :maxdepth: 2
@@ -60,6 +70,14 @@ facilitate expert annotation.
    :name: sec-sourcecode
 
    GitHub <https://github.com/autonlab/auviewer/>
+
+
+Overview & Installation Video
+-----------------------------
+
+.. raw:: html
+
+   <iframe style="margin-bottom: 34px;" width="560" height="315" src="https://www.youtube-nocookie.com/embed/trO9KTuexD4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe>
 
 
 Site Map
