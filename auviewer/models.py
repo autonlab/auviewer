@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from .flask_user import UserMixin
 from pkg_resources import packaging
 from sqlalchemy.sql import func
+import logging
 
 db = SQLAlchemy()
 
@@ -196,6 +197,7 @@ def upgrade_db():
         #     continue
 
         if db_version != app_version:
+            logging.info(f"Database version was {db_version}. Upgrading to {app_version}. __VERSION__ is {__VERSION__}.")
             Version.query.first().version = __VERSION__
             db.session.commit()
 
