@@ -28,9 +28,8 @@ facilitate expert annotation.
    :caption: Getting Started
    :name: sec-getstarted
 
-   installation
    getstarted
-   about
+   installation
 
 
 .. toctree::
@@ -40,8 +39,8 @@ facilitate expert annotation.
    :name: sec-documentation
 
    documentation/datadir
+   documentation/templates
    Python API <api/auviewer>
-   license
 
 .. toctree::
    :hidden:
@@ -52,6 +51,17 @@ facilitate expert annotation.
    Motivation <contributing/motivation>
    contributing/getstarteddev
    contributing/technical
+
+
+.. toctree::
+   :hidden:
+   :maxdepth: 2
+   :caption: About
+   :name: sec-about
+
+   about
+   license
+
 
 .. toctree::
    :hidden:

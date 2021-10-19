@@ -9,7 +9,7 @@ by an individual analyst (standalone) or a team of analysts/domain experts
 Documentation
 -------------
 
-Further documentation, including Installation & Getting Started, is available at
+Documentation is available at
 `auviewer.readthedocs.io`_
 
 .. _auviewer.readthedocs.io: https://auviewer.readthedocs.io/

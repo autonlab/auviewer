@@ -7,6 +7,7 @@ import argparse
 import logging
 import shutil
 import tempfile
+import json
 
 # Simplejson package is required in order to "ignore" NaN values and implicitly
 # convert them into null values. RFC JSON spec left out NaN values, even though
@@ -24,6 +25,27 @@ from .config import set_data_path, config, FlaskConfigClass
 
 from .flask_user import confirm_email_required, current_user, login_required, UserManager, SQLAlchemyAdapter
 from .flask_user.signals import user_sent_invitation, user_registered
+
+
+
+
+
+
+##### IMPORTS FOR FEATURIZERS
+from sklearn.linear_model import LinearRegression
+
+from datetime import datetime
+import pyhrv
+import pandas as pd
+import numpy as np
+import pytz
+
+from .modules.featurization.mean import MeanFeaturizer
+from functools import partial
+
+
+
+
 
 def createApp():
 
@@ -350,6 +372,12 @@ def createApp():
     @login_required
     def featurize():
 
+        # featurizers = {
+        #     "sample_entropy"
+        # }
+        featurizer = request.args.get('featurizer')
+        print("FEATURIZER", featurizer)
+
         # Parse parameters
         project_id = request.args.get('project_id', type=int)
         file_id = request.args.get('file_id', type=int)
@@ -358,6 +386,50 @@ def createApp():
         right = request.args.get('right', type=float)
         params = json.loads(request.args.get('params'));
         print('featurize', project_id, file_id, series, params)
+
+        if featurizer == 'sample_entropy':
+            tolerance = params['tolerance']
+            if len(tolerance) < 1:
+                tolerance = None
+            dim = params['dim']
+            try:
+                dim = int(dim)
+            except:
+                dim = 2
+            def se(x):
+                try:
+                    return pyhrv.nonlinear.sample_entropy(nni=x, tolerance=tolerance, dim=dim)[0] if x.shape[0] > 0 else np.nan
+                except Exception as e:
+                    print(f"exception: {e}")
+                    return np.nan
+        elif featurizer == 'mean':
+            fi = MeanFeaturizer()
+            se = partial(fi.featurize, params=params)
+            # TODO: exception catching?
+            # def se(x):
+            #     try:
+            #         return x.mean()
+            #     except Exception as e:
+            #         print(f"exception: {e}")
+            #         return np.nan
+        elif featurizer == 'standard_deviation':
+            def se(x):
+                try:
+                    return x.std()
+                except Exception as e:
+                    print(f"exception: {e}")
+                    return np.nan
+        elif featurizer == 'regression':
+            def se(x):
+                try:
+                    slrm = LinearRegression()
+                    slrm.fit(data[['time']], data['value'])
+                    return slrm.coef_[0] # slope
+                except Exception as e:
+                    print(f"exception: {e}")
+                    return np.nan
+        else:
+            raise Exception(f"Unknown featurizer requested: {featurizer}")
 
         try:
 
@@ -378,11 +450,6 @@ def createApp():
                     mimetype='application/json'
                 )
 
-            from datetime import datetime
-            import pyhrv
-            import pandas as pd
-            import numpy as np
-            import pytz
             utc = pytz.UTC
 
             s = file.getSeries(series)
@@ -390,35 +457,29 @@ def createApp():
                 raise Exception('series not found')
             df = s.getDataAsDF().set_index('time')
             window_size = params['window_size']
-            tolerance = params['tolerance']
-            if len(tolerance) < 1:
-                tolerance = None
-            dim = params['dim']
-            try:
-                dim = int(dim)
-            except:
-                dim = 2
 
-            left = datetime.fromtimestamp(left).astimezone(utc)
-            right = datetime.fromtimestamp(right).astimezone(utc)
+            # left = datetime.fromtimestamp(left).astimezone(utc)
+            # right = datetime.fromtimestamp(right).astimezone(utc)
+            # left = pd.to_datetime(datetime.fromtimestamp(left).astimezone(utc))
+            # right = pd.to_datetime(datetime.fromtimestamp(right).astimezone(utc))
+            left = np.datetime64(datetime.fromtimestamp(left).astimezone(utc))
+            right = np.datetime64(datetime.fromtimestamp(right).astimezone(utc))
             print('left', left)
             print('right', right)
             df = df[(df.index >= left) & (df.index <= right)]
 
             print("BEFORE")
             print(df)
-            def se(x):
-                try:
-                    return pyhrv.nonlinear.sample_entropy(nni=x, tolerance=tolerance, dim=dim)[0] if x.shape[0] > 0 else np.nan
-                except Exception as e:
-                    print(f"exception: {e}")
-                    return np.nan
-            featurization = df.resample(window_size).agg(se).replace(np.inf, np.nan).replace(-np.inf, np.nan).dropna()
+
+            # TODO: Might make label side configurable
+
+            featurization = df.resample(window_size, label='right').agg(se).replace(np.inf, np.nan).replace(-np.inf, np.nan).dropna()
             print("AFTER")
             print(featurization)
             # featurization = df.resample(window_size).agg(lambda x: x.mean()).dropna()
             featurization.reset_index(inplace=True)
-            featurization['time'] = ((featurization['time'].dt.tz_convert(utc) - pd.Timestamp("1970-01-01").replace(tzinfo=utc)) // pd.Timedelta("1ms")) / 1000
+            # featurization['time'] = ((featurization['time'].dt.tz_convert(utc) - pd.Timestamp("1970-01-01").replace(tzinfo=utc)) // pd.Timedelta("1ms")) / 1000
+            featurization['time'] = ((featurization['time'].dt.tz_localize('UTC') - pd.Timestamp("1970-01-01").replace(tzinfo=utc)) // pd.Timedelta("1ms")) / 1000
 
             nones = [None] * featurization.shape[0]
             data = [list(i) for i in zip(featurization['time'], nones, nones, featurization['value'])]
@@ -537,7 +598,29 @@ def createApp():
         # JSON string safe to drop straight into JavaScript code, as we are doing.
         projectPayloadJSON = simplejson.dumps(simplejson.dumps(projectPayload))
 
-        return render_template('project.html', project_name=projectPayload['project_name'], payload=projectPayloadJSON)
+
+
+
+
+
+
+
+        #### TEMP FOR FEATURIZERS
+
+        m = MeanFeaturizer()
+
+        # Assemble the data into a payload. We JSON-encode this twice. The first
+        # one converts the dict into JSON. The second one essentially makes the
+        # JSON string safe to drop straight into JavaScript code, as we are doing.
+        featurizersJSONPayload = simplejson.dumps(simplejson.dumps(m.getFields()))
+
+
+
+
+
+
+
+        return render_template('project.html', project_name=projectPayload['project_name'], payload=projectPayloadJSON, featurizersJSONPayload=featurizersJSONPayload)
 
     @app.route(config['rootWebPath']+'/series_ranged_data', methods=['GET'])
     @login_required

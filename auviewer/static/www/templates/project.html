@@ -16,6 +16,10 @@
 <script type="application/javascript">
 	const payload = JSON.parse({{payload|safe}});
 	console.log('Initial project payload', payload);
+
+	// TEMP FOR FEATURIZERS
+    const featurizersPayload = JSON.parse({{featurizersJSONPayload|safe}});
+	console.log('Initial featurizers payload', featurizersPayload);
 </script>
 
 <script src="{{ rootWebPath }}/js/third-party/bootstrap-select.min.js"></script>

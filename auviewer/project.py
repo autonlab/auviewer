@@ -305,30 +305,44 @@ class Project:
         if processNewFiles:
 
             # For each new project file which does not exist in the database...
-            for newOrigFilePathObj in [p for p in self.originalsDirPathObj.iterdir() if p.is_file() and p.suffix == '.h5' and not any(map(lambda existingFilePathObj: p.samefile(existingFilePathObj), existingFilePathObjs))]:
+            for newOrigFilePathObj in self.originalsDirPathObj.iterdir():
 
-                # Establish the path of the new processed file
-                newProcFilePathObj = self.processedDirPathObj / getProcFNFromOrigFN(newOrigFilePathObj)
-
-                # Instantiate the file class with an id of -1, and attach to
-                # this project instance.
                 try:
-                    newFileClassInstance = File(self, -1, newOrigFilePathObj, newProcFilePathObj, processNewFiles)
-                except Exception as e:
-                    logging.error(f"New file {newOrigFilePathObj} could not be processed.\n{e}\n{traceback.format_exc()}")
-                    continue
 
-                # Now that the processing has completed (if not, an exception
-                # would have been raised), add the file to the database and
-                # update the file class instance ID.
-                newFileDBEntry = models.File(project_id=self.id, path=str(newOrigFilePathObj))
-                models.db.session.add(newFileDBEntry)
-                models.db.session.commit()
+                    # Skip if not file or not .h5
+                    if not p.is_file() or p.suffix != '.h5':
+                        continue
 
-                # Update the file class instance ID, and add it to the files
-                # list for this project.
-                newFileClassInstance.id = newFileDBEntry.id
-                self.files.append(newFileClassInstance)
+                    # Skip if matches any already-loaded files
+                    if any(map(lambda existingFilePathObj: p.samefile(existingFilePathObj), existingFilePathObjs)):
+                        continue
+
+                    # Establish the path of the new processed file
+                    newProcFilePathObj = self.processedDirPathObj / getProcFNFromOrigFN(newOrigFilePathObj)
+
+                    # Instantiate the file class with an id of -1, and attach to
+                    # this project instance.
+                    try:
+                        newFileClassInstance = File(self, -1, newOrigFilePathObj, newProcFilePathObj, processNewFiles)
+                    except Exception as e:
+                        logging.error(f"New file {newOrigFilePathObj} could not be processed.\n{e}\n{traceback.format_exc()}")
+                        continue
+
+                    # Now that the processing has completed (if not, an exception
+                    # would have been raised), add the file to the database and
+                    # update the file class instance ID.
+                    newFileDBEntry = models.File(project_id=self.id, path=str(newOrigFilePathObj))
+                    models.db.session.add(newFileDBEntry)
+                    models.db.session.commit()
+
+                    # Update the file class instance ID, and add it to the files
+                    # list for this project.
+                    newFileClassInstance.id = newFileDBEntry.id
+                    self.files.append(newFileClassInstance)
+
+                except:
+
+                    logging.error(f"Error loading new file: {traceback.format_exc()}")
 
     def setName(self, name):
         """Rename the project."""

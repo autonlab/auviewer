@@ -16,16 +16,16 @@ is as follows, and assets will be created by AUViewer as needed if they
 do not already exist:
 
 * config
-    * _config.json_
+    * *config.json*
 * database
-    * _db.sqlite_
+    * *db.sqlite*
 * global_templates
-    * _interface_templates.json_
-    * _project_template.json_
+    * *interface_templates.json*
+    * *project_template.json*
 * projects
     * \[project name\]
         * originals
         * processed
         * templates
-            * _interface_templates.json_
-            * _project_template.json_
+            * *interface_templates.json*
+            * *project_template.json*

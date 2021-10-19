@@ -31,11 +31,12 @@ RequestHandler.prototype.deleteAnnotation = function(id, project_id, file_id, ca
 	});
 };
 
-RequestHandler.prototype.featurize = function(project_id, file_id, series, left, right, params, callback) {
+RequestHandler.prototype.featurize = function(project_id, file_id, series, featurizer, left, right, params, callback) {
 	this._newRequest(callback, globalAppConfig.featurizeURL, {
 		project_id: project_id,
 		file_id: file_id,
 		series: series,
+		featurizer: featurizer,
 		left: left,
 		right: right,
 		params: JSON.stringify(params)
