@@ -3,6 +3,8 @@ from .model import SimpleFeaturizer, FeaturizerParameter
 
 class MeanFeaturizer(SimpleFeaturizer):
 
+    id = 'mean'
+    name = 'Mean'
     parameters = [
         FeaturizerParameter(id='skipna', name="Skip NaN", description="Skip NaN values", data_type='boolean'),
         FeaturizerParameter(id='input', name="An Input Field"),
@@ -16,7 +18,3 @@ class MeanFeaturizer(SimpleFeaturizer):
     def featurize(self, data, params):
         print(f"Parameters received:\n{params}")
         return data.mean()
-
-    def matFeaturize(self, rwParam, data, params):
-        # ???
-        pass

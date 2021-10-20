@@ -7,6 +7,7 @@ class AdvancedFeaturizer(ABC):
 
 class SimpleFeaturizer(ABC):
 
+    id = None
     parameters = []
 
     # def __init__(self, files: Union[str, List[str]], series: Union[str, List[str], None]):
@@ -24,7 +25,10 @@ class SimpleFeaturizer(ABC):
     #     self.series = series
 
     def __init__(self):
-        pass
+        if self.id is None:
+            raise Exception("Featurizer has no ID.")
+        if self.name is None:
+            raise Exception(f"Featurizer {self.id} has no name.")
 
     def getFeaturizeFunction(self, params):
         return partial(self.featurize, params=params)

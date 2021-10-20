@@ -379,6 +379,15 @@ function showFeaturizationPanel(s) {
 		});
 	}
 
+	// Assemble the array of available featurizers for the dropdown menu
+	let featurizerOptions = [];
+	for (const fid of Object.getOwnPropertyNames(featurizersPayload)) {
+		featurizerOptions.push({
+			id: fid,
+			value: featurizersPayload[fid]['name'],
+		});
+	}
+
 	webix.ui({
 		view: 'window',
 		id: 'featurize_window',
@@ -401,23 +410,31 @@ function showFeaturizationPanel(s) {
 					labelWidth: 'auto',
 					label: 'Featurizer',
 					name:"_featurizer",
-					options:[
-						{ id: "mean", value: "Mean" },
-						{ id: "standard_deviation", value: "Standard Deviation" },
-						{ id: "sample_entropy", value: "Sample Entropy" },
-					],
+					options: featurizerOptions,
 					on: {
 						onChange: function() {
 							const featurizerID = this.getValue();
-							/*if (featurizerID === 'sample_entropy') {
-								console.log('hiding');
-								$$('featurizer_param_dim').show();
-								$$('featurizer_param_tolerance').show();
+							if (featurizersPayload.hasOwnProperty(featurizerID) && featurizersPayload[featurizerID]['fields'].length > 0) {
+								const fieldset = {
+									view: 'fieldset',
+									id: 'featurizer_params_fieldset',
+									label: 'Featurizer Parameters',
+									paddingY: 40,
+									body: {
+										rows: featurizersPayload[featurizerID]['fields'],
+									}
+								};
+								if ($$('featurizer_params_fieldset')) {
+									// The fieldset exists, so replace it.
+									webix.ui(fieldset, $$('featurize_form'), $$('featurizer_params_fieldset'));
+								} else {
+									// The fieldset doesn't exist, so add it.
+									const pos = $$("featurize_form").index($$("featurize_window_generate_button"));
+									$$('featurize_form').addView(fieldset, pos)
+								}
 							} else {
-								$$('featurizer_param_dim').hide();
-								$$('featurizer_param_tolerance').hide();
-							}*/
-							$$('featurizer_params_fieldset')
+								$$('featurize_form').removeView('featurizer_params_fieldset');
+							}
 						}
 					}
 				},
@@ -448,49 +465,8 @@ function showFeaturizationPanel(s) {
 					},
 				},
 				{
-					view: 'fieldset',
-					id: 'featurizer_params_fieldset',
-					label: 'Featurizer Parameters',
-					paddingY: 40,
-					body: {
-						rows: featurizersPayload,
-
-							/*[
-							{
-								view: 'text',
-								label: 'Embedding Dimension (opt)',
-								tooltip: 'The embedding dimension (length of vectors to compare) (default: 2)',
-								labelWidth: 230,
-								name: 'dim',
-								id: 'featurizer_param_dim',
-								// width: 120,
-								hidden: false,
-								on: {
-									onFocus: function () {
-										this.getInputNode().select()
-									}
-								},
-							},
-							{
-								view: 'text',
-								label: 'Tolerance (opt)',
-								tooltip: 'Tolerance distance for which the two vectors can be considered equal (default: std(NNI))',
-								labelWidth: 230,
-								name: 'tolerance',
-								id: 'featurizer_param_tolerance',
-								// width: 120,
-								hidden: false,
-								on: {
-									onFocus: function () {
-										this.getInputNode().select()
-									}
-								},
-							},
-						],//*/
-					}
-				},
-				{
 					view: 'button',
+					id: 'featurize_window_generate_button',
 					value: 'Generate',
 					tooltip: 'Generate the featurization and display in the viewer when ready.',
 					click: featurize

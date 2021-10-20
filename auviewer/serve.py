@@ -41,7 +41,18 @@ import numpy as np
 import pytz
 
 from .modules.featurization.mean import MeanFeaturizer
+from .modules.featurization.std import StandardDeviationFeaturizer
 from functools import partial
+
+
+
+
+featurizers = [MeanFeaturizer(), StandardDeviationFeaturizer()]
+featurizers = {f.id: f for f in featurizers}
+
+
+
+
 
 
 
@@ -500,12 +511,12 @@ def createApp():
             df = s.getDataAsDF().set_index('time')
             window_size = params['window_size']
 
-            # left = datetime.fromtimestamp(left).astimezone(utc)
-            # right = datetime.fromtimestamp(right).astimezone(utc)
+            left = datetime.fromtimestamp(left).astimezone(utc)
+            right = datetime.fromtimestamp(right).astimezone(utc)
             # left = pd.to_datetime(datetime.fromtimestamp(left).astimezone(utc))
             # right = pd.to_datetime(datetime.fromtimestamp(right).astimezone(utc))
-            left = np.datetime64(datetime.fromtimestamp(left).astimezone(utc))
-            right = np.datetime64(datetime.fromtimestamp(right).astimezone(utc))
+            # left = np.datetime64(datetime.fromtimestamp(left).astimezone(utc))
+            # right = np.datetime64(datetime.fromtimestamp(right).astimezone(utc))
             print('left', left)
             print('right', right)
             df = df[(df.index >= left) & (df.index <= right)]
@@ -520,8 +531,8 @@ def createApp():
             print(featurization)
             # featurization = df.resample(window_size).agg(lambda x: x.mean()).dropna()
             featurization.reset_index(inplace=True)
-            # featurization['time'] = ((featurization['time'].dt.tz_convert(utc) - pd.Timestamp("1970-01-01").replace(tzinfo=utc)) // pd.Timedelta("1ms")) / 1000
-            featurization['time'] = ((featurization['time'].dt.tz_localize('UTC') - pd.Timestamp("1970-01-01").replace(tzinfo=utc)) // pd.Timedelta("1ms")) / 1000
+            featurization['time'] = ((featurization['time'].dt.tz_convert(utc) - pd.Timestamp("1970-01-01").replace(tzinfo=utc)) // pd.Timedelta("1ms")) / 1000
+            # featurization['time'] = ((featurization['time'].dt.tz_localize('UTC') - pd.Timestamp("1970-01-01").replace(tzinfo=utc)) // pd.Timedelta("1ms")) / 1000
 
             nones = [None] * featurization.shape[0]
             data = [list(i) for i in zip(featurization['time'], nones, nones, featurization['value'])]
@@ -648,12 +659,23 @@ def createApp():
 
         #### TEMP FOR FEATURIZERS
 
-        m = MeanFeaturizer()
-
         # Assemble the data into a payload. We JSON-encode this twice. The first
         # one converts the dict into JSON. The second one essentially makes the
         # JSON string safe to drop straight into JavaScript code, as we are doing.
-        featurizersJSONPayload = simplejson.dumps(simplejson.dumps(m.getFields()))
+        featurizersJSONPayload = simplejson.dumps(simplejson.dumps({
+            f.id: {
+                'id': f.id,
+                'name': f.name,
+                'fields': f.getFields(),
+            } for f in featurizers.values()
+        }))
+
+        # m = MeanFeaturizer()
+        #
+        # # Assemble the data into a payload. We JSON-encode this twice. The first
+        # # one converts the dict into JSON. The second one essentially makes the
+        # # JSON string safe to drop straight into JavaScript code, as we are doing.
+        # featurizersJSONPayload = simplejson.dumps(simplejson.dumps(m.getFields()))
 
 
 
