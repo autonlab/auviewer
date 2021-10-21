@@ -15,7 +15,7 @@
 	const payload = JSON.parse({{payload|safe}});
 	console.log('Initial project payload', payload);
 </script>
-
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 <script src="{{ rootWebPath }}/js/third-party/bootstrap-select.min.js"></script>
 
 <!-- Dygraphs & Synchronizer -->
@@ -208,7 +208,18 @@
 			<div class="card">
 				<div class="card-body">
 				<h5 class="card-title">{{project_name}}</h5>
-				<ul class="list-group list-group-flush" id="labelerStatsTable">
+				<div id="vueapp">
+
+				</div>
+				<script>
+					const vueApp = new Vue({
+						el: '#vueapp',
+						data: { 
+							display: 'redbox' 
+						}
+					})
+				</script>
+				<!-- <ul class="list-group list-group-flush" id="labelerStatsTable">
 				<li class="list-group-item" >
 				</li>
 				<div> hello</div>
@@ -216,7 +227,7 @@
 
 				<li class="list-group-item">
 				</li>
-				</ul>
+				</ul> -->
 				</div>
 			</div>
 		</div>
