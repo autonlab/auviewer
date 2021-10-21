@@ -670,3 +670,20 @@ function zoom(g, zoomInPercentage, xBias) {
 		dateWindow: [ axis[0] + foo[0], axis[1] - foo[1] ]
 	});
 }
+
+function binarySearch(arr,target){
+  var midpoint = Math.floor(arr.length/2);
+
+  if (arr[midpoint] === target){
+    return arr[midpoint];
+  }
+  if (arr.length === 1){
+    return arr[0];
+  }
+
+  if (arr[midpoint] > target){
+    return binarySearch(arr.slice(0,midpoint),target);
+  }else if (arr[midpoint] < target){
+    return binarySearch(arr.slice(midpoint),target);
+  }
+}

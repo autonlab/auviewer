@@ -63,8 +63,8 @@ RequestHandler.prototype.previewThreshold = function(project_id, filesToPreview,
 	}, "POST", true)
 };
 
-RequestHandler.prototype.createSupervisorPrecomputer = function(project_id, filePayload, callback) {
-	this._customRequest(callback, globalAppConfig.createSupervisorPrecomputerUrl, {
+RequestHandler.prototype.uploadCustomSegments = function(project_id, filePayload, callback) {
+	this._customRequest(callback, globalAppConfig.uploadCustomSegmentsURL, {
 		project_id: project_id
 	},
 	{
@@ -91,6 +91,12 @@ RequestHandler.prototype.requestInitialFilePayload = function(project_id, file_i
 	this._newRequest(callback, globalAppConfig.initialFilePayloadURL, {
 		project_id: project_id,
 		file_id: file_id
+	});
+};
+
+RequestHandler.prototype.requestInitialEvaluatorPayload = function(project_id, callback) {
+	this._newRequest(callback, globalAppConfig.initialEvaluatorPayloadURL, {
+		project_id: project_id,
 	});
 };
 
@@ -126,11 +132,12 @@ RequestHandler.prototype.submitVoteSegments = function(project_id, created_segme
 	}, "POST", true);
 };
 
-RequestHandler.prototype.getVotes = function(project_id, files, window_info, callback) {
+RequestHandler.prototype.getVotes = function(project_id, files, window_info, recalculate, callback) {
 	console.log(files);
 	this._customRequest(callback, globalAppConfig.getVotesURL, {
 		project_id: project_id,
-		file_ids: files
+		file_ids: files,
+		recalculate: recalculate
 	},
 	{
 		window_info: window_info

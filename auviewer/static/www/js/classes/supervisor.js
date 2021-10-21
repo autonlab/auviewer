@@ -6,6 +6,8 @@ function Supervisor(payload) {
     this.project_id = payload['project_id']
     this.project_name = payload['project_name']
 
+	this.prior_context = null;
+
 	this.prospectiveSegmentShade = 'rgba(211, 211, 211, .33)'; //'#D3D3D3'; // light grey
 	this.existentSegmentShade = 'rgba(169, 169, 169, .33)'; //'#A9A9A9'; // dark grey
 	this.toBeDeletedShade = 'rgba(233, 116, 81, .33)'; //'#E97451'; //burnt sienna red
@@ -17,6 +19,10 @@ function Supervisor(payload) {
 
 
 	$('#modal').css('display', 'inline-block');
+
+	$('#upload-windows').change(function() {
+		$('#segment_upload_button').removeAttr('disabled');
+	})
 
 	/*
 	Holds the min [0] and max [1] x-value across all graphs currently displayed.
@@ -94,8 +100,26 @@ function Supervisor(payload) {
 		});
 		$('#modal').css('display', 'none');
 		let self=this;
-		$('#view_segment').on('input', function () {
-			self.setTimeWindow($('#view_segment').val()*15*60*1000, false, 0);
+		$('#view_15sec').on('click', function () {
+			self.setTimeWindow(15*1000, false);
+		});
+		$('#view_30sec').on('click', function () {
+			self.setTimeWindow(30*1000, false);
+		});
+		$('#view_1min').on('click', function () {
+			self.setTimeWindow(1*60*1000, false);
+		});
+		$('#view_15min').on('click', function () {
+			self.setTimeWindow(15*60*1000, false);
+		});
+		$('#view_1hr').on('click', function () {
+			self.setTimeWindow(60*60*1000, false);
+		});
+		$('#view_5hr').on('click', function () {
+			self.setTimeWindow(5*60*60*1000, false);
+		});
+		$('#view_10hr').on('click', function () {
+			self.setTimeWindow(10*60*60*1000, false);
 		});
 	}.bind(this));
 
@@ -107,6 +131,17 @@ function Supervisor(payload) {
 }
 
 Supervisor.prototype.initModel = function(data) {
+	let self = this;
+	$('#evaluation-tab').on('click', function (e) {
+		e.preventDefault()
+		$(this).tab('show')
+		self.initEvaluation();
+
+	})
+	$('#labelers-tab').on('click', function (e) {
+		e.preventDefault()
+		$(this).tab('show')
+	})
     this.sync = null;
 
 	//Holds the labeling function titles to their associated colors (more succinct than full title to render)
@@ -173,9 +208,15 @@ Supervisor.prototype.initModel = function(data) {
 		let graphsTableBody = document.getElementById('seriesTableBody');
 
 		for (let i = 0; i < this.projectData.files.length; i++) {
+			// skip file if series doesn't exist
+			let seriesId = Object.keys(this.projectData.series[i])[0];
+			if (seriesId == 'null') {
+				this.dygraphs[i] = null;
+				continue;
+			}
+
 			let filename = this.projectData.files[i][1];
 			let fileId = this.projectData.files[i][0];
-			let seriesId = Object.keys(this.projectData.series[i])[0];
 			this.domElementObjs[i] = this.buildGraph(filename, seriesId);
 			graphsTableBody.appendChild(this.domElementObjs[i].graphWrapperDomElement);
 
@@ -186,8 +227,8 @@ Supervisor.prototype.initModel = function(data) {
 
 			this.dygraphs[i] = this.createDygraph(this.domElementObjs[i], series, events);
 			let self=this;
-			document.getElementById('left_'+filename).onclick = function() { self.pan(self.dygraphs[i], -1); };
-			document.getElementById('right_'+filename).onclick = function() { self.pan(self.dygraphs[i], +1); };
+			document.getElementById('left_'+filename).onclick = function() { self.panToPrior(self.dygraphs[i]); self.updateRangeToMatchView(self.dygraphs[i]);};
+			document.getElementById('right_'+filename).onclick = function() { self.panToNext(self.dygraphs[i]); self.updateRangeToMatchView(self.dygraphs[i]);};
 			document.getElementById('breakout_'+filename).onclick = function() { self.breakout(fileid); };
 		}
 
@@ -231,6 +272,87 @@ Supervisor.prototype.initModel = function(data) {
 	}.bind(this));
 }
 
+Supervisor.prototype.initEvaluation = function() {
+	requestHandler.requestInitialEvaluatorPayload(this.project_id, function (data) {
+		console.log(data);
+	})
+	this.initLabelerStatsTable()
+}
+
+Supervisor.prototype.initLabelerStatsTable = function() {
+	// $(".evaluation labelerStatsTable")
+}
+Supervisor.prototype.adjustActiveGraphValueRanges = function() {
+	// let yAxisRange = [0, 0];
+	// for (let activeGraphIdx of this.activeGraphs) {
+	// 	let g = this.dygraphs[activeGraphIdx];
+	// 	let [_, maxValue] = g.yAxisRange();
+	// 	yAxisRange[1] = Math.max(yAxisRange[1], maxValue);
+	// 	// let s = g.file_
+	// }
+
+	// for (let activeGraphIdx of this.activeGraphs) {
+	// 	let g = this.dygraphs[activeGraphIdx];
+	// 	g.updateOptions({
+	// 		valueRange: yAxisRange,
+	// 	})
+	// }
+}
+
+Supervisor.prototype.panToNext = function(dygraph) {
+	const [filename, series_id] = dygraph.maindiv_.id.split(';');
+	if (!this.allSegments.hasOwnProperty(filename)) {
+		toastr.warning("This graph lacks segments, so nothing to pan to");
+		return;
+	}
+	const [start, _] = dygraph.xAxisRange();
+	let smallestSeenDiff = Number.MAX_SAFE_INTEGER;
+	let newStart = 0;
+	for (let [seriesId, dataBoundsArr] of Object.entries(this.allSegments[filename])) {
+		for (let segmentObj of dataBoundsArr) {
+			if (segmentObj.left > start) {
+				if (segmentObj.left-start < smallestSeenDiff) {
+					smallestSeenDiff = segmentObj.left-start;
+					newStart = segmentObj.left;
+				}
+			}
+		}
+	}
+	if (smallestSeenDiff === Number.MAX_SAFE_INTEGER) {
+		toastr.warning("No segment after to pan to");
+	} else {
+		this.animate(dygraph, [newStart, newStart+this.timeWindow]);
+		let self = this;
+		setTimeout(function () {self.updateRangeToMatchView(dygraph);}, 500);
+	}
+}
+
+Supervisor.prototype.panToPrior = function(dygraph) {
+	const [filename, series_id] = dygraph.maindiv_.id.split(';');
+	if (!this.allSegments.hasOwnProperty(filename)) {
+		toastr.warning("This graph lacks segments, so nothing to pan to");
+	}
+	let [start, _] = dygraph.xAxisRange();
+	let smallestSeenDiff = Number.MAX_SAFE_INTEGER;
+	let newStart = 0;
+	for (let [seriesId, dataBoundsArr] of Object.entries(this.allSegments[filename])) {
+		for (let segmentObj of dataBoundsArr) {
+			if (segmentObj.left < start) {
+				if (start - segmentObj.left < smallestSeenDiff) {
+					smallestSeenDiff = start - segmentObj.left;
+					newStart = segmentObj.left;
+				}
+			}
+		}
+	}
+	if (smallestSeenDiff === Number.MAX_SAFE_INTEGER) {
+		toastr.warning("No segment earlier to pan to");
+	} else {
+		this.animate(dygraph, [newStart, newStart+this.timeWindow]);
+		let self = this;
+		setTimeout(function () {self.updateRangeToMatchView(dygraph);}, 200);
+	}
+}
 Supervisor.prototype.toggleSegmentType = function() {
 	if (this.segmentType === 'CUSTOM')
 	{
@@ -319,6 +441,9 @@ Supervisor.prototype.clearModel = function() {
 }
 
 Supervisor.prototype.regenerateGraphFor = function(filename, idx, curPageIdx) {
+	if (! this.dygraphs[idx]) {
+		return;
+	}
 	let graphsTableBody = document.getElementById('seriesTableBody');
 	let graphWrapperDomElement = document.createElement('tr');
 	graphWrapperDomElement.className = 'graph_row_wrapper';
@@ -357,8 +482,8 @@ Supervisor.prototype.regenerateGraphFor = function(filename, idx, curPageIdx) {
 	let events = this.projectData.events[idx];
 	this.dygraphs[idx] = this.createDygraph(this.domElementObjs[idx], series, events);
 	let self=this;
-	document.getElementById('left_'+filename).onclick = function() { self.pan(self.dygraphs[idx], -1); };
-	document.getElementById('right_'+filename).onclick = function() { self.pan(self.dygraphs[idx], +1); };
+	document.getElementById('left_'+filename).onclick = function() { self.panToPrior(self.dygraphs[idx]);};
+	document.getElementById('right_'+filename).onclick = function() { self.panToNext(self.dygraphs[idx]);};
 	document.getElementById('breakout_'+filename).onclick = function() { self.breakout(self.projectData.files[idx][0]); };
 
 	this.shadeGraphSegmentsForFile(filename, this.votesCalculated);
@@ -370,6 +495,7 @@ Supervisor.prototype.regenerateGraphs = function(pageNum) {
 	this.globalYExtremes[1] = 0;
 	// this.activeGraphs = new Array(this.seriesOnPage);
 	for (let idx = startIdx; idx < endIdx; idx++) {
+		if (!this.dygraphs[idx]) { continue; }
 		let series = Object.values(this.projectData.series[idx])[0].data;
 		for (let i = 0; i < series.length; i++) {
 			let yVal = series[i][series[i].length -1];
@@ -390,6 +516,9 @@ Supervisor.prototype.regenerateGraphs = function(pageNum) {
 	}
 
 	this.setTimeWindow(this.timeWindow, forceAdjustment=true, 10);
+	for (let i = startIdx; i < endIdx; i++) {
+		this.updateRangeToMatchView(this.dygraphs[i]);
+	}
 }
 
 Supervisor.prototype.setTimeWindow = function(newTimeWindow, forceAdjustment=false, maxSteps=10) {
@@ -398,9 +527,12 @@ Supervisor.prototype.setTimeWindow = function(newTimeWindow, forceAdjustment=fal
 		this.timeWindow = newTimeWindow;
 		for (let graphIdx of this.activeGraphs) {
 			let curGraph = this.dygraphs[graphIdx];
+			if (! curGraph) { continue; }
 			let curRange = curGraph.xAxisRange();
 			let desiredRange = [curRange[0], curRange[0] + this.timeWindow];
 			this.animate(curGraph, desiredRange, maxSteps);
+			let self = this;
+			setTimeout(function () {self.updateRangeToMatchView(curGraph);}, 500);
 		}
 	}
 }
@@ -568,6 +700,7 @@ Supervisor.prototype.pan = function(graph, dir) {
 	let amount = scale * dir;
 	let desiredRange = [curRange[0] + amount, curRange[1] + amount];
 	this.animate(graph, desiredRange);
+	this.updateRangeToMatchView(graph);
 }
 
 Supervisor.prototype.animate = function(graph, desiredRange, maxSteps=7) {
@@ -635,8 +768,12 @@ Supervisor.prototype.updateVotesWithActiveGraphs = function () {
 	let windowInfo = this.segmentType==='WINDOW' ? this.windowInfo : null;
 	$('#modal').css('display', 'flex');
 	let self = this;
-	requestHandler.getVotes(this.project_id, files, windowInfo, function(data) {
+	requestHandler.getVotes(this.project_id, files, windowInfo, false, function(data) {
 		for (const [segId, votes] of Object.entries(data.labeling_function_votes)) {
+			// let vos = new Array(votes.length)
+			// for (let i in votes) {
+			// 	vos[i] = self.number_to_labels[votes[i]];
+			// }
 			self.labeling_function_votes[segId] = votes;
 		}
 		self.votesCalculated = true;
@@ -664,8 +801,16 @@ Supervisor.prototype.recalculateVotes = function () {
 		});
 		windowInfo = this.windowInfo;
 	}
-	requestHandler.getVotes(this.project_id, files, windowInfo, function(data) {
+	requestHandler.getVotes(this.project_id, files, windowInfo, false, function(data) {
 		self.labeling_function_votes = data.labeling_function_votes;
+		self.lm_predictions = data.lm_predictions;
+		// for (const [segId, votes] of Object.entries(data.labeling_function_votes)) {
+		// 	// let vos = new Array(votes.length)
+		// 	// for (let i in votes) {
+		// 	// 	vos[i] = self.number_to_labels[votes[i]];
+		// 	// }
+		// 	self.labeling_function_votes[segId] = votes;
+		// }
 		self.votesCalculated = true;
 		$('#calculate_stats').removeAttr('disabled');
 		if (self.statsCalculated) {
@@ -693,7 +838,6 @@ Supervisor.prototype.shadeGraphSegmentsForFile = function(filename, withVotes=fa
 			this.shadeGraphSegments(this.dygraphs[this.filenamesToIdxs[filename]], dataBoundsArr, withVotes);
 		}
 	} else {
-		console.log(filename);
 		this.shadeGraphSegments(this.dygraphs[this.filenamesToIdxs[filename]], [], null);
 	}
 }
@@ -734,6 +878,13 @@ Supervisor.prototype.shadeGraphSegments = function(graph, dataBoundsArray, withV
 				// let topRight = g.toDomCoords(right, +20);
 				// left = bottomLeft[0];
 				// right = topRight[0];
+			},
+			legendFormatter: function(data) {
+				return data.series.map(function (series) {
+					return series.dashHTML + ' ' + series.label + ' - ' + series.yHTML
+					}).join('<br>') +
+					'<br>' + 
+					'LabelModel' + ': ' + self.getVoteForGraphAndPoint(graph, data.x);
 			}
 	});
 
@@ -777,25 +928,20 @@ Supervisor.prototype.shadeGraph = function(graphIdx) {
 	});
 }
 
-Supervisor.prototype.getVoteForGraphAndPoint = function(graphIdx, xPoint, lfTitle) {
-	let startIdx = 0;
-	let bucketIdx = 0;
-	let series = Object.values(this.projectData.series[graphIdx])[0].data;
-	xPoint = new Date(xPoint);
-	if (isNaN(xPoint.getTime()) || this.lfVotesByTimeSegment[graphIdx].length === 0) {
-		// means date of x point isn't valid
+Supervisor.prototype.getVoteForGraphAndPoint = function(g, xPoint) {
+	if (! this.lm_predictions) {
 		return 'N/A';
 	}
-	for (let endIdx of this.timeSegmentEndIndices[graphIdx]) {
-		// get start and end timestamps
-		let start = series[startIdx][0];
-		let end = series[endIdx-1][0];
-		if (start <= xPoint && xPoint <= end) {
-			break;
+	const [filename, _] = g.maindiv_.id.split(';');
+	xPoint = new Date(xPoint);
+	for (let predictionObj of this.lm_predictions['predictions'][filename]) {
+		let [left, right] = [new Date(predictionObj.left), new Date(predictionObj.right)];
+		if (left <= xPoint && xPoint <= right) {
+			let with2Decimals = Math.max(... predictionObj['confidences']).toString().match(/^-?\d+(?:\.\d{0,2})?/)[0];
+			return `${predictionObj['prediction']} (${with2Decimals})`
 		}
-		bucketIdx++;
 	}
-	return this.lfVotesByTimeSegment[graphIdx][bucketIdx];
+	return 'N/A';
 }
 
 Supervisor.prototype.onQueryClick = function() {
@@ -1113,7 +1259,7 @@ Supervisor.prototype.handleMouseDown = function(event, g, context) {
 	if (event.altKey) {
 		handleAnnotationHighlightStart(event, g, context);
 	}
-	else if (event.shiftKey) {
+	else if (event.shiftKey || this.createdSegments !== null) {
 		Dygraph.startZoom(event, g, context);
 	} else {
 		context.medViewPanningMouseMoved = false;
@@ -1145,9 +1291,14 @@ Supervisor.prototype.handleMouseUp = function(event, g, context) {
 		this.addSegmentTo(this.createdSegments, filename, seriesId, {left, right, 'color':this.prospectiveSegmentShade});
 		this.addSegmentTo(this.allSegments, filename, seriesId, {left, right, 'color':this.prospectiveSegmentShade});
 		this.shadeGraphSegments(g, this.allSegments[filename][seriesId], this.votesCalculated);
+	} 
+	else if (context.isPanning) {
+		Dygraph.endPan(event, g, context);
+		this.updateRangeToMatchView(g);
 	} else {
 		// perform normal zooming behavior
 		Dygraph.endZoom(event, g, context);
+		this.updateRangeToMatchView(g);
 	}
 
 	// Dygraph.startZoom(event, g, context);
@@ -1177,11 +1328,46 @@ Supervisor.prototype.handleMouseUp = function(event, g, context) {
 
 }
 
+Supervisor.prototype.updateRangeToMatchView = function(g) {
+	if (!g) {return;}
+	let [left, right] = g.xAxisRange();
+	const [filename, series_id] = g.maindiv_.id.split(';');
+	let fileId = this.projectData.files[this.filenamesToIdxs[filename]][0];
+	// let series_id = this.projectData.series_to_render_id;
+	let self = this;
+	requestHandler.requestSeriesRangedData(this.project_id, fileId, [series_id], left / 1000.0, right/1000.0, function (data) {
+		let seriesData = null;
+		for (let [seriesId, obj] of Object.entries(data.series)){
+			seriesData = obj.data;
+		}
+		// const basetime = new Date(self.projectData.metadata.time_origin);
+		// convertFirstColumnToDate(seriesData, );
+		for (let i in seriesData) {
+			seriesData[i] = [new Date(seriesData[i][0]*1000), seriesData[i][seriesData[i].length-1]];
+		}
+		// console.log(Object.entries(data.series)[1].data.length);
+		let newData = createMeshedTimeSeries(self.dygraphs[self.filenamesToIdxs[filename]].file_, seriesData);
+		g.updateOptions({
+			file: newData
+		});
+		// need to reshade segments?
+		// self.reshadeActiveGraphs(self.votesCalculated);
+		self.adjustActiveGraphValueRanges();
+	})
+}
+
 // Handle mouse-move for pan & zoom.
 Supervisor.prototype.handleMouseMove = function(event, g, context) {
 
 	// Dygraph.moveZoom(event, g, context);
-	Dygraph.moveZoom(event, g, context);
+	// Dygraph.moveZoom(event, g, context);
+	// console.log(context);
+	if (context.isPanning) {
+		context.medViewPanningMouseMoved = true;
+		Dygraph.movePan(event, g, context);
+	} else if (context.isZooming) {
+		Dygraph.moveZoom(event, g, context);
+	}
 	// console.log(event, context);
 	// Dygraph.startZoom(event, g, context);
 	// Dygraph.endZoom(event, g, context);
@@ -1195,7 +1381,13 @@ Supervisor.prototype.handleMouseMove = function(event, g, context) {
 		// context.medViewPanningMouseMoved = true;
 		// Dygraph.movePan(event, g, context);
 	// }
+	
+	// this.updateRangeToMatchView(g);
 
+}
+
+Supervisor.prototype.getSeriesToRenderY = function() {
+	return this.projectData.series_to_render_id.split(':')[0].split('/')[3]
 }
 
 Supervisor.prototype.createDygraph = function(graphDomElementObj, series, eventData) {
@@ -1207,7 +1399,7 @@ Supervisor.prototype.createDygraph = function(graphDomElementObj, series, eventD
     let seriesData = new Array(series.data.length);
     // let initialValue;
     for (let i = 0; i < seriesData.length; i++) {
-		let yVal = series.data[i][series.data[i].length -1];
+		let yVal = series.data[i][series.data[i].length -2];
 		// seriesData[i] = [i/*new Date(series.data[i][0]*1000 % 1) - initialValue*/, series.data[i][series.data[i].length -1]];
 		seriesData[i] = [series.data[i][0]/*new Date(series.data[i][0]*1000 % 1) - initialValue*/, yVal];
     }
@@ -1243,7 +1435,7 @@ Supervisor.prototype.createDygraph = function(graphDomElementObj, series, eventD
 		// },
 		labels: [series.labels[0], series.labels[3]],
 		legend: 'follow',
-		ylabel: 'aEEG',
+		ylabel: this.getSeriesToRenderY(),
 		// plotter: handlePlotting.bind(this),
 		/*series: {
 		  'Min': { plotter: handlePlotting },
@@ -1286,9 +1478,9 @@ Supervisor.prototype.prepareData = function(data, baseTime) {
 
             // Process series data
             for (let s of seriesIndices) {
-
+				
                 // If this series has no data, continue
-                if (series[s].data.length < 1) {
+                if (series[s] === null || series[s].data.length < 1) {
                     continue;
                 }
 
@@ -1364,7 +1556,14 @@ Supervisor.prototype.prepareData = function(data, baseTime) {
 
 Supervisor.prototype.uploadFile = function(fileElementId) {
 	let filePayload = document.getElementById(fileElementId).files[0];
-	requestHandler.createSupervisorPrecomputer(this.project_id, filePayload, function() {
-		console.log("Successfully uploaded file with id: " + fileElementId);
+	let self = this;
+	// set loader on
+	$('#modal').css('display', 'flex');
+	requestHandler.uploadCustomSegments(this.project_id, filePayload, function(data) {
+		self.allSegments = self.addColorToSegments(data.segments, self.existentSegmentShade);
+		self.reshadeActiveGraphs(self.votesCalculated);
+		toastr.success(`Successfully added ${data.num_added} segments from ${fileElementId}`);
+		// set loader off
+		$('#modal').css('display', 'none');
 	})
 }

@@ -52,79 +52,90 @@
 {% endblock %}
 
 {% block content %}
+<ul class="nav nav-tabs" id="supervisorNav" role="tablist">
+  <li class="nav-item">
+    <a class="nav-link active" id="labelers-tab" data-toggle="tab" href="#labelers" role="tab" aria-controls="labelers" aria-selected="true">Labelers</a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link" id="evaluation-tab" data-toggle="tab" href="#evaluation" role="tab" aria-controls="evaluation" aria-selected="false">Evaluation</a>
+  </li>
+</ul>
+<div class="tab-content" id="myTabContent">
+  <div class="tab-pane fade active show" id="labelers" role="tabpanel" aria-labelledby="labelers-tab">
 <div class="row" id="supervisorPane">
 
 	<div class="col-3">
 		<div class="card">
 			<div class="card-body">
-			<h5 class="card-title">{{project_name}}</h5>
-			<ul class="list-group list-group-flush">
-			<li class="list-group-item" >
-				<div class="custom-control custom-switch mb-3">
-					<input class="custom-control-input" type="checkbox" id="segment_type_switch">
-					<label class="custom-control-label" for="segment_type_switch" id="segment_type_label">Create custom segments</label>
-				</div>
-
-				<div id="custom_segment_creation" class="btn-group btn-block">
-					<button type="button" id="create_segments" onclick="globalStateManager.currentSupervisor.activateSegmentCreationMode()" class="btn btn-primary">Add segments</button>
-					<button type="button" id="delete_segments" onclick="globalStateManager.currentSupervisor.activateSegmentDeletionMode()" class="btn btn-danger">Delete segments</button>
-				</div>
-
-				<div id="window_segment_creation" class="input-group" style="display:none">
-					<div class="input-group mb-1">
-						<div class="input-group-prepend"><span class="input-group-text">Window Size</span></div>
-						<input type="text" class="form-control" placeholder="2hr, 30m, 120s" id="window_size">
-					</div>
-					<div class="input-group mb-1">
-						<div class="input-group-prepend"><span class="input-group-text">Stride Length</span></div>
-						<input type="text" class="form-control" placeholder="2hr, 30m, 120s" id="window_roll">
-					</div>
-					<button type="button" class="btn btn-primary btn-block" onclick="globalStateManager.currentSupervisor.submitWindowSegments()">Apply</button>
-				</div>	
-			</li>
-
-
-			<li class="list-group-item">
-				<label for="lfSelection">Select labeler:</label>
-				<select class="form-control mb-3" id="lfSelection" onchange="globalStateManager.currentSupervisor.onLabelerSelect()">
-				</select>
-					<div id="stats_pane">
-							<button type="button" id="calculate_stats" class="btn btn-primary mb-2" onclick="globalStateManager.currentSupervisor.calculateStats()" disabled>Calculate Stats</button>
-					</div>
-
-					<div id="threshold_pane" >
-
-						<div class="btn-group btn-block" id="submitThresholds">
-							<button type="button" id="submitThresholds" class="btn btn-secondary" onclick="globalStateManager.currentSupervisor.submitThresholds()">Update Thresholds</button>
+				<h5 class="card-title">{{project_name}}</h5>
+				<ul class="list-group list-group-flush">
+					<li class="list-group-item" >
+						<div class="custom-control custom-switch mb-3">
+							<input class="custom-control-input" type="checkbox" id="segment_type_switch">
+							<label class="custom-control-label" for="segment_type_switch" id="segment_type_label">Create custom segments</label>
 						</div>
-					</div>
-			</li>
-			<li class="list-group-item">
-				<button type="button" id="recalculateVotes" class="btn btn-primary btn-block" onclick="globalStateManager.currentSupervisor.recalculateVotes()">Calculate votes on created segments</button>
-			</li>
-			</ul>
 
-			<!-- <table class="table table-hover table-sm top-buffer" id='labelingFunctionTable'>
-				<col style="width:80%">
-				<col style="width:20%">
-				<thead>
-					<tr>
-						<th scope="col">Labeling Function</th>
-						<th scope="col">View?</th>
-					</tr>
-				</thead>
-				<tbody>
+						<div id="custom_segment_creation" class="btn-group btn-block mb-1">
+							<button type="button" id="create_segments" onclick="globalStateManager.currentSupervisor.activateSegmentCreationMode()" class="btn btn-primary">Add segments</button>
+							<button type="button" id="delete_segments" onclick="globalStateManager.currentSupervisor.activateSegmentDeletionMode()" class="btn btn-danger">Delete segments</button>
+						</div>
 
-				</tbody>
-			</table> -->
+						<div class="form-group">
+							<input id="upload-windows" class="form-control-file" type="file" />
+							<label for="upload-windows"> Browse custom segments file (.csv, or .pkl of pandas dataframe)</label>
+							<button type="button" disabled id="segment_upload_button" class="btn btn-block btn-primary" onclick="globalStateManager.currentSupervisor.uploadFile('upload-windows')">Upload custom segments</button>
+						</div>
+
+						<div id="window_segment_creation" class="input-group" style="display:none">
+							<div class="input-group mb-1">
+								<div class="input-group-prepend"><span class="input-group-text">Window Size</span></div>
+								<input type="text" class="form-control" placeholder="2hr, 30m, 120s" id="window_size">
+							</div>
+							<div class="input-group mb-1">
+								<div class="input-group-prepend"><span class="input-group-text">Stride Length</span></div>
+								<input type="text" class="form-control" placeholder="2hr, 30m, 120s" id="window_roll">
+							</div>
+							<button type="button" class="btn btn-primary btn-block" onclick="globalStateManager.currentSupervisor.submitWindowSegments()">Apply</button>
+						</div>	
+					</li>
+
+
+					<li class="list-group-item">
+						<label for="lfSelection">Select labeler:</label>
+						<select class="form-control mb-3" id="lfSelection" onchange="globalStateManager.currentSupervisor.onLabelerSelect()">
+						</select>
+							<div id="stats_pane">
+									<button type="button" id="calculate_stats" class="btn btn-primary mb-2" onclick="globalStateManager.currentSupervisor.calculateStats()" disabled>Calculate Stats</button>
+							</div>
+
+							<div id="threshold_pane" >
+
+								<div class="btn-group btn-block" id="submitThresholds">
+									<button type="button" id="submitThresholds" class="btn btn-secondary" onclick="globalStateManager.currentSupervisor.submitThresholds()">Update Thresholds</button>
+								</div>
+							</div>
+					</li>
+					<li class="list-group-item">
+						<button type="button" id="recalculateVotes" class="btn btn-primary btn-block" onclick="globalStateManager.currentSupervisor.recalculateVotes()">Calculate votes on created segments</button>
+					</li>
+				</ul>
+
+				<!-- <table class="table table-hover table-sm top-buffer" id='labelingFunctionTable'>
+					<col style="width:80%">
+					<col style="width:20%">
+					<thead>
+						<tr>
+							<th scope="col">Labeling Function</th>
+							<th scope="col">View?</th>
+						</tr>
+					</thead>
+					<tbody>
+
+					</tbody>
+				</table> -->
 			</div>
 
-		<!-- <h6>Label function precomputer</h6>
 
-		<div class="form-group">
-			<input id="precompute-file" class="btn btn-sm btn-light" type="file" />
-			<button type="button" class="btn btn-sm btn-light" onclick="globalStateManager.currentSupervisor.uploadFile('precompute-file')">Upload File</button>
-		</div> -->
 
 		</div>
 	</div>
@@ -132,12 +143,16 @@
 		<div class="card">
 			<div class="card-body">
 			<h5 class="card-title">Patients</h5>
-				<form>
-				<div class="form-group mb-2">
-					<label for="view_segment">View segment</label>
-					<input type="range" min="1" max="20" class="form-control-range" id="view_segment">
+				<h8>View segment</h8>
+				<div class="btn-group btn-block mb-1">
+					<button type="button" id="view_15sec" class="btn btn-primary">15 sec</button>
+					<button type="button" id="view_30sec" class="btn btn-primary">30 sec</button>
+					<button type="button" id="view_1min" class="btn btn-primary">1 min</button>
+					<button type="button" id="view_15min" class="btn btn-primary">15 min</button>
+					<button type="button" id="view_1hr" class="btn btn-primary">1 hr</button>
+					<button type="button" id="view_5hr" class="btn btn-primary">5 hr</button>
+					<button type="button" id="view_10hr" class="btn btn-primary">10 hr</button>
 				</div>
-				</form>
 
 			<div id="supervisorGraphs">
 			</div>
@@ -182,8 +197,40 @@
 		</div>
     </div>
   </div>
+
+
+
+
+<div class="tab-pane fade" id="evaluation" role="tabpanel" aria-labelledby="evaluation-tab">
+	<div class="row" >
+
+		<div class="col-3">
+			<div class="card">
+				<div class="card-body">
+				<h5 class="card-title">{{project_name}}</h5>
+				<ul class="list-group list-group-flush" id="labelerStatsTable">
+				<li class="list-group-item" >
+				</li>
+				<div> hello</div>
+
+
+				<li class="list-group-item">
+				</li>
+				</ul>
+				</div>
+			</div>
+		</div>
+		<div class="col-9">
+			<div class="card">
+			</div>
+		</div>
+
+		</div>
+	</div>
+	</div>
+
+
 </div>
-
-
+  </div>
 </div>
 {% endblock %}

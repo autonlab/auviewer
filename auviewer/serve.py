@@ -621,6 +621,19 @@ def createApp():
             mimetype='application/json'
         )
 
+    @app.route(config['rootWebPath']+'/initial_evaluator_payload')
+    @login_required
+    def initial_evaluator_payload():
+        project_id = request.args.get('project_id', type=int)
+
+        project = getProject(project_id)
+        res = project.applyLabelModel()
+        return app.response_class(
+            response=simplejson.dumps(res, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
+
     @app.route(config['rootWebPath']+'/initial_supervisor_payload')
     @login_required
     def initial_supervisor_payload():
@@ -773,6 +786,7 @@ def createApp():
     @login_required
     def get_votes():
         project_id = request.args.get('project_id', type=int)
+        recalculate = request.args.get('recalculate', type=bool) 
         fileIds = request.args.getlist('file_ids[]')
         windowInfo = request.get_json()['window_info']
         '''
@@ -787,8 +801,14 @@ def createApp():
             fileIds = [f.id for f in project.files]
         print(fileIds, windowInfo)
         fileIds = [int(fileId) for fileId in fileIds]
-        votes = project.computeVotes(fileIds, windowInfo)
-        d = dict()
+        if (recalculate):
+            votes = project.computeVotes(fileIds, windowInfo)
+            d = dict()
+        else:
+            print('getting votes instead')
+            votes, preds = project.getVotes(fileIds, windowInfo)
+            d = dict()
+            d['lm_predictions'] = preds
         d['labeling_function_votes'] = votes
         return app.response_class(
             response=simplejson.dumps(d, ignore_nan=True),
@@ -812,14 +832,16 @@ def createApp():
             mimetype='application/json'
         )
 
-    @app.route(config['rootWebPath']+'/create_supervisor_precomputer', methods=['POST'])
+    @app.route(config['rootWebPath']+'/upload_custom_segments', methods=['POST'])
     @login_required
-    def supervisor_precomputer():
+    def custom_segments_upload():
         project_id = request.args.get('project_id', type=int)
-        request_data = request.files['file_payload']
-        response = request_data.read()#request_data['file_payload']
+        p = getProject(project_id)
+        file = request.files['file_payload']
+        
+        segments, count = p.parseAndCreateSegmentsFromFile(file.filename, file)
         return app.response_class(
-            response=simplejson.dumps(response),
+            response=simplejson.dumps({'segments': segments, 'num_added': count}),
             status=200,
             mimetype='application/json'
         )

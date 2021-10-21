@@ -171,15 +171,16 @@ class Series:
 
         # Get the appropriate downsample for this time range
         ds = self.dss.getRangedOutput(starttime, stoptime)
-
         if isinstance(ds, pd.DataFrame):
             data = ds.to_records(index=False).tolist()
             output_type = 'downsample'
 
+        
+        # if (not isinstance(ds, pd.DataFrame) or pd.DataFrame.empty):
         else:
             data = self.rd.getRangedOutput(starttime, stoptime)
             output_type = 'real'
-
+        # print(data)
         logging.info(f"Completed assembly of ranged ({'downsampled' if output_type=='downsample' else 'raw'}) output for {self.id}.")
 
         # Return the JSON-ready output object

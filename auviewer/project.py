@@ -2,12 +2,14 @@
 import importlib
 import numpy as np
 
+import datetime as dt
+from io import StringIO, BytesIO
 import logging
 import math
 import pandas as pd
 import traceback
 import random
-import datetime as dt
+from snorkel.labeling.model import LabelModel
 from collections import Counter
 
 from pathlib import Path
@@ -165,7 +167,7 @@ class Project:
 
     def makeFilesPayload(self, files):
         outputObject = {
-            'files': [[f.id, f.origFilePathObj.name] for f in files],
+            'files': [[f.id, f.origFilePathObj.name, f.f.time_reference.timestamp()] for f in files],
             'series': [],
             'events': [],#[f.getEvents() for f in self.files],
             'metadata': [f.getMetadata() for f in files]
@@ -173,8 +175,11 @@ class Project:
 
         #must populate outputObject with constituent files' series, events, and metadata
         for f in files:
-            for s in f.series:
-                outputObject['series'].append({s.id: s.getFullOutput()})
+            s = self.getSeriesToRender(f)
+            if (s):
+                outputObject['series'].append({s.id:  s.getFullOutput()})
+            else:
+                outputObject['series'].append({None: None})
         
         return outputObject
 
@@ -243,13 +248,9 @@ class Project:
         #find file corresponding to fileId
         for f in self.files:
             if f.id == fileId:
-                series = f.series[0].getFullOutput().get('data') #for now assuming a single series, hence the 0-index
+                series = self.getSeriesOfInterest(f).getFullOutput().get('data')
 
-        lfModule = 'diagnoseEEG'
-        labelingFunctionModuleSpec = importlib.util.spec_from_file_location(lfModule, f"EEG_Weak_Supervision_Code/{lfModule}.py")
-        labelingFunctionModule = importlib.util.module_from_spec(labelingFunctionModuleSpec)
-        labelingFunctionModuleSpec.loader.exec_module(labelingFunctionModule)
-        lfModule = getattr(labelingFunctionModule, lfModule)
+        lfModule = self.getLFModule()
 
         thresholds = lfModule.getInitialThresholds()
 
@@ -258,7 +259,6 @@ class Project:
                 title, value = thresholdDict['title'], thresholdDict['value']
                 print(type(value), value)
                 thresholds[title] = float(value)
-
 
         return []
 
@@ -282,36 +282,104 @@ class Project:
                         correspondingIndices[j] = [i-1, None]
         return correspondingIndices
 
+    def applyLabelModel(self, votes=None):
+        lfMod = self.getLFModule()
+        labels = lfMod.getLabels()
+        if (votes != None):
+            pass
+        elif (len(models.Vote.query.filter_by(project_id=self.id).all()) > 0):
+            #use calculated votes
+            votes = self.getVotes([f.id for f in self.files])
+        else:
+            votes = self.computeVotes([f.id for f in self.files])
+        segIds = sorted(votes.keys())
+        L_train = []
+        for segId in segIds:
+            L_train.append([labels[v] for v in votes[segId]])
+        L_train = np.array(L_train)
+        lm = LabelModel(cardinality=2, verbose=False)
+        lm.fit(L_train=L_train, n_epochs=500, log_freq=100, seed=42)
+        lm_predictions = lm.predict_proba(L=L_train)
+        predsByFilename = dict()
+        numbersToLabels = lfMod.number_to_label_map()
+        for i, segId in enumerate(segIds):
+            segment = models.Segment.query.get(segId)
+            filename = self.getFile(segment.file_id).name
+            prediction = lm_predictions[i]
+            listToAppendTo = predsByFilename.get(filename, [])
+            listToAppendTo.append({
+                'prediction': numbersToLabels[np.argmax(prediction)],
+                'confidences': prediction.tolist(),
+                'left': segment.left,
+                'right': segment.right
+            })
+            predsByFilename[filename] = listToAppendTo
+        # predictions = list()
+        # for prediction in lm_predictions:
+        #     predictions.append(numbersToLabels[np.argmax(prediction)])
+        return {
+            # 'predictions': predictions,
+            # 'probabilities': lm_predictions.tolist()
+            'predictions': predsByFilename
+        }
+
+
     def deleteVotes(self):
         allVotes = models.Vote.query.filter_by(project_id=self.id).all()
         for vote in allVotes:
             models.db.session.delete(vote)
         models.db.session.commit()
 
+    def getVotes(self, fileIds, windowInfo=None):
+        result = dict()
+        for fileId in fileIds:
+            if (windowInfo):
+                segmentsForFile = models.Segment.query.\
+                    filter_by(
+                        project_id=self.id,
+                        file_id=fileId,
+                        type='WINDOW',
+                        window_size_ms=windowInfo['window_size_ms'],
+                        window_roll_ms=windowInfo['window_roll_ms']).\
+                    order_by(
+                        models.Segment.left.asc() #ascending
+                ).all()
+            else:
+                segmentsForFile = models.Segment.query.filter_by(
+                    project_id=self.id,
+                    file_id=fileId,
+                    type='CUSTOM'
+                ).all()
+            for segment in segmentsForFile:
+                votes = [v.category.label for v in segment.votes] 
+                print(segment.id, votes)
+                result[segment.id] = votes
+        #add labelmodel results
+        
+        preds = self.applyLabelModel(votes=result)
+        return result, preds
+
     def computeVotes(self, fileIds, windowInfo=None):
         lfModule = self.getLFModule()
         thresholds = self.getThresholdsPayload()
-        labels = {
-            'ABSTAIN': 'ABSTAIN',
-            'NORMAL': 'NORMAL',
-            'SUPPRESSED': 'SUPPRESSED',
-            'SUPPRESSED_WITH_ICTAL': 'SUPPRESSED_WITH_ICTAL',
-            'BURST_SUPRESSION': 'BURST_SUPRESSION',
-        }
 
+        labels = lfModule.getLabels()
         resultingVotes = dict()
         self.deleteVotes()
 
         lfs = list(map(lambda x: models.Labeler.query.filter_by(project_id=self.id, title=x).first(), lfModule.get_LF_names()))
-        categoryNamesToIds = dict()
-        for name in labels.keys():
-            label = models.Category.query.filter_by(project_id=self.id, label=name).first()
-            categoryNamesToIds[name] = label.id
-
+        categoryNumbersToIds = dict()
+        m = lfModule.number_to_label_map()
+        for number in labels.values():
+            label = models.Category.query.filter_by(project_id=self.id, label=m[number]).first()
+            categoryNumbersToIds[number] = label.id
         newVotes = list()
         for fileId in fileIds:
             f = self.getFile(fileId)
-            series = f.series[0].getFullOutput().get('data') #for now assuming a single series, hence the 0-index
+            if (self.getSeriesOfInterest(f) == None):
+                print(f, fileId)
+                continue
+
 
             if (windowInfo):
                 segmentsForFile = models.Segment.query.\
@@ -330,23 +398,38 @@ class Project:
                     file_id=fileId,
                     type='CUSTOM'
                 ).all()
+            # mini = float('inf')
+            # maxi = float('-inf')
+            # for segment in segmentsForFile:
+            #     mini = min(segment.left, mini)
+            #     maxi = max(segment.right, maxi)
+            # print(series)
+            # series = self.getSeriesOfInterest(f).getFullOutput().get('data')
+            # print(series)
             #iterate through user defined segments
             if (len(segmentsForFile) == 0): continue
-            correspondingIndexBounds = self.getIndicesForSegments(segmentsForFile, series)
+            # correspondingIndexBounds = self.getIndicesForSegments(segmentsForFile, series)
             for i, segment in enumerate(segmentsForFile):
-                startIdx, endIdx = correspondingIndexBounds[i]
-                curSeries = np.array([series[idx][-1] for idx in range(startIdx, endIdx)])
+                # if (correspondingIndexBounds[i]):
+                #     startIdx, endIdx = correspondingIndexBounds[i]
+                # else:
+                #     continue
+                series = self.getSeriesOfInterest(f).getRangedOutput(segment.left / 1000.0, segment.right / 1000.0).get('data')
+                if (len(series) == 0):
+                    print(fileId, segment.id)
+                    continue
+                curSeries = np.array([x[-1] for x in series])
 
                 filledNaNs = None
                 if np.sum(np.isnan(curSeries)) > 0:
                     filledNaNs = curSeries.isna().to_numpy()
                     curSeries = curSeries.fillna(0)
                 EEG = curSeries.reshape((-1, 1))
-                curLFModule = lfModule(EEG, filledNaNs, thresholds, labels, verbose=False, explain=False)
+                curLFModule = lfModule(EEG, filledNaNs, thresholds, labels)
                 vote_vec = curLFModule.get_vote_vector()
                 resultingVotes[segment.id] = vote_vec
                 for lf, vote in zip(lfs, vote_vec):
-                    categoryId = categoryNamesToIds[vote]
+                    categoryId = categoryNumbersToIds[vote]
                     newVote = models.Vote(
                         project_id=self.id,
                         labeler_id=lf.id,
@@ -355,6 +438,8 @@ class Project:
                         segment_id=segment.id
                     )
                     newVotes.append(newVote)
+                    # models.db.session.add(newVote)
+                    # models.db.session.commit()
 
         numBefore = len(models.Vote.query.filter_by(project_id=self.id).all())
         models.db.session.add_all(newVotes)
@@ -401,7 +486,67 @@ class Project:
         success = len(segmentsToDelete) == numDeleted
         return numDeleted, success
 
+    def findFileByFIN(self, fin_id):
+        for file in self.files:
+            fin = file.name.split(".")[0].split("_")[-1]
+            if fin == str(fin_id):
+                return file
+        return None
+    
+    def parseAndCreateSegmentsFromFile(self, filename, fileObj):
+        fileContents = fileObj.read()
+        if (filename.endswith('.pkl')):
+            #assume its a pickled pandas dataframe
+            df = pd.read_pickle(fileContents)
+        elif (filename.endswith('.csv')):
+            df = pd.read_csv(BytesIO(fileContents), parse_dates=['start', 'end'])
+        self._deleteCustomSegments()
+        foundFINs = dict() #dictionary mapping fins to their file indexes
+        segmentsMap = dict()
+        '''
+        segmentsMap expected to be of form:
+            { fId1: { seriesId1: [{'left': left1, 'right': right1},
+                                  {'left': left2, 'right': right2}
+                                 ],
+                      seriesId2: [ ...,
+                                   ...
+                                 ]
+                    },
+              fId2: {...}
+            }
+        '''
+        count = 0
+        for idx, row in df.iterrows():
+            fin_id = row['fin_id']
+            foundFINs[fin_id] = foundFINs.get(fin_id, self.findFileByFIN(fin_id))
+            if (not foundFINs[fin_id]):
+                #then file in csv isn't associated with file, so we should skip making segments for it
+                continue
+            file = foundFINs[fin_id]
+            series = self.getSeriesOfInterest(file)
+            if (series is None):
+                continue
+            left_ms, right_ms = dt.datetime.timestamp(row['start'])*1000, dt.datetime.timestamp(row['end'])*1000
+            newSeg = models.Segment(
+                project_id=self.id,
+                file_id=file.id,
+                series=series.id,
+                left=left_ms,
+                right=right_ms,
+                type='CUSTOM'
+            )
+            models.db.session.add(newSeg)
 
+            if (not segmentsMap.get(file.name)):
+                segmentsMap[file.name] = {series.id: list()}
+            segmentsMap[file.name][series.id].append({
+                'left': left_ms,
+                'right': right_ms,
+                'id': newSeg.id
+            })
+            count += 1
+        models.db.session.commit()
+        return segmentsMap, count
 
     def createSegments(self, segmentsMap, windowInfo, files=None):
         '''
@@ -415,6 +560,13 @@ class Project:
             return self._createSegmentsCustom(segmentsMap)
         else:
             return self._createSegmentsWindows(windowInfo, files)
+    
+    def _deleteCustomSegments(self):
+        allWindows = models.Segment.query.filter_by(project_id=self.id, type="CUSTOM").all()
+        if (len(allWindows) > 0):
+            for window in allWindows:
+                models.db.session.delete(window)
+            models.db.session.commit()
 
     def _deleteWindowSegments(self):
         allWindows = models.Segment.query.filter_by(project_id=self.id, type="WINDOW").all()
@@ -493,26 +645,44 @@ class Project:
                         type="CUSTOM"
                     )
                     newSegments.append(newSegment)
+                    models.db.session.add(newSegment)
 
                     span['id'] = newSegment.id
-        models.db.session.add_all(newSegments)
         models.db.session.commit()
         afterNum = len(models.Segment.query.filter_by(project_id=self.id).all())
         success = (afterNum-beforeNum)==len(newSegments)
         return segmentsMap, success, len(newSegments)
 
+    def getSeriesOfInterest(self, file):
+        supervisorModule = models.SupervisorModule.query.filter_by(project_id=self.id).first()
+        if (supervisorModule):
+            for s in file.series:
+                if (s.id == supervisorModule.series_of_interest):
+                    return s
+        else:
+            return file.series[0]
+
+    def getSeriesToRender(self, file):
+        supervisorModule = models.SupervisorModule.query.filter_by(project_id=self.id).first()
+        if (supervisorModule):
+            for s in file.series:
+                if (s.id == supervisorModule.series_to_render):
+                    return s
+        else:
+            return file.series[0]
+
     def getLFCode(self, lfNames, lfModule, thresholds, labels):
-        curSeries = self.files[0].series[0].getFullOutput().get('data') #for now assuming a single series, hence the 0-index
+        curSeries = self.getSeriesOfInterest(self.files[0]).getFullOutput().get('data')
         curSeries = np.array([x[-1] for x in curSeries])
         filledNaNs = None
         if np.sum(np.isnan(curSeries)) > 0:
             filledNaNs = curSeries.isna().to_numpy()
             curSeries = curSeries.fillna(0)
 
-        EEG = curSeries.reshape((-1, 1))
+        series = curSeries.reshape((-1, 1))
 
         # apply lfs to series
-        currentLfModule = lfModule(EEG, filledNaNs, thresholds, labels=labels, verbose =False, explain =False)
+        currentLfModule = lfModule(series, filledNaNs, thresholds, labels=labels)
         namesToCode = dict()
         import inspect
         for lfName in lfNames:
@@ -568,6 +738,9 @@ class Project:
         return res
 
     def getLFModule(self, module='diagnoseEEG'):
+        replacementMod = models.SupervisorModule.query.filter_by(project_id=self.id).first()
+        if (replacementMod):
+            module = replacementMod.title
         labelingFunctionModuleSpec = importlib.util.spec_from_file_location(module, f"EEG_Weak_Supervision_Code/{module}.py")
         labelingFunctionModule = importlib.util.module_from_spec(labelingFunctionModuleSpec)
         labelingFunctionModuleSpec.loader.exec_module(labelingFunctionModule)
@@ -575,21 +748,22 @@ class Project:
         return lfModule 
     
     def populateInitialSupervisorValuesToDict(self, fileIds, d, lfModule="diagnoseEEG", timeSegment=None):
-        lfModule = self.getLFModule(lfModule)
 
         # print('gonna drop_all then create_all')
         # models.db.drop_all()
         # models.db.create_all()
+        # afibProj = models.Project.query.get(2)
+        # supervisorMod = models.SupervisorModule(project_id=self.id, title="diagnoseAFib",
+        #   series_of_interest='/data/numerics/HR.BeatToBeat:value', series_to_render='/data/numerics/HR.BeatToBeat:value')
+        # models.db.session.add(supervisorMod)
+        # models.db.session.commit()
+        # print(supervisorMod.title, supervisorMod)
         # print('did it')
         # print(1/0)
 
-        labels = {
-            'ABSTAIN': 'ABSTAIN',
-            'NORMAL': 'NORMAL',
-            'SUPPRESSED': 'SUPPRESSED',
-            'SUPPRESSED_WITH_ICTAL': 'SUPPRESSED_WITH_ICTAL',
-            'BURST_SUPRESSION': 'BURST_SUPRESSION',
-        }
+        lfModule = self.getLFModule(lfModule)
+
+        labels = lfModule.getLabels()
         #### end of copied vars
 
         labelerNamesToIds = dict()
@@ -665,8 +839,10 @@ class Project:
         d['labeling_function_titles'] = lfNames
         d['labeling_function_possible_votes'] = list(labels.keys())
         d['labelers_to_thresholds'] = lfModule.getThresholdsForLabelers()
+        d['number_to_labels'] = lfModule.number_to_label_map()
         namesToCode = self.getLFCode(lfNames, lfModule, thresholds, labels)
         d['labeler_code'] = namesToCode 
+        d['series_to_render_id'] = self.getSeriesToRender(self.files[0]).id
         
         return lfNames, list(labels.keys())
     

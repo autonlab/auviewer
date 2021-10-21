@@ -37,6 +37,13 @@ class AnnotationTemplate(db.Model):
     name = db.Column(db.String(255), nullable=False)
     form = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, server_default=func.now())
+class SupervisorModule(db.Model):
+    __tablename__ = 'supervisor_modules'
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
+    title = db.Column(db.String(255), nullable=False)
+    series_of_interest = db.Column(db.String(255), nullable=False)
+    series_to_render = db.Column(db.String(255), nullable=True)
 
 #many to many table joining labelers and thresholds
 labelerThresholds = db.Table('labeler_thresholds',
