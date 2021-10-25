@@ -98,6 +98,7 @@ p.assignment-panel-bottom-label { font-size: 0.6em; margin-top: 0; font-style: i
     height: 60px;
     padding-bottom: 4px;
     font-weight: bold;
+    overflow-wrap: break-word;
 }
 
 .graph_wrapper > table > tbody > tr > td.graph_title > div {

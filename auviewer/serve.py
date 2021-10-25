@@ -40,6 +40,7 @@ import pandas as pd
 import numpy as np
 import pytz
 
+from .modules.featurization.example import ExampleFeaturizer
 from .modules.featurization.mean import MeanFeaturizer
 from .modules.featurization.std import StandardDeviationFeaturizer
 from functools import partial
@@ -47,7 +48,7 @@ from functools import partial
 
 
 
-featurizers = [MeanFeaturizer(), StandardDeviationFeaturizer()]
+featurizers = [ExampleFeaturizer(), MeanFeaturizer(), StandardDeviationFeaturizer()]
 featurizers = {f.id: f for f in featurizers}
 
 
@@ -425,22 +426,22 @@ def createApp():
     @login_required
     def featurize():
 
-        # featurizers = {
-        #     "sample_entropy"
-        # }
-        featurizer = request.args.get('featurizer')
-        print("FEATURIZER", featurizer)
 
         # Parse parameters
+        featurizer = request.args.get('featurizer')
         project_id = request.args.get('project_id', type=int)
         file_id = request.args.get('file_id', type=int)
         series = request.args.get('series')
         left = request.args.get('left', type=float)
         right = request.args.get('right', type=float)
         params = json.loads(request.args.get('params'));
+
+        print("FEATURIZER", featurizer)
         print('featurize', project_id, file_id, series, params)
 
-        if featurizer == 'sample_entropy':
+        if featurizer in featurizers:
+            se = featurizers[featurizer].getFeaturizeFunction(params)
+        elif featurizer == 'sample_entropy':
             tolerance = params['tolerance']
             if len(tolerance) < 1:
                 tolerance = None
@@ -452,23 +453,6 @@ def createApp():
             def se(x):
                 try:
                     return pyhrv.nonlinear.sample_entropy(nni=x, tolerance=tolerance, dim=dim)[0] if x.shape[0] > 0 else np.nan
-                except Exception as e:
-                    print(f"exception: {e}")
-                    return np.nan
-        elif featurizer == 'mean':
-            fi = MeanFeaturizer()
-            se = partial(fi.featurize, params=params)
-            # TODO: exception catching?
-            # def se(x):
-            #     try:
-            #         return x.mean()
-            #     except Exception as e:
-            #         print(f"exception: {e}")
-            #         return np.nan
-        elif featurizer == 'standard_deviation':
-            def se(x):
-                try:
-                    return x.std()
                 except Exception as e:
                     print(f"exception: {e}")
                     return np.nan

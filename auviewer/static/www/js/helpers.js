@@ -345,135 +345,180 @@ function padDataIfNeeded(data) {
 function showFeaturizationPanel(s) {
 	globalAppConfig.verbose && console.log('showFeaturizationPanel('+s+') called.');
 
-	// Setup handler
-	const featurize = function() {
+	const panel = $$('featurize_window');
+	if (panel) {
+		panel.show()
+	} else {
 
-		$$('featurize_window').showProgress();
+		// Setup handler
+		const featurize = function() {
 
-		const vals = $$('featurize_form').getValues();
-		const featurizer = vals['_featurizer'];
-		delete vals['_featurizer'];
-		const params = vals;
+			$$('featurize_window').showProgress();
 
-		// Grab the x-axis range from the last showing graph (all graphs should be
-		// showing the same range since they are synchronized).
-		const f = globalStateManager.currentFile;
-		const g = f.getGraphForSeries(s);
-		const xRange = g.dygraphInstance.xAxisRange();
-		const left = xRange[0]/1000-f.fileData.baseTime;
-		const right = xRange[1]/1000-f.fileData.baseTime;
+			const vals = $$('featurize_form').getValues();
+			const featurizer = vals['_featurizer'];
+			delete vals['_featurizer'];
+			const series = vals['_series']
+			delete vals['_series']
+			const params = vals;
 
-		requestHandler.featurize(globalStateManager.currentProject.id, globalStateManager.currentFile.id, s, featurizer, left, right, params, function(data) {
-			$$('featurize_window').hideProgress();
-
-			if (!data['success']) {
-				console.log('Featurization was not successful.');
-				let msg = 'Featurization was not successful.';
-				if (data.hasOwnProperty('error_message')) {
-					msg = data['error_message'];
+			// Grab the x-axis range from the last showing graph (all graphs should be
+			// showing the same range since they are synchronized).
+			const f = globalStateManager.currentFile;
+			const g = f.getGraphForSeries(series);
+			let xRange = null;
+			try {
+				xRange = g.dygraphInstance.xAxisRange();
+			} catch (error) {
+				// The graph may not be showing
+				try {
+					xRange = f.getFirstShowingGraph().xAxisRange();
+				} catch (error) {
+					// No graphs may be showing
+					xRange = f.getOutermostZoomWindow();
 				}
-				alert(msg);
-				return;
 			}
-			globalStateManager.currentFile.addTemporaryFeatureGraph(data);
-		});
-	}
+			const left = xRange[0]/1000-f.fileData.baseTime;
+			const right = xRange[1]/1000-f.fileData.baseTime;
 
-	// Assemble the array of available featurizers for the dropdown menu
-	let featurizerOptions = [];
-	for (const fid of Object.getOwnPropertyNames(featurizersPayload)) {
-		featurizerOptions.push({
-			id: fid,
-			value: featurizersPayload[fid]['name'],
-		});
-	}
+			requestHandler.featurize(globalStateManager.currentProject.id, globalStateManager.currentFile.id, series, featurizer, left, right, params, function(data) {
+				$$('featurize_window').hideProgress();
 
-	webix.ui({
-		view: 'window',
-		id: 'featurize_window',
-		close: true,
-		head: "Featurize",// &mdash; Rolling Window Sample Entropy &mdash; "+s,
-		move: true,
-		position: 'center',
-		width: 400,
-		body: {
-			view: 'form',
-			//width: 650,
-			//height: 500,
-			id: 'featurize_form',
-			on: { onSubmit: featurize },
-			elements: [
-				{
-					view: "combo",
-					id: '_featurizer',
-					//width:300,
-					labelWidth: 'auto',
-					label: 'Featurizer',
-					name:"_featurizer",
-					options: featurizerOptions,
-					on: {
-						onChange: function() {
-							const featurizerID = this.getValue();
-							if (featurizersPayload.hasOwnProperty(featurizerID) && featurizersPayload[featurizerID]['fields'].length > 0) {
-								const fieldset = {
-									view: 'fieldset',
-									id: 'featurizer_params_fieldset',
-									label: 'Featurizer Parameters',
-									paddingY: 40,
-									body: {
-										rows: featurizersPayload[featurizerID]['fields'],
+				if (!data['success']) {
+					console.log('Featurization was not successful.');
+					let msg = 'Featurization was not successful.';
+					if (data.hasOwnProperty('error_message')) {
+						msg = data['error_message'];
+					}
+					alert(msg);
+					return;
+				}
+				globalStateManager.currentFile.addTemporaryFeatureGraph(data);
+			});
+		}
+
+		// Assemble the array of available featurizers for the dropdown menu
+		let featurizerOptions = [];
+		for (const fid of Object.getOwnPropertyNames(featurizersPayload)) {
+			featurizerOptions.push({
+				id: fid,
+				value: featurizersPayload[fid]['name'],
+			});
+		}
+
+		let seriesOptions = Object.getOwnPropertyNames(globalStateManager.currentFile.graphs);
+
+		webix.ui({
+			view: 'window',
+			id: 'featurize_window',
+			close: true,
+			head: "Featurize",
+			move: true,
+			position: 'center',
+			width: 400,
+			body: {
+				view: 'form',
+				//width: 650,
+				//height: 500,
+				id: 'featurize_form',
+				on: { onSubmit: featurize },
+				elements: [
+					{
+						view: "combo",
+						id: 'featuze_window_featurizer_dropdown',
+						//width:300,
+						labelWidth: 'auto',
+						label: 'Featurizer',
+						name: "_featurizer",
+						options: featurizerOptions,
+						suggest: {
+							data: featurizerOptions,
+							filter: function(obj, filter) {
+								return obj.value.toLowerCase().indexOf(filter.toLowerCase()) != -1;
+							}
+						},
+						on: {
+							onChange: function () {
+								const featurizerID = this.getValue();
+								if (featurizersPayload.hasOwnProperty(featurizerID) && featurizersPayload[featurizerID]['fields'].length > 0) {
+									const fieldset = {
+										view: 'fieldset',
+										id: 'featurizer_params_fieldset',
+										label: 'Featurizer Parameters',
+										paddingY: 40,
+										body: {
+											rows: featurizersPayload[featurizerID]['fields'],
+										}
+									};
+									if ($$('featurizer_params_fieldset')) {
+										// The fieldset exists, so replace it.
+										const x = webix.ui(fieldset, $$('featurize_form'), $$('featurizer_params_fieldset'));
+									} else {
+										// The fieldset doesn't exist, so add it.
+										const pos = $$("featurize_form").index($$("featurize_window_generate_button"));
+										$$('featurize_form').addView(fieldset, pos)
 									}
-								};
-								if ($$('featurizer_params_fieldset')) {
-									// The fieldset exists, so replace it.
-									webix.ui(fieldset, $$('featurize_form'), $$('featurizer_params_fieldset'));
 								} else {
-									// The fieldset doesn't exist, so add it.
-									const pos = $$("featurize_form").index($$("featurize_window_generate_button"));
-									$$('featurize_form').addView(fieldset, pos)
+									console.log("Error: Couldn't find featurizer ID '" + featurizerID + "' payload!", featurizersPayload)
+									$$('featurize_form').removeView('featurizer_params_fieldset');
 								}
-							} else {
-								$$('featurize_form').removeView('featurizer_params_fieldset');
 							}
 						}
-					}
-				},
-				{
-					view: 'fieldset',
-					id: 'rw_params_fieldset',
-					label: 'Rolling Window Parameters',
-					paddingY: 48,
-					body: {
-						rows: [
-							{
-								view: 'text',
-								label: 'Window Size (e.g. 10ms, 3s, 5min)',
-								//labelWidth: 250,
-								labelWidth: 'auto',
-								labelAlign: 'left',
-								inputAlign: 'right',
-								name: 'window_size',
-								id: 'window_size',
-								// width: 120,
-								on: {
-									onFocus: function () {
-										this.getInputNode().select()
-									}
-								},
-							},
-						],
 					},
-				},
-				{
-					view: 'button',
-					id: 'featurize_window_generate_button',
-					value: 'Generate',
-					tooltip: 'Generate the featurization and display in the viewer when ready.',
-					click: featurize
-				},
-			]
-		},
-	}).show();
+					{
+						view: "combo",
+						id: 'featurize_window_series_dropdown',
+						//width:300,
+						labelWidth: 'auto',
+						label: 'Series',
+						name: "_series",
+						options: seriesOptions,
+						suggest: {
+							data: seriesOptions,
+							filter: function(obj, filter) {
+								return obj.value.toLowerCase().indexOf(filter.toLowerCase()) != -1;
+							}
+						},
+					},
+					{
+						view: 'fieldset',
+						id: 'rw_params_fieldset',
+						label: 'Rolling Window Parameters',
+						paddingY: 48,
+						body: {
+							rows: [
+								{
+									view: 'text',
+									label: 'Window Size (e.g. 10ms, 3s, 5min)',
+									//labelWidth: 250,
+									labelWidth: 'auto',
+									labelAlign: 'left',
+									inputAlign: 'right',
+									name: 'window_size',
+									id: 'window_size',
+									// width: 120,
+									on: {
+										onFocus: function () {
+											this.getInputNode().select()
+										}
+									},
+								},
+							],
+						},
+					},
+					{
+						view: 'button',
+						id: 'featurize_window_generate_button',
+						value: 'Generate',
+						tooltip: 'Generate the featurization and display in the viewer when ready.',
+						click: featurize
+					},
+				]
+			},
+		}).show();
+	}
+
+	$$('featurize_window_series_dropdown').setValue(s)
 
 	webix.extend($$("featurize_window"), webix.ProgressBar);
 
@@ -487,13 +532,13 @@ function showGraphControlPanel(s) {
 
 	// Setup some handlers
 	const updateRange = function() {
-		const vals = $$('graph_range_form').getValues();
+		const vals = $$('graph_range_form_'+s).getValues();
 		g.dygraphInstance.updateOptions({
 			valueRange: [vals['ymin'], vals['ymax']],
 		});
 	};
 	const updateHeight = function() {
-		const vals = $$('graph_height_form').getValues();
+		const vals = $$('graph_height_form_'+s).getValues();
 		g.graphWrapperDomElement.style.height = vals['height'] + 'px';
 		if (g.isShowing()) {
 			g.hide();
@@ -501,67 +546,72 @@ function showGraphControlPanel(s) {
 		}
 	};
 
-	webix.ui({
-		view: 'window',
-		id: 'graph_config_window',
-		close: true,
-		head: "Graph Options &mdash; "+g.shortName,
-		move: true,
-		//resize: true,
-		//height: 250,
-		//width: 200,
-		position: 'center',
-		body: {
-			cols: [
-				{
-					view: 'form',
-					id: 'graph_range_form',
-					on: { onSubmit: updateRange },
-					elements: [
-						{view: 'template', template: 'Y-Axis Range', type: 'header', borderless: true},
-						{
-							view: 'text',
-							label: 'y min',
-							name: 'ymin',
-							width: 200,
-							value: dg.axes_[0].valueRange[0],
-							on: { onFocus: function() { this.getInputNode().select() } },
-						},
-						{
-							view: 'text',
-							label: 'y max',
-							name: 'ymax',
-							width: 200,
-							value: dg.axes_[0].valueRange[1],
-							on: { onFocus: function() { this.getInputNode().select() } },
-						},
-						{
-							view: 'button', value: 'Update', click: updateRange
-						},
-					]
-				},
-				{
-					view: 'form',
-					id: 'graph_height_form',
-					on: { onSubmit: updateHeight },
-					elements: [
-						{view: 'template', template: 'Graph Height', type: 'header', borderless: true},
-						{
-							view: 'text',
-							label: 'Height (px)',
-							name: 'height',
-							width: 150,
-							value: g.graphWrapperDomElement.style.height.slice(0, -2),
-							on: { onFocus: function() { this.getInputNode().select() } },
-						},
-						{
-							view: 'button', value: 'Update', click: updateHeight
-						},
-					]
-				},
-			]
-		},
-	}).show();
+	const panel = $$('graph_config_window_'+s);
+	if (panel) {
+		panel.show()
+	} else {
+		webix.ui({
+			view: 'window',
+			id: 'graph_config_window_'+s,
+			close: true,
+			head: "Graph Options &mdash; "+g.shortName,
+			move: true,
+			//resize: true,
+			//height: 250,
+			//width: 200,
+			position: 'center',
+			body: {
+				cols: [
+					{
+						view: 'form',
+						id: 'graph_range_form_'+s,
+						on: { onSubmit: updateRange },
+						elements: [
+							{view: 'template', template: 'Y-Axis Range', type: 'header', borderless: true},
+							{
+								view: 'text',
+								label: 'y min',
+								name: 'ymin',
+								width: 200,
+								value: dg.axes_[0].valueRange[0],
+								on: { onFocus: function() { this.getInputNode().select() } },
+							},
+							{
+								view: 'text',
+								label: 'y max',
+								name: 'ymax',
+								width: 200,
+								value: dg.axes_[0].valueRange[1],
+								on: { onFocus: function() { this.getInputNode().select() } },
+							},
+							{
+								view: 'button', value: 'Update', click: updateRange
+							},
+						]
+					},
+					{
+						view: 'form',
+						id: 'graph_height_form_'+s,
+						on: { onSubmit: updateHeight },
+						elements: [
+							{view: 'template', template: 'Graph Height', type: 'header', borderless: true},
+							{
+								view: 'text',
+								label: 'Height (px)',
+								name: 'height',
+								width: 150,
+								value: g.graphWrapperDomElement.style.height.slice(0, -2),
+								on: { onFocus: function() { this.getInputNode().select() } },
+							},
+							{
+								view: 'button', value: 'Update', click: updateHeight
+							},
+						]
+					},
+				]
+			},
+		}).show();
+	}
 }
 
 // Returns a simplified name of the series, with the path components removed and

@@ -69,7 +69,7 @@ class PatternSet(db.Model):
     __tablename__ = 'pattern_sets'
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
-    annotation_template_id = db.Column(db.Integer, db.ForeignKey('annotation_templates.id', ondelete='RESTRICT'), nullable=True)
+    #annotation_template_id = db.Column(db.Integer, db.ForeignKey('annotation_templates.id', ondelete='RESTRICT'), nullable=True)
     name = db.Column(db.String(255), nullable=False)
     description = db.Column(db.String(255), nullable=True)
     show_by_default = db.Column(db.Boolean, default=False, nullable=False)
