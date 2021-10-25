@@ -29,11 +29,16 @@ author = 'Gus Welter, Anthony Wertz, Artur Dubrawski'
 #extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'nbsphinx']
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.viewcode',
     'nbsphinx',
     'sphinx_gallery.load_style'
 ]
 
-nbsphinx_prolog = 'this is a prolog'
+nbsphinx_prolog = """
+Go there: https://example.org/notebooks/{{ env.doc2path(env.docname, base=None) }}
+
+----
+"""
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
