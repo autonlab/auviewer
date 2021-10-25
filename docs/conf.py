@@ -13,7 +13,6 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('..'))
-import sphinx_gallery
 
 # -- Project information -----------------------------------------------------
 
@@ -28,7 +27,11 @@ author = 'Gus Welter, Anthony Wertz, Artur Dubrawski'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 #extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'nbsphinx']
-extensions = ['sphinx.ext.autodoc', 'nbsphinx', 'sphinx_gallery.load_style']
+extensions = [
+    'sphinx.ext.autodoc',
+    'nbsphinx',
+    'sphinx_gallery.load_style'
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
