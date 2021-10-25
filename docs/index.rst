@@ -30,7 +30,7 @@ facilitate expert annotation.
 
    getstarted
    installation
-   testnb
+   example_notebooks
 
 
 .. toctree::
