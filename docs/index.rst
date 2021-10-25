@@ -30,6 +30,7 @@ facilitate expert annotation.
 
    getstarted
    installation
+   testnb
 
 
 .. toctree::
