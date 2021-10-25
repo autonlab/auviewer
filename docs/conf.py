@@ -33,6 +33,8 @@ extensions = [
     'sphinx_gallery.load_style'
 ]
 
+nbsphinx_prolog = 'this is a prolog'
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
