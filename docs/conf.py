@@ -14,7 +14,6 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('..'))
 
-
 # -- Project information -----------------------------------------------------
 
 project = 'Auton Universal Viewer'
@@ -28,7 +27,23 @@ author = 'Gus Welter, Anthony Wertz, Artur Dubrawski'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 #extensions = ['sphinx.ext.autodoc', 'sphinx.ext.napoleon', 'nbsphinx']
-extensions = ['sphinx.ext.autodoc', 'nbsphinx']
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.viewcode',
+    'nbsphinx',
+    'sphinx_gallery.load_style'
+]
+
+nbsphinx_prolog = """
+
+This is from a Jupyter Notebook. View & download the notebook here_.
+
+.. _here: https://github.com/autonlab/auviewer/blob/master/docs/sample_notebooks/{{ env.doc2path(env.docname, base=None) }}
+
+
+
+----
+"""
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
