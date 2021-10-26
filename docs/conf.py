@@ -35,7 +35,7 @@ extensions = [
 ]
 
 nbsphinx_prolog = """
-Go there: `https://example.org/notebooks/{{ env.doc2path(env.docname, base=None) }}`
+Go there: `{{ env.doc2path(env.docname, base='https://github.com/autonlab/auviewer/blob/master/docs/sample_notebooks/') }}
 
 ----
 """
