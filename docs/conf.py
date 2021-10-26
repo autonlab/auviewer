@@ -35,7 +35,9 @@ extensions = [
 ]
 
 nbsphinx_prolog = """
-Go there: `{{ env.doc2path(env.docname, base='https://github.com/autonlab/auviewer/blob/master/docs/sample_notebooks/') }}
+
+This is from a Jupyter Notebook. View & download the notebook here_.
+.. _here: https://github.com/autonlab/auviewer/blob/master/docs/sample_notebooks/{{ env.doc2path(env.docname, base=None) }}
 
 ----
 """
