@@ -31,22 +31,54 @@ class SimpleFeaturizer(ABC):
             raise Exception(f"Featurizer {self.id} has no name.")
 
     def getFeaturizeFunction(self, params):
-        return partial(self.featurize, params=params)
+        print(f"Params pre-process: {params}")
+        preparedParams = self.prepareParams(params)
+        print(f"Params post-process: {preparedParams}")
+        return partial(self.featurize, params=preparedParams)
 
     def getFields(self):
         """
-        This function produces and returns a list of field dicts ready to be marshalled to JSON
-        and then supplied to Webix as a JavaScript array representing the featurizer's form fields.
+        Produces and returns a list of field dicts ready to be marshalled to JSON and supplied to Webix as a JavaScript
+        array representing the featurizer's form fields.
         """
         return [field.getField() for field in self.parameters]
 
     @abstractmethod
     def featurize(self, data, params={}):
         """
-
-        :return:
+        This will be the function which, given a Pandas DataFrame and parameters dict, featurizes and returns the
+        feature's scalar value output.
+        :return: Scalar value output of featurization
         """
         raise NotImplementedError("Error! Required featurizer method 'featurize' not implemented.")
+
+    def prepareParams(self, params):
+        """
+        Returns a processed version of params given web form input.
+        """
+        newParams = {}
+        for p in self.parameters:
+
+            try:
+
+                val = params[p.id]
+                if p.data_type == 'boolean':
+                    if val is None or val=='':
+                        val = p.default
+                    elif not val or val==0 or val=='0' or val=='false' or val=='False':
+                        val = False
+                    else:
+                        val = True
+                else:
+                    if val is None or val=='':
+                        val = p.default
+
+                newParams[p.id] = val
+
+            except:
+                newParams[p.id] = p.default
+
+        return newParams
 
 
 class FeaturizerParameter():
@@ -88,9 +120,22 @@ class FeaturizerParameter():
         if not len(name) > 0:
             raise Exception(f"Empty parameter name provided: {name}")
 
+        # Boolean-specific properties enforcement
         if data_type == 'boolean':
-            form_field_type = 'dropdown'
-            options = {'': '', 'true': 'True', 'false': 'False'}
+
+            if required:
+                form_field_type = 'checkbox'
+                options = []
+            else:
+                form_field_type = 'dropdown'
+                options = {'': '', 'true': 'True', 'false': 'False'}
+
+            if not default:
+                default = False
+            else:
+                default = True
+            # TODO: TEMP!!!!!
+            default = 'default'
 
         # Set properties
         self.id = id
