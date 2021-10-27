@@ -1,5 +1,5 @@
-Example Jupyter Notebooks
-=========================
+Example Notebooks
+=================
 
 .. nbgallery::
    example_notebooks/documentation_via_help
