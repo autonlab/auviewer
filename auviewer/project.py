@@ -64,7 +64,7 @@ class Project:
         except:
             pass
 
-    def createPatternSet(self, name: str, description=None, showByDefault: bool = False) -> PatternSet:
+    def createPatternSet(self, name: str, description=None, showByDefault: bool = True) -> PatternSet:
         """
         Create and return a new pattern set.
         :return: a new PatternSet instance
@@ -248,6 +248,13 @@ class Project:
         """
         return sum([ps.count for ps in self.patternsets.values()])
 
+    def listFiles(self) -> List[List[str]]:
+        """
+        Returns list of files for the project (ID, filename, file path, downsample path).
+        :return: list of lists
+        """
+        return [[f.id, f.name, str(f.origFilePathObj), str(f.procFilePathObj)] for f in self.files]
+
     def listPatternSets(self) -> List[List[str]]:
         """
         Returns list of pattern sets (ID, names).
@@ -310,11 +317,11 @@ class Project:
                 try:
 
                     # Skip if not file or not .h5
-                    if not p.is_file() or p.suffix != '.h5':
+                    if not newOrigFilePathObj.is_file() or newOrigFilePathObj.suffix != '.h5':
                         continue
 
                     # Skip if matches any already-loaded files
-                    if any(map(lambda existingFilePathObj: p.samefile(existingFilePathObj), existingFilePathObjs)):
+                    if any(map(lambda existingFilePathObj: newOrigFilePathObj.samefile(existingFilePathObj), existingFilePathObjs)):
                         continue
 
                     # Establish the path of the new processed file

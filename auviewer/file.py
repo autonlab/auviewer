@@ -12,12 +12,12 @@ from .cylib import generateThresholdAlerts
 from .series import Series, simpleSeriesName
 from .shared import annotationOrPatternOutput
 
-# File represents a single patient data file. File may operate in file- or
-# realtime-mode. In file-mode, all data is written to & read from a file. In
-# realtime-mode, no file is dealt with and instead everything is kept in memory.
-# If no filename parameter is passed to the constructor, File will operate in
-# realtime-mode.
 class File:
+    """
+    Represents a project file. File may operate in file- or realtime-mode. In file-mode, all data is written to & read
+    from a file. In realtime-mode, no file is dealt with and instead everything is kept in memory. If no filename
+    parameter is passed to the constructor, File will operate in realtime-mode.
+    """
 
     def __init__(self, projparent, id, origFilePathObj, procFilePathObj, processNewFiles=True, processOnly=False):
 
@@ -467,13 +467,13 @@ class File:
     def load(self):
         """
         Loads the necessary data into memory for an already-processed data file
-        (does not load data though).Sets up classes for all series from file but
+        (does not load data though). Sets up classes for all series from file but
         does not load series data into memory).
         """
 
         logging.info('Loading series from file.')
 
-        # Iteratee through all datasets in the partial file
+        # Iterate through all datasets in the partial file
         for (ds, _) in self.file.recurse():
             self.loadSeriesFromDataset(ds)
 
@@ -593,7 +593,7 @@ class File:
 
         # Verify the user has requested to update his or her own annotation.
         if annotationToUpdate.user_id != user_id:
-            logging.critical(f"Error/securityissue on annotation update: User (id {user_id}) tried to update an annotation (id {id}) belonging to another user (id {annotationToUpdate.user_id}).")
+            logging.critical(f"Error/security issue on annotation update: User (id {user_id}) tried to update an annotation (id {id}) belonging to another user (id {annotationToUpdate.user_id}).")
             return False
 
         # Set updated values

@@ -79,7 +79,7 @@ def listAvailableProjects() -> List[List[str]]:
     """
     return [[p.id, p.name, p.path] for p in models.Project.query.all()]
 
-def listProjects() -> List[List[str]]:
+def listLoadedProjects() -> List[List[str]]:
     """
     Returns list of projects loaded in memory (ID, name, path).
     :return: list of lists

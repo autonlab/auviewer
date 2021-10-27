@@ -1,6 +1,5 @@
 """Class and related functionality for pattern sets."""
 
-from pathlib import Path
 from sqlalchemy.orm import joinedload
 import pandas as pd
 from typing import Union, List
@@ -9,6 +8,7 @@ from . import models
 from .shared import annotationDataFrame, patternDataFrame
 
 class PatternSet:
+    """Represents a pattern set."""
 
     def __init__(self, projparent, dbmodel):
 
@@ -25,16 +25,100 @@ class PatternSet:
 
         # Establish a count of patterns belonging to the set
         self.count = 0
-        self.updateCount()
 
-    # Add patterns to the pattern set.
-    def addPatterns(self, df):
+        # Refresh model & count
+        self.refresh()
+
+    def addPatterns(self, df, validate=True):
+        """
+        Add patterns to the pattern set. By default, the rows will be validated (e.g. for matching file ID & filename).
+        This may be skipped in the case of extremely high volume, but it may lead to database integrity issues to do so.
+
+        During validation, if filename is present and file_id is not, then file_id will be populated according to the
+        filename. If both are populated, then the file_id will be validated to match the filename. The provided pattern
+        set must contain 'file_id' and/or 'filename' columns as well as ['series', 'left', 'right', 'label'].
+        :return: None
+        """
+
+        if validate:
+
+            if 'file_id' not in df.columns and 'filename' not in df.columns:
+                raise Exception('Pattern set must have either a file_id or filename column. Neither was found.')
+
+            required_columns = ['series', 'left', 'right', 'label']
+            if not all(c in df.columns for c in required_columns):
+                raise Exception(f"Pattern set is missing one of the following required columns: [{', '.join(required_columns)}]")
+
+            # Add optional columns if not present
+            if 'file_id' not in df.columns:
+                df['file_id'] = None
+            if 'top' not in df.columns:
+                df['top'] = None
+            if 'bottom' not in df.columns:
+                df['bottom'] = None
+
+            # Reset index (so row number corresponds to index)
+            df.reset_index(drop=True, inplace=True)
+
+            # We'll do a validation and/or file_id fill-in if the filename column is present
+            checkfn = 'filename' in df.columns
+
+            for i in range(df.shape[0]):
+                row = df.loc[i]
+                fid = row['file_id']
+                series = row['series']
+                left = row['left']
+                right = row['right']
+
+                # These columns might be NaN (which evaluates to truthy), so override them to None
+                if pd.isnull(fid):
+                    fid = None
+                if pd.isnull(left):
+                    left = None
+                if pd.isnull(right):
+                    right = None
+
+                # Check filename
+                if checkfn and row['filename']:
+                    fn = row['filename']
+                    f = self.projparent.getFileByFilename(fn)
+                    if not f:
+                        # If they provided a filename but the file wasn't found in the project, raise an exception.
+                        raise Exception(f"File {fn} not found in the project.")
+                    if fid:
+                        # If they provided both file_id and filename but they don't match, raise an exception.
+                        if f.id != fid:
+                            raise Exception(f"File ID {f.id} for filename {fn} did not match the provided file_id {fid}.")
+                    else:
+                        # File ID not provided, so populate it.
+                        df.at[i, 'file_id'] = f.id
+                    # Note: If the file_id was provided and filename was not provided, we don't care, as the
+                    # filename column will be dropped.
+
+                # If file_id is still not populated for any reason, we have a problem
+                fid = df.at[i, 'file_id']
+                if not fid or pd.isnull(fid):
+                    raise Exception(f"File ID not found for {row}.")
+
+                # Validate the file ID
+                f = self.projparent.getFile(fid)
+                if not f:
+                    raise Exception(f"File ID {fid} not found for {row}.")
+
+                # Check series name
+                # TODO(gus, vedant): Check series name, but the file loading issue has to be resolved first.
+                if not series:# or not f.getSeries(series):
+                    raise Exception(f"Series {series} not found for {row}.")
+
+                # Check left & right
+                if not left or not right:
+                    raise Exception(f"Left or right not found for {row}.")
 
         # Subset only the columns we need from the user
         df = df[['file_id', 'series', 'left', 'right', 'top', 'bottom', 'label']]
 
         # Add the project ID
-        df['project_id'] = self.projparent.id
+        df.insert(0, "project_id", [self.projparent.id]*df.shape[0])
 
         # Add the id of this pattern set
         df.insert(0, "pattern_set_id", [self.id]*df.shape[0])
@@ -42,8 +126,8 @@ class PatternSet:
         # Do the db insert
         df.to_sql('patterns', models.db.engine, index=False, if_exists='append')
 
-        # Update count
-        self.updateCount()
+        # Refresh & update count
+        self.refresh()
 
     def assignToUsers(self, user_ids: Union[int, List[int]]) -> None:
         """
@@ -88,7 +172,7 @@ class PatternSet:
             models.db.session.rollback()
             raise
         models.db.session.commit()
-        self.updateCount()
+        self.refresh()
         return n
 
     def deleteUnannotatedPatterns(self) -> int:
@@ -105,7 +189,7 @@ class PatternSet:
             models.db.session.rollback()
             raise
         models.db.session.commit()
-        self.updateCount()
+        self.refresh()
         return n
 
     def getAnnotationCount(self) -> int:
@@ -141,11 +225,12 @@ class PatternSet:
         models.db.session.commit()
         self.showByDefault = show
 
-    def updateCount(self):
+    def refresh(self):
         """
-        Update the count of patterns belonging to this set
+        Refresh model & update the count of patterns belonging to this set
         (this is normally an internally-used method).
         """
+        models.db.session.refresh(self.dbmodel)
         self.count = models.Pattern.query.filter_by(pattern_set_id=self.id).count()
 
 def getAssignmentsPayload(user_id):

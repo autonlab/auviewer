@@ -218,8 +218,15 @@ def set_data_path(path):
 
     global config
 
-    # Create a path object, converting a relative path to absolute if necessary
-    p = Path(path).resolve()
+    # Create a path object
+    p = Path(path)
+
+    # Resolve user directory, if necessary
+    if path.startswith('~'):
+        p = p.expanduser()
+
+    # Resolve relative to absolute path, if necessary
+    p = p.resolve()
 
     # Create the data directory if necessary
     p.mkdir(exist_ok=True)
