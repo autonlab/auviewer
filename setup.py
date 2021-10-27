@@ -71,6 +71,7 @@ setup(
         'pycrypto',
         'simplejson',
         'sqlalchemy',
+        'sklearn'
     ],
     packages=find_packages(),
     setup_requires=['numpy'],
