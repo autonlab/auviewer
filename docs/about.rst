@@ -31,14 +31,19 @@ original files which it serves. Generally, this leads to a doubling of original
 data disk space requirements (e.g. a 20GB original file will require on the
 order of 20GB of additional space for pre-computed downsample data).
 
-Created for You By
-------------------
+Created & Maintained for You By
+-------------------------------
 Auton Universal Viewer was created for you by `Gus Welter`_, `Anthony Wertz`_, and `Dr. Artur Dubrawski`_ of the
 `Auton Lab`_ at `Carnegie Mellon University`_.
+
+Current contributors & maintainers include `Roman Kaufman`_, `Vedant Sanil`_, `Stefania La Vattiata`_, and `Gus Welter`_.
 
 .. _Gus Welter: https://www.ri.cmu.edu/ri-people/gus-welter/
 .. _Anthony Wertz: https://www.ri.cmu.edu/ri-people/anthony-t-wertz/
 .. _Dr. Artur Dubrawski: https://www.ri.cmu.edu/ri-faculty/artur-w-dubrawski/
+.. _Roman Kaufman: https://www.ri.cmu.edu/ri-people/roman-kaufman/
+.. _Vedant Sanil: https://www.ri.cmu.edu/ri-people/vedant-sanil/
+.. _Stefania La Vattiata: https://www.ri.cmu.edu/ri-people/stefania-la-vattiata/
 .. _Auton Lab: https://www.autonlab.org/
 .. _Carnegie Mellon University: https://www.cmu.edu/
 
