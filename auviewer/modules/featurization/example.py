@@ -15,7 +15,7 @@ class ExampleFeaturizer(SimpleFeaturizer):
         FeaturizerParameter(id='radio', name='Radio', description="Radio description", form_field_type='radio', options={'val1': 'Value 1', 'val2': 'Value 2', 'val3': 'Value 3'}),
         # FeaturizerParameter(id='', description="", data_type='slider'),
     ]
-    needeSeries = 2
+    neededSeries = 2
 
     def featurize(self, data, params):
         print(f"Parameters received:\n{params}")

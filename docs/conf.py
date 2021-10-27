@@ -38,7 +38,7 @@ nbsphinx_prolog = """
 
 This is from a Jupyter Notebook. View & download the notebook here_.
 
-.. _here: https://github.com/autonlab/auviewer/blob/master/docs/example_notebooks/{{ env.doc2path(env.docname, base=None) }}
+.. _here: https://github.com/autonlab/auviewer/blob/master/docs/{{ env.doc2path(env.docname, base=None) }}
 
 
 

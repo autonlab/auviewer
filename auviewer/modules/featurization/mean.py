@@ -8,7 +8,7 @@ class MeanFeaturizer(SimpleFeaturizer):
     parameters = [
         FeaturizerParameter(id='skipna', name="Skip NaN", description="Skip NaN values", data_type='boolean'),
     ]
-    needeSeries = 2
+    neededSeries = 2
 
     def featurize(self, data, params):
         skipna = params['skipna']
