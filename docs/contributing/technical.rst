@@ -9,48 +9,9 @@ Choices and Tradeoffs & Implications sections on the About_ page.
 
 .. _About: about
 
-Building & Publishing
----------------------
-
-Build from source & install locally
-```````````````````````````````````
-::
-
-    cd tools
-    ./rebuild
-
-Clean up source builds
-``````````````````````
-::
-
-    cd tools
-    ./clean
-
-Generate Sphinx documentation
-`````````````````````````````
-::
-
-    cd tools
-    ./mkdocs
-
-Build from source and publish Linux (wheels and source)
-```````````````````````````````````````````````````````
-::
-
-    cd tools
-    ./publish_linux
-
-*Note: Requires Docker in order to build with manywheel*
-
-Build from source and publish Mac wheel
-```````````````````````````````````````
-::
-
-    cd tools
-    ./publish_mac
 
 Viewer Use Cases
-------------------
+----------------
 
 Viewer allows the following primary use cases:
 
@@ -81,11 +42,8 @@ In detail, from a perspective of technical architecture, the following use cases
     * Multi-user visualization & annotation by human subject matter experts
     * Optional user authentication integration
 
-Technical Documentation
------------------------
-
 Technical Architecture
-``````````````````````
+----------------------
 
 AUViewer is comprised of:
 
@@ -131,19 +89,19 @@ Additionally, a few technical components are implemented in classes:
 No persistence or caching layer is used by the frontend codebase.
 
 Strategies
-++++++++++
+----------
 
 Because AUViewer is meant for visualization & annotation of large datasets, one important architectural strategy is to lazy load the data from disk (i.e. no caching in memory) with the exception of metadata which is not likely to grow too large for memory. For example, when the AUViewer web service starts, it loads the projects, file lists, and series lists but not the data contained therein. Each time an API request comes in to load a file, the data is read from disk, served, and then immediately purged from memory.
 
 Patterns & Conventions
-++++++++++++++++++++++
+----------------------
 
 Communication between the web application frontend and backend takes place via an HTTP REST API interface using GET parameters for client-to-backend requests and JSON for backend-to-client responses. As a general design pattern, the classes (mentioned above) output generalized data structures (e.g. lists, dicts), and the encapsulation of response data into JSON takes place in the http handler functions in the `serve` module. This breakdown makes sense since AUViewer can be used both as a Python/Jupyter Notebook module and a web server.
 
 As a function naming convention, getters are named `get[Thing]`, but getters which return output structured primarily for web transmission are named `get[Thing]Output` (for API transmission) or `get[Thing]Payload` (for an initial data payload embedded in an html template).
 
 Backend Configuration
-`````````````````````
+---------------------
 
 Backend config consists of the following types of configuration parameters:
 

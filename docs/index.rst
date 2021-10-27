@@ -52,6 +52,7 @@ facilitate expert annotation.
    Motivation <contributing/motivation>
    contributing/getstarteddev
    contributing/technical
+   contributing/buildandpublish
 
 
 .. toctree::
