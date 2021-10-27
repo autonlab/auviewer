@@ -47,8 +47,24 @@ from functools import partial
 
 
 
+from .modules.featurization.abunch import CoeffOfVariationFeaturizer, MADFeaturizer, NFeaturizer, MinFeaturizer, MaxFeaturizer, MedianFeaturizer, RangeFeaturizer, RangeRatioFeaturizer, DataDenFeaturizer
 
-featurizers = [ExampleFeaturizer(), MeanFeaturizer(), StandardDeviationFeaturizer()]
+
+
+featurizers = [
+    ExampleFeaturizer(),
+    MeanFeaturizer(),
+    StandardDeviationFeaturizer(),
+    CoeffOfVariationFeaturizer(),
+    MADFeaturizer(),
+    NFeaturizer(),
+    MinFeaturizer(),
+    MaxFeaturizer(),
+    MedianFeaturizer(),
+    RangeFeaturizer(),
+    RangeRatioFeaturizer(),
+    DataDenFeaturizer(),
+]
 featurizers = {f.id: f for f in featurizers}
 
 

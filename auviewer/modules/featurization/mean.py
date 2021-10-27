@@ -10,6 +10,6 @@ class MeanFeaturizer(SimpleFeaturizer):
     ]
     neededSeries = 2
 
-    def featurize(self, data, params):
+    def featurize(self, data, params={}):
         skipna = params['skipna']
         return data.mean(skipna=skipna)
