@@ -33,5 +33,7 @@ let globalAppConfig = {
 	getProjectAnnotationsURL: 'get_project_annotations',
 	seriesRangedDataURL: 'series_ranged_data',
 	updateAnnotationURL: 'update_annotation',
+	getLabelersURL: 'get_labelers',
+	getLabelsURL: 'get_labels'
 	
 };

@@ -69,7 +69,7 @@ function Supervisor(payload) {
 			let nextOpt = document.createElement('option');
 			nextOpt.innerHTML = possibleVote;
 			voteSelector.appendChild(nextOpt);
-			// create 
+			// create
 			this.votesToColors[possibleVote] = this.shade_colors[colorIdx];
 			rowStrings.push(`<td style="background-color:${this.shade_colors[colorIdx]}">${possibleVote}</td>`)
 			colorIdx++;
@@ -123,7 +123,7 @@ function Supervisor(payload) {
 		});
 	}.bind(this));
 
-	toastr.options.timeOut = 3000;
+	toastr.options.timeOut = 6000;
 	toastr.options.positionClass = "toast-bottom-center";
 	toastr.options.showMethod = 'slideDown';
 	toastr.options.hideMethod = 'slideUp';
@@ -273,10 +273,10 @@ Supervisor.prototype.initModel = function(data) {
 }
 
 Supervisor.prototype.initEvaluation = function() {
-	requestHandler.requestInitialEvaluatorPayload(this.project_id, function (data) {
-		console.log(data);
-	})
-	this.initLabelerStatsTable()
+	// requestHandler.requestInitialEvaluatorPayload(this.project_id, function (data) {
+	// 	console.log(data);
+	// })
+	// this.initLabelerStatsTable()
 }
 
 Supervisor.prototype.initLabelerStatsTable = function() {
@@ -453,11 +453,11 @@ Supervisor.prototype.regenerateGraphFor = function(filename, idx, curPageIdx) {
 	let leftId = 'left_' + filename;
 	let rightId = 'right_' + filename;
 	let breakoutButtonId = 'breakout_' + filename;
-	graphWrapperDomElement.innerHTML = 
+	graphWrapperDomElement.innerHTML =
 		// '<td >' +
 		// 	'<div class="labelingFunctionVotes"></div>' +
 		// '</td>' +
-		'<td class="graph_title"><span title="'+this.altText+'">'+filename+'</span>' + 
+		'<td class="graph_title"><span title="'+this.altText+'">'+filename+'</span>' +
 			'<span id="'+breakoutButtonId+'" class="webix_icon wxi-plus"></span>' +
 			'<div class="btn-group" role="group" aria-label="Time series navigation">' +
 				'<button type="button" id="'+leftId+'" class="btn btn-primary"><span class="webix_icon wxi-angle-left"></span></button>' +
@@ -748,7 +748,7 @@ Supervisor.prototype.renderStats = function() {
 	}
 	let x = document.createElement('table');
 	x.className = 'table table-sm table-striped table-bordered mb-2';
-	x.innerHTML = 
+	x.innerHTML =
 		'<tbody>' +
 			trStringList.join('');
 		'</tbody>';
@@ -801,7 +801,7 @@ Supervisor.prototype.recalculateVotes = function () {
 		});
 		windowInfo = this.windowInfo;
 	}
-	requestHandler.getVotes(this.project_id, files, windowInfo, false, function(data) {
+	requestHandler.getVotes(this.project_id, files, windowInfo, true, function(data) {
 		self.labeling_function_votes = data.labeling_function_votes;
 		self.lm_predictions = data.lm_predictions;
 		// for (const [segId, votes] of Object.entries(data.labeling_function_votes)) {
@@ -883,7 +883,7 @@ Supervisor.prototype.shadeGraphSegments = function(graph, dataBoundsArray, withV
 				return data.series.map(function (series) {
 					return series.dashHTML + ' ' + series.label + ' - ' + series.yHTML
 					}).join('<br>') +
-					'<br>' + 
+					'<br>' +
 					'LabelModel' + ': ' + self.getVoteForGraphAndPoint(graph, data.x);
 			}
 	});
@@ -922,7 +922,7 @@ Supervisor.prototype.shadeGraph = function(graphIdx) {
 			return data.series.map(function (series) {
 				return series.dashHTML + ' ' + series.label + ' - ' + series.yHTML
 				}).join('<br>') +
-				'<br>' + 
+				'<br>' +
 				self.activeLF + ' - ' + self.getVoteForGraphAndPoint(graphIdx, data.x, self.activeLF);
 		}
 	});
@@ -1014,8 +1014,8 @@ Supervisor.prototype.buildLabelingFunctionTable = function(labelingFunctionTitle
 		nextOpt.innerHTML = lfTitle;
 		lfSelection.appendChild(nextOpt);
 		// let lfTitleDomElement = document.createElement('tr');
-		// lfTitleDomElement.innerHTML = 
-		// 	'<td >' + lfTitle + '</td>' + 
+		// lfTitleDomElement.innerHTML =
+		// 	'<td >' + lfTitle + '</td>' +
 		// 	'<td >' +
 		// 		'<input class="btn" type="checkbox" id="' + lfTitle + '" value = "' + lfTitle + '" onclick="globalStateManager.currentSupervisor.onClick(`'+lfTitle+'`)"> </td>';
 		// lfTitleDomElement.style.fontSize = 'small';
@@ -1070,7 +1070,7 @@ Supervisor.prototype.createThresholds = function(lfTitle) {
 		document.getElementById(threshold).value = thresholdValue;
 	}
 	newElem = document.createElement('pre');
-	newElem.innerHTML = 
+	newElem.innerHTML =
 			'<code>'+
 			this.cleanCode(this.projectData.labeler_code[this.activeLF]) +
 			'</code>';
@@ -1291,7 +1291,7 @@ Supervisor.prototype.handleMouseUp = function(event, g, context) {
 		this.addSegmentTo(this.createdSegments, filename, seriesId, {left, right, 'color':this.prospectiveSegmentShade});
 		this.addSegmentTo(this.allSegments, filename, seriesId, {left, right, 'color':this.prospectiveSegmentShade});
 		this.shadeGraphSegments(g, this.allSegments[filename][seriesId], this.votesCalculated);
-	} 
+	}
 	else if (context.isPanning) {
 		Dygraph.endPan(event, g, context);
 		this.updateRangeToMatchView(g);
@@ -1381,7 +1381,7 @@ Supervisor.prototype.handleMouseMove = function(event, g, context) {
 		// context.medViewPanningMouseMoved = true;
 		// Dygraph.movePan(event, g, context);
 	// }
-	
+
 	// this.updateRangeToMatchView(g);
 
 }
@@ -1443,7 +1443,7 @@ Supervisor.prototype.createDygraph = function(graphDomElementObj, series, eventD
 		},*/
 		//title: this.series,
 		// underlayCallback: handleUnderlayRedraw.bind(this),
-		valueRange: yAxisRange
+		valueRange: yAxisRange//[yAxisRange[0], 160]
     });
 
     return dygraphInstance;
@@ -1478,7 +1478,7 @@ Supervisor.prototype.prepareData = function(data, baseTime) {
 
             // Process series data
             for (let s of seriesIndices) {
-				
+
                 // If this series has no data, continue
                 if (series[s] === null || series[s].data.length < 1) {
                     continue;

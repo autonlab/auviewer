@@ -9,9 +9,18 @@ build/
 *.egg-info/
 dist/
 data/
+<<<<<<< HEAD
 auviewer.code-workspace
 ._.DS_Store
 .DS_Store
 ._*
 .eggs
 audata
+=======
+
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
+>>>>>>> 4e48a20... updates to add vue

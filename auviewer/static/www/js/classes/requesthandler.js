@@ -278,7 +278,7 @@ RequestHandler.prototype._newRequest = function(callback, path, params) {
 	req.onreadystatechange = callbackCaller(callback, path);
 
 	path = buildPathWithParams(path, params);
-
+	console.log(path);
 	req.open("GET", path, true);
 	req.send();
 

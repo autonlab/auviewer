@@ -673,6 +673,44 @@ def createApp():
             mimetype='application/json'
         )
 
+    @app.route(config['rootWebPath']+'/query_supervisor')
+    @login_required
+    def get_labels():
+        project_id = request.args.get('project_id', type=int)
+        labeler = request.args.get('labeler', type=str)
+        label = request.args.get('label', type=str)
+
+        x = getProject(project_id).query_supervisor()
+        return app.response_class(
+            response=simplejson.dumps({'possible_labels': list(labels.keys())}, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
+    
+    @app.route(config['rootWebPath']+'/get_labels')
+    @login_required
+    def get_labels():
+        project_id = request.args.get('project_id', type=int)
+
+        labels = getProject(project_id).getLabels()
+        return app.response_class(
+            response=simplejson.dumps({'possible_labels': list(labels.keys())}, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
+
+    @app.route(config['rootWebPath']+'/get_labelers')
+    @login_required
+    def get_labelers():
+        project_id = request.args.get('project_id', type=int)
+
+        labelers = getProject(project_id).getLabelers()
+        return app.response_class(
+            response=simplejson.dumps({'possible_labelers': labelers}, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
+
     @app.route(config['rootWebPath']+'/get_segments')
     @login_required
     def get_segments():
