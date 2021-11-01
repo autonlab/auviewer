@@ -51,6 +51,7 @@ facilitate expert annotation.
 
    Motivation <contributing/motivation>
    contributing/getstarteddev
+   contributing/buildandpublish
    contributing/technical
 
 

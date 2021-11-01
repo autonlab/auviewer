@@ -31,6 +31,7 @@ class SimpleFeaturizer(ABC):
             raise Exception(f"Featurizer {self.id} has no name.")
 
     def getFeaturizeFunction(self, params):
+        # TODO(gus): Wrap iteratively in try/except?
         print(f"Params pre-process: {params}")
         preparedParams = self.prepareParams(params)
         print(f"Params post-process: {preparedParams}")

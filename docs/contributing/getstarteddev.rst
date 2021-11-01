@@ -1,5 +1,5 @@
-Getting Started with Development
-================================
+Getting Started Developing
+==========================
 
 Initial Setup
 -------------

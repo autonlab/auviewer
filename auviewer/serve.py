@@ -35,7 +35,6 @@ from .flask_user.signals import user_sent_invitation, user_registered
 from sklearn.linear_model import LinearRegression
 
 from datetime import datetime
-import pyhrv
 import pandas as pd
 import numpy as np
 import pytz
@@ -47,8 +46,24 @@ from functools import partial
 
 
 
+from .modules.featurization.abunch import CoeffOfVariationFeaturizer, MADFeaturizer, NFeaturizer, MinFeaturizer, MaxFeaturizer, MedianFeaturizer, RangeFeaturizer, RangeRatioFeaturizer, DataDenFeaturizer
 
-featurizers = [ExampleFeaturizer(), MeanFeaturizer(), StandardDeviationFeaturizer()]
+
+
+featurizers = [
+    ExampleFeaturizer(),
+    MeanFeaturizer(),
+    StandardDeviationFeaturizer(),
+    CoeffOfVariationFeaturizer(),
+    MADFeaturizer(),
+    NFeaturizer(),
+    MinFeaturizer(),
+    MaxFeaturizer(),
+    MedianFeaturizer(),
+    RangeFeaturizer(),
+    RangeRatioFeaturizer(),
+    DataDenFeaturizer(),
+]
 featurizers = {f.id: f for f in featurizers}
 
 
@@ -441,30 +456,30 @@ def createApp():
 
         if featurizer in featurizers:
             se = featurizers[featurizer].getFeaturizeFunction(params)
-        elif featurizer == 'sample_entropy':
-            tolerance = params['tolerance']
-            if len(tolerance) < 1:
-                tolerance = None
-            dim = params['dim']
-            try:
-                dim = int(dim)
-            except:
-                dim = 2
-            def se(x):
-                try:
-                    return pyhrv.nonlinear.sample_entropy(nni=x, tolerance=tolerance, dim=dim)[0] if x.shape[0] > 0 else np.nan
-                except Exception as e:
-                    print(f"exception: {e}")
-                    return np.nan
-        elif featurizer == 'regression':
-            def se(x):
-                try:
-                    slrm = LinearRegression()
-                    slrm.fit(data[['time']], data['value'])
-                    return slrm.coef_[0] # slope
-                except Exception as e:
-                    print(f"exception: {e}")
-                    return np.nan
+        # elif featurizer == 'sample_entropy':
+        #     tolerance = params['tolerance']
+        #     if len(tolerance) < 1:
+        #         tolerance = None
+        #     dim = params['dim']
+        #     try:
+        #         dim = int(dim)
+        #     except:
+        #         dim = 2
+        #     def se(x):
+        #         try:
+        #             return pyhrv.nonlinear.sample_entropy(nni=x, tolerance=tolerance, dim=dim)[0] if x.shape[0] > 0 else np.nan
+        #         except Exception as e:
+        #             print(f"exception: {e}")
+        #             return np.nan
+        # elif featurizer == 'regression':
+        #     def se(x):
+        #         try:
+        #             slrm = LinearRegression()
+        #             slrm.fit(data[['time']], data['value'])
+        #             return slrm.coef_[0] # slope
+        #         except Exception as e:
+        #             print(f"exception: {e}")
+        #             return np.nan
         else:
             raise Exception(f"Unknown featurizer requested: {featurizer}")
 
@@ -501,18 +516,11 @@ def createApp():
             # right = pd.to_datetime(datetime.fromtimestamp(right).astimezone(utc))
             # left = np.datetime64(datetime.fromtimestamp(left).astimezone(utc))
             # right = np.datetime64(datetime.fromtimestamp(right).astimezone(utc))
-            print('left', left)
-            print('right', right)
             df = df[(df.index >= left) & (df.index <= right)]
-
-            print("BEFORE")
-            print(df)
 
             # TODO: Might make label side configurable
 
             featurization = df.resample(window_size, label='right').agg(se).replace(np.inf, np.nan).replace(-np.inf, np.nan).dropna()
-            print("AFTER")
-            print(featurization)
             # featurization = df.resample(window_size).agg(lambda x: x.mean()).dropna()
             featurization.reset_index(inplace=True)
             featurization['time'] = ((featurization['time'].dt.tz_convert(utc) - pd.Timestamp("1970-01-01").replace(tzinfo=utc)) // pd.Timedelta("1ms")) / 1000

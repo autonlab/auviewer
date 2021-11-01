@@ -8,6 +8,6 @@ class StandardDeviationFeaturizer(SimpleFeaturizer):
         FeaturizerParameter(id='skipna', name="Skip NaN", description="Skip NaN values", data_type='boolean'),
     ]
 
-    def featurize(self, data, params):
-        print(f"Parameters received:\n{params}")
-        return data.std()
+    def featurize(self, data, params={}):
+        skipna = params['skipna']
+        return data.std(skipna=skipna)

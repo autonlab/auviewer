@@ -1,6 +1,41 @@
 About
 =====
 
+Created & Maintained for You By
+-------------------------------
+Auton Universal Viewer was created for you by `Gus Welter`_, `Anthony Wertz`_, and `Dr. Artur Dubrawski`_ of the
+`Auton Lab`_ at `Carnegie Mellon University`_.
+
+Current contributors & maintainers include `Roman Kaufman`_, `Vedant Sanil`_, `Stefania La Vattiata`_, and `Gus Welter`_.
+
+.. _Gus Welter: https://www.ri.cmu.edu/ri-people/gus-welter/
+.. _Anthony Wertz: https://www.ri.cmu.edu/ri-people/anthony-t-wertz/
+.. _Dr. Artur Dubrawski: https://www.ri.cmu.edu/ri-faculty/artur-w-dubrawski/
+.. _Roman Kaufman: https://www.ri.cmu.edu/ri-people/roman-kaufman/
+.. _Vedant Sanil: https://www.ri.cmu.edu/ri-people/vedant-sanil/
+.. _Stefania La Vattiata: https://www.ri.cmu.edu/ri-people/stefania-la-vattiata/
+.. _Auton Lab: https://www.autonlab.org/
+.. _Carnegie Mellon University: https://www.cmu.edu/
+
+Additional Contributors
+```````````````````````
+Additional contributors & collaborators include:
+
+* `Dr. Michael R. Pinsky`_, Critical Care Medicine, University of Pittsburgh Medical Center
+* `Dr. Gilles Clermont`_, Critical Care Medicine, University of Pittsburgh Medical Center
+* `Dr. Marilyn Hravnak`_, University of Pittsburgh School of Nursing
+* `Victor Leonard`_, Auton Lab, Carnegie Mellon University
+* Many others who provided valuable input & feedback.
+
+.. _Dr. Michael R. Pinsky: https://www.ccm.pitt.edu/node/241
+.. _Dr. Gilles Clermont: https://www.ccm.pitt.edu/node/261
+.. _Dr. Marilyn Hravnak: https://www.nursing.pitt.edu/person/marilyn-hravnak
+.. _Victor Leonard: https://www.ri.cmu.edu/ri-people/victor-leonard/
+
+Interested in Contributing?
+```````````````````````````
+Are you interested in contributing to Auton Universal Viewer? Please see :doc:`contributing/motivation`
+
 Design Choices
 --------------
 AUViewer is designed to enable web-based viewing & annotation of large
@@ -30,35 +65,3 @@ pre-computes and stores to disk min-max downsample representations of all
 original files which it serves. Generally, this leads to a doubling of original
 data disk space requirements (e.g. a 20GB original file will require on the
 order of 20GB of additional space for pre-computed downsample data).
-
-Created for You By
-------------------
-Auton Universal Viewer was created for you by `Gus Welter`_, `Anthony Wertz`_, and `Dr. Artur Dubrawski`_ of the
-`Auton Lab`_ at `Carnegie Mellon University`_.
-
-.. _Gus Welter: https://www.ri.cmu.edu/ri-people/gus-welter/
-.. _Anthony Wertz: https://www.ri.cmu.edu/ri-people/anthony-t-wertz/
-.. _Dr. Artur Dubrawski: https://www.ri.cmu.edu/ri-faculty/artur-w-dubrawski/
-.. _Auton Lab: https://www.autonlab.org/
-.. _Carnegie Mellon University: https://www.cmu.edu/
-
-Additional Contributors
-```````````````````````
-
-Additional contributors & collaborators include:
-
-* `Dr. Michael R. Pinsky`_, Critical Care Medicine, University of Pittsburgh Medical Center
-* `Dr. Gilles Clermont`_, Critical Care Medicine, University of Pittsburgh Medical Center
-* `Dr. Marilyn Hravnak`_, University of Pittsburgh School of Nursing
-* `Victor Leonard`_, Auton Lab, Carnegie Mellon University
-* Many others who provided valuable input & feedback.
-
-.. _Dr. Michael R. Pinsky: https://www.ccm.pitt.edu/node/241
-.. _Dr. Gilles Clermont: https://www.ccm.pitt.edu/node/261
-.. _Dr. Marilyn Hravnak: https://www.nursing.pitt.edu/person/marilyn-hravnak
-.. _Victor Leonard: https://www.ri.cmu.edu/ri-people/victor-leonard/
-
-Interested in Contributing?
-```````````````````````````
-
-Are you interested in contributing to Auton Universal Viewer? Please see :doc:`contributing/motivation`
