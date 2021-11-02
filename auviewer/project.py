@@ -854,11 +854,15 @@ class Project:
         #print('gonna drop_all then create_all')
         #models.db.drop_all()
         #models.db.create_all()
-        #afibProj = models.Project.query.get(1)
-        #supervisorMod = models.SupervisorModule(project_id=self.id, title="diagnoseAFib",
-        #  series_of_interest='/data/numerics/HR.BeatToBeat:value', series_to_render='/data/numerics/HR.BeatToBeat:value')
-        #models.db.session.add(supervisorMod)
-        #models.db.session.commit()
+        print(self.name)
+        if (self.name == 'AFib Identification' and len(models.SupervisorModule.query.filter_by(project_id=self.id).all()) == 0):
+            supervisorMod = models.SupervisorModule(project_id=self.id, title="diagnoseAFib",
+              series_of_interest='/data/numerics/HR.BeatToBeat:value', series_to_render='/data/numerics/HR.BeatToBeat:value')
+            models.db.session.add(supervisorMod)
+            models.db.session.commit()
+            print(supervisorMod.title)
+        #afibProj = models.Project.query.filter_by(name='AFib Identification').first()
+        #if
         #print(supervisorMod.title, supervisorMod)
         #print('did it')
         #print(1/0)
