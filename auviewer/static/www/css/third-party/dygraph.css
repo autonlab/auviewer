@@ -2,6 +2,22 @@
  * Default styles for the dygraphs charting library.
  */
 
+ /* Fonts */
+@font-face {
+  font-family: LatoRegular;
+  src: url(third-party/fonts/Lato-Regular.ttf);
+}
+
+@font-face {
+  font-family: LatoLight;
+  src: url(third-party/fonts/Lato-Light.ttf);
+}
+
+@font-face {
+  font-family: LatoBold;
+  src: url(third-party/fonts/Lato-Bold.ttf);
+}
+
 .dygraph-legend {
   position: absolute;
   font-size: 14px;
@@ -66,11 +82,12 @@
 
 .dygraph-axis-label {
   /* position: absolute; */
-  /* font-size: 14px; */
   z-index: 10;
   line-height: normal;
+  font-family: LatoRegular;
+  font-size: 12px;
   overflow: hidden;
-  color: black;  /* replaces old axisLabelColor option */
+  color: #4D4D4D;  /* replaces old axisLabelColor option */
 }
 
 .dygraph-axis-label-x {
