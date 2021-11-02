@@ -613,7 +613,7 @@ def createApp():
         # Assemble the initial file payload (full zoomed-out & downsampled, if
         # necessary, datasets for all data series.
         initialFilePayload = file.getInitialPayload(current_user.id)
-        
+
         # Output response
         return app.response_class(
             response=simplejson.dumps(initialFilePayload, ignore_nan=True),
@@ -673,20 +673,7 @@ def createApp():
             mimetype='application/json'
         )
 
-    @app.route(config['rootWebPath']+'/query_supervisor')
-    @login_required
-    def get_labels():
-        project_id = request.args.get('project_id', type=int)
-        labeler = request.args.get('labeler', type=str)
-        label = request.args.get('label', type=str)
 
-        x = getProject(project_id).query_supervisor()
-        return app.response_class(
-            response=simplejson.dumps({'possible_labels': list(labels.keys())}, ignore_nan=True),
-            status=200,
-            mimetype='application/json'
-        )
-    
     @app.route(config['rootWebPath']+'/get_labels')
     @login_required
     def get_labels():
@@ -738,7 +725,7 @@ def createApp():
             status=200,
             mimetype='application/json'
         )
-    
+
     @app.route(config['rootWebPath']+'/update_threshold', methods=['PUT'])
     @login_required
     def put_threshold():
@@ -824,13 +811,13 @@ def createApp():
     @login_required
     def get_votes():
         project_id = request.args.get('project_id', type=int)
-        recalculate = request.args.get('recalculate', type=bool) 
+        recalculate = request.args.get('recalculate', type=bool)
         fileIds = request.args.getlist('file_ids[]')
         windowInfo = request.get_json()['window_info']
         '''
             window_info: {
                 window_size_ms: 30*60*1000,
-                window_roll_ms: 30*60*1000 
+                window_roll_ms: 30*60*1000
             }
         '''
 
@@ -839,14 +826,14 @@ def createApp():
             fileIds = [f.id for f in project.files]
         print(fileIds, windowInfo)
         fileIds = [int(fileId) for fileId in fileIds]
-        if (recalculate):
-            votes = project.computeVotes(fileIds, windowInfo)
-            d = dict()
-        else:
+        if (len(models.Vote.query.filter_by(project_id=project_id).all()) > 0):
             print('getting votes instead')
             votes, preds = project.getVotes(fileIds, windowInfo)
             d = dict()
             d['lm_predictions'] = preds
+        else:
+            votes = project.computeVotes(fileIds, windowInfo)
+            d = dict()
         d['labeling_function_votes'] = votes
         return app.response_class(
             response=simplejson.dumps(d, ignore_nan=True),
@@ -862,7 +849,7 @@ def createApp():
         query_payload = request_data['query_payload']
 
         project = getProject(project_id)
-        query_response = project.queryWeakSupervision(query_payload) 
+        query_response = project.queryWeakSupervision(query_payload)
         _ = project.populateInitialSupervisorValuesToDict([f[0] for f in query_response['files']], query_response)
         return app.response_class(
             response=simplejson.dumps(query_response),
@@ -876,7 +863,7 @@ def createApp():
         project_id = request.args.get('project_id', type=int)
         p = getProject(project_id)
         file = request.files['file_payload']
-        
+
         segments, count = p.parseAndCreateSegmentsFromFile(file.filename, file)
         return app.response_class(
             response=simplejson.dumps({'segments': segments, 'num_added': count}),

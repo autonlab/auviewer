@@ -311,7 +311,7 @@ class Project:
         for segId in segIds:
             if (len(votes[segId]) > 0):
                 L_train.append([labels[v] for v in votes[segId]])
-        lfNumCorrect, lfNumNonAbstains = [0 for v in lfNames], [0 for v in lfNames] 
+        lfNumCorrect, lfNumNonAbstains = [0 for v in lfNames], [0 for v in lfNames]
         lfNumAbstains = [0 for v in lfNames]
         print(lfNumCorrect, lfNumNonAbstains)
         L_train = np.array(L_train)
@@ -843,7 +843,7 @@ class Project:
         replacementMod = models.SupervisorModule.query.filter_by(project_id=self.id).first()
         if (replacementMod):
             module = replacementMod.title
-        labelingFunctionModuleSpec = importlib.util.spec_from_file_location(module, f"EEG_Weak_Supervision_Code/{module}.py")
+        labelingFunctionModuleSpec = importlib.util.spec_from_file_location(module, f"./assets/EEG_Weak_Supervision_Code/{module}.py")
         labelingFunctionModule = importlib.util.module_from_spec(labelingFunctionModuleSpec)
         labelingFunctionModuleSpec.loader.exec_module(labelingFunctionModule)
         lfModule = getattr(labelingFunctionModule, module)
@@ -851,17 +851,17 @@ class Project:
 
     def populateInitialSupervisorValuesToDict(self, fileIds, d, lfModule="diagnoseEEG", timeSegment=None):
 
-        # print('gonna drop_all then create_all')
-        # models.db.drop_all()
-        # models.db.create_all()
-        # afibProj = models.Project.query.get(1)
-        # supervisorMod = models.SupervisorModule(project_id=self.id, title="diagnoseAFib",
-        #   series_of_interest='/data/numerics/HR.BeatToBeat:value', series_to_render='/data/numerics/HR.BeatToBeat:value')
-        # models.db.session.add(supervisorMod)
-        # models.db.session.commit()
-        # print(supervisorMod.title, supervisorMod)
-        # print('did it')
-        # print(1/0)
+        #print('gonna drop_all then create_all')
+        #models.db.drop_all()
+        #models.db.create_all()
+        #afibProj = models.Project.query.get(1)
+        #supervisorMod = models.SupervisorModule(project_id=self.id, title="diagnoseAFib",
+        #  series_of_interest='/data/numerics/HR.BeatToBeat:value', series_to_render='/data/numerics/HR.BeatToBeat:value')
+        #models.db.session.add(supervisorMod)
+        #models.db.session.commit()
+        #print(supervisorMod.title, supervisorMod)
+        #print('did it')
+        #print(1/0)
 
         lfModule = self.getLFModule(lfModule)
 
