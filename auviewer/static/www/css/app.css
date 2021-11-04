@@ -250,7 +250,7 @@ p.assignment-panel-bottom-label { font-size: 0.6em; margin-top: 0; font-style: i
 
 /* Realtime */
 
-body.realtime > #controls > #projectAndFileSelection, body.realtime > #controls > #patternDetectionPanel {
+body.realtime > #controls #projectAndFileSelection, body.realtime > #controls > #patternDetectionPanel {
     display: none !important;
 }
 body.realtime #realtimeTitle {
