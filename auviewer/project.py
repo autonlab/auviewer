@@ -192,6 +192,27 @@ class Project:
         return self.makeFilesPayload(files)
 
     def queryWeakSupervision(self, queryObj, fileIds=None):
+        newsm = None
+        if (self.name.lower().startswith('afib') and len(models.SupervisorModule.query.filter_by(project_id=self.id).all()) == 0):
+            newsm = models.SupervisorModule(
+                project_id=self.id,
+                title='diagnoseAFib',
+                series_of_interest="data/numerics/HR.HR",
+                series_to_render="data/numerics/HR.HR"
+            )
+        elif (self.name.lower().startswith('mitbih') and len(models.SupervisorModule.query.filter_by(project_id=self.id).all()) == 0):
+            newsm = models.SupervisorModule(
+                project_id=self.id,
+                title='diagnoseAFib',
+                series_of_interest="/data",
+                series_to_render="/data"
+            )
+
+        if (newsm):
+            models.db.session.add(newsm)
+            models.db.session.commit()
+            print('made '+newsm.title + ' for proj '+self.name)
+
         #of form:
             # 'randomFiles': True,
             # 'categorical': None,
@@ -833,8 +854,6 @@ class Project:
         return lfModule
 
     def populateInitialSupervisorValuesToDict(self, fileIds, d, lfModule="diagnoseEEG", timeSegment=None):
-
-
         lfModule = self.getLFModule(lfModule)
 
         labels = lfModule.getLabels()
