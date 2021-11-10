@@ -11,7 +11,6 @@ from .shared import createEmptyJSONFile
 # Get the code root
 # TODO(gus): This may not work when once viewer is pip installable
 codeRootPathObj = Path(__file__).resolve().parent
-
 # Read in the built-in default interface templates file. This will (and should)
 # # raise an exception if the file does not exist.
 with (codeRootPathObj / 'static' / 'builtin_templates' / 'interface_templates.json').open() as f:
