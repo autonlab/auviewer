@@ -1,5 +1,5 @@
 <template>
-<b-table  striped hover v-bind:items="labelerInformation" :fields="fieldFormatting"></b-table>
+<b-table small striped hover v-bind:items="labelerInformation" :fields="fieldFormatting"></b-table>
 
 </template>
 

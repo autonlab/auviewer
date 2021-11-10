@@ -843,10 +843,12 @@ class Project:
         replacementMod = models.SupervisorModule.query.filter_by(project_id=self.id).first()
         if (replacementMod):
             module = replacementMod.title
-        labelingFunctionModuleSpec = importlib.util.spec_from_file_location(module, f"./assets/EEG_Weak_Supervision_Code/{module}.py")
+        print(module)
+        labelingFunctionModuleSpec = importlib.util.spec_from_file_location(module, f"./assets/afib_assets/{module}.py")
         labelingFunctionModule = importlib.util.module_from_spec(labelingFunctionModuleSpec)
         labelingFunctionModuleSpec.loader.exec_module(labelingFunctionModule)
         lfModule = getattr(labelingFunctionModule, module)
+        print(lfModule)
         return lfModule
 
     def populateInitialSupervisorValuesToDict(self, fileIds, d, lfModule="diagnoseEEG", timeSegment=None):
@@ -855,7 +857,7 @@ class Project:
         #models.db.drop_all()
         #models.db.create_all()
         print(self.name)
-        if (self.name == 'AFib Identification' and len(models.SupervisorModule.query.filter_by(project_id=self.id).all()) == 0):
+        if (((self.name == 'AFib Identification') or (self.name.startswith('mitbih'))) and len(models.SupervisorModule.query.filter_by(project_id=self.id).all()) == 0):
             supervisorMod = models.SupervisorModule(project_id=self.id, title="diagnoseAFib",
               series_of_interest='/data/numerics/HR.BeatToBeat:value', series_to_render='/data/numerics/HR.BeatToBeat:value')
             models.db.session.add(supervisorMod)

@@ -1135,8 +1135,9 @@ def main():
         print(f"\n{bannerMsgPrefix}You may access AUViewer at: {browser_url}\n{fmtEndSuffix}")
 
     app.run(host=config['host'], port=config['port'], debug=config['debug'], use_reloader=False)
+    return app
 
 
 # Start development web server
 if __name__ == '__main__':
-    main()
+    app = main()
