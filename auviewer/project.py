@@ -167,8 +167,10 @@ class Project:
         return None
 
     def makeFilesPayload(self, files):
+        for f in files:
+            f.initfile()
         outputObject = {
-            'files': [[f.id, f.origFilePathObj.name, f.f.time_reference.timestamp()] for f in files],
+            'files': [[f.id, f.origFilePathObj.name] for f in files],
             'series': [],
             'events': [],#[f.getEvents() for f in self.files],
             'metadata': [f.getMetadata() for f in files]
@@ -218,18 +220,11 @@ class Project:
             # 'amount': 5,
 
             #extract labeler and category from tables
-            print('getting query response')
             labeler = models.Labeler.query.filter_by(project_id=self.id, title=queryObj['labelingFunction']).first()
             category = models.Category.query.filter_by(project_id=self.id, label=queryObj['categorical']).first()
             categories = models.Category.query.filter_by(project_id=self.id, label=queryObj['categorical']).all()
-            print([c.label for c in categories])
-            print(labeler.title, category.label)
-            print(len(self.files))
             # get votes belonging to labeling function, then votes belonging to category
-            print([v for v in models.Vote.query.filter_by(category_id=category.id).all()])
-            print([v for v in models.Vote.query.filter_by(labeler_id=labeler.id, category_id=category.id).all()])
             filteredVotes = models.Vote.query.filter_by(labeler_id=labeler.id).filter_by(category_id=category.id).all()
-            print(filteredVotes)
             #basically doing a join w/o using a join here
             chosenFiles = [next(f for f in self.files if f.id==vote.file_id) for vote in filteredVotes]
 
@@ -258,7 +253,6 @@ class Project:
         if (modifiedThresholds):
             for thresholdDict in modifiedThresholds:
                 title, value = thresholdDict['title'], thresholdDict['value']
-                print(type(value), value)
                 thresholds[title] = float(value)
 
         return []
@@ -313,7 +307,6 @@ class Project:
                 L_train.append([labels[v] for v in votes[segId]])
         lfNumCorrect, lfNumNonAbstains = [0 for v in lfNames], [0 for v in lfNames]
         lfNumAbstains = [0 for v in lfNames]
-        print(lfNumCorrect, lfNumNonAbstains)
         L_train = np.array(L_train)
         lm = LabelModel(cardinality=2, verbose=False)
         lm.fit(L_train=L_train, n_epochs=500, log_freq=100, seed=42)
@@ -325,8 +318,6 @@ class Project:
             if (len(votes[segId]) > 0):
                 prediction = lm_predictions[j]
                 p = np.argmax(prediction)
-                if j == 0:
-                    print(prediction, p)
                 #for experimental accuracy predictions
                 for k, v in enumerate(votes[segId]):
                     if j == 0:
@@ -357,7 +348,6 @@ class Project:
         # for prediction in lm_predictions:
         #     predictions.append(numbersToLabels[np.argmax(prediction)])
         analysis = LFAnalysis(L=L_train).lf_summary()
-        print(lfNumCorrect, lfNumNonAbstains, [lfNumNonAbstains[i] / (lfNumAbstains[i]+lfNumNonAbstains[i]) for i in range(len(lfNames))], lfNames)
         analysis['experimental_accuracy'] = [lfNumCorrect[i]/lfNumNonAbstains[i] for i in range(len(lfNames))]
         return {
             # 'predictions': predictions,
@@ -399,7 +389,6 @@ class Project:
         for fileId in fileIds:
             f = self.getFile(fileId)
             fin = int(f.name.split('.')[0].split('_')[-1])
-            # print(fin)
 
             if (windowInfo):
                 segmentsForFile = models.Segment.query.\
@@ -422,7 +411,6 @@ class Project:
                 for segment in segmentsForFile:
                     series = self.getSeriesOfInterest(f).getRangedOutput(segment.left / 1000.0, segment.right / 1000.0).get('data')
                     if (len(series) == 0):
-                        # print(fileId, segment.id)
                         continue
                     curSeries = np.array([x[-1] for x in series])
 
@@ -452,7 +440,6 @@ class Project:
                         dfDict[k].append(num)
             for segment in segmentsForFile:
                 votes = [v.category.label for v in segment.votes]
-                # print(segment.id, votes)
                 result[segment.id] = votes
         #add labelmodel results
         # preds = self.applyLabelModel(segIdxToDFIdx=segIdxToDFIdx, dfdict=dfDict, votes=result)
@@ -479,7 +466,6 @@ class Project:
         for fileId in fileIds:
             f = self.getFile(fileId)
             if (self.getSeriesOfInterest(f) == None):
-                print(f, fileId)
                 continue
 
 
@@ -505,9 +491,7 @@ class Project:
             # for segment in segmentsForFile:
             #     mini = min(segment.left, mini)
             #     maxi = max(segment.right, maxi)
-            # print(series)
             # series = self.getSeriesOfInterest(f).getFullOutput().get('data')
-            # print(series)
             #iterate through user defined segments
             if (len(segmentsForFile) == 0): continue
             # correspondingIndexBounds = self.getIndicesForSegments(segmentsForFile, series)
@@ -548,7 +532,6 @@ class Project:
         models.db.session.commit()
         numAfter = len(models.Vote.query.filter_by(project_id=self.id).all())
         print(f"Added {numAfter - numBefore} votes")
-        print(len(newVotes))
         return resultingVotes
 
     def getSegments(self, type='CUSTOM'):
@@ -774,7 +757,8 @@ class Project:
             return file.series[0]
 
     def getLFCode(self, lfNames, lfModule, thresholds, labels):
-        curSeries = self.getSeriesOfInterest(self.files[0]).getFullOutput().get('data')
+        s = self.getSeriesOfInterest(self.files[0])
+        curSeries = s.getFullOutput().get('data')
         curSeries = np.array([x[-1] for x in curSeries])
         filledNaNs = None
         if np.sum(np.isnan(curSeries)) > 0:
@@ -811,7 +795,6 @@ class Project:
             res[labeler.title] = statsDict
 
         allSegments = models.Segment.query.filter_by(project_id=self.id, type=type).all()
-        print(len(allSegments))
         for segment in allSegments:
             #create presentVotes
             presentVotes = Counter()
@@ -843,31 +826,14 @@ class Project:
         replacementMod = models.SupervisorModule.query.filter_by(project_id=self.id).first()
         if (replacementMod):
             module = replacementMod.title
-        print(module)
         labelingFunctionModuleSpec = importlib.util.spec_from_file_location(module, f"./assets/afib_assets/{module}.py")
         labelingFunctionModule = importlib.util.module_from_spec(labelingFunctionModuleSpec)
         labelingFunctionModuleSpec.loader.exec_module(labelingFunctionModule)
         lfModule = getattr(labelingFunctionModule, module)
-        print(lfModule)
         return lfModule
 
     def populateInitialSupervisorValuesToDict(self, fileIds, d, lfModule="diagnoseEEG", timeSegment=None):
 
-        #print('gonna drop_all then create_all')
-        #models.db.drop_all()
-        #models.db.create_all()
-        print(self.name)
-        if (((self.name == 'AFib Identification') or (self.name.startswith('mitbih'))) and len(models.SupervisorModule.query.filter_by(project_id=self.id).all()) == 0):
-            supervisorMod = models.SupervisorModule(project_id=self.id, title="diagnoseAFib",
-              series_of_interest='/data/numerics/HR.BeatToBeat:value', series_to_render='/data/numerics/HR.BeatToBeat:value')
-            models.db.session.add(supervisorMod)
-            models.db.session.commit()
-            print(supervisorMod.title)
-        #afibProj = models.Project.query.filter_by(name='AFib Identification').first()
-        #if
-        #print(supervisorMod.title, supervisorMod)
-        #print('did it')
-        #print(1/0)
 
         lfModule = self.getLFModule(lfModule)
 
