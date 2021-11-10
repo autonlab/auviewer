@@ -112,33 +112,33 @@ export default class SupervisorEvaluation extends Vue {
     mounted() {
         let self: SupervisorEvaluation = this;
         Fetcher.requestPossibleLabelers(this.projectID, function(data: any) {
-            console.log(data);
             self.possibleLabelers = data.possible_labelers;
         });
         Fetcher.requestPossibleLabels(this.projectID, function(data: any) {
-            console.log(data);
             self.possibleLabels = data.possible_labels;
         });
         // fetch and populate labelingFunctions
         Fetcher.requestInitialEvaluatorPayload( this.projectID, function(data: any): void {
-            let lfInfo: JSON = JSON.parse(data.lfInfo)
-            let lfs: Array<string> = data.lfs;
-            let labelingFunctions: Array<any> = [];
-            for (let lfname of lfs) {
-                labelingFunctions.push({'labeler': lfname});
-            }
-
-            for (const [metric, values] of Object.entries(lfInfo)) {
-                console.log(metric);
-                for (let i: number = 0; i < lfs.length; i++) {
-                    let value = values[i];
-                    if (typeof values[i] === 'number') {
-                        value = (value*100).toFixed(1);
-                    }
-                    labelingFunctions[i][metric.toLowerCase()] = value;
+            if (data.lfInfo) {
+                let lfInfo: JSON = JSON.parse(data.lfInfo)
+                let lfs: Array<string> = data.lfs;
+                let labelingFunctions: Array<any> = [];
+                for (let lfname of lfs) {
+                    labelingFunctions.push({'labeler': lfname});
                 }
+
+                for (const [metric, values] of Object.entries(lfInfo)) {
+                    console.log(metric);
+                    for (let i: number = 0; i < lfs.length; i++) {
+                        let value = values[i];
+                        if (typeof values[i] === 'number') {
+                            value = (value*100).toFixed(1);
+                        }
+                        labelingFunctions[i][metric.toLowerCase()] = value;
+                    }
+                }
+                self.labelerInformation = labelingFunctions as Array<LabelerEvaluativeStats>;
             }
-            self.labelerInformation = labelingFunctions as Array<LabelerEvaluativeStats>;
         });
     }
 
