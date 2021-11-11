@@ -638,6 +638,7 @@ def createApp():
     @app.route(config['rootWebPath']+'/initial_supervisor_payload')
     @login_required
     def initial_supervisor_payload():
+        print(listUsers())
         project_id = request.args.get('project_id', type=int)
 
         project = getProject(project_id)
@@ -647,7 +648,6 @@ def createApp():
             return
 
         fileIds = [f.id for f in project.files]
-        for f in project.files: f.f, f.pf
         filesPayload = project.queryWeakSupervision({
             'randomFiles': False,
             # 'amount': 5
