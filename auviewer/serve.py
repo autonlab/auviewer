@@ -647,6 +647,7 @@ def createApp():
             return
 
         fileIds = [f.id for f in project.files]
+        for f in project.files: f.f, f.pf
         filesPayload = project.queryWeakSupervision({
             'randomFiles': False,
             # 'amount': 5
