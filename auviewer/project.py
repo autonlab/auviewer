@@ -971,7 +971,12 @@ class Project:
         d['number_to_labels'] = lfModule.number_to_label_map()
         namesToCode = self.getLFCode(lfNames, lfModule, thresholds, labels)
         d['labeler_code'] = namesToCode
-        d['series_to_render_id'] = self.getSeriesToRender(self.files[0]).id
+        i = 0
+        s = None
+        while (not s):
+            s = self.getSeriesToRender(self.files[i])
+            i += 1
+        d['series_to_render_id'] = s.id
 
         return lfNames, list(labels.keys())
 
