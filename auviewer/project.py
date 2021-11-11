@@ -223,7 +223,10 @@ class Project:
             fileDict = dict()
             for f in self.files:
                 if not f.f_open:
-                    f._loadonstart()
+                    try:
+                        f._loadonstart()
+                    except:
+                        pass
                 fileDict[f.id] = f
             
             for fId in fileIds:
