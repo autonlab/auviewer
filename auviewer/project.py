@@ -222,8 +222,10 @@ class Project:
         if fileIds:
             fileDict = dict()
             for f in self.files:
-                f.f, f.pf
+                if not f.f_open:
+                    f._loadonstart()
                 fileDict[f.id] = f
+            
             for fId in fileIds:
                 chosenFiles.append(fileDict[fId])
         elif queryObj['randomFiles']:

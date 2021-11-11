@@ -308,8 +308,7 @@ class File:
 
         return events
     
-    def initfile(self):
-        print(str(self.origFilePathObj), str(self.procFilePathObj))
+    def _loadonstart(self):
         while True:
             # Open the original file
             self.file = audata.File.open(str(self.origFilePathObj), return_datetimes=False)
@@ -331,7 +330,6 @@ class File:
             # If the processed file does not exist and we're supposed to process
             # new file data, process it.
             if not self.procFilePathObj.exists() and self.processNewFiles:
-                print('YO processin')
                 logging.info(f"Generating processed file for {self.origFilePathObj}")
                 self.process()
                 self.pf_open = True
@@ -351,7 +349,7 @@ class File:
 
         if self.mode() == 'file':
             if not self.f_open:
-                self.initfile()
+                self._loadonstart()
 
         # Assemble the output object.
         outputObject = {
