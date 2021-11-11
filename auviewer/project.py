@@ -167,8 +167,8 @@ class Project:
         return None
 
     def makeFilesPayload(self, files):
-        for f in files:
-            f.initfile()
+        # for f in files:
+        #     f.initfile()
         outputObject = {
             'files': [[f.id, f.origFilePathObj.name] for f in files],
             'series': [],
@@ -193,12 +193,16 @@ class Project:
 
     def queryWeakSupervision(self, queryObj, fileIds=None):
         newsm = None
+        # if (self.name.lower().startswith('afib')):
+        #     sm = models.SupervisorModule.query.filter_by(project_id=self.id).first()
+        #     models.db.session.delete(sm)
+        #     models.db.session.commit()
         if (self.name.lower().startswith('afib') and len(models.SupervisorModule.query.filter_by(project_id=self.id).all()) == 0):
             newsm = models.SupervisorModule(
                 project_id=self.id,
                 title='diagnoseAFib',
-                series_of_interest="data/numerics/HR.HR",
-                series_to_render="data/numerics/HR.HR"
+                series_of_interest="/data/numerics/HR.BeatToBeat:value",
+                series_to_render="/data/numerics/HR.BeatToBeat:value"
             )
         elif (self.name.lower().startswith('mitbih') and len(models.SupervisorModule.query.filter_by(project_id=self.id).all()) == 0):
             newsm = models.SupervisorModule(
@@ -365,6 +369,37 @@ class Project:
                 })
                 predsByFilename[filename] = listToAppendTo
                 j += 1
+
+        #create labelmodel_mladi_labels.csv
+        print('starting')
+        j = 0
+        lm_ml_labelsD = {
+            'FIN_Study_ID': list(),
+            'confidence': list(),
+            'label': list(),
+            'start': list(),
+            'stop': list()
+        }
+
+        for segId in segIds:
+            if (len(votes[segId]) > 0):
+                prediction = lm_predictions[j]
+                p = np.argmax(prediction)
+                lm_label = numbersToLabels[p]
+                segment = models.Segment.query.get(segId)
+                fin = int(self.getFile(segment.file_id).name.split(".")[0].split("_")[-1])
+
+                lm_ml_labelsD['FIN_Study_ID'].append(fin)
+                lm_ml_labelsD['label'].append(lm_label)
+                lm_ml_labelsD['confidence'].append(prediction[p])
+                lm_ml_labelsD['start'].append(dt.datetime.fromtimestamp(segment.left/1000))
+                lm_ml_labelsD['stop'].append(dt.datetime.fromtimestamp(segment.right/1000))
+
+                j+=1
+        lm_ml_labels = pd.DataFrame(lm_ml_labelsD)
+        lm_ml_labels.to_csv('~/Documents/auton/localWorkspace/afib_detection/assets/gold/labelmodel_mladi_labels.csv')
+        print(lm_ml_labels.head())
+
         # predictions = list()
         # for prediction in lm_predictions:
         #     predictions.append(numbersToLabels[np.argmax(prediction)])
@@ -761,6 +796,7 @@ class Project:
 
     def getSeriesOfInterest(self, file):
         supervisorModule = models.SupervisorModule.query.filter_by(project_id=self.id).first()
+        print(supervisorModule.title, supervisorModule.series_of_interest)
         if (supervisorModule):
             for s in file.series:
                 if (s.id == supervisorModule.series_of_interest):
@@ -778,7 +814,11 @@ class Project:
             return file.series[0]
 
     def getLFCode(self, lfNames, lfModule, thresholds, labels):
-        s = self.getSeriesOfInterest(self.files[0])
+        i = 0
+        s = None
+        while (not s):
+            s = self.getSeriesOfInterest(self.files[i])
+            i += 1
         curSeries = s.getFullOutput().get('data')
         curSeries = np.array([x[-1] for x in curSeries])
         filledNaNs = None

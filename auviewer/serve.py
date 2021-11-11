@@ -626,9 +626,9 @@ def createApp():
     def initial_evaluator_payload():
         project_id = request.args.get('project_id', type=int)
 
-        # project = getProject(project_id)
+        project = getProject(project_id)
         res = dict()
-        # res = project.applyLabelModel()
+        res = project.applyLabelModel()
         return app.response_class(
             response=simplejson.dumps(res, ignore_nan=True),
             status=200,
