@@ -315,8 +315,6 @@ class Project:
         return lfNames + ['LabelModel']
 
     def applyLabelModel(self, segIdxToDFIdx=None, dfdict=None, votes=None):
-        searchFINs =[1215499, 1007711, 1998627]
-        searchFINs = []
         lfMod = self.getLFModule()
         labels = lfMod.getLabels()
         lfNames = lfMod.get_LF_names()
@@ -373,34 +371,34 @@ class Project:
                 j += 1
 
         #create labelmodel_mladi_labels.csv
-        print('starting')
-        j = 0
-        lm_ml_labelsD = {
-            'FIN_Study_ID': list(),
-            'confidence': list(),
-            'label': list(),
-            'start': list(),
-            'stop': list()
-        }
+        # print('starting')
+        # j = 0
+        # lm_ml_labelsD = {
+        #     'FIN_Study_ID': list(),
+        #     'confidence': list(),
+        #     'label': list(),
+        #     'start': list(),
+        #     'stop': list()
+        # }
 
-        for segId in segIds:
-            if (len(votes[segId]) > 0):
-                prediction = lm_predictions[j]
-                p = np.argmax(prediction)
-                lm_label = numbersToLabels[p]
-                segment = models.Segment.query.get(segId)
-                fin = int(self.getFile(segment.file_id).name.split(".")[0].split("_")[-1])
+        # for segId in segIds:
+        #     if (len(votes[segId]) > 0):
+        #         prediction = lm_predictions[j]
+        #         p = np.argmax(prediction)
+        #         lm_label = numbersToLabels[p]
+        #         segment = models.Segment.query.get(segId)
+        #         fin = int(self.getFile(segment.file_id).name.split(".")[0].split("_")[-1])
 
-                lm_ml_labelsD['FIN_Study_ID'].append(fin)
-                lm_ml_labelsD['label'].append(lm_label)
-                lm_ml_labelsD['confidence'].append(prediction[p])
-                lm_ml_labelsD['start'].append(dt.datetime.fromtimestamp(segment.left/1000))
-                lm_ml_labelsD['stop'].append(dt.datetime.fromtimestamp(segment.right/1000))
+        #         lm_ml_labelsD['FIN_Study_ID'].append(fin)
+        #         lm_ml_labelsD['label'].append(lm_label)
+        #         lm_ml_labelsD['confidence'].append(prediction[p])
+        #         lm_ml_labelsD['start'].append(dt.datetime.fromtimestamp(segment.left/1000))
+        #         lm_ml_labelsD['stop'].append(dt.datetime.fromtimestamp(segment.right/1000))
 
-                j+=1
-        lm_ml_labels = pd.DataFrame(lm_ml_labelsD)
-        lm_ml_labels.to_csv('~/Documents/auton/localWorkspace/afib_detection/assets/gold/labelmodel_mladi_labels.csv')
-        print(lm_ml_labels.head())
+        #         j+=1
+        # lm_ml_labels = pd.DataFrame(lm_ml_labelsD)
+        # lm_ml_labels.to_csv('~/Documents/auton/localWorkspace/afib_detection/assets/gold/labelmodel_mladi_labels.csv')
+        # print(lm_ml_labels.head())
 
         # predictions = list()
         # for prediction in lm_predictions:
@@ -560,7 +558,6 @@ class Project:
                 #     continue
                 series = self.getSeriesOfInterest(f).getRangedOutput(segment.left / 1000.0, segment.right / 1000.0).get('data')
                 if (len(series) == 0):
-                    print(fileId, segment.id)
                     continue
                 curSeries = np.array([x[-1] for x in series])
 
@@ -798,7 +795,6 @@ class Project:
 
     def getSeriesOfInterest(self, file):
         supervisorModule = models.SupervisorModule.query.filter_by(project_id=self.id).first()
-        print(supervisorModule.title, supervisorModule.series_of_interest)
         if (supervisorModule):
             for s in file.series:
                 if (s.id == supervisorModule.series_of_interest):
