@@ -193,10 +193,10 @@ class Project:
 
     def queryWeakSupervision(self, queryObj, fileIds=None):
         newsm = None
-        # if (self.name.lower().startswith('afib')):
-        #     sm = models.SupervisorModule.query.filter_by(project_id=self.id).first()
-        #     models.db.session.delete(sm)
-        #     models.db.session.commit()
+        if (self.name.lower().startswith('afib')):
+            sm = models.SupervisorModule.query.filter_by(project_id=self.id).first()
+            models.db.session.delete(sm)
+            models.db.session.commit()
         if (self.name.lower().startswith('afib') and len(models.SupervisorModule.query.filter_by(project_id=self.id).all()) == 0):
             newsm = models.SupervisorModule(
                 project_id=self.id,
