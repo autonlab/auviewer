@@ -455,6 +455,7 @@ Supervisor.prototype.clearModel = function() {
 			dygraphInstance.destroy();
 		}
 	}
+	this.clearThresholds();
 	// let parents = [document.getElementById('labelingFunctionTable').getElementsByTagName('tbody')[0], document.getElementById('lfSelector'), document.getElementById('voteSelector')];
 	// for (let parent of parents) {
 	// 	while (parent.firstChild) {
