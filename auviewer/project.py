@@ -906,7 +906,8 @@ class Project:
         shouldConstructCategories = len(models.Category.query.filter_by(project_id=self.id).all()) != len(labels)
         if (shouldConstructCategories):
             print(f'Constructing the following categories: {labels.keys()}')
-            #delete old labels
+            #delete old labels and votes
+            self.deleteVotes()
             for c in models.Category.query.filter_by(project_id=self.id).all():
                 models.db.session.delete(c)
             # add new ones
