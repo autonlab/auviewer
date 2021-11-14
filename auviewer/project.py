@@ -207,7 +207,7 @@ class Project:
                 series_of_interest="/data",
                 series_to_render="/data"
             )
-
+        print(models.SupervisorModule.query.filter_by(project_id=self.id).first().title)
         if (newsm):
             models.db.session.add(newsm)
             models.db.session.commit()
@@ -498,9 +498,9 @@ class Project:
                 result[segment.id] = votes
         #add labelmodel results
         preds = self.applyLabelModel(segIdxToDFIdx=segIdxToDFIdx, dfdict=dfDict, votes=result)
-        preds = None
-        df = pd.DataFrame.from_dict(dfDict)
-        df.to_csv('segmentsOfInterest.csv')
+        # preds = None
+        # df = pd.DataFrame.from_dict(dfDict)
+        # df.to_csv('segmentsOfInterest.csv')
         return result, preds
 
     def computeVotes(self, fileIds, windowInfo=None):
