@@ -228,7 +228,7 @@ class Project:
                     except:
                         pass
                 fileDict[f.id] = f
-            
+
             for fId in fileIds:
                 chosenFiles.append(fileDict[fId])
         elif queryObj['randomFiles']:
@@ -333,7 +333,7 @@ class Project:
         lfNumCorrect, lfNumNonAbstains = [0 for v in lfNames], [0 for v in lfNames]
         lfNumAbstains = [0 for v in lfNames]
         L_train = np.array(L_train)
-        lm = LabelModel(cardinality=2, verbose=False)
+        lm = LabelModel(cardinality=len(labels.keys()), verbose=False)
         lm.fit(L_train=L_train, n_epochs=500, log_freq=100, seed=42)
         lm_predictions = lm.predict_proba(L=L_train)
         predsByFilename = dict()
@@ -357,10 +357,10 @@ class Project:
                 segment = models.Segment.query.get(segId)
                 filename = self.getFile(segment.file_id).name
                 listToAppendTo = predsByFilename.get(filename, [])
-                p = numbersToLabels[p]
+                p = numbersToLabels[p-1]
                 fin = int(self.getFile(segment.file_id).name.split(".")[0].split("_")[-1])
-                if (fin in searchFINs):
-                    dfdict['LabelModelVote'][segIdxToDFIdx[segId]] = p
+                # if (fin in searchFINs):
+                #     dfdict['LabelModelVote'][segIdxToDFIdx[segId]] = p
                 listToAppendTo.append({
                     'prediction': p,
                     'confidences': prediction.tolist(),
@@ -370,7 +370,6 @@ class Project:
                 predsByFilename[filename] = listToAppendTo
                 j += 1
 
-        #create labelmodel_mladi_labels.csv
         # print('starting')
         # j = 0
         # lm_ml_labelsD = {
@@ -407,7 +406,7 @@ class Project:
         analysis['experimental_accuracy'] = [lfNumCorrect[i]/lfNumNonAbstains[i] for i in range(len(lfNames))]
         return {
             # 'predictions': predictions,
-            # 'probabilities': lm_predictions.tolist()
+            # 'probabilities': lm_predictions.tolist(),
             'lfs': lfNames,
             'lfInfo': analysis.to_json(),
             'predictions': predsByFilename
@@ -422,8 +421,8 @@ class Project:
 
     def getVotes(self, fileIds, windowInfo=None):
         result = dict()
-        searchFINs =[1215499, 1007711, 1998627]
-        searchFINs = []
+        # searchFINs =[1215499, 1007711, 1998627]
+        # searchFINs = []
         dfDict = {
             'FIN_Study_Id': list(),
             'segmentStart': list(),
@@ -463,7 +462,7 @@ class Project:
                     file_id=fileId,
                     type='CUSTOM'
                 ).all()
-            if fin in searchFINs:
+            if fin in [None]:
                 for segment in segmentsForFile:
                     series = self.getSeriesOfInterest(f).getRangedOutput(segment.left / 1000.0, segment.right / 1000.0).get('data')
                     if (len(series) == 0):
@@ -498,7 +497,7 @@ class Project:
                 votes = [v.category.label for v in segment.votes]
                 result[segment.id] = votes
         #add labelmodel results
-        # preds = self.applyLabelModel(segIdxToDFIdx=segIdxToDFIdx, dfdict=dfDict, votes=result)
+        preds = self.applyLabelModel(segIdxToDFIdx=segIdxToDFIdx, dfdict=dfDict, votes=result)
         preds = None
         df = pd.DataFrame.from_dict(dfDict)
         df.to_csv('segmentsOfInterest.csv')
@@ -901,15 +900,16 @@ class Project:
         categoryNamesToIds = dict()
 
         numLabelersInDb = len(models.Labeler.query.filter_by(project_id=self.id).all())
-        shouldConstructLabelers = numLabelersInDb == 0
+        shouldConstructLabelers = numLabelersInDb != len(lfModule.get_LF_names())
 
         shouldConstructThresholds = len(models.Threshold.query.filter_by(project_id=self.id).all()) == 0
-
-        shouldConstructCategories = len(models.Category.query.filter_by(project_id=self.id).all()) == 0
-        # shouldConstructCategories = False
+        shouldConstructCategories = len(models.Category.query.filter_by(project_id=self.id).all()) != len(labels)
         if (shouldConstructCategories):
             print(f'Constructing the following categories: {labels.keys()}')
-            # add categories to table
+            #delete old labels
+            for c in models.Category.query.filter_by(project_id=self.id).all():
+                models.db.session.delete(c)
+            # add new ones
             newCategories = list()
             for label in labels.keys():
                 newCategory = models.Category(
@@ -924,6 +924,8 @@ class Project:
         lfNames = lfModule.get_LF_names()
         newLabelers = []
         if (shouldConstructLabelers):
+            for c in models.Labeler.query.filter_by(project_id=self.id).all():
+                models.db.session.delete(c)
             print('Constructing labelers')
             for lfName in lfNames:
                 newLabeler = models.Labeler(

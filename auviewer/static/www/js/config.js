@@ -34,6 +34,7 @@ let globalAppConfig = {
 	seriesRangedDataURL: 'series_ranged_data',
 	updateAnnotationURL: 'update_annotation',
 	getLabelersURL: 'get_labelers',
-	getLabelsURL: 'get_labels'
+	getLabelsURL: 'get_labels',
+	prioritizeFileURL: 'reprioritize_file'
 	
 };

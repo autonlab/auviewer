@@ -208,7 +208,7 @@ def createApp():
                             status=200,
                             mimetype='application/json'
                         )
-                 
+
         ### To be implemented here...
         return app.response_class(
             response=simplejson.dumps({'success': True}),
@@ -635,10 +635,45 @@ def createApp():
             mimetype='application/json'
         )
 
+    @app.route(config['rootWebPath']+'/reprioritize_file')
+    @login_required
+    def prioritize_file():
+        project_id = request.args.get('project_id', type=int)
+        file_idx = request.args.get('file_idx', type=int)
+
+        project = getProject(project_id)
+        if project is None:
+            logging.error(f"Project ID {project_id} not found.")
+            abort(404, description="Project not found.")
+            return
+        try:
+            project.file_ids
+        except:
+            fileIds = [f.id for f in project.files]
+            project.file_ids = fileIds
+
+        fileIds = project.file_ids
+        if file_idx < 0 or file_idx > len(fileIds):
+            return 
+        fileIds = [fileIds[file_idx]] + fileIds[:file_idx] + fileIds[file_idx+1:]
+        project.file_ids = fileIds
+
+        filesPayload = project.queryWeakSupervision({
+            'randomFiles': False,
+            # 'amount': 5
+        }, fileIds = fileIds)
+
+        _ = project.populateInitialSupervisorValuesToDict(fileIds, filesPayload)
+        filesPayload['thresholds'] = project.getThresholdsPayload()
+        filesPayload['existent_segments'], _ = project.getSegments()
+        return app.response_class(
+            response=simplejson.dumps(filesPayload, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
     @app.route(config['rootWebPath']+'/initial_supervisor_payload')
     @login_required
     def initial_supervisor_payload():
-        print(listUsers())
         project_id = request.args.get('project_id', type=int)
 
         project = getProject(project_id)

@@ -11,6 +11,7 @@ class diagnoseAFib:
         self.ABSTAIN = labels['ABSTAIN']
         self.ATRIAL_FIBRILLATION = labels['ATRIAL_FIBRILLATION']
         self.SINUS = labels['SINUS']
+        self.OTHER = labels['OTHER']
         if thresholds == None:
             thresholds = self.getInitialThresholds()
 
@@ -43,7 +44,8 @@ class diagnoseAFib:
         return {
             'ABSTAIN': -1,
             'ATRIAL_FIBRILLATION': 0,
-            'SINUS': 1
+            'SINUS': 1,
+            'OTHER': 2
         }
 
     @staticmethod
@@ -66,6 +68,10 @@ class diagnoseAFib:
             'iqr_h',
             'range_h',
             'std_h',
+            'variation_m',
+            'iqr_m',
+            'range_m',
+            'std_m',
             'variation_l',
             'iqr_l',
             'range_l',
@@ -77,7 +83,8 @@ class diagnoseAFib:
         return {
             -1: 'ABSTAIN',
             0: 'ATRIAL_FIBRILLATION',
-            1: 'SINUS'
+            1: 'SINUS',
+            2: 'OTHER'
         }
     def get_numbers_vector(self):
         return [
@@ -92,6 +99,10 @@ class diagnoseAFib:
             self.iqr_h(),
             self.range_h(),
             self.std_h(),
+            self.variation_m(),
+            self.iqr_m(),
+            self.range_m(),
+            self.std_m(),
             self.variation_l(),
             self.iqr_l(),
             self.range_l(),
@@ -101,6 +112,13 @@ class diagnoseAFib:
     def variation_h(self, compute=False):
         if (self.cov > self.thresholds['max_coefficient_of_variation']):
             return self.ATRIAL_FIBRILLATION
+        else:
+            return self.ABSTAIN
+
+    def variation_m(self, compute=False):
+        if (self.cov < self.thresholds['max_coefficient_of_variation'] and
+            self.cov > self.thresholds['min_coefficient_of_variation']):
+            return self.OTHER
         else:
             return self.ABSTAIN
 
@@ -116,6 +134,13 @@ class diagnoseAFib:
         else:
             return self.ABSTAIN
 
+    def iqr_m(self, compute=False):
+        if (self.iqr < self.thresholds['max_interquartile_range'] and
+            self.iqr > self.thresholds['min_interquartile_range']):
+            return self.OTHER
+        else:
+            return self.ABSTAIN
+
     def iqr_l(self, compute=False):
         if self.iqr < self.thresholds['min_interquartile_range']:
             return self.SINUS
@@ -128,6 +153,13 @@ class diagnoseAFib:
         else:
             return self.ABSTAIN
 
+    def std_m(self, compute=False):
+        if (self.std < self.thresholds['max_standard_deviation'] and
+            self.std > self.thresholds['min_standard_deviation']):
+            return self.OTHER
+        else:
+            return self.ABSTAIN
+
     def std_l(self, compute=False):
         if self.std < self.thresholds['min_standard_deviation']:
             return self.SINUS
@@ -137,6 +169,13 @@ class diagnoseAFib:
     def range_h(self, compute=False):
         if self.range > self.thresholds['max_range']:
             return self.ATRIAL_FIBRILLATION
+        else:
+            return self.ABSTAIN
+
+    def range_m(self, compute=False):
+        if (self.range < self.thresholds['max_range'] and
+            self.range > self.thresholds['min_range']):
+            return self.OTHER
         else:
             return self.ABSTAIN
 

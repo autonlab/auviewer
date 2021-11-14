@@ -24,6 +24,15 @@ function Supervisor(payload) {
 		$('#segment_upload_button').removeAttr('disabled');
 	})
 
+	let self = this;
+	$('#patient-dropdown').change(function(s) {
+		console.log(s.target.value);
+		requestHandler.requestReprioritizeFile(self.project_id, s.target.value, function(data) {
+			self.clearModel();
+			self.initModel(data);
+		})
+	});
+
 	/*
 	Holds the min [0] and max [1] x-value across all graphs currently displayed.
 	This is calculated in the convertToDateObjsAndUpdateExtremes() function. The
@@ -49,7 +58,6 @@ function Supervisor(payload) {
 	this.graphDomElement = null;
 
 	this.timeWindow = 60 *60*1000;
-	let self=this;
 	// document.getElementById('recalculateVotes').setAttribute('disabled', true);
 
 	document.getElementById('segment_type_switch').onclick = function() {self.toggleSegmentType()}
@@ -65,6 +73,7 @@ function Supervisor(payload) {
 		let colorIdx = 0;
 		this.votesToColors = {};
 		let rowStrings = [];
+
 		for (let possibleVote of data.labeling_function_possible_votes) {
 			let nextOpt = document.createElement('option');
 			nextOpt.innerHTML = possibleVote;
@@ -156,6 +165,13 @@ Supervisor.prototype.initModel = function(data) {
 	this.filenamesToIdxs = {};
 	for (let i = 0; i < this.projectData.files.length; i++) {
 		this.filenamesToIdxs[this.projectData.files[i][1]] = i;
+	}
+	for (let i = 0; i < this.projectData.files.length; i++) {
+		console.log()
+		$('#patient-dropdown').append($('<option>', {
+			value: i,
+			text: this.projectData.files[i][1]
+		}));
 	}
 	this.lfVotes = this.projectData.labeling_function_votes;
 
@@ -421,9 +437,16 @@ Supervisor.prototype.addColorToSegments = function(segments, color) {
 }
 
 Supervisor.prototype.clearModel = function() {
+	let p = document.getElementById('patient-dropdown');
+	while (p.firstChild) {
+		p.removeChild(p.firstChild);
+	}
+	console.log(this.domElementObjs);
 	for (let domElementObj of this.domElementObjs) {
-		domElementObj.graphDomElement.remove();
-		domElementObj.graphWrapperDomElement.remove();
+		if (domElementObj) {
+			domElementObj.graphDomElement.remove();
+			domElementObj.graphWrapperDomElement.remove();
+		}
 	}
 	this.datatable.destroy();
 	this.graphsTableDomElement.remove();
@@ -1056,6 +1079,9 @@ Supervisor.prototype.cleanCode = function(codeText) {
 
 Supervisor.prototype.createThresholds = function(lfTitle) {
 	let thresholdsInputPane = document.getElementById('threshold_pane');
+	if (!(lfTitle in this.projectData.labelers_to_thresholds)) {
+		return;
+	}
 	for (let threshold of this.projectData.labelers_to_thresholds[lfTitle]) {
 		let thresholdValue = this.projectData.thresholds[threshold];
 		let newElem = document.createElement('div');

@@ -106,6 +106,13 @@ RequestHandler.prototype.requestInitialSupervisorPayload = function(project_id, 
 	});
 };
 
+RequestHandler.prototype.requestReprioritizeFile = function(project_id, file_idx, callback) {
+	this._newRequest(callback, globalAppConfig.prioritizeFileURL, {
+		project_id: project_id,
+		file_idx: file_idx
+	});
+};
+
 RequestHandler.prototype.requestAggregateLabelerStats = function(project_id, segment_type, callback) {
 	this._newRequest(callback, globalAppConfig.requestLabelerStatsURL, {
 		project_id: project_id,
