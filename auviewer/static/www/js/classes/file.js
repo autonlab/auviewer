@@ -1457,3 +1457,22 @@ File.prototype.zoomTo = function(timeWindow, suppressDataRefresh=false) {
 	}
 
 };
+
+File.prototype.pan = function(by) {
+
+	// Grab the first showing graph
+	const g = this.getFirstShowingGraph();
+
+	// Grab the x-axis range from the last showing graph (all graphs should be
+	// showing the same range since they are synchronized).
+	const xRange = g.dygraphInstance.xAxisRange();
+	const left = xRange[0]+by;
+	const right = xRange[1]+by;
+
+	// Pan by the specified amount
+	this.zoomTo([left, right])
+};
+
+File.prototype.play = function() {
+	setInterval(this.pan.bind(this), 300, 1000);
+}
