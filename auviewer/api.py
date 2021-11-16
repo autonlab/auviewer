@@ -91,7 +91,7 @@ def listUsers() -> List[List[str]]:
     Returns list of users (ID, email, first name, last name)
     :return: list of lists
     """
-    return [[u.id, u.email, u.first_name, u.last_name] for u in models.User.all()]
+    return [[u.id, u.email, u.first_name, u.last_name] for u in models.User.query.all()]
 
 def loadProject(id) -> Optional[Project]:
     """

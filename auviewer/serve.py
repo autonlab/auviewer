@@ -208,7 +208,7 @@ def createApp():
                             status=200,
                             mimetype='application/json'
                         )
-                 
+
         ### To be implemented here...
         return app.response_class(
             response=simplejson.dumps({'success': True}),
@@ -613,13 +613,301 @@ def createApp():
         # Assemble the initial file payload (full zoomed-out & downsampled, if
         # necessary, datasets for all data series.
         initialFilePayload = file.getInitialPayload(current_user.id)
-        
+
         # Output response
         return app.response_class(
             response=simplejson.dumps(initialFilePayload, ignore_nan=True),
             status=200,
             mimetype='application/json'
         )
+
+    @app.route(config['rootWebPath']+'/initial_evaluator_payload')
+    @login_required
+    def initial_evaluator_payload():
+        project_id = request.args.get('project_id', type=int)
+
+        project = getProject(project_id)
+        res = dict()
+        res = project.applyLabelModel()
+        return app.response_class(
+            response=simplejson.dumps(res, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
+
+    @app.route(config['rootWebPath']+'/reprioritize_file')
+    @login_required
+    def prioritize_file():
+        project_id = request.args.get('project_id', type=int)
+        file_idx = request.args.get('file_idx', type=int)
+
+        project = getProject(project_id)
+        if project is None:
+            logging.error(f"Project ID {project_id} not found.")
+            abort(404, description="Project not found.")
+            return
+        try:
+            project.file_ids
+        except:
+            fileIds = [f.id for f in project.files]
+            project.file_ids = fileIds
+
+        fileIds = project.file_ids
+        if file_idx < 0 or file_idx > len(fileIds):
+            return 
+        fileIds = [fileIds[file_idx]] + fileIds[:file_idx] + fileIds[file_idx+1:]
+        project.file_ids = fileIds
+
+        filesPayload = project.queryWeakSupervision({
+            'randomFiles': False,
+            # 'amount': 5
+        }, fileIds = fileIds)
+
+        _ = project.populateInitialSupervisorValuesToDict(fileIds, filesPayload)
+        filesPayload['thresholds'] = project.getThresholdsPayload()
+        filesPayload['existent_segments'], _ = project.getSegments()
+        return app.response_class(
+            response=simplejson.dumps(filesPayload, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
+    @app.route(config['rootWebPath']+'/initial_supervisor_payload')
+    @login_required
+    def initial_supervisor_payload():
+        project_id = request.args.get('project_id', type=int)
+
+        project = getProject(project_id)
+        if project is None:
+            logging.error(f"Project ID {project_id} not found.")
+            abort(404, description="Project not found.")
+            return
+
+        fileIds = [f.id for f in project.files]
+        filesPayload = project.queryWeakSupervision({
+            'randomFiles': False,
+            # 'amount': 5
+        }, fileIds = fileIds)
+        # {
+        #     'randomFiles': bool,
+        #     'categorical': List[Category],
+        #     'labelingFunction': str,
+        #     'amount': int,
+        #     # 'sortByConfidence': bool,
+        #     # 'patientSearchString': str,
+        # }
+        # supervisorPayload = project.queryWeakSupervision({
+        #     'randomFiles': True,
+        #     'categorical': None,
+        #     'labelingFunction': None,
+        #     'amount': 10
+        # })
+        _ = project.populateInitialSupervisorValuesToDict(fileIds, filesPayload)
+        filesPayload['thresholds'] = project.getThresholdsPayload()
+        filesPayload['existent_segments'], _ = project.getSegments()
+        return app.response_class(
+            response=simplejson.dumps(filesPayload, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
+
+
+    @app.route(config['rootWebPath']+'/get_labels')
+    @login_required
+    def get_labels():
+        project_id = request.args.get('project_id', type=int)
+
+        labels = getProject(project_id).getLabels()
+        return app.response_class(
+            response=simplejson.dumps({'possible_labels': list(labels.keys())}, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
+
+    @app.route(config['rootWebPath']+'/get_labelers')
+    @login_required
+    def get_labelers():
+        project_id = request.args.get('project_id', type=int)
+
+        labelers = getProject(project_id).getLabelers()
+        return app.response_class(
+            response=simplejson.dumps({'possible_labelers': labelers}, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
+
+    @app.route(config['rootWebPath']+'/get_segments')
+    @login_required
+    def get_segments():
+        project_id = request.args.get('project_id', type=int)
+        type = request.args.get('segment_type', type=str)
+
+        segments, windowInfo = getProject(project_id).getSegments(type)
+        return app.response_class(
+            response=simplejson.dumps({'segments': segments, 'window_info': windowInfo}, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
+
+    @app.route(config['rootWebPath']+'/get_labeler_statistics')
+    @login_required
+    def get_labeler_stats():
+        project_id = request.args.get('project_id', type=int)
+        segment_type = request.args.get('segment_type', type=str)
+
+        project = getProject(project_id)
+        stats = project.getLFStats(segment_type)
+
+        return app.response_class(
+            response=simplejson.dumps(stats, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
+
+    @app.route(config['rootWebPath']+'/update_threshold', methods=['PUT'])
+    @login_required
+    def put_threshold():
+        project_id = request.args.get('project_id', type=int)
+        p = getProject(project_id)
+        req = request.get_json()
+        success = p.updateThreshold(req)
+        print(success)
+        return app.response_class(
+            response=simplejson.dumps({'success': success}, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
+
+    @app.route(config['rootWebPath']+'/delete_vote_segments', methods=['POST'])
+    @login_required
+    def delete_vote_segments():
+        project_id = request.args.get('project_id', type=int)
+        project = getProject(project_id)
+
+        payload = request.get_json()
+        voteSegments = payload['vote_segments']
+        numDeleted, success = project.deleteSegments(voteSegments)
+
+        returnPayload = {
+            'success': success,
+            'number_deleted': numDeleted
+        }
+
+        return app.response_class(
+            response=simplejson.dumps(returnPayload, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
+
+    @app.route(config['rootWebPath']+'/create_vote_segments', methods=['POST'])
+    @login_required
+    def create_vote_segments():
+        project_id = request.args.get('project_id', type=int)
+        project = getProject(project_id)
+
+        payload = request.get_json()
+        voteSegments = payload.get('vote_segments')
+        windowInfo = payload.get('window_info')
+        createdSegments, success, numAdded = project.createSegments(voteSegments, windowInfo)
+
+        returnPayload = {
+            'newly_created_segments': createdSegments,
+            'success': success,
+            'num_added': numAdded
+            }
+
+        return app.response_class(
+            response=simplejson.dumps(returnPayload, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
+
+    @app.route(config['rootWebPath']+'/preview_threshold_change', methods=['POST'])
+    @login_required
+    def preview_threshold():
+        project_id = request.args.get('project_id', type=int)
+        project = getProject(project_id)
+
+        req = request.get_json()
+        file_ids = req['files']
+        thresholds = req['thresholds']
+        labeler = req['labeler']
+        timeSegment = req['time_segment']
+
+        voteOutputs, endIndicesOutputs = project.previewThresholds(file_ids, thresholds, labeler, timeSegment)
+        returnLoad = {'votes': voteOutputs,
+            'end_indices': endIndicesOutputs}
+
+        return app.response_class(
+            response=simplejson.dumps(returnLoad, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
+
+
+    @app.route(config['rootWebPath']+'/get_votes', methods=["GET", "POST"])
+    @login_required
+    def get_votes():
+        project_id = request.args.get('project_id', type=int)
+        recalculate = request.args.get('recalculate', type=bool)
+        fileIds = request.args.getlist('file_ids[]')
+        windowInfo = request.get_json()['window_info']
+        '''
+            window_info: {
+                window_size_ms: 30*60*1000,
+                window_roll_ms: 30*60*1000
+            }
+        '''
+
+        project = getProject(project_id)
+        if (len(fileIds) == 0):
+            fileIds = [f.id for f in project.files]
+        print(fileIds, windowInfo)
+        fileIds = [int(fileId) for fileId in fileIds]
+        if (len(models.Vote.query.filter_by(project_id=project_id).all()) > 0):
+            print('getting votes instead')
+            votes, preds = project.getVotes(fileIds, windowInfo)
+            d = dict()
+            d['lm_predictions'] = preds
+        else:
+            votes = project.computeVotes(fileIds, windowInfo)
+            d = dict()
+        d['labeling_function_votes'] = votes
+        return app.response_class(
+            response=simplejson.dumps(d, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
+
+    @app.route(config['rootWebPath']+'/query_supervisor_series', methods=['POST'])
+    @login_required
+    def query_supervisor_series():
+        project_id = request.args.get('project_id', type=int)
+        request_data = request.get_json()
+        query_payload = request_data['query_payload']
+
+        project = getProject(project_id)
+        query_response = project.queryWeakSupervision(query_payload)
+        _ = project.populateInitialSupervisorValuesToDict([f[0] for f in query_response['files']], query_response)
+        return app.response_class(
+            response=simplejson.dumps(query_response),
+            status=200,
+            mimetype='application/json'
+        )
+
+    @app.route(config['rootWebPath']+'/upload_custom_segments', methods=['POST'])
+    @login_required
+    def custom_segments_upload():
+        project_id = request.args.get('project_id', type=int)
+        p = getProject(project_id)
+        file = request.files['file_payload']
+
+        segments, count = p.parseAndCreateSegmentsFromFile(file.filename, file)
+        return app.response_class(
+            response=simplejson.dumps({'segments': segments, 'num_added': count}),
+            status=200,
+            mimetype='application/json'
+        )
+        #receives function that takes in patient series' and returns necessary inputs for LF votes
 
     @app.route(config['rootWebPath']+'/project')
     @login_required
@@ -676,6 +964,27 @@ def createApp():
 
 
         return render_template('project.html', project_name=projectPayload['project_name'], payload=projectPayloadJSON, featurizersJSONPayload=featurizersJSONPayload)
+
+    @app.route(config['rootWebPath']+'/supervisor')
+    @login_required
+    def supervisor():
+        # Parse parameters
+        id = request.args.get('id', type=int)
+        p = getProject(id)
+        if p is None:
+            logging.error(f"Project ID {id} not found.")
+            abort(404, description="Project not found.")
+            return
+
+        # Project payload data for the HTML template
+        projectPayload = p.getInitialPayload(current_user.id)
+
+        # Assemble the data into a payload. We JSON-encode this twice. The first
+        # one converts the dict into JSON. The second one essentially makes the
+        # JSON string safe to drop straight into JavaScript code, as we are doing.
+        projectPayloadJSON = simplejson.dumps(simplejson.dumps(projectPayload))
+
+        return render_template('supervisor.html', project_name=projectPayload['project_name'], payload=projectPayloadJSON)
 
     @app.route(config['rootWebPath']+'/series_ranged_data', methods=['GET'])
     @login_required
@@ -863,8 +1172,9 @@ def main():
         print(f"\n{bannerMsgPrefix}You may access AUViewer at: {browser_url}\n{fmtEndSuffix}")
 
     app.run(host=config['host'], port=config['port'], debug=config['debug'], use_reloader=False)
+    return app
 
 
 # Start development web server
 if __name__ == '__main__':
-    main()
+    app = main()
