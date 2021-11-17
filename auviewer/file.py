@@ -47,7 +47,11 @@ class File:
 
         # Processing flags
         self.processNewFiles = processNewFiles
-        self.processOnly = processOnly 
+        self.processOnly = processOnly
+
+        # TODO(gus): TEMP!
+        # if self.processNewFiles:
+        #     self._loadonstart()
 
     @property
     def f(self):
