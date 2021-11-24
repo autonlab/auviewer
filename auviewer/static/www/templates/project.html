@@ -308,11 +308,11 @@
 					</div>
 					<div class="form-row">
 						<div class="col">
-							<label for="annotationStartTime">Start Time</label>
+							<label for="annotationStartTime" style="font-family:LatoBold; font-size: 14px;color: #4D4D4D;">Start Time</label>
 							<input type="date" class="form-control" id="annotationStartDate"><input type="time" step=".001" class="form-control" id="annotationStartTime" step="1">
 						</div>
 						<div class="col">
-							<label for="annotationEndTime">End Time</label>
+							<label for="annotationEndTime" style="font-family:LatoBold; font-size: 14px;color: #4D4D4D;">End Time</label>
 							<input type="date" class="form-control" id="annotationEndDate"><input type="time" step=".001" class="form-control" id="annotationEndTime" step="1">
 						</div>
 					</div>
@@ -396,6 +396,7 @@
 		<div id="zoomControl">
 			<h6 style="display: inline-block;">Zoom Control</h6>
 			<div id="zoom-buttons">
+				<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.resetZoomToOutermost();" title="Reset zoom to see all data">All</button>
 				<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(21600000);" title="6 hours">6hr</button>
 				<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(7200000);" title="2 hours">2hr</button>
 				<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(3600000);" title="1 hour">1hr</button>
@@ -403,7 +404,6 @@
 				<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(60000);" title="1 minute">1m</button>
 				<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(10000);" title="10 seconds">10s</button>
 				<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(1000);" title="1 second">1s</button>
-				<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.resetZoomToOutermost();" title="Reset zoom to see all data">All</button>
 				<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomBy(0, .1);" title="Zoom out by 10%">-</button>
 				<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomBy(1, .1);" title="Zoom in by 10%">+</button>
 			</div>

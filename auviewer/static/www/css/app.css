@@ -131,6 +131,31 @@ button {
     background-color: #D9EAF4;
 }
 
+.btn-primary {
+    background-color: #C3E4F7;
+    border-color: #C3E4F7;
+    font-family: LatoRegular;
+    font-size: 12px;
+    color: #4D4D4D;
+}
+
+.btn-secondary {
+    background-color: #4D4D4D;
+    border-color: #4D4D4D;
+    font-family: LatoRegular;
+    font-size: 12px;
+    color: #ffffff;
+}
+
+.btn-danger {
+    background-color: #D95B5B;
+    border-color: #D95B5B;
+    font-family: LatoRegular;
+    font-size: 12px;
+    color: #ffffff;
+}
+
+
 .filter-option-inner-inner{
     font-family: LatoRegular;
     font-size: 12px;
@@ -196,7 +221,7 @@ p.assignment-panel-bottom-label { font-size: 0.6em; margin-top: 0; font-style: i
     padding-bottom: 4px;
     padding-left: 20px;
     font-family: LatoBold;
-    font-family: 14px;
+    font-size: 14px;
     color: #4D4D4D;
 }
 
@@ -288,6 +313,31 @@ body.realtime > #controls > #control_footer > p#exitrealtime {
 }
 
 /* Annotations */
+
+.form-group{
+    font-family: LatoBold;
+    font-size: 14px;
+    color: #4D4D4D;
+}
+
+.annotationStartTime{
+    font-family: LatoBold;
+    font-size: 14px;
+    color: #4D4D4D;
+}
+
+.form-control:disabled{
+    background-color: #F3F8FB;
+    font-family: LatoRegular;
+    font-size: 13px;
+    color: #4D4D4D;
+}
+
+.form-control{
+    font-family: LatoRegular;
+    font-size: 13px;
+    color: #4D4D4D;
+}
 
 #allAnnotationsListModal tr:hover, #annotationsListModal tr:hover {
     cursor: pointer;
