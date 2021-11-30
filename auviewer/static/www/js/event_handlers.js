@@ -519,7 +519,13 @@ function handleUnderlayRedraw(canvas, area, g) {
 						canvas.font = '14px Arial';
 						canvas.fillStyle = '#333';
 
-						wrapText(canvas, file.annotationsAndPatternsToRender[i].label, x + (width / 2) + 6, y + 18, maxWidth, lineHeight);
+						let yeffective = y + 18;
+
+						if (file.annotationsAndPatternsToRender[i].label.startsWith('Stage')) {
+							yeffective = y + height - 4;
+						}
+
+						wrapText(canvas, file.annotationsAndPatternsToRender[i].label, x + (width / 2) + 6, yeffective, maxWidth, lineHeight);
 					}
 				} catch (e) {
 					console.log("Exception:", e)
