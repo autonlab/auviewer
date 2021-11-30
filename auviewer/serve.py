@@ -46,7 +46,7 @@ from functools import partial
 
 
 
-from .modules.featurization.abunch import CoeffOfVariationFeaturizer, MADFeaturizer, NFeaturizer, MinFeaturizer, MaxFeaturizer, MedianFeaturizer, RangeFeaturizer, RangeRatioFeaturizer, DataDenFeaturizer
+from .modules.featurization.abunch import CoeffOfVariationFeaturizer, MADFeaturizer, NFeaturizer, MinFeaturizer, MaxFeaturizer, MedianFeaturizer, RangeFeaturizer, RangeRatioFeaturizer, DataDenFeaturizer, MaxGapFeaturizer, LRSlopeFeaturizer, RobustSlopeFeaturizer
 
 
 
@@ -63,6 +63,9 @@ featurizers = [
     RangeFeaturizer(),
     RangeRatioFeaturizer(),
     DataDenFeaturizer(),
+    MaxGapFeaturizer(),
+    LRSlopeFeaturizer(),
+    RobustSlopeFeaturizer(),
 ]
 featurizers = {f.id: f for f in featurizers}
 
@@ -510,21 +513,30 @@ def createApp():
             df = s.getDataAsDF().set_index('time')
             window_size = params['window_size']
 
-            left = datetime.fromtimestamp(left).astimezone(utc)
-            right = datetime.fromtimestamp(right).astimezone(utc)
+            # # Option 1 (sometimes this works)
+            # left = datetime.fromtimestamp(left).astimezone(utc)
+            # right = datetime.fromtimestamp(right).astimezone(utc)
+
+            # Option 2 (and sometimes this works)
+            left = np.datetime64(datetime.fromtimestamp(left).astimezone(utc))
+            right = np.datetime64(datetime.fromtimestamp(right).astimezone(utc))
+
+            # # This was from an earlier attempt, probably discard...
             # left = pd.to_datetime(datetime.fromtimestamp(left).astimezone(utc))
             # right = pd.to_datetime(datetime.fromtimestamp(right).astimezone(utc))
-            # left = np.datetime64(datetime.fromtimestamp(left).astimezone(utc))
-            # right = np.datetime64(datetime.fromtimestamp(right).astimezone(utc))
+
             df = df[(df.index >= left) & (df.index <= right)]
 
             # TODO: Might make label side configurable
 
-            featurization = df.resample(window_size, label='right').agg(se).replace(np.inf, np.nan).replace(-np.inf, np.nan).dropna()
-            # featurization = df.resample(window_size).agg(lambda x: x.mean()).dropna()
-            featurization.reset_index(inplace=True)
-            featurization['time'] = ((featurization['time'].dt.tz_convert(utc) - pd.Timestamp("1970-01-01").replace(tzinfo=utc)) // pd.Timedelta("1ms")) / 1000
-            # featurization['time'] = ((featurization['time'].dt.tz_localize('UTC') - pd.Timestamp("1970-01-01").replace(tzinfo=utc)) // pd.Timedelta("1ms")) / 1000
+            featurization = df.resample(window_size, label='right').agg(se).replace(np.inf, np.nan).replace(-np.inf, np.nan).dropna().reset_index()
+            print(featurization)
+
+            # # Option 1 (sometimes this works)
+            # featurization['time'] = ((featurization['time'].dt.tz_convert(utc) - pd.Timestamp("1970-01-01").replace(tzinfo=utc)) // pd.Timedelta("1ms")) / 1000
+
+            # Option 2 (and sometimes this works)
+            featurization['time'] = ((featurization['time'].dt.tz_localize('UTC') - pd.Timestamp("1970-01-01").replace(tzinfo=utc)) // pd.Timedelta("1ms")) / 1000
 
             nones = [None] * featurization.shape[0]
             data = [list(i) for i in zip(featurization['time'], nones, nones, featurization['value'])]

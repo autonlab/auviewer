@@ -106,3 +106,62 @@ class DataDenFeaturizer(SimpleFeaturizer):
             return data.shape[0] / (data.index[-1].timestamp() - data.index[0].timestamp())
         except:
             return None
+
+from sklearn.linear_model import LinearRegression
+slrm = LinearRegression()
+class LRSlopeFeaturizer(SimpleFeaturizer):
+
+    id = 'skl_slope'
+    name = 'Linear Regression Slope (sklearn)'
+    description = 'Slope of linear regression computed with sklearn.LinearRegression'
+
+    def featurize(self, data, params={}):
+        # TODO(gus): Move this exception handling to outer base class
+        try:
+            slrm.fit(data.reset_index()[['time']], data)
+            return slrm.coef_[0]
+        except:
+            return None
+
+
+
+### BELOW HERE NEEDS TESTING
+
+
+class MaxGapFeaturizer(SimpleFeaturizer):
+
+    id = 'maxgap'
+    name = 'Max Gap'
+    description = 'Maximum timestamp gap between two subsequent measurements'
+
+    def featurize(self, data, params={}):
+        # TODO(gus): Move this exception handling to outer base class
+        try:
+            return data.index.diff().max()
+        except:
+            return None
+
+
+
+# import rpy2
+# import rpy2.robjects as robjects
+# from rpy2.robjects import pandas2ri
+# from rpy2.robjects.conversion import localconverter
+# from rpy2.robjects.packages import importr
+# robjects.r['source']('temp.R')
+# 
+# import numpy as np
+class RobustSlopeFeaturizer(SimpleFeaturizer):
+
+    id = 'robustslope'
+    name = 'Robst Slope (R)'
+    description = 'Slope from the robust linear regression fit using M estimator (uses R)'
+
+    def featurize(self, data, params={}):
+        with localconverter(robjects.default_converter + pandas2ri.converter):
+            # ret = robjects.r['get_robust_slope'](data.index, data['value'])
+            # ret = robjects.r['get_robust_slope'](data.reset_index()['time'].values.astype(np.int64) // 10 ** 9, data)
+            print(data.reset_index()[['time']])
+            print(data)
+            ret = robjects.r['get_robust_slope'](data.reset_index()[['time']], data)
+        return None if isinstance(ret[0], rpy2.rinterface_lib.sexp.NALogicalType) else ret[0]
