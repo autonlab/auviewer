@@ -68,6 +68,15 @@ facilitate expert annotation.
 .. toctree::
    :hidden:
    :maxdepth: 2
+   :caption: Discussion
+   :name: sec-discussion
+
+   User Group <https://groups.google.com/g/auviewer-users>
+
+
+.. toctree::
+   :hidden:
+   :maxdepth: 2
    :caption: Source Code
    :name: sec-sourcecode
 
