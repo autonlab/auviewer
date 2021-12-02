@@ -1,5 +1,8 @@
-require("pacman")
-pacman::p_load(zoo, plyr, reshape, MASS, nlts, strucchange, np, data.table, doParallel)
+#require("pacman")
+#pacman::p_load(zoo, plyr, reshape, MASS, nlts, strucchange, np, data.table, doParallel)
+
+lapply(c('zoo', 'plyr', 'reshape', 'MASS', 'nlts', 'strucchange', 'np', 'data.table', 'doParallel'), require, character.only = TRUE)
+
 #library(auton.utils)
 registerDoParallel(cores=8)
 
@@ -60,7 +63,18 @@ get_robust_slope <- function(x,y){
 	print(X)
 	print('y')
 	print(Y)
-	result <- tryCatch(as.numeric(coef(rlm(Y~X))[2]), error = function(e) {NA})
+
+#     print("BEGIN")
+# 	print(rlm(X, Y))
+# 	print("COEF")
+# 	print(coef(rlm(X, Y)))
+# 	print("COEF[2]")
+# 	print(coef(rlm(X, Y))[1])
+# 	print("DONE")
+# 	return(NA)
+
+# 	result <- tryCatch(as.numeric(coef(rlm(Y~X))[2]), error = function(e) { print(e); return(NA); })
+	result <- tryCatch(as.numeric(coef(rlm(Y~X))[1]), error = function(e) { print(e); return(NA); })
 	print("result")
 	print(result)
 	return(result)
