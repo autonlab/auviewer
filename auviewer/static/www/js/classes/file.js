@@ -1193,12 +1193,11 @@ File.prototype.renderMetadata = function() {
 
 	let div = document.createElement('DIV');
 	div.id = 'metadata';
-	div.innerHTML = '<h2>Metadata</h2>';
+	div.innerHTML = '<h6>Metadata</h6>';
 	for (let property of Object.keys(this.metadata)) {
-		div.innerHTML += '<br>'+property+': '+this.metadata[property];
+		div.innerHTML += ' '+property+': '+this.metadata[property]+'    ';
 	}
-	document.getElementById('graphs').appendChild(div);
-
+	document.getElementById('controls').appendChild(div);
 };
 
 // Reset zoom to outermost view

@@ -6,27 +6,164 @@
 
 .color-square { width: 17.4px; height: 17.4px; }
 
+/* Fonts */
+@font-face {
+    font-family: LatoRegular;
+    src: url(third-party/fonts/Lato-Regular.ttf);
+  }
+  
+  @font-face {
+    font-family: LatoLight;
+    src: url(third-party/fonts/Lato-Light.ttf);
+  }
+  
+  @font-face {
+    font-family: LatoBold;
+    src: url(third-party/fonts/Lato-Bold.ttf);
+  }
+
 /* Main */
 
 body {
     overscroll-behavior: none;
+    background-color: rgb(255, 255, 255);
+    color: #4D4D4D;
 }
 
+h5 {
+    font-family: LatoBold;
+    font-size: 16px;
+}
+
+h6 {
+    font-family: LatoRegular;
+    font-size: 14px;
+}
+
+/* Main Navigation bar */
 #controls {
     position: fixed;
-    top: 56px;
-    left: 0;
+    top: 106px;
+    right: 0;
     box-sizing: border-box;
-    width: 260px;
+    background-color: #F3F8FB;
+    width: 280px;
     height: calc(100% - 56px);
-    padding-top: 8px;
-    padding-left: 8px;
+    padding-top: 24px;
+    padding-left: 12px;
+    padding-right: 12px;
     overflow-y: auto;
     overflow-x: hidden;
 }
 
-#zoomControl { width: 100%; margin-bottom: 16px; }
-#zoomControl > div { width: 100%; text-align: center; margin-bottom: 4px; }
+#navbar-top {
+    position: fixed;
+    top:45px;
+    height: 60px;
+    right: 0%;
+    width: 100%;
+    background-color: #ebebeb;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 4px 5px 0 rgba(0, 0, 0, 0.19);
+}
+
+#projectAndFileSelection {
+    width: 400px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+#metadata {
+    /* position: fixed; 
+    display: inline-block;
+    vertical-align: middle; */
+    font-family: LatoLight;
+    font-size: 12px;
+    /* left: 720px; 
+    top: 55px;  */
+}
+
+#plot-graphs {
+    display: inline-block;
+    position: fixed; 
+    left: 320px; 
+    top: 61px; 
+    color: #4D4D4D;
+}
+
+#zoomControl {
+    display: inline-block;
+    position: fixed; 
+    left: 500px; 
+    top: 61px;
+    color: #4D4D4D;
+}
+
+#zoom-buttons {
+    display: inline-block;
+    position: fixed; 
+    left: 600px; 
+    top: 61px;
+}
+
+.btn-light {
+    color: #4D4D4D;
+    background-color: #ffffff;
+    border-color: #ffffff;
+    font-family: LatoRegular;
+    font-size: 12px;
+}
+
+.bg-light {
+    background-color: #F3F8FB!important;
+    height: 45px;
+}
+
+button {
+    background-color: #D9EAF4;
+    border: 1px solid #c3e4f7;
+    border-radius: 3px;
+    font-family: LatoRegular;
+    font-size: 12px;
+    color: #4D4D4D;
+}
+
+.btn-light:hover{
+    background-color: #D9EAF4;
+}
+
+.btn-primary {
+    background-color: #C3E4F7;
+    border-color: #C3E4F7;
+    font-family: LatoRegular;
+    font-size: 12px;
+    color: #4D4D4D;
+}
+
+.btn-secondary {
+    background-color: #4D4D4D;
+    border-color: #4D4D4D;
+    font-family: LatoRegular;
+    font-size: 12px;
+    color: #ffffff;
+}
+
+.btn-danger {
+    background-color: #D95B5B;
+    border-color: #D95B5B;
+    font-family: LatoRegular;
+    font-size: 12px;
+    color: #ffffff;
+}
+
+
+.filter-option-inner-inner{
+    font-family: LatoRegular;
+    font-size: 12px;
+    color: #4D4D4D;
+}
+
+/* #zoomControl { width: 100%; margin-bottom: 10px; }
+#zoomControl > div { width: 100%; text-align: center; margin-bottom: 4px; } */
 
 #playbackControl { width: 100%; margin-bottom: 10px; }
 #playbackControl > div { width: 100%; text-align: center; margin-bottom: 4px; }
@@ -58,12 +195,9 @@ p.assignment-panel-bottom-label { font-size: 0.6em; margin-top: 0; font-style: i
 #graphs {
     box-sizing: border-box;
     margin-bottom: 100px;
-
-
-
     position: fixed;
-    top: 56px;
-    left: 270px;
+    top: 130px;
+    left: 0px;
     width: calc(100% - 270px);
     height: calc(100% - 56px);
     padding: 8px 4px 60px 8px;
@@ -160,11 +294,16 @@ p.assignment-panel-bottom-label { font-size: 0.6em; margin-top: 0; font-style: i
     padding-left: 4px;
 }
 
+/* DOUBLE CHECK */
 .graph_wrapper > table > tbody > tr > td.graph_title {
     vertical-align: bottom;
     overflow: hidden;
     height: 60px;
     padding-bottom: 4px;
+    padding-left: 20px;
+    font-family: LatoBold;
+    font-size: 14px;
+    color: #4D4D4D;
     font-weight: bold;
     overflow-wrap: break-word;
 }
@@ -185,7 +324,7 @@ p.assignment-panel-bottom-label { font-size: 0.6em; margin-top: 0; font-style: i
 }
 
 .graph_wrapper > table > tbody > tr > td.graph_title > .webix_icon {
-    color: rgb(71, 84, 102);
+    color: rgb(0, 98, 235);
     visibility: hidden;
     cursor: pointer;
     margin-left: 8px;
@@ -204,12 +343,15 @@ p.assignment-panel-bottom-label { font-size: 0.6em; margin-top: 0; font-style: i
 .graph_wrapper > table > tbody > tr > td.legend > div {
     position: relative;
     display: inline-block;
-    background-color: white;
+    background-color: #F3F8FB;
     filter: drop-shadow(-2px 2px 2px #ccc);
-    border: 1px solid #aaa;
+    border: 1px solid #c3e4f7;
     padding: 2px 4px;
     word-wrap: break-word;
+    border-radius: 5px;
     z-index: 99999;
+    font-family: LatoRegular;
+    font-size: 12px;
 }
 
 .graph_wrapper > table > tbody > tr > td.legend > div > span {
@@ -224,7 +366,7 @@ p.assignment-panel-bottom-label { font-size: 0.6em; margin-top: 0; font-style: i
 
 /* Realtime */
 
-body.realtime > #controls > #projectAndFileSelection, body.realtime > #controls > #patternDetectionPanel {
+body.realtime > #controls #projectAndFileSelection, body.realtime > #controls > #patternDetectionPanel {
     display: none !important;
 }
 body.realtime #realtimeTitle {
@@ -262,6 +404,31 @@ body.realtime > #controls > #control_footer > p#exitrealtime {
 }
 
 /* Annotations */
+
+.form-group{
+    font-family: LatoBold;
+    font-size: 14px;
+    color: #4D4D4D;
+}
+
+.annotationStartTime{
+    font-family: LatoBold;
+    font-size: 14px;
+    color: #4D4D4D;
+}
+
+.form-control:disabled{
+    background-color: #F3F8FB;
+    font-family: LatoRegular;
+    font-size: 13px;
+    color: #4D4D4D;
+}
+
+.form-control{
+    font-family: LatoRegular;
+    font-size: 13px;
+    color: #4D4D4D;
+}
 
 #allAnnotationsListModal tr:hover, #annotationsListModal tr:hover {
     cursor: pointer;
@@ -339,3 +506,77 @@ body.realtime > #controls > #control_footer > p#exitrealtime {
     transform: scale(1.0); 
   } 
 }
+/* AUViewer 2.0 Index page CSS */
+
+.table {
+    vertical-align: bottom;
+    color: #4D4D4D;
+    font-family: LatoRegular;
+    border-collapse: collapse;
+
+}
+
+.table thead {
+    background-color: #D9EAF4;
+    text-align: center;
+    font-family: LatoBold;
+}
+
+.table thead th{
+    border:solid rgb(255, 255, 255) 1px;
+    border-collapse: separate;
+    padding: 6px;
+
+}
+
+td:first-child, th:first-child {
+     border-left: none;
+     border-radius:30px 0px 0px 30px;
+}
+
+td:last-child, th:last-child {
+    border-left: none;
+    border-radius: 0px 40px 40px 0px;
+}
+
+.row {
+    padding-top: 150px;
+    font-family: LatoBold;
+    color: #4D4D4D;
+}
+
+.navbar-light .navbar-brand {
+    color: #4D4D4D;
+    font-family: LatoRegular;
+    font-size: 15px;
+}
+
+
+.bootstrap-select>.dropdown-toggle {
+    position: relative;
+    width: 200px;
+    text-align: right;
+    white-space: nowrap;
+}
+
+
+.webix_view {
+    -webkit-appearance: none;
+    -webkit-font-smoothing: antialiased;
+    background-color: #fff;
+    border: 0 solid #dadee0;
+    color: #475466;
+    cursor: default;
+    font-family: LatoRegular;
+    font-size: 13px;
+    letter-spacing: .2px;
+    overflow: hidden;
+    white-space: normal;
+}
+
+:not(.input-group)>.bootstrap-select.form-control:not([class*=col-]) {
+    width: 200px;
+    left: 10px;
+}
+/*  */
+

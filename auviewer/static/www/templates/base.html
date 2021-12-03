@@ -19,7 +19,7 @@
         hr { border-color: #cccccc; margin: 0; }
         .no-margins { margin: 0px; }
         .with-margins { margin: 10px; }
-        .col-centered { float: none; margin: 0 auto; }
+		.col-centered { float: none; margin: 0 auto; }
     </style>
 
 </head>
@@ -29,7 +29,36 @@
 
 <div id="vueapp">
 <nav class="navbar fixed-top navbar-expand-sm navbar-light bg-light mb-4">
-	<a class="navbar-brand" style="padding: 0;" href="{{rootWebPath}}/"><img src="{{rootWebPath}}/img/auv_logo.png" style="height: 37px; margin-right: 4px;"> Auton Universal Viewer<span style="display: none;" id="realtimeTitle"> &ndash; Realtime Mode</span></a>
+	<a class="navbar-brand" style="padding: 0;" href="{{rootWebPath}}/"><img src="{{rootWebPath}}/img/auv_logo.png" style="height: 30px; margin-right: 4px;"> Auton Universal Viewer<span style="display: none;" id="realtimeTitle"> &ndash; Realtime Mode</span>
+		<h5 style="display:inline-block; padding-left: 40px; color: #4D4D4D">{{project_name}}</h5>
+	</a>
+	<!-- <div id="navbar-top">
+		<div id="projectAndFileSelection">
+			<h6 style="display:inline-block; padding-left: 52px; padding-top: 20px; color: #4D4D4D;">Files</h6>
+			<div class="form-group" style="display:inline-block">
+				<select class="form-control form-control-sm selectpicker bs-width-correction" data-title="Select file" data-live-search="true" id="file_selection" onchange="globalStateManager.loadFile();">
+				</select>
+			</div>
+		<div id="plot-graphs">
+			<h6 style="display: inline-block;">Plot</h6>
+			<button type="button" class="btn btn-sm btn-light" style="margin-left: 10px;" onclick="globalStateManager.currentFile ? globalStateManager.currentFile.plotControl.show() : null;">Show/Hide Graphs</button><br></div>
+		</div>
+		<div id="zoomControl">
+			<h6 style="display: inline-block;">Zoom Control</h6>
+			<div id="zoom-buttons">
+				<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(21600000);" title="6 hours">6hr</button>
+				<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(7200000);" title="2 hours">2hr</button>
+				<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(3600000);" title="1 hour">1hr</button>
+				<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(600000);" title="10 minutes">10m</button>
+				<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(60000);" title="1 minute">1m</button>
+				<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(10000);" title="10 seconds">10s</button>
+				<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomTo(1000);" title="1 second">1s</button>
+				<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.resetZoomToOutermost();" title="Reset zoom to see all data">All</button>
+				<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomBy(0, .1);" title="Zoom out by 10%">-</button>
+				<button onclick="globalStateManager.currentFile && globalStateManager.currentFile.zoomBy(1, .1);" title="Zoom in by 10%">+</button>
+			</div>
+		</div>
+	</div> -->
 	<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
 		<span class="navbar-toggler-icon"></span>
 	</button>
