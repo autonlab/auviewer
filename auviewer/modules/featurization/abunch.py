@@ -143,14 +143,14 @@ class MaxGapFeaturizer(SimpleFeaturizer):
 
 
 
-# import rpy2
-# import rpy2.robjects as robjects
-# from rpy2.robjects import pandas2ri
-# from rpy2.robjects.conversion import localconverter
-# from rpy2.robjects.packages import importr
-# robjects.r['source']('temp.R')
-# 
-# import numpy as np
+import rpy2
+import rpy2.robjects as robjects
+from rpy2.robjects import pandas2ri
+from rpy2.robjects.conversion import localconverter
+from rpy2.robjects.packages import importr
+robjects.r['source']('temp.R')
+
+import numpy as np
 class RobustSlopeFeaturizer(SimpleFeaturizer):
 
     id = 'robustslope'
@@ -161,7 +161,22 @@ class RobustSlopeFeaturizer(SimpleFeaturizer):
         with localconverter(robjects.default_converter + pandas2ri.converter):
             # ret = robjects.r['get_robust_slope'](data.index, data['value'])
             # ret = robjects.r['get_robust_slope'](data.reset_index()['time'].values.astype(np.int64) // 10 ** 9, data)
-            print(data.reset_index()[['time']])
-            print(data)
-            ret = robjects.r['get_robust_slope'](data.reset_index()[['time']], data)
+
+            data = data.reset_index() # data.reset_index(inplace=True)
+            data['time'] = data['time'].astype(np.int64) // 10**9
+
+
+
+            # t = data.reset_index()[['time']]
+            # t['time'] = t['time'].astype(np.int64) // 10**9
+            # data['time'] = t['time']
+            # print(t)
+            print('arg1')
+            print(data['time'])
+            print('arg2')
+            print(data['value'])
+            # ret = robjects.r['get_robust_slope'](data[['time']], data.set_index('time'))
+            ret = robjects.r['get_robust_slope'](data['time'], data['value'])
+        print(ret)
+        print(ret[0])
         return None if isinstance(ret[0], rpy2.rinterface_lib.sexp.NALogicalType) else ret[0]
