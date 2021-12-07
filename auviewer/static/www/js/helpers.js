@@ -9,7 +9,7 @@ function classifyAnnotationInRelationToGraph(annotation, graph) {
 	const annotationBelongsToThisGraph = annotation.series && graph.members.includes(annotation.series);
 
 	// Determine if the pattern is the current workflow pattern
-	const currentWorkflowPattern = annotation.id === currentAssignmentID || annotation.pattern_id === currentAssignmentID;
+	const currentWorkflowPattern = currentAssignmentID !== null && (annotation.id === currentAssignmentID || annotation.pattern_id === currentAssignmentID);
 
 	if (currentAssignmentID && !currentWorkflowPattern && document.getElementById('assignmentFocusOption').checked) {
 		return 'do_not_render';

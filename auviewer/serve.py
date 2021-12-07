@@ -69,14 +69,6 @@ featurizers = [
 ]
 featurizers = {f.id: f for f in featurizers}
 
-
-
-
-
-
-
-
-
 def createApp():
 
     # Instantiate the Flask web application class
