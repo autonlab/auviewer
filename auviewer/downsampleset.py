@@ -30,7 +30,7 @@ class DownsampleSet:
     def getNumDownsamplesFromFile(self):
 
         # If no processed file is available, return 0
-        if not hasattr(self.seriesparent.fileparent, 'pf'):
+        if not self.seriesparent.fileparent.procFilePathObj.exists(): 
             return 0
 
         # Get reference to the group containing the downsamples

@@ -224,8 +224,9 @@ class Project:
             for f in self.files:
                 if not f.f_open:
                     try:
-                        f._loadonstart()
-                    except:
+                        f.f
+                    except Exception as e:
+                        print(e)
                         pass
                 fileDict[f.id] = f
 
@@ -1143,7 +1144,7 @@ class Project:
             if not procFilePathObj.exists():
                 logging.error(
                     f"File ID {fileDBModel.id} in the database is missing the processed file on the file system at {procFilePathObj}")
-                continue
+                #continue
                 # TODO(gus): Do something else with this? Like set error state in the database entry and display in GUI?
 
             # Instantiate the file class, and attach to this project instance

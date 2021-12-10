@@ -55,7 +55,7 @@ class Series:
 
             # Grab the unit, if available
             try:
-                self.units = self.fileparent.f['/'.join(self.h5path)].meta['dwc_meta']['unitLabel']
+                self.units = self.fileparent.file['/'.join(self.h5path)].meta['dwc_meta']['unitLabel']
             except:
                 self.units = ""
 

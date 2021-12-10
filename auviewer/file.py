@@ -47,14 +47,68 @@ class File:
 
         # Processing flags
         self.processNewFiles = processNewFiles
-        self.processOnly = processOnly 
+        self.processOnly = processOnly
+        self.processedFileExists = self.procFilePathObj.exists()
+
+        # Downsample file if opened in process only mode
+        if processOnly:
+            self.f
+
 
     @property
     def f(self):
+        if self.processOnly:
+            # This implementation is designed to be performed in a backgorund process
+            # If the processed file does not exist and we are in downsample only mode, downsample the file and return 
+            if not self.procFilePathObj.exists():
+                print(f"Generating processed file for {self.origFilePathObj}")
+
+                # Open, load and downsample the file
+                # TODO(vedant) : find a cleaner implementation for this?
+                self.file = audata.File.open(str(self.origFilePathObj), return_datetimes=False)
+                self.load()
+                self.process()
+
+                # If the processed file still does not exist, raise an exception
+                if not self.procFilePathObj.exists():
+                    raise Exception(f"File {self.origFilePathObj} has not been processed and therefore cannot be loaded.")
+
+                # Close original and processed files
+                self.processed_file.close()
+
+        else:
+            if not self.f_open:
+                # Open the original file only if the donwsampled version exists
+                # TODO(vedant) : does this behavior need to be changed? since current multiprocessing does not support prioritization,
+                # users may have to wait for a while to view their files
+                if not self.procFilePathObj.exists():
+                    logging.error(f"File {self.origFilePathObj} still being downsampled")
+
+                    # TODO(vedant/gus) : inform the front end instead of backend about the file being downsampled
+                    raise IOError("Please wait, file being downsampled")
+
+                self.file = audata.File.open(str(self.origFilePathObj), return_datetimes=False)
+
+                # Load the processed file if it exists
+                if self.procFilePathObj.exists():
+                    logging.info(f"Opening processed file {self.procFilePathObj}.")
+                    self.processed_file = audata.File.open(str(self.procFilePathObj), return_datetimes=False)
+                    self.pf_open = True
+
+                # Load series data into memory
+                self.load()
+                self.f_open = True
+
         return self.file
 
     @property
     def pf(self):
+        if not self.pf_open and not self.processOnly:
+            logging.error(f"File {self.origFilePathObj} still being downsampled")
+
+            # TODO(vedant/gus) : inform the front end instead of backend about the file being downsampled
+            raise IOError("Please wait, file being downsampled")
+
         return self.processed_file
 
     def __del__(self):
@@ -309,8 +363,38 @@ class File:
         return events
     
     def _loadonstart(self):
-        while True:
-            # Open the original file
+        if self.processOnly:
+            # This implementation is designed to be performed in a backgorund process
+            # If the processed file does not exist and we are in downsample only mode, downsample the file and return 
+            if not self.procFilePathObj.exists():
+                print(f"Generating processed file for {self.origFilePathObj}")
+
+                # Open, load and downsample the file
+                # TODO(vedant) : find a cleaner implementation for this?
+                self.file = audata.File.open(str(self.origFilePathObj), return_datetimes=False)
+                self.load()
+                self.process()
+
+                # If the processed file still does not exist, raise an exception
+                if not self.procFilePathObj.exists():
+                    raise Exception(f"File {self.origFilePathObj} has not been processed and therefore cannot be loaded.")
+
+                # Close original and processed files
+                self.file.close()
+                self.processed_file.close()
+                
+            return
+
+        if not self.f_open:
+            # Open the original file only if the donwsampled version exists
+            # TODO(vedant) : does this behavior need to be changed? since current multiprocessing does not support prioritization,
+            # users may have to wait for a while to view their files
+            if not self.procFilePathObj.exists():
+                logging.info(f"File {self.origFilePathObj} still being downsampled")
+
+                # TODO(vedant/gus) : inform the front end instead of backend about the file being downsampled
+                raise IOError("Please wait, file being downsampled")
+
             self.file = audata.File.open(str(self.origFilePathObj), return_datetimes=False)
 
             # Load the processed file if it exists
@@ -319,26 +403,10 @@ class File:
                 self.processed_file = audata.File.open(str(self.procFilePathObj), return_datetimes=False)
                 self.pf_open = True
 
-                # If we've been asked only to generate the processed file and it already exists, return now.
-                if self.processOnly:
-                    break
-
             # Load series data into memory
             self.load()
             self.f_open = True
 
-            # If the processed file does not exist and we're supposed to process
-            # new file data, process it.
-            if not self.procFilePathObj.exists() and self.processNewFiles:
-                logging.info(f"Generating processed file for {self.origFilePathObj}")
-                self.process()
-                self.pf_open = True
-
-            # If the processed file still does not exist, raise an exception
-            if not self.procFilePathObj.exists():
-                raise Exception(f"File {self.origFilePathObj} has not been processed and therefore cannot be loaded.")
-            
-            break
     
 
     def getInitialPayload(self, user_id):
@@ -349,7 +417,10 @@ class File:
 
         if self.mode() == 'file':
             if not self.f_open:
-                self._loadonstart()
+                try:
+                    self.f
+                except:
+                    return {}
 
         # Assemble the output object.
         outputObject = {

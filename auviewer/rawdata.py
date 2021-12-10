@@ -7,13 +7,13 @@ from .cylib import getSliceParam
 class RawData:
 
     # RawData may operate in file-mode or data-mode. If seriesparent.h5path`
-    def __init__(self, seriesparent):
+    def __init__(self, seriesparent, loading=True):
 
         # Set the series parent
         self.seriesparent = seriesparent
 
         # Grab a reference to the dataset
-        dataset = self.getDatasetReference()
+        dataset = self.getDatasetReference(loading)
 
         # Holds the number of data points in the raw data series
         self.len = dataset.nrow
@@ -49,6 +49,9 @@ class RawData:
         ds_slice = ds[startIndex:stopIndex]
         return [list(i) for i in zip(ds_slice[self.seriesparent.timecol].values.astype(np.float64), nones, nones, ds_slice[self.seriesparent.valcol].values.astype(np.float64))]
 
-    def getDatasetReference(self):
-
-        return self.seriesparent.fileparent.file['/'.join(self.seriesparent.h5path)]
+    def getDatasetReference(self, loading=False):
+        
+        if loading:
+            return self.seriesparent.fileparent.file['/'.join(self.seriesparent.h5path)]
+        else:
+            return self.seriesparent.fileparent.f['/'.join(self.seriesparent.h5path)]

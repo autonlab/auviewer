@@ -14,6 +14,8 @@ from .file import File
 from .project import Project
 from .shared import createEmptyJSONFile, getProcFNFromOrigFN
 
+import multiprocessing as mp
+
 # Will hold loaded projects
 loadedProjects = []
 
@@ -34,7 +36,12 @@ def downsampleFile(filepath: str, destinationpath: str) -> bool:
     if not (dp.exists() and dp.is_dir()):
         raise Exception(f"Destination '{destinationpath}' does not exist or is not a directory.")
 
-    _ = File(None, -1, fp, dp / getProcFNFromOrigFN(fp), processNewFiles=True, processOnly=True)
+    ds_file = File(None, -1, fp, dp / getProcFNFromOrigFN(fp), processNewFiles=True, processOnly=True)
+    del ds_file
+
+# Background pool for downsampling files
+downsamplePool = mp.Pool(processes=2)
+
 
 def getProject(id) -> Optional[Project]:
     """
@@ -136,6 +143,7 @@ def loadProjects() -> Dict[int, Project]:
 
     # Reset projects to empty list
     loadedProjects = []
+    notProcessedFiles = []
 
     # Load projects from the database
     projs = models.Project.query.all()
@@ -156,6 +164,12 @@ def loadProjects() -> Dict[int, Project]:
             # Instantiate project, and add to the list to be returned
             # TODO(gus): We need to have project take absolute path and project name!
             loadedProjects.append(Project(p))
+
+            # Iterate through files in project and downsample in background process
+            # if processed file does not exist
+            for projFile in loadedProjects[-1].files:
+                if not projFile.processedFileExists:
+                    notProcessedFiles.append((str(projFile.origFilePathObj), str(projFile.procFilePathObj.parent)))
 
             logging.info("Finished loading project.")
 
@@ -196,6 +210,14 @@ def loadProjects() -> Dict[int, Project]:
             # Instantiate project
             # TODO(gus): We need to have project take absolute path and project name!
             loadedProjects.append(Project(project))
+
+            for projFile in loadedProjects[-1].files:
+                if not projFile.processedFileExists:
+                    notProcessedFiles.append((str(projFile.origFilePathObj), str(projFile.procFilePathObj.parent)))
+
+    for downsampParam in notProcessedFiles:
+        downsamplePool.apply_async(downsampleFile, downsampParam)
+
 
     logging.info("Finished loading projects.")
 
