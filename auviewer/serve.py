@@ -408,7 +408,7 @@ def createApp():
         # Get the project
         project = getProject(project_id)
         if project is None:
-            logging.error(f"Project ID {project_id} not found.")
+            logging.error(f"Project ID '{project_id}' not found.")
             abort(404, description="Project not found.")
             return
 
@@ -454,35 +454,18 @@ def createApp():
         right = request.args.get('right', type=float)
         params = json.loads(request.args.get('params'));
 
-        print("FEATURIZER", featurizer)
-        print('featurize', project_id, file_id, series, params)
+        print("\n".join([
+            f"\nFeaturizer {featurizer} requested, with parameters:",
+            f"Project ID: {project_id}",
+            f"File ID: {file_id}",
+            f"Series: {series}",
+            f"Left: {left}",
+            f"Right: {right}",
+            f"Params: {params}\n",
+        ]))
 
         if featurizer in featurizers:
             se = featurizers[featurizer].getFeaturizeFunction(params)
-        # elif featurizer == 'sample_entropy':
-        #     tolerance = params['tolerance']
-        #     if len(tolerance) < 1:
-        #         tolerance = None
-        #     dim = params['dim']
-        #     try:
-        #         dim = int(dim)
-        #     except:
-        #         dim = 2
-        #     def se(x):
-        #         try:
-        #             return pyhrv.nonlinear.sample_entropy(nni=x, tolerance=tolerance, dim=dim)[0] if x.shape[0] > 0 else np.nan
-        #         except Exception as e:
-        #             print(f"exception: {e}")
-        #             return np.nan
-        # elif featurizer == 'regression':
-        #     def se(x):
-        #         try:
-        #             slrm = LinearRegression()
-        #             slrm.fit(data[['time']], data['value'])
-        #             return slrm.coef_[0] # slope
-        #         except Exception as e:
-        #             print(f"exception: {e}")
-        #             return np.nan
         else:
             raise Exception(f"Unknown featurizer requested: {featurizer}")
 
