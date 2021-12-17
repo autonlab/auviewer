@@ -444,7 +444,6 @@ def createApp():
     @login_required
     def featurize():
 
-
         # Parse parameters
         featurizer = request.args.get('featurizer')
         project_id = request.args.get('project_id', type=int)
@@ -465,7 +464,7 @@ def createApp():
         ]))
 
         if featurizer in featurizers:
-            se = featurizers[featurizer].getFeaturizeFunction(params)
+            featurizerFunction = featurizers[featurizer].getFeaturizeFunction(params)
         else:
             raise Exception(f"Unknown featurizer requested: {featurizer}")
 
@@ -512,7 +511,7 @@ def createApp():
 
             # TODO: Might make label side configurable
 
-            featurization = df.resample(window_size, label='right').agg(se).replace(np.inf, np.nan).replace(-np.inf, np.nan).dropna().reset_index()
+            featurization = df.resample(window_size, label='right').agg(featurizerFunction).replace(np.inf, np.nan).replace(-np.inf, np.nan).dropna().reset_index()
             print(featurization)
 
             # Option 1 (sometimes this works) – make sure to correlate with option above
