@@ -8,7 +8,6 @@ import logging
 import shutil
 import tempfile
 import json
-import multiprocessing as mp
 
 # Simplejson package is required in order to "ignore" NaN values and implicitly
 # convert them into null values. RFC JSON spec left out NaN values, even though
@@ -194,12 +193,9 @@ def createApp():
             proj = getProject(p['id'])
             for f in proj.files:
                 try:
-                    if f.f_open:
-                        f.f.close()
-                        f.f_open = False
-                    if f.pf_open:
-                        f.pf.close()
-                        f.pf_open = False
+                    if f.file is not None:
+                        f.close()
+
                 except Exception as e:
                     return app.response_class(
                             response=simplejson.dumps({'success': False}),
@@ -233,12 +229,8 @@ def createApp():
         ### To be implemented here...
         for f in project.files:
             try:
-                if f.f_open:
-                    f.f.close()
-                    f.f_open = False
-                if f.pf_open:
-                    f.pf.close()
-                    f.pf_open = False
+                if f.f or f.pf:
+                    f.close()
             except Exception as e:
                 print(e)
                 return app.response_class(
@@ -283,13 +275,9 @@ def createApp():
             )
 
         ### To be implemented here...
-        if file.f_open:
+        if file.f or file.pf:
             print("Closing file")
-            file.f.close()
-            file.f_open = False
-        if file.pf_open:
-            file.pf.close()
-            file.pf_open = False
+            file.close()
 
         ### This is the success response -- if there is an error you want to catch, just
         ### the same response below but with success=False!

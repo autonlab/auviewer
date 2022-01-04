@@ -222,12 +222,11 @@ class Project:
         if fileIds:
             fileDict = dict()
             for f in self.files:
-                if not f.f_open:
-                    try:
-                        f.f
-                    except Exception as e:
-                        print(e)
-                        pass
+                try:
+                    f.f
+                except Exception as e:
+                    print(e)
+                    pass
                 fileDict[f.id] = f
 
             for fId in fileIds:

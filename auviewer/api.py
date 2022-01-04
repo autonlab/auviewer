@@ -211,9 +211,7 @@ def loadProjects() -> Dict[int, Project]:
             # TODO(gus): We need to have project take absolute path and project name!
             loadedProjects.append(Project(project))
 
-            for projFile in loadedProjects[-1].files:
-                if not projFile.processedFileExists:
-                    notProcessedFiles.append((str(projFile.origFilePathObj), str(projFile.procFilePathObj.parent)))
+            notProcessedFiles = [(str(projFile.origFilePathObj.resolve()), str(projFile.projFilePathProc.parent.resolve())) for projFile in loadedProjects[-1].files if not projFile.processedFileExists]
 
     for downsampParam in notProcessedFiles:
         downsamplePool.apply_async(downsampleFile, downsampParam)
