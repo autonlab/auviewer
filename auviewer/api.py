@@ -37,6 +37,7 @@ def downsampleFile(filepath: str, destinationpath: str) -> bool:
         raise Exception(f"Destination '{destinationpath}' does not exist or is not a directory.")
 
     ds_file = File(None, -1, fp, dp / getProcFNFromOrigFN(fp), processNewFiles=True, processOnly=True)
+    ds_file.process()
     del ds_file
 
 # Background pool for downsampling files
@@ -165,12 +166,6 @@ def loadProjects() -> Dict[int, Project]:
             # TODO(gus): We need to have project take absolute path and project name!
             loadedProjects.append(Project(p))
 
-            # Iterate through files in project and downsample in background process
-            # if processed file does not exist
-            for projFile in loadedProjects[-1].files:
-                if not projFile.processedFileExists:
-                    notProcessedFiles.append((str(projFile.origFilePathObj), str(projFile.procFilePathObj.parent)))
-
             logging.info("Finished loading project.")
 
     # Detect new project folders not in the database
@@ -211,7 +206,7 @@ def loadProjects() -> Dict[int, Project]:
             # TODO(gus): We need to have project take absolute path and project name!
             loadedProjects.append(Project(project))
 
-            notProcessedFiles = [(str(projFile.origFilePathObj.resolve()), str(projFile.projFilePathProc.parent.resolve())) for projFile in loadedProjects[-1].files if not projFile.processedFileExists]
+    notProcessedFiles = [(str(projFile.origFilePathObj.resolve()), str(projFile.projFilePathProc.parent.resolve())) for project in loadedProjects for projFile in project.files]
 
     for downsampParam in notProcessedFiles:
         downsamplePool.apply_async(downsampleFile, downsampParam)

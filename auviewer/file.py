@@ -19,7 +19,7 @@ class File:
     parameter is passed to the constructor, File will operate in realtime-mode.
     """
 
-    def __init__(self, projparent, id, origFilePathObj, procFilePathObj, processNewFiles=True, processOnly=False):
+    def __init__(self, projparent, id, origFilePathObj, procFilePathObj):
 
         logging.info(f"\n------------------------------------------------\nACCESSING FILE: (ID {id}) {origFilePathObj}\n------------------------------------------------\n")
 
@@ -32,8 +32,8 @@ class File:
         self.procFilePathObj = procFilePathObj
 
         # Store file if already read
-        self.file = None
-        self.processed_file = None
+        self._file = None
+        self._processed_file = None
 
         # Filename
         self.name = Path(self.origFilePathObj).name
@@ -42,47 +42,37 @@ class File:
         self.series = []
 
         # Processing flags
-        self.processNewFiles = processNewFiles
+        #self.processNewFiles = processNewFiles
         self.processedFileExists = self.procFilePathObj.exists()
-
-        # Downsample file if opened in process only mode
-        if processOnly:
-            self.processOnly()
 
 
     @property
     def f(self):       
-        if self.file is None:
+        if self._file is None:
             # Open the original file only if the donwsampled version exists
             # TODO(vedant) : does this behavior need to be changed? since current multiprocessing does not support prioritization,
             # users may have to wait for a while to view their files
+            self._file = audata.File.open(str(self.origFilePathObj), return_datetimes=False)
+
+            # Load series data into memory
+            self.load()
+
+        return self._file
+
+    @property
+    def pf(self):
+        if self._processed_file is None:
             if not self.procFilePathObj.exists():
                 logging.error(f"File {self.origFilePathObj} still being downsampled")
 
                 # TODO(vedant/gus) : inform the front end instead of backend about the file being downsampled
                 raise IOError("Please wait, file being downsampled")
 
-            self.file = audata.File.open(str(self.origFilePathObj), return_datetimes=False)
-
-            # Load the processed file if it exists
-            if self.procFilePathObj.exists():
+            else:
                 logging.info(f"Opening processed file {self.procFilePathObj}.")
-                self.processed_file = audata.File.open(str(self.procFilePathObj), return_datetimes=False)
+                self._processed_file = audata.File.open(str(self.procFilePathObj), return_datetimes=False)
 
-            # Load series data into memory
-            self.load()
-
-        return self.file
-
-    @property
-    def pf(self):
-        if self.processed_file is None:
-            logging.error(f"File {self.origFilePathObj} still being downsampled")
-
-            # TODO(vedant/gus) : inform the front end instead of backend about the file being downsampled
-            raise IOError("Please wait, file being downsampled")
-
-        return self.processed_file
+        return self._processed_file
 
     def close(self):
         """ Use this for closing original and processed .h5 without removing File object from memory"""
@@ -91,43 +81,20 @@ class File:
 
         # Close the original file
         try:
-            self.file.close()
+            self._file.close()
         except:
             pass
 
         # Close the processed file
         try:
-            self.processed_file.close()
+            self._processed_file.close()
         except:
             pass
 
-        self.file, self.processed_file = None, None
+        self._file, self._processed_file = None, None
 
     def __del__(self):
         self.close()
-
-
-    def processOnly(self):
-        """ Use this function for processing the file only. This is implementation is designed
-        to be performed in a background process. If the processed file does not exist, we will
-        downsample the file and return.
-        
-        """
-        if not self.procFilePathObj.exists():
-            print(f"Generating processed file for {self.origFilePathObj}")
-
-            # Open, load and downsample the file
-            # TODO(vedant) : find a cleaner implementation for this?
-            self.file = audata.File.open(str(self.origFilePathObj), return_datetimes=False)
-            self.load()
-            self.process()
-
-            # If the processed file still does not exist, raise an exception
-            if not self.procFilePathObj.exists():
-                raise Exception(f"File {self.origFilePathObj} has not been processed and therefore cannot be loaded.")
-
-            # Close processed files
-            self.processed_file.close()
 
 
     def addSeriesData(self, seriesData):
@@ -343,7 +310,7 @@ class File:
         try:
 
             # Prepare references to HDF5 data
-            meds = self.file['ehr/medications'][:]
+            meds = self.f['ehr/medications'][:]
             events['meds'] = meds.apply(catcols, 1, idcol='time').tolist()
 
         except Exception:
@@ -353,7 +320,7 @@ class File:
         try:
 
             # Prepare references to HDF5 data
-            ce = self.file['low_rate'][:]
+            ce = self.f['low_rate'][:]
             events['ce'] = ce.apply(catcols, 1, idcol='date').tolist()
 
         except Exception:
@@ -438,7 +405,7 @@ class File:
     def getMetadata(self):
         """Returns a dict of file metadata."""
         try:
-            return self.file.file_meta
+            return self.f.file_meta
         except:
             return {}
 
@@ -507,7 +474,7 @@ class File:
         logging.info('Loading series from file.')
 
         # Iterate through all datasets in the partial file
-        for (ds, _) in self.file.recurse():
+        for (ds, _) in self.f.recurse():
             self.loadSeriesFromDataset(ds)
 
         logging.info('Completed loading series from file.')
@@ -564,13 +531,13 @@ class File:
             print(f"Downsampling file {self.name}...")
 
             # Create the file for storing processed data.
-            self.processed_file = audata.File.new(str(self.procFilePathObj), overwrite=False, time_reference=self.file.time_reference, return_datetimes=False)
+            self._processed_file = audata.File.new(str(self.procFilePathObj), overwrite=False, time_reference=self.f.time_reference, return_datetimes=False)
 
             # Process & store numeric series
             for s in self.series:
                 s.processAndStore()
 
-            self.processed_file.flush()
+            self._processed_file.flush()
 
             # Reload series data in memory since we have new downsamples
             self.load()
@@ -588,7 +555,7 @@ class File:
 
             # Close the file
             try:
-                self.processed_file.close()
+                self._processed_file.close()
             except Exception as e:
                 logging.error(f"Unable to close the processed file.\n{e}\n{traceback.format_exc()}")
 
@@ -606,7 +573,7 @@ class File:
 
             # Close the file
             try:
-                self.processed_file.close()
+                self._processed_file.close()
             except Exception as e:
                 logging.error(f"Unable to close the processed file.\n{e}\n{traceback.format_exc()}")
 

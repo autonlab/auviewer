@@ -193,8 +193,7 @@ def createApp():
             proj = getProject(p['id'])
             for f in proj.files:
                 try:
-                    if f.file is not None:
-                        f.close()
+                    f.close()
 
                 except Exception as e:
                     return app.response_class(
@@ -229,8 +228,7 @@ def createApp():
         ### To be implemented here...
         for f in project.files:
             try:
-                if f.f or f.pf:
-                    f.close()
+                f.close()
             except Exception as e:
                 print(e)
                 return app.response_class(
@@ -275,9 +273,14 @@ def createApp():
             )
 
         ### To be implemented here...
-        if file.f or file.pf:
-            print("Closing file")
+        try:
             file.close()
+        except Exception as e:
+            return app.response_class(
+                response=simplejson.dumps({'success':False}),
+                status=200,
+                mimetype='application/json'
+            )
 
         ### This is the success response -- if there is an error you want to catch, just
         ### the same response below but with success=False!
