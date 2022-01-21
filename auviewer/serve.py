@@ -523,7 +523,7 @@ def createApp():
             nones = [None] * featurization.shape[0]
             data = [list(i) for i in zip(featurization['time'], nones, nones, featurization['value'])]
             response = {
-                'id': f"{window_size}_sample_entropy_{series}",
+                'id': f"{window_size}_{featurizer}_{series}",
                 'success': True,
                 'labels': ['Date/Offset', 'Min', 'Max', 'Sample Entropy for '+series],
                 'data': data,

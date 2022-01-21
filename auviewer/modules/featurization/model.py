@@ -45,10 +45,13 @@ class SimpleFeaturizer(ABC):
         return [field.getField() for field in self.parameters]
 
     @abstractmethod
-    def featurize(self, data, params={}):
+    def featurize(self, data, params={}, series=[]):
         """
         This will be the function which, given a Pandas DataFrame and parameters dict, featurizes and returns the
         feature's scalar value output.
+        :param data: the dataframe of data
+        :param params: a dict of key=>value pairs of the parameters
+        :param series: list of references to entire series/dataframes (irrespective of rolling window operation), with the target series in the first position
         :return: Scalar value output of featurization
         """
         raise NotImplementedError("Error! Required featurizer method 'featurize' not implemented.")
