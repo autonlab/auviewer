@@ -21,7 +21,7 @@ You may build from source using the bash script `tools/rebuild`_.
 Portions of AUViewer are written in Cython_, which compiles into C code. The .c
 files are included in source so that running the Cython compilation is not
 necessary to build from source. However, if you wish to re-compile the Cython
-code, ensure that Cython is installed, and set :code:`RECOMPILE_CYTHON = False`
+code, ensure that Cython is installed, and set :code:`RECOMPILE_CYTHON = True`
 in `setup.py`_.
 
 .. _Cython: https://cython.org/
