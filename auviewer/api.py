@@ -36,7 +36,7 @@ def downsampleFile(filepath: str, destinationpath: str) -> bool:
     if not (dp.exists() and dp.is_dir()):
         raise Exception(f"Destination '{destinationpath}' does not exist or is not a directory.")
 
-    ds_file = File(None, -1, fp, dp / getProcFNFromOrigFN(fp), processNewFiles=True, processOnly=True)
+    ds_file = File(None, -1, fp, dp / getProcFNFromOrigFN(fp))
     ds_file.process()
     del ds_file
 

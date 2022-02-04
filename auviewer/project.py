@@ -1147,7 +1147,7 @@ class Project:
                 # TODO(gus): Do something else with this? Like set error state in the database entry and display in GUI?
 
             # Instantiate the file class, and attach to this project instance
-            self.files.append(File(self, fileDBModel.id, origFilePathObj, procFilePathObj, processNewFiles))
+            self.files.append(File(self, fileDBModel.id, origFilePathObj, procFilePathObj))
 
         # If processNewFiles is true, then go through and process new files
         if processNewFiles:
@@ -1171,7 +1171,7 @@ class Project:
                     # Instantiate the file class with an id of -1, and attach to
                     # this project instance.
                     try:
-                        newFileClassInstance = File(self, -1, newOrigFilePathObj, newProcFilePathObj, processNewFiles)
+                        newFileClassInstance = File(self, -1, newOrigFilePathObj, newProcFilePathObj)
                     except Exception as e:
                         logging.error(f"New file {newOrigFilePathObj} could not be processed.\n{e}\n{traceback.format_exc()}")
                         continue
