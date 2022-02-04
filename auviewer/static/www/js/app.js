@@ -87,6 +87,7 @@ $('#annotationsListModal').on('show.bs.modal', function (e) {
 
 });
 
+
 function populateAllAnnotationsModal() {
 
 	const modal = document.getElementById('allAnnotationsListModal')
@@ -165,3 +166,13 @@ var result = hash.split('&').reduce(function (result, item) {
 if (result.hasOwnProperty('file_id')) {
 	globalStateManager.loadFile(result['file_id'])
 }
+
+function collapse(){
+	var x = document.getElementById("controls");
+	if (x.style.display === "none") {
+		x.style.display = "block";
+	} else {
+		x.style.display = "none";
+	}
+}
+
