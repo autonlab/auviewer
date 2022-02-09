@@ -19,6 +19,9 @@ import multiprocessing as mp
 # Will hold loaded projects
 loadedProjects = []
 
+# Initiate the donwsampling pool
+downsamplePool = None
+
 def downsampleFile(filepath: str, destinationpath: str) -> bool:
     """
     Downsamples an original file, placing the processed file in the destination folder.
@@ -40,8 +43,11 @@ def downsampleFile(filepath: str, destinationpath: str) -> bool:
     ds_file.process()
     del ds_file
 
-# Background pool for downsampling files
-downsamplePool = mp.Pool(processes=2)
+# Sets a global downsample
+def instantiatePool(pool):
+    global downsamplePool
+    if downsamplePool is None: 
+        downsamplePool = pool
 
 
 def getProject(id) -> Optional[Project]:
@@ -139,6 +145,10 @@ def loadProjects() -> Dict[int, Project]:
     """
 
     global loadedProjects
+
+    # Instantiate a global downsample pool
+    pool = mp.Pool(processes=mp.cpu_count()//2)
+    instantiatePool(pool)
 
     logging.info("Loading projects.")
 
