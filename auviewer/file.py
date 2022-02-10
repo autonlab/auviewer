@@ -45,7 +45,6 @@ class File:
         #self.processNewFiles = processNewFiles
         self.processedFileExists = self.procFilePathObj.exists()
 
-
     @property
     def f(self):       
         if self._file is None:

@@ -29,10 +29,6 @@ class DownsampleSet:
     # processed data file.
     def getNumDownsamplesFromFile(self):
 
-        # If no processed file is available, return 0
-        #if not self.seriesparent.fileparent.procFilePathObj.exists(): 
-        #    return 0
-
         # Get reference to the group containing the downsamples
         try:
             grp = self.seriesparent.fileparent.pf['/'.join(self.seriesparent.h5pathDownsample)]

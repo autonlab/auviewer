@@ -109,6 +109,36 @@
 		</div>
 	</div>
 
+    <h6>Playback Control</h6>
+    <div id="playbackControl">
+        <div>
+            <button onclick="globalStateManager.currentFile.play(document.getElementById('playbackSpeedSlider').value);" title="Play">Play</button>
+            <button onclick="globalStateManager.currentFile.stop();" title="Stop">Stop</button>
+        </div>
+        <div>
+            <button onclick="globalStateManager.currentFile.play(.5);" title="Stop">0.5x</button>
+            <button onclick="globalStateManager.currentFile.play(1);" title="Stop">1x</button>
+            <button onclick="globalStateManager.currentFile.play(2);" title="Stop">2x</button>
+            <button onclick="globalStateManager.currentFile.play(4);" title="Stop">4x</button>
+        </div>
+        <div>
+            <input type="range" list="tickmarks" id="playbackSpeedSlider" value="1" min="0" max="64" step=".25" oninput="globalStateManager.currentFile.play(this.value);" onchange="globalStateManager.currentFile.TEMPFORPLAY_currently_loaded_ds_left = 0; globalStateManager.currentFile.TEMPFORPLAY_currently_loaded_ds_right = 0;">
+            <datalist id="tickmarks">
+            <option value="0.25"></option>
+            <option value="0.5" label="0.5x"></option>
+            <option value="0.75"></option>
+            <option value="1" label="1x"></option>
+            <option value="2" label="2x"></option>
+            <option value="4" label="4x"></option>
+            <option value="8"></option>
+            <option value="16"></option>
+            <option value="32"></option>
+            <option value="64" label="64x"></option>
+            </datalist>
+            <div style="display: inline-block; border-bottom: 1px; margin-left: 6px; margin-top: 4px; width: 24px;" id="currentSpeedOutput">1x</div>
+        </div>
+    </div>
+
 	<h6>Annotations</h6>
 
 	<table id="annotation_sets_cp_table" class="table table-sm table-hover control-panel-table">

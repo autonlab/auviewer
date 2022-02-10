@@ -310,7 +310,7 @@ function handlePlotting(e) {
 	// Plot each series, whether it be an individual series or a group of them.
 	//console.log(e.allSeriesPoints);
 	for (let i = 0; i + 2 < e.allSeriesPoints.length; i += 3) {
-		
+
 		// SERIES LINE - Plot line for the raw data column for the series, which
 		// will be the third column of this series' set of three columns.
 		if (this.template['drawLine'] && e.allSeriesPoints[i+2].length > 2) {
@@ -439,7 +439,7 @@ function handleUnderlayRedraw(canvas, area, g) {
 			if (category == null) {
 				console.log("Error! Uncategorized/unexpected annotation type during graph in handleUnderlayRedraw():", file.annotationsAndPatternsToRender[i])
 			}
-			
+
 			// This if statement controls which annotations/patterns are
 			// included in each pass-through of the layering.
 			if (currentPassLayer === getAnnotationCategoryLayerNumber(category)) {
@@ -486,6 +486,7 @@ function handleUnderlayRedraw(canvas, area, g) {
 					default:
 						console.log("Error! Unexpected annotation category during graph in handleUnderlayRedraw():", file.annotationsAndPatternsToRender[i])
 				}
+				console.log('cat:', category)
 
 				// Draw the section highlight.
 				canvas.fillRect(x, y, width, height);
@@ -502,7 +503,33 @@ function handleUnderlayRedraw(canvas, area, g) {
 						canvas.textAlign = "center";
 						canvas.fillText(file.annotationsAndPatternsToRender[i].label.confidence, x + (width / 2), y + 3 + height / 2/*area.y + (area.h * .1)*/);
 					}
-				} catch {}
+					else if (typeof file.annotationsAndPatternsToRender[i].label === 'string' || file.annotationsAndPatternsToRender[i].label instanceof String) {
+						// TODO(gus): TEMP FOR PLAYBACK / TRACIR DEMO
+						// canvas.font = "12px Arial";
+						// canvas.fillStyle = '#ffffff';
+						// canvas.textAlign = 'center';
+						// canvas.fillText(file.annotationsAndPatternsToRender[i].label, x + (width / 2), y + 3 + height / 2/*area.y + (area.h * .1)*/);
+
+						let maxWidth = 180
+						let lineHeight = 16;
+						// var x = (canvas.width - maxWidth) / 2;
+						// var y = 60;
+						// var text = 'All the world \'s a stage, and all the men and women merely players. They have their exits and their entrances; And one man in his time plays many parts.';
+
+						canvas.font = '14px Arial';
+						canvas.fillStyle = '#333';
+
+						let yeffective = y + 18;
+
+						if (file.annotationsAndPatternsToRender[i].label.startsWith('Stage')) {
+							yeffective = y + height - 4;
+						}
+
+						wrapText(canvas, file.annotationsAndPatternsToRender[i].label, x + (width / 2) + 6, yeffective, maxWidth, lineHeight);
+					}
+				} catch (e) {
+					console.log("Exception:", e)
+				}
 
 			}
 
@@ -510,4 +537,24 @@ function handleUnderlayRedraw(canvas, area, g) {
 
 	}
 
+}
+
+function wrapText(context, text, x, y, maxWidth, lineHeight) {
+	let words = text.split(' ');
+	let line = '';
+
+	for(let n = 0; n < words.length; n++) {
+		let testLine = line + words[n] + ' ';
+		let metrics = context.measureText(testLine);
+		let testWidth = metrics.width;
+		if (testWidth > maxWidth && n > 0) {
+			context.fillText(line, x, y);
+			line = words[n] + ' ';
+			y += lineHeight;
+		}
+		else {
+			line = testLine;
+		}
+	}
+	context.fillText(line, x, y);
 }
