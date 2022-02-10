@@ -6,13 +6,16 @@ a tool for viewing, analyzing, and annotating large time-series datasets
 by an individual analyst (standalone) or a team of analysts/domain experts
 (as a browser-based application which remains performant on limited bandwidth).
 
-Documentation
--------------
+Documentation & Support
+-----------------------
 
 Documentation is available at
-`auviewer.readthedocs.io`_
+readthedocs_.
 
-.. _auviewer.readthedocs.io: https://auviewer.readthedocs.io/
+Discussion & peer-support is available on the auviewer-users_ group.
+
+.. _readthedocs: https://auviewer.readthedocs.io/
+.. _auviewer-users: https://groups.google.com/g/auviewer-users
 
 Installation
 ------------

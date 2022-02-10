@@ -414,6 +414,8 @@ class File:
         Returns the series instance corresponding to the provided series ID, or None if the series cannot be found.
         The seriesid format is [full_series_path]:[value_column], e.g. /data/numerics/HR:value.
         """
+        logging.info(f"Doing a File.getSeries() on {seriesid}")
+
         for s in self.series:
             if s.id == seriesid:
                 return s

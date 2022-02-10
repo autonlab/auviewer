@@ -394,7 +394,7 @@ def createApp():
         # Get the project
         project = getProject(project_id)
         if project is None:
-            logging.error(f"Project ID {project_id} not found.")
+            logging.error(f"Project ID '{project_id}' not found.")
             abort(404, description="Project not found.")
             return
 
@@ -430,7 +430,6 @@ def createApp():
     @login_required
     def featurize():
 
-
         # Parse parameters
         featurizer = request.args.get('featurizer')
         project_id = request.args.get('project_id', type=int)
@@ -440,35 +439,18 @@ def createApp():
         right = request.args.get('right', type=float)
         params = json.loads(request.args.get('params'));
 
-        print("FEATURIZER", featurizer)
-        print('featurize', project_id, file_id, series, params)
+        print("\n".join([
+            f"\nFeaturizer {featurizer} requested, with parameters:",
+            f"Project ID: {project_id}",
+            f"File ID: {file_id}",
+            f"Series: {series}",
+            f"Left: {left}",
+            f"Right: {right}",
+            f"Params: {params}\n",
+        ]))
 
         if featurizer in featurizers:
-            se = featurizers[featurizer].getFeaturizeFunction(params)
-        # elif featurizer == 'sample_entropy':
-        #     tolerance = params['tolerance']
-        #     if len(tolerance) < 1:
-        #         tolerance = None
-        #     dim = params['dim']
-        #     try:
-        #         dim = int(dim)
-        #     except:
-        #         dim = 2
-        #     def se(x):
-        #         try:
-        #             return pyhrv.nonlinear.sample_entropy(nni=x, tolerance=tolerance, dim=dim)[0] if x.shape[0] > 0 else np.nan
-        #         except Exception as e:
-        #             print(f"exception: {e}")
-        #             return np.nan
-        # elif featurizer == 'regression':
-        #     def se(x):
-        #         try:
-        #             slrm = LinearRegression()
-        #             slrm.fit(data[['time']], data['value'])
-        #             return slrm.coef_[0] # slope
-        #         except Exception as e:
-        #             print(f"exception: {e}")
-        #             return np.nan
+            featurizerFunction = featurizers[featurizer].getFeaturizeFunction(params)
         else:
             raise Exception(f"Unknown featurizer requested: {featurizer}")
 
@@ -515,7 +497,7 @@ def createApp():
 
             # TODO: Might make label side configurable
 
-            featurization = df.resample(window_size, label='right').agg(se).replace(np.inf, np.nan).replace(-np.inf, np.nan).dropna().reset_index()
+            featurization = df.resample(window_size, label='right').agg(featurizerFunction).replace(np.inf, np.nan).replace(-np.inf, np.nan).dropna().reset_index()
             print(featurization)
 
             # Option 1 (sometimes this works) – make sure to correlate with option above
@@ -527,7 +509,7 @@ def createApp():
             nones = [None] * featurization.shape[0]
             data = [list(i) for i in zip(featurization['time'], nones, nones, featurization['value'])]
             response = {
-                'id': f"{window_size}_sample_entropy_{series}",
+                'id': f"{window_size}_{featurizer}_{series}",
                 'success': True,
                 'labels': ['Date/Offset', 'Min', 'Max', 'Sample Entropy for '+series],
                 'data': data,

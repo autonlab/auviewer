@@ -288,7 +288,7 @@ def validateProjectFolder(projDirPathObj):
     tp = projDirPathObj / "templates"
     if tp.exists():
         for p in [p for p in tp.iterdir()]:
-            if p.name not in ['project_template.json', 'interface_templates.json']:
+            if p.name not in ['project_template.json', 'interface_templates.json'] and not p.name.startswith('.'):
                 raise Exception(f'Project templates folder contains invalid file: {p}')
 
     # TODO(gus): Validate that originals have processed?
