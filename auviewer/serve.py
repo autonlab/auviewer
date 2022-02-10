@@ -23,7 +23,7 @@ from .api import downsampleFile, getProject, getProjectsPayload, loadProjects
 from .patternset import getAssignmentsPayload
 from .config import set_data_path, config, FlaskConfigClass
 
-from .flask_user import confirm_email_required, current_user, login_required, UserManager, SQLAlchemyAdapter
+from .flask_user import current_user, login_required, UserManager, SQLAlchemyAdapter
 from .flask_user.signals import user_sent_invitation, user_registered
 
 
@@ -39,36 +39,34 @@ import pandas as pd
 import numpy as np
 import pytz
 
-from .modules.featurization.example import ExampleFeaturizer
-from .modules.featurization.mean import MeanFeaturizer
-from .modules.featurization.std import StandardDeviationFeaturizer
-from functools import partial
 
-
-
-from .modules.featurization.abunch import CoeffOfVariationFeaturizer, MADFeaturizer, NFeaturizer, MinFeaturizer, MaxFeaturizer, MedianFeaturizer, RangeFeaturizer, RangeRatioFeaturizer, DataDenFeaturizer, MaxGapFeaturizer, LRSlopeFeaturizer, RobustSlopeFeaturizer
-
-
-
-featurizers = [
-    ExampleFeaturizer(),
-    MeanFeaturizer(),
-    StandardDeviationFeaturizer(),
-    CoeffOfVariationFeaturizer(),
-    MADFeaturizer(),
-    NFeaturizer(),
-    MinFeaturizer(),
-    MaxFeaturizer(),
-    MedianFeaturizer(),
-    RangeFeaturizer(),
-    RangeRatioFeaturizer(),
-    DataDenFeaturizer(),
-    MaxGapFeaturizer(),
-    LRSlopeFeaturizer(),
-    RobustSlopeFeaturizer(),
-]
-featurizers = {f.id: f for f in featurizers}
-
+###
+### Featurizer functionality - disabled for release
+###
+# from .modules.featurization.example import ExampleFeaturizer
+# from .modules.featurization.mean import MeanFeaturizer
+# from .modules.featurization.std import StandardDeviationFeaturizer
+# from functools import partial
+#
+# # Dict of featurizers indexed by ID
+# featurizers = { f.id: f for f in [
+#     ExampleFeaturizer(),
+#     MeanFeaturizer(),
+#     StandardDeviationFeaturizer(),
+#     CoeffOfVariationFeaturizer(),
+#     MADFeaturizer(),
+#     NFeaturizer(),
+#     MinFeaturizer(),
+#     MaxFeaturizer(),
+#     MedianFeaturizer(),
+#     RangeFeaturizer(),
+#     RangeRatioFeaturizer(),
+#     DataDenFeaturizer(),
+#     MaxGapFeaturizer(),
+#     LRSlopeFeaturizer(),
+#     RobustSlopeFeaturizer(),
+# ]}
+featurizers = {}
 
 
 def createApp():
@@ -651,6 +649,7 @@ def createApp():
             status=200,
             mimetype='application/json'
         )
+
     @app.route(config['rootWebPath']+'/initial_supervisor_payload')
     @login_required
     def initial_supervisor_payload():
@@ -689,7 +688,6 @@ def createApp():
             status=200,
             mimetype='application/json'
         )
-
 
     @app.route(config['rootWebPath']+'/get_labels')
     @login_required
@@ -822,7 +820,6 @@ def createApp():
             status=200,
             mimetype='application/json'
         )
-
 
     @app.route(config['rootWebPath']+'/get_votes', methods=["GET", "POST"])
     @login_required
