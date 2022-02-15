@@ -1,6 +1,5 @@
 <template>
-<b-table small striped hover v-bind:items="labelerInformation" :fields="fieldFormatting"></b-table>
-
+  <b-table small striped hover v-bind:items="labelerInformation" :fields="fieldFormatting"></b-table>
 </template>
 
 <script lang="ts">
@@ -41,7 +40,7 @@ h3 {
   margin: 40px 0 0;
 }
 ul {
-  list-style-type: none;
+  list-style-type: nonefrom '@/ty
   padding: 0;
 }
 li {

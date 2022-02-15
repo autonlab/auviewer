@@ -361,6 +361,39 @@ class File:
 
         return events
 
+    def _loadonstart(self):
+        while True:
+            # Open the original file
+            self.file = audata.File.open(str(self.origFilePathObj), return_datetimes=False)
+
+            # Load the processed file if it exists
+            if self.procFilePathObj.exists():
+                logging.info(f"Opening processed file {self.procFilePathObj}.")
+                self.processed_file = audata.File.open(str(self.procFilePathObj), return_datetimes=False)
+                self.pf_open = True
+
+                # If we've been asked only to generate the processed file and it already exists, return now.
+                if self.processOnly:
+                    break
+
+            # Load series data into memory
+            self.load()
+            self.f_open = True
+
+            # If the processed file does not exist and we're supposed to process
+            # new file data, process it.
+            if not self.procFilePathObj.exists() and self.processNewFiles:
+                logging.info(f"Generating processed file for {self.origFilePathObj}")
+                self.process()
+                self.pf_open = True
+
+            # If the processed file still does not exist, raise an exception
+            if not self.procFilePathObj.exists():
+                raise Exception(f"File {self.origFilePathObj} has not been processed and therefore cannot be loaded.")
+            
+            break
+    
+
     def getInitialPayload(self, user_id):
         """Produces JSON output for all series in the file at the maximum time range."""
 
