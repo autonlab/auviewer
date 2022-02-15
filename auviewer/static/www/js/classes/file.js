@@ -1195,7 +1195,7 @@ File.prototype.renderMetadata = function() {
 	div.id = 'metadata';
 	div.innerHTML = '<h6>Metadata</h6>';
 	for (let property of Object.keys(this.metadata)) {
-		div.innerHTML += ' '+property+': '+this.metadata[property]+'    ';
+		div.innerHTML += ' '+property+': '+this.metadata[property]+'<br />';
 	}
 	document.getElementById('controls').appendChild(div);
 };
