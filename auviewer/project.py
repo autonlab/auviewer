@@ -9,8 +9,8 @@ import math
 import pandas as pd
 import traceback
 import random
-from snorkel.labeling import LFAnalysis
-from snorkel.labeling.model import LabelModel
+# from snorkel.labeling import LFAnalysis
+# from snorkel.labeling.model import LabelModel
 from collections import Counter
 
 from pathlib import Path
