@@ -3,10 +3,12 @@ import importlib
 import numpy as np
 
 import datetime as dt
+from tqdm import tqdm
 from io import StringIO, BytesIO
 import logging
 import math
 import pandas as pd
+import pickle
 import traceback
 import random
 # from snorkel.labeling import LFAnalysis
@@ -193,6 +195,10 @@ class Project:
 
     def queryWeakSupervision(self, queryObj, fileIds=None):
         newsm = None
+        #for sm in models.SupervisorModule.query.filter_by(project_id=self.id).all():
+        #    models.db.session.delete(sm)
+        #models.db.session.commit()
+
         if (self.name.lower().startswith('afib') and len(models.SupervisorModule.query.filter_by(project_id=self.id).all()) == 0):
             newsm = models.SupervisorModule(
                 project_id=self.id,
@@ -207,12 +213,18 @@ class Project:
                 series_of_interest="/data",
                 series_to_render="/data"
             )
-        print(models.SupervisorModule.query.filter_by(project_id=self.id).first().title)
         if (newsm):
             models.db.session.add(newsm)
             models.db.session.commit()
             print('made '+newsm.title + ' for proj '+self.name)
 
+        existentSegments = models.Segment.query.filter_by(project_id = self.id).all()
+        seenFileIds = set()
+        for seg in existentSegments:
+            seenFileIds.add(seg.file_id)
+
+        # files = [self.getFile(fId) for fId in seenFileIds]
+        # return self.makeFilesPayload(files)
         #of form:
             # 'randomFiles': True,
             # 'categorical': None,
@@ -260,7 +272,7 @@ class Project:
     def previewThresholds(self, fileIds, thresholds, labeler, timesegment):
         voteOutput = list()
         endIndicesOutput = list()
-        for fileId in fileIds:
+        for fileId in tqdm(fileIds, total=len(fileIds)):
             votes, endIndices = self.computeVotesForFile(fileId, labeler, thresholds)
             voteOutput.append(votes)
             endIndicesOutput.append(endIndices)
@@ -327,14 +339,38 @@ class Project:
             votes = self.computeVotes([f.id for f in self.files])
         segIds = sorted(votes.keys())
         L_train = []
+        L_map = {
+            'FIN_Study_ID': list(),
+            'start': list(),
+            'stop': list()
+        }
+        first = False
         for segId in segIds:
             if (len(votes[segId]) > 0):
+                if first == False:
+                    first=segId
                 L_train.append([labels[v] for v in votes[segId]])
+                segment = models.Segment.query.get(segId)
+                fin = int(self.getFile(segment.file_id).name.split(".")[0].split("_")[-1])
+                L_map['FIN_Study_ID'].append(fin)
+                L_map['start'].append(dt.datetime.fromtimestamp(segment.left/1000))
+                L_map['stop'].append(dt.datetime.fromtimestamp(segment.right/1000))
+
+                    # 'left': segment.left,
+                    # 'right': segment.right
         lfNumCorrect, lfNumNonAbstains = [0 for v in lfNames], [0 for v in lfNames]
         lfNumAbstains = [0 for v in lfNames]
         L_train = np.array(L_train)
-        lm = LabelModel(cardinality=len(labels.keys()), verbose=False)
-        lm.fit(L_train=L_train, n_epochs=500, log_freq=100, seed=42)
+        with open('./L_train.pkl', 'wb+') as writefile:
+            pickle.dump(L_train, writefile)
+        l_map = pd.DataFrame(L_map)
+        l_map.to_csv('./L_map.csv')
+        # with open('./L_map.pkl', 'wb+') as writefile:
+        #     pickle.dump(L_map, writefile)
+        lm = LabelModel(cardinality=len(labels.keys())-1, verbose=False)
+        lm.fit(L_train=L_train, class_balance=lfMod.getClassBalance(), n_epochs=500, log_freq=100, seed=42)
+        x = lm.get_weights()
+        print(x)
         lm_predictions = lm.predict_proba(L=L_train)
         predsByFilename = dict()
         numbersToLabels = lfMod.number_to_label_map()
@@ -342,11 +378,10 @@ class Project:
         for i, segId in enumerate(segIds):
             if (len(votes[segId]) > 0):
                 prediction = lm_predictions[j]
+
                 p = np.argmax(prediction)
                 #for experimental accuracy predictions
                 for k, v in enumerate(votes[segId]):
-                    if j == 0:
-                        print(v, labels[v])
                     v = labels[v]
                     if v >= 0:
                         lfNumNonAbstains[k] += 1
@@ -357,7 +392,7 @@ class Project:
                 segment = models.Segment.query.get(segId)
                 filename = self.getFile(segment.file_id).name
                 listToAppendTo = predsByFilename.get(filename, [])
-                p = numbersToLabels[p-1]
+                p = numbersToLabels[p]
                 fin = int(self.getFile(segment.file_id).name.split(".")[0].split("_")[-1])
                 # if (fin in searchFINs):
                 #     dfdict['LabelModelVote'][segIdxToDFIdx[segId]] = p
@@ -370,40 +405,54 @@ class Project:
                 predsByFilename[filename] = listToAppendTo
                 j += 1
 
-        # print('starting')
-        # j = 0
-        # lm_ml_labelsD = {
-        #     'FIN_Study_ID': list(),
-        #     'confidence': list(),
-        #     'label': list(),
-        #     'start': list(),
-        #     'stop': list()
-        # }
+        print('starting')
+        j = 0
+        lm_ml_labelsD = {
+            'FIN_Study_ID': list(),
+            'confidence': list(),
+            'label': list(),
+            'start': list(),
+            'stop': list(),
 
-        # for segId in segIds:
-        #     if (len(votes[segId]) > 0):
-        #         prediction = lm_predictions[j]
-        #         p = np.argmax(prediction)
-        #         lm_label = numbersToLabels[p]
-        #         segment = models.Segment.query.get(segId)
-        #         fin = int(self.getFile(segment.file_id).name.split(".")[0].split("_")[-1])
+        }
 
-        #         lm_ml_labelsD['FIN_Study_ID'].append(fin)
-        #         lm_ml_labelsD['label'].append(lm_label)
-        #         lm_ml_labelsD['confidence'].append(prediction[p])
-        #         lm_ml_labelsD['start'].append(dt.datetime.fromtimestamp(segment.left/1000))
-        #         lm_ml_labelsD['stop'].append(dt.datetime.fromtimestamp(segment.right/1000))
+        for lfName in lfNames:
+            lm_ml_labelsD[lfName] = list()
 
-        #         j+=1
-        # lm_ml_labels = pd.DataFrame(lm_ml_labelsD)
-        # lm_ml_labels.to_csv('~/Documents/auton/localWorkspace/afib_detection/assets/gold/labelmodel_mladi_labels.csv')
-        # print(lm_ml_labels.head())
+        j = 0
+        for segId in segIds:
+            if (len(votes[segId]) > 0):
+                prediction = lm_predictions[j]
+                p = np.argmax(prediction)
+                lm_label = numbersToLabels[p]
+                segment = models.Segment.query.get(segId)
+                fin = int(self.getFile(segment.file_id).name.split(".")[0].split("_")[-1])
+
+                lm_ml_labelsD['FIN_Study_ID'].append(fin)
+                lm_ml_labelsD['label'].append(lm_label)
+                lm_ml_labelsD['confidence'].append(prediction[p])
+                lm_ml_labelsD['start'].append(dt.datetime.fromtimestamp(segment.left/1000))
+                lm_ml_labelsD['stop'].append(dt.datetime.fromtimestamp(segment.right/1000))
+                v = [v.category.label for v in segment.votes]
+                # print()
+                # print(L_train[j])
+                for i, lfName in enumerate(lfNames):
+                    # lm_ml_labelsD[lfName] = numbersToLabels[L_train[j][i]]
+                    lm_ml_labelsD[lfName].append(v[i])
+
+                j+=1
+
+        lm_ml_labels = pd.DataFrame(lm_ml_labelsD)
+        lm_ml_labels.to_csv('~/Documents/auton/localWorkspace/afib_detection/assets/gold/labelmodel_mladi_labels.csv')
+        print(lm_ml_labels.head())
 
         # predictions = list()
         # for prediction in lm_predictions:
         #     predictions.append(numbersToLabels[np.argmax(prediction)])
         analysis = LFAnalysis(L=L_train).lf_summary()
-        analysis['experimental_accuracy'] = [lfNumCorrect[i]/lfNumNonAbstains[i] for i in range(len(lfNames))]
+        print(analysis)
+        analysis.to_csv('./lfsummary.csv')
+        # analysis['experimental_accuracy'] = [lfNumCorrect[i]/lfNumNonAbstains[i] for i in range(len(lfNames))]
         return {
             # 'predictions': predictions,
             # 'probabilities': lm_predictions.tolist(),
@@ -428,7 +477,6 @@ class Project:
             'segmentStart': list(),
             'segmentEnd': list(),
             'LabelModelVote': list()
-
         }
         lfModule = self.getLFModule()
         lfnames = lfModule.get_LF_names()
@@ -468,6 +516,8 @@ class Project:
                     if (len(series) == 0):
                         continue
                     curSeries = np.array([x[-1] for x in series])
+                    # timestamps = np.array([x[0] for x in series])
+                    # timestamps = np.array([dt.datetime.fromtimestamp(e[0]).timestamp()*1000.0 for e in series])
 
                     filledNaNs = None
                     if np.sum(np.isnan(curSeries)) > 0:
@@ -502,14 +552,14 @@ class Project:
         # df = pd.DataFrame.from_dict(dfDict)
         # df.to_csv('segmentsOfInterest.csv')
         return result, preds
-
+    from tqdm import tqdm
     def computeVotes(self, fileIds, windowInfo=None):
         lfModule = self.getLFModule()
         thresholds = self.getThresholdsPayload()
 
         labels = lfModule.getLabels()
         resultingVotes = dict()
-        self.deleteVotes()
+        # self.deleteVotes()
 
         lfs = list(map(lambda x: models.Labeler.query.filter_by(project_id=self.id, title=x).first(), lfModule.get_LF_names()))
         categoryNumbersToIds = dict()
@@ -522,7 +572,6 @@ class Project:
             f = self.getFile(fileId)
             if (self.getSeriesOfInterest(f) == None):
                 continue
-
 
             if (windowInfo):
                 segmentsForFile = models.Segment.query.\
@@ -550,7 +599,7 @@ class Project:
             #iterate through user defined segments
             if (len(segmentsForFile) == 0): continue
             # correspondingIndexBounds = self.getIndicesForSegments(segmentsForFile, series)
-            for i, segment in enumerate(segmentsForFile):
+            for i, segment in tqdm(enumerate(segmentsForFile), total=(len(segmentsForFile))):
                 # if (correspondingIndexBounds[i]):
                 #     startIdx, endIdx = correspondingIndexBounds[i]
                 # else:
@@ -565,7 +614,14 @@ class Project:
                     filledNaNs = curSeries.isna().to_numpy()
                     curSeries = curSeries.fillna(0)
                 EEG = curSeries.reshape((-1, 1))
-                curLFModule = lfModule(EEG, filledNaNs, thresholds, labels)
+        # timestamps = np.array([dt.datetime.fromtimestamp(e[0]) for e in series])
+                HR_SERIES = "/data/waveforms/II:value"
+                ecg_samp = self.getArbitrarySeries(f, HR_SERIES)
+                ecgSample = None
+                if (ecg_samp):
+                    ecgSample = ecg_samp.getRangedOutput(segment.left/1000.0, segment.right/1000.0).get('data')
+                    # ecgSample = [e[-1] for e in ecgSample]
+                curLFModule = lfModule(EEG, filledNaNs, thresholds=thresholds, labels=labels, ecgSample=np.array([e[-1] for e in ecgSample]), timesample=np.array([dt.datetime.fromtimestamp(x[0]) for x in ecgSample[:50]]))
                 vote_vec = curLFModule.get_vote_vector()
                 resultingVotes[segment.id] = vote_vec
                 for lf, vote in zip(lfs, vote_vec):
@@ -642,6 +698,14 @@ class Project:
         self._deleteCustomSegments()
         foundFINs = dict() #dictionary mapping fins to their file indexes
         segmentsMap = dict()
+        for ps in self.getPatternSets().values():
+            print(ps)
+            try:
+                ps.delete(deletePatterns=True)
+            except:
+                ps.delete()
+        ps = self.createPatternSet(name="AFIB segment set")
+        pdf = ps.getPatterns()
         '''
         segmentsMap expected to be of form:
             { fId1: { seriesId1: [{'left': left1, 'right': right1},
@@ -684,10 +748,19 @@ class Project:
                 'id': newSeg.id
             })
             count += 1
+            pdf = pdf.append({
+                'filename': file.name,
+                'series':   series.id,
+                'left':     left_ms / 1000.0,
+                'right':    right_ms / 1000.0,
+            }, ignore_index=True)
         models.db.session.commit()
+        ps.addPatterns(pdf)
+        print(ps.getPatterns())
         return segmentsMap, count
 
     def createSegments(self, segmentsMap, windowInfo, files=None):
+        print(segmentsMap)
         '''
             one of segmentsMap or windowInfo will be undefined
                 if segmentsMap, then use windowInfo to create rolling segments of
@@ -801,6 +874,12 @@ class Project:
         else:
             return file.series[0]
 
+    def getArbitrarySeries(self, file, seriesId):
+        for s in file.series:
+            if (s.id == seriesId):
+                return s
+        return None
+
     def getSeriesToRender(self, file):
         supervisorModule = models.SupervisorModule.query.filter_by(project_id=self.id).first()
         if (supervisorModule):
@@ -826,7 +905,7 @@ class Project:
         series = curSeries.reshape((-1, 1))
 
         # apply lfs to series
-        currentLfModule = lfModule(series, filledNaNs, thresholds, labels=labels)
+        currentLfModule = lfModule(series, filledNaNs, thresholds=thresholds, labels=labels)
         namesToCode = dict()
         import inspect
         for lfName in lfNames:
@@ -890,7 +969,7 @@ class Project:
         lfModule = getattr(labelingFunctionModule, module)
         return lfModule
 
-    def populateInitialSupervisorValuesToDict(self, fileIds, d, lfModule="diagnoseEEG", timeSegment=None):
+    def populateInitialSupervisorValuesToDict(self, fileIds, d, lfModule="diagnoseEEG", timeSegment=None, cleanAll=False):
         lfModule = self.getLFModule(lfModule)
 
         labels = lfModule.getLabels()
@@ -901,13 +980,19 @@ class Project:
 
         numLabelersInDb = len(models.Labeler.query.filter_by(project_id=self.id).all())
         shouldConstructLabelers = numLabelersInDb != len(lfModule.get_LF_names())
+        if (cleanAll):
+            self._deleteWindowSegments()
+            self._deleteCustomSegments()
 
         shouldConstructThresholds = len(models.Threshold.query.filter_by(project_id=self.id).all()) == 0
         shouldConstructCategories = len(models.Category.query.filter_by(project_id=self.id).all()) != len(labels)
+        if (cleanAll):
+            shouldConstructThresholds, shouldConstructCategories = True, True
         if (shouldConstructCategories):
             print(f'Constructing the following categories: {labels.keys()}')
-            #delete old labels and votes
-            self.deleteVotes()
+            # delete old labels and votes
+            if (cleanAll):
+                self.deleteVotes()
             for c in models.Category.query.filter_by(project_id=self.id).all():
                 models.db.session.delete(c)
             # add new ones
@@ -925,6 +1010,7 @@ class Project:
         lfNames = lfModule.get_LF_names()
         newLabelers = []
         if (shouldConstructLabelers):
+            # self.deleteVotes()
             for c in models.Labeler.query.filter_by(project_id=self.id).all():
                 models.db.session.delete(c)
             print('Constructing labelers')

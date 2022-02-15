@@ -3,7 +3,7 @@ export default class Fetcher {
         Fetcher._makeRequest(callback, 'initial_evaluator_payload', {
             project_id: project_id,
         });
-    };
+    }
 
     static requestPossibleLabelers(project_id: number, callback: (data: any) => void) {
         Fetcher._makeRequest(callback, 'get_labelers', {
@@ -17,17 +17,33 @@ export default class Fetcher {
         });
     }
 
+    static createAnnotation = function(project_id: number, file_id: number, left: number, right: number, series_id: string, label: string, pattern_id: number | undefined, callback: (data: any) => void) {
+        Fetcher._makeRequest(callback, 'create_annotation', {
+            project_id: project_id,
+            file_id: file_id,
+            xl: left,
+            xr: right,
+            /*yt: ,
+            yb: ,*/
+            sid: series_id,
+            label: label,
+            pattern_id: pattern_id
+        });
+    }
+
+
+
     private static _makeRequest (callback: (data: any) => void, url: string, pathParams: object) {
         console.log(pathParams);
-	// Instantiate a new HTTP request object
-	let req = new XMLHttpRequest();
-	req.onreadystatechange = Fetcher._callbackCaller(callback);
+        // Instantiate a new HTTP request object
+        const req = new XMLHttpRequest();
+        req.onreadystatechange = Fetcher._callbackCaller(callback);
 
-	const path: string = Fetcher._buildPathWithParams(url, pathParams);
-	console.log(path);
-	req.open("GET", path, true);
-	req.send();
-    };
+        const path: string = Fetcher._buildPathWithParams(url, pathParams);
+        console.log(path);
+        req.open("GET", path, true);
+        req.send();
+    }
 
     private static _callbackCaller (callback: (data: any) => void) : () => void {
         return function() {
@@ -45,9 +61,9 @@ export default class Fetcher {
 
                 // Call the callback with data
                 if (typeof callback === 'function') {
-                    let t0 = performance.now();
+                    const t0 = performance.now();
                     callback(data);
-                    let tt = performance.now() - t0;
+                    const tt = performance.now() - t0;
                 } else {
                     console.log("Important: Callback not provided to request handler.");
                 }
@@ -55,11 +71,11 @@ export default class Fetcher {
             }
         }
 
-    };
+    }
 
     private static _buildPathWithParams (path: string, params: any) : string {
         // Assemble the parameters on the path
-        let keys = Object.keys(params);
+        const keys = Object.keys(params);
         for (let i = 0; i < keys.length; i++) {
             if (i === 0) {
                 path += '?';
@@ -81,7 +97,7 @@ export default class Fetcher {
         }
 
         return path;
-    };
+    }
     
 
 }

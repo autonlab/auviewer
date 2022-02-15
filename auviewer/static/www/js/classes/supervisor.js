@@ -97,7 +97,7 @@ function Supervisor(payload) {
 					'</tr>' +
 				'</thead>' +
 				'<tbody >' +
-					'<tr>' + rowStrings + '</tr>'
+					'<tr>' + rowStrings + '</tr>' +
 				'</tbody>';
 
 		document.getElementById('shadingLegend').appendChild(shading_legend);

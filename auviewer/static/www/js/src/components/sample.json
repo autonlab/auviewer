@@ -1,0 +1,30 @@
+[
+    {
+        "id": "pvc_presence",
+        "label": "PVC Presence",
+        "type": "categorical",
+        "classes": ["None", "One PVC", "Multiple PVCs"],
+        "selection_type": "button"
+    },
+    {
+        "id": "pac_presence",
+        "label": "PAC Presence",
+        "type": "categorical",
+        "classes": ["None", "One PAC", "Multiple PACs"],
+        "selection_type": "button"
+    },
+    {
+        "id": "worth_review",
+        "label": "Worth revisiting",
+        "type": "text"
+    },
+    {
+        "id": "rhythm_label",
+        "label": "Rhythm",
+        "type": "categorical",
+        "classes": ["Atrial Fibrillation", "Sinus", "Other", "Noise"],
+        "selection_type": "button"
+    }
+]
+
+

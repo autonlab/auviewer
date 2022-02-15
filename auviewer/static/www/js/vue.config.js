@@ -4,11 +4,13 @@ module.exports = {
   lintOnSave: false,
   productionSourceMap: false,
   filenameHashing: false,
+
   css: {
     extract: {
       filename: '[name].css'
     }
   },
+
   configureWebpack: {
     optimization: {
       splitChunks: false
@@ -22,4 +24,15 @@ module.exports = {
       }
     }
   },
+
+  pluginOptions: {
+    quasar: {
+      importStrategy: 'kebab',
+      rtlSupport: false
+    }
+  },
+
+  transpileDependencies: [
+    'quasar'
+  ]
 }
