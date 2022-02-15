@@ -122,7 +122,7 @@
             <button onclick="globalStateManager.currentFile.play(4);" title="Stop">4x</button>
         </div>
         <div>
-            <input type="range" list="tickmarks" id="playbackSpeedSlider" value="1" min="0" max="64" step=".25" oninput="globalStateManager.currentFile.play(this.value);" onchange="globalStateManager.currentFile.TEMPFORPLAY_currently_loaded_ds_left = 0; globalStateManager.currentFile.TEMPFORPLAY_currently_loaded_ds_right = 0;">
+            <input type="range" list="tickmarks" id="playbackSpeedSlider" value="1" min="0" max="64" step=".25" oninput="globalStateManager.currentFile.play(this.value);" onchange="globalStateManager.currentFile.playback_currently_loaded_ds_left = 0; globalStateManager.currentFile.playback_currently_loaded_ds_right = 0;">
             <datalist id="tickmarks">
             <option value="0.25"></option>
             <option value="0.5" label="0.5x"></option>

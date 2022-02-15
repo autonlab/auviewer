@@ -1361,8 +1361,8 @@ File.prototype.updateCurrentViewData = function(left=false, right=false) {
 	}
 
 	// TEMP FOR PLAYBACK - assume our currently loaded downsample data is the current zoom window
-	this.TEMPFORPLAY_currently_loaded_ds_left = left
-	this.TEMPFORPLAY_currently_loaded_ds_right = right
+	this.playback_currently_loaded_ds_left = left
+	this.playback_currently_loaded_ds_right = right
 
 	// Convert to seconds from file offset which the backend expects
 	const leftForBE = left / 1000 - this.fileData.baseTime;
@@ -1492,10 +1492,9 @@ File.prototype.pan = function(by) {
 
 	// Load if needed
 	const presumedDataLoadTime = 7 * 1000; // assumed data load from backend takes this long, in milliseconds
-	const loadThisMuchAhead = presumedDataLoadTime*this.TEMPFORPLAY_speed*2 // load ahead this many milliseconds
-	console.log('Comparing', this.TEMPFORPLAY_currently_loaded_ds_right, 'with', right + presumedDataLoadTime * this.TEMPFORPLAY_speed)
-	if (this.TEMPFORPLAY_currently_loaded_ds_right < right + presumedDataLoadTime * this.TEMPFORPLAY_speed) {
-		console.log('LOADING')
+	const loadThisMuchAhead = presumedDataLoadTime*this.playback_speed*2 // load ahead this many milliseconds
+	if (this.playback_currently_loaded_ds_right < right + presumedDataLoadTime * this.playback_speed) {
+		console.log('Loading data.')
 		this.updateCurrentViewData(left, right + loadThisMuchAhead)
 	}
 
@@ -1503,17 +1502,17 @@ File.prototype.pan = function(by) {
 
 File.prototype.play = function(speed=1) {
 	try {
-		clearInterval(this.TEMPFORPLAY_intervalRef);
+		clearInterval(this.playback_intervalRef);
 	} catch (e) {}
 	console.log('Playing at speed', speed);
 	document.getElementById('playbackSpeedSlider').value = speed;
 	document.getElementById('currentSpeedOutput').innerText = speed+'x';
 	const interval = 100; // interval in milliseconds
-	this.TEMPFORPLAY_speed = speed;
+	this.playback_speed = speed;
 	const panBy = interval * speed; // pan by in milliseconds
-	this.TEMPFORPLAY_intervalRef = setInterval(this.pan.bind(this), interval, panBy);
+	this.playback_intervalRef = setInterval(this.pan.bind(this), interval, panBy);
 }
 
 File.prototype.stop = function() {
-	clearInterval(this.TEMPFORPLAY_intervalRef);
+	clearInterval(this.playback_intervalRef);
 }
