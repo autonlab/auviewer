@@ -14,7 +14,23 @@ class DownsampleSet:
         self.seriesparent = seriesparent
 
         # Holds the number of downsamples available for the series
-        self.numDownsamples = self.getNumDownsamplesFromFile()
+        self._numDownsamples = None
+
+    @property
+    def numDownsamples(self):
+        if self._numDownsamples is None:
+            try:
+                # Attempt to access the processed file
+                _ = self.seriesparent.fileparent.pf
+            except:
+                # If we received an exception (which we assume indicates the processed file does not exist),
+                # return 0 but do not set self._numDownsamples
+                return 0
+
+            # Otherwise, we're able to access the processed file, so go ahead and set self._numDownsamples
+            self._numDownsamples = self.getNumDownsamplesFromFile()
+
+        return self._numDownsamples
 
     # Returns the full series output at the highest downsample level, or None
     # if no downsample exists for the series.
@@ -29,15 +45,7 @@ class DownsampleSet:
     # processed data file.
     def getNumDownsamplesFromFile(self):
 
-        # If no processed file is available, return 0
-        #if not self.seriesparent.fileparent.procFilePathObj.exists(): 
-        #    return 0
-
-        # Get reference to the group containing the downsamples
-        try:
-            grp = self.seriesparent.fileparent.pf['/'.join(self.seriesparent.h5pathDownsample)]
-        except:
-            return 0
+        grp = self.seriesparent.fileparent.pf['/'.join(self.seriesparent.h5pathDownsample)]
 
         # If no downsamples are available, return 0
         if grp is None:
@@ -177,8 +185,8 @@ class DownsampleSet:
             end = time.time()
             logging.info(f"Done storing to file. Took {round(end - start, 5)}s.")
 
-        # Update the self.numDownsamples count.
-        self.numDownsamples = self.getNumDownsamplesFromFile()
+        # Clear self._numDownsamples so that it updates the next time it's accessed
+        self._numDownsamples = None
 
     # Returns the index of the appropriate downsample which should be used for
     # the given timespan, or -1 if raw data should be used instead.

@@ -41,6 +41,7 @@ def downsampleFile(filepath: str, destinationpath: str) -> bool:
 
     ds_file = File(None, -1, fp, dp / getProcFNFromOrigFN(fp))
     ds_file.process()
+    ds_file.close()
     del ds_file
 
 # Sets a global downsample

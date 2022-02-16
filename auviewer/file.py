@@ -41,10 +41,6 @@ class File:
         # Will hold the data series from the file
         self.series = []
 
-        # Processing flags
-        #self.processNewFiles = processNewFiles
-        self.processedFileExists = self.procFilePathObj.exists()
-
 
     @property
     def f(self):       
@@ -63,8 +59,6 @@ class File:
     def pf(self):
         if self._processed_file is None:
             if not self.procFilePathObj.exists():
-                logging.error(f"File {self.origFilePathObj} still being downsampled")
-
                 # TODO(vedant/gus) : inform the front end instead of backend about the file being downsampled
                 raise IOError("Please wait, file being downsampled")
 
@@ -342,7 +336,7 @@ class File:
 
         if self.mode() == 'file':
             try:
-                self.f
+                _ = self.pf
             except:
                 return {}
 
