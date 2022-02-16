@@ -129,7 +129,7 @@ Graph.prototype.build = function() {
 					'<td class="graph_title">' +
 						'<span title="'+this.altText+'">'+this.shortName+'</span>' +
 						'<span class="webix_icon mdi mdi-cogs" title="Graph Options" onclick="showGraphControlPanel(\''+this.fullName+'\');"></span>' +
-						'<span class="webix_icon mdi mdi-abacus" title="Featurize this series" onclick="showFeaturizationPanel(\''+this.fullName+'\');"></span>' +
+						//'<span class="webix_icon mdi mdi-abacus" title="Featurize this series" onclick="showFeaturizationPanel(\''+this.fullName+'\');"></span>' +
 					'</td>' +
 					'<td rowspan="2">' +
 						'<div class="graph"></div>' +
