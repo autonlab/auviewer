@@ -1,5 +1,7 @@
 """Python API for working with AUViewer."""
 
+import sys
+import signal
 import logging
 import traceback
 
@@ -22,6 +24,9 @@ loadedProjects = []
 # Initiate the donwsampling pool
 downsamplePool = None
 
+def signal_handler(signal, frame):
+    sys.exit(0)
+
 def downsampleFile(filepath: str, destinationpath: str) -> bool:
     """
     Downsamples an original file, placing the processed file in the destination folder.
@@ -30,7 +35,8 @@ def downsampleFile(filepath: str, destinationpath: str) -> bool:
     :param destinationpath: path to the destination folder
     :return: None
     """
-
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
     fp = Path(filepath)
     if not (fp.exists() and fp.is_file()):
         raise Exception(f"File '{filepath}' does not exist or is not a file.")

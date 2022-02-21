@@ -556,9 +556,11 @@ class File:
                 logging.error(f"Unable to close the processed file.\n{e}\n{traceback.format_exc()}")
 
             # Delete the processed data file
-            self.procFilePathObj.unlink()
-
-            logging.info("Partial processed file has been removed.")
+            try:
+                self.procFilePathObj.unlink()
+            except Exception as e:
+                logging.error(f"Unable to delete file successfully. \n{e}\n{traceback.format_exc()}")
+    
 
             # Quit the program
             quit()
@@ -574,7 +576,10 @@ class File:
                 logging.error(f"Unable to close the processed file.\n{e}\n{traceback.format_exc()}")
 
             # Delete the processed data file
-            self.procFilePathObj.unlink(missing_ok=True)
+            try:
+                self.procFilePathObj.unlink(missing_ok=True)
+            except Exception as e:
+                logging.error(f"Unable to delete file successfully. \n{e}\n{traceback.format_exc()}")
 
             logging.info("File has been removed.")
 
