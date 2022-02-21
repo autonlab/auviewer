@@ -144,6 +144,9 @@ function handleClick(e, x) {
 		}
 
 		if (e.offsetX >= itemOffsetXLeft && e.offsetX <= itemOffsetXRight) {
+			console.log(
+				!file.annotationsAndPatternsToRender[i].series, (!graph.isGroup && file.annotationsAndPatternsToRender[i].series === graph.fullName), (graph.isGroup && graph.members.includes(file.annotationsAndPatternsToRender[i].series))
+			);
 			if (
 				!file.annotationsAndPatternsToRender[i].series ||
 				(!graph.isGroup && file.annotationsAndPatternsToRender[i].series === graph.fullName) ||
@@ -312,7 +315,6 @@ function handlePlotting(e) {
 	cnv.lineWidth = 1;
 
 	// Plot each series, whether it be an individual series or a group of them.
-	//console.log(e.allSeriesPoints);
 	for (let i = 0; i + 2 < e.allSeriesPoints.length; i += 3) {
 
 		// SERIES LINE - Plot line for the raw data column for the series, which
@@ -466,7 +468,6 @@ function handleUnderlayRedraw(canvas, area, g) {
 					x--;
 				}
 				height = area.h; //shortHighlights ? area.h/5*.85 : area.h;
-
 				// Prepare styling for the section highlight.
 				switch (category) {
 					case 'own_annotation':
@@ -500,7 +501,7 @@ function handleUnderlayRedraw(canvas, area, g) {
 
 				// Draw annotation label text
 				try {
-					if (file.annotationsAndPatternsToRender[i].label.confidence) {
+					if (file.annotationsAndPatternsToRender[i].label && file.annotationsAndPatternsToRender[i].label.confidence) {
 						canvas.font = "12px Arial";
 						canvas.fillStyle = this.template.ownAnnotationLabelColor;
 						canvas.textAlign = "center";

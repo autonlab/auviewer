@@ -485,9 +485,6 @@ class File:
         """Returns a list of series names available in the file."""
 
         seriesNames = []
-        for s in self.series:
-            seriesNames.append(s.id)
-        return seriesNames
 
     def getSeriesOrCreate(self, seriesid):
         """Retreves or creates & returns the series corresponding to the provided series ID."""
