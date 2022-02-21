@@ -140,9 +140,6 @@ function handleClick(e, x) {
 		}
 
 		if (e.offsetX >= itemOffsetXLeft && e.offsetX <= itemOffsetXRight) {
-			console.log(
-				!file.annotationsAndPatternsToRender[i].series, (!graph.isGroup && file.annotationsAndPatternsToRender[i].series === graph.fullName), (graph.isGroup && graph.members.includes(file.annotationsAndPatternsToRender[i].series))
-			);
 			if (
 				!file.annotationsAndPatternsToRender[i].series ||
 				(!graph.isGroup && file.annotationsAndPatternsToRender[i].series === graph.fullName) ||

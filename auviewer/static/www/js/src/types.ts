@@ -34,6 +34,8 @@ export interface AnnotationField {
   id: string,
   label: string,
   type: AnnotationFieldType,
+  default?: string,
+  required?: boolean,
   classes?: Array<string>,
   class_ids?: Array<string>,
   selection_type?: AnnotationSelectionType
@@ -50,6 +52,8 @@ export interface AnnotationFormInput {
   id: string,
   name: string,
   type: AnnotationFieldType,
+  required: boolean,
+  default: string,
   options?: Array<CategoryOption>,
   selection_type?: AnnotationSelectionType
 }

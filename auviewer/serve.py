@@ -660,7 +660,6 @@ def createApp():
             status=200,
             mimetype='application/json'
         )
-
     # @app.route(config['rootWebPath']+'/initial_supervisor_payload')
     # @login_required
     def initial_supervisor_payload():
