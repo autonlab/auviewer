@@ -64,11 +64,14 @@ Annotation.prototype.cancel = function () {
 };
 
 // Delete the annotation (only valid for this.type==='annotation').
-Annotation.prototype.delete = function () {
+Annotation.prototype.delete = function (callback=null) {
 
 	if (this.type === 'annotation') {
 
 		console.log('Delete called. Sending request to backend.');
+		if (callback) {
+			requestHandler.deleteAnnotation(this.id, globalStateManager.currentFile.parentProject.id, globalStateManager.currentFile.id, callback);
+		} else {
 
 		// Send deletion request to the backend.
 		requestHandler.deleteAnnotation(this.id, globalStateManager.currentFile.parentProject.id, globalStateManager.currentFile.id, function (data) {
@@ -85,6 +88,7 @@ Annotation.prototype.delete = function () {
 			}
 
 		}.bind(this));
+		}
 
 
 	} else {
@@ -171,18 +175,19 @@ Annotation.prototype.populateFormFromValues = function() {
 	// let annotationEndDateStrings = getHTML5DateTimeStringsFromDate(annotationEndDate);
 	// document.getElementById('annotationEndDate').value = annotationEndDateStrings[0];
 	// document.getElementById('annotationEndTime').value = annotationEndDateStrings[1];
-	let currentAnnotation = {
-		annotation_id: this.id,
-		annotation_file: this.filename,
-		annotation_series: this.series,
-		start: annotationStartDate,
-		// startDate: annotationStartDateStrings[0],
-		// startTime: annotationStartDateStrings[1],
-		end: annotationEndDate,
-		label: this.label
-		// endDate: annotationEndDateStrings[0],
-		// endTime: annotationEndDateStrings[1],
-	};
+	let currentAnnotation = this; 
+	// {
+	// 	annotation_id: this.id,
+	// 	annotation_file: this.filename,
+	// 	annotation_series: this.series,
+	// 	start: annotationStartDate,
+	// 	// startDate: annotationStartDateStrings[0],
+	// 	// startTime: annotationStartDateStrings[1],
+	// 	end: annotationEndDate,
+	// 	label: this.label
+	// 	// endDate: annotationEndDateStrings[0],
+	// 	// endTime: annotationEndDateStrings[1],
+	// };
 	globalStateManager.currentAnnotation = currentAnnotation;
 	return;
 	// if (this.annotation.hasOwnProperty('label')) {

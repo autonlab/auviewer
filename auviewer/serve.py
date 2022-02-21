@@ -330,6 +330,12 @@ def createApp():
 
         # Write the annotation
         newAnnotationID = file.createAnnotation(current_user.id, left, right, top, bottom, seriesID, label, pattern_id)
+        def deleteAnnotations():
+            allAnnotations = models.Annotation.query.filter_by(project_id=project_id).all()
+            for annotation in allAnnotations:
+                models.db.session.delete(annotation)
+            models.db.session.commit()
+        # deleteAnnotations()
 
         # Output response
         return app.response_class(

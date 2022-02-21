@@ -31,6 +31,22 @@ export default class Fetcher {
         });
     }
 
+    static updateAnnotation = function(id: number, project_id: number, file_id: number, left: number, right: number, seriesID: string, label: string, callback: (data: any) => void) {
+
+        Fetcher._makeRequest(callback, 'update_annotation', {
+            id: id,
+            project_id: project_id,
+            file_id: file_id,
+            xl: left,
+            xr: right,
+            /*yt: ,
+            yb: ,*/
+            sid: seriesID,
+            label: label
+        });
+    }
+
+
 
 
     private static _makeRequest (callback: (data: any) => void, url: string, pathParams: object) {

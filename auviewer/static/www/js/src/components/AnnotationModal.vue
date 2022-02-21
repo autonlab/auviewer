@@ -190,7 +190,7 @@ import AnnotationFieldComponent from '@/components/AnnotationFieldComponent.vue'
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import  Fetcher from '@/utils/fetcher';
 
-    //@ts-ignore
+//@ts-ignore
 @Component({
   components: {
     AnnotationFieldComponent,
@@ -201,6 +201,7 @@ export default class AnnotationModal extends Vue {
     public annotationResult: { [key:string]: string } = {};
     public annotationFormInputs: Array<AnnotationFormInput> = new Array<AnnotationFormInput>();
     public annotationID: number = -1;
+    public inAnnotation: boolean = false;
     public annotationFile?: string = '';
     public annotationSeries?: string = '';
     public startDateText?: string = '';
@@ -235,10 +236,10 @@ export default class AnnotationModal extends Vue {
       return [ds, tstr];
     }
 
-
     onVisible(isVisible: any, entry: any) {
       if (isVisible) {
-        console.log(this.annotationID);
+        this.clearFormValues();
+        // this.inAnnotation = true;
         if (this.annotationID < 0) {
           console.log(this.getAnnotationFields());
           this.populateFormModel(this.getAnnotationFields());
@@ -249,13 +250,13 @@ export default class AnnotationModal extends Vue {
         // @ts-ignore
         let curAnnotation = globalStateManager.currentAnnotation;
         // let curAnnotation = globalStateManager.currentProject.assignmentsManager.currentTargetAssignmentSet.members[curAnnotationIdx];
-        this.annotationID = curAnnotation.annotation_id;
-        this.annotationFile = curAnnotation.annotation_file;
-        this.annotationSeries = curAnnotation.annotation_series;
+        this.annotationID = curAnnotation.id;
+        this.annotationFile = curAnnotation.filename;
+        this.annotationSeries = curAnnotation.series;
         // this.start = new Date(curAnnotation.begin * 1000);
         // this.end = new Date(curAnnotation.end * 1000);
-        this.start = curAnnotation.start;
-        this.end = curAnnotation.end;
+        this.start = curAnnotation.getStartDate();
+        this.end = curAnnotation.getEndDate();
         if (!this.start || !this.end) {
           return;
         }
@@ -265,11 +266,15 @@ export default class AnnotationModal extends Vue {
         this.startTimeText = startTime;
         this.endDateText = endDate;
         this.endTimeText = endTime;
-
         this.populateFormValues(curAnnotation);
       }
       else {
-        this.clearFormValues();
+        // //@ts-ignore
+        // globalStateManager.currentFile.triggerRedraw();
+        // if (this.inAnnotation) {
+        this.onCancel(null);
+        // }
+        // this.clearFormValues();
       }
     }
 
@@ -279,6 +284,9 @@ export default class AnnotationModal extends Vue {
 
     onSubmit(event: any) {
       event.preventDefault();
+      // this.inAnnotation = false;
+      //@ts-ignore
+      // globalStateManager.currentAnnotation.save();
       if (!(this.annotationID && this.annotationFile && this.annotationSeries && this.start && this.end)) {
         return;
       }
@@ -296,24 +304,52 @@ export default class AnnotationModal extends Vue {
         label: formedLabel,
       };
       this.createOrUpdate(populatedAnnotation);
-      this.clearFormValues();
+      // this.clearFormValues();
       // return true;
     }
 
     onCancel(event: any) {
-      event.preventDefault();
-      this.clearFormValues();
+      if (event) {
+        event.preventDefault();
+      }
+      // this.inAnnotation = false;
+      this.hideModal();
       //@ts-ignore
-      toastr.warning("Canceled annotation");
+      globalStateManager.currentAnnotation && globalStateManager.currentAnnotation.cancel();
+      // //@ts-ignore
+      // toastr.warning("Canceled annotation");
     }
 
     onDelete(event: any) {
       event.preventDefault();
-      this.clearFormValues();
+      // this.inAnnotation = false;
+      // //@ts-ignore
+      // globalStateManager.currentAnnotation.delete();
+
       //@ts-ignore
-      $('#annotationModal').modal('toggle');
+      let t = globalStateManager.currentAnnotation;
+      if (t.type !== 'annotation') {
+        //@ts-ignore
+        toastr.warning("You may only delete a pre-existing annotation, and this isn't one.");
+        return;
+      }
+        
+      let self = this;
       //@ts-ignore
-      toastr.warning("Deletion not functional for this demonstration.");
+      globalStateManager.currentAnnotation.delete(function (data) {
+        if (data.hasOwnProperty('success') && data['success'] === true) {
+          self.clearFormValues();
+          //@ts-ignore
+          toastr.success("Successfully deleted.");
+          //@ts-ignore
+          globalStateManager.currentAnnotation.parentSet.deleteMember(globalStateManager.currentAnnotation);
+          //@ts-ignore
+          globalStateManager.currentAnnotation.hideDialog();
+        } else {
+          //@ts-ignore
+          toastr.warning("There was an error while trying to delete this annotation.");
+        }
+      });
     }
 
     @Watch('annotationResult')
@@ -360,11 +396,16 @@ export default class AnnotationModal extends Vue {
           } as AnnotationFormInput);
         }
       }
-    /*  */}
+    }
 
     populateFormValues(annotation: Annotation) {
-
-      for (const [field_id, value] of Object.entries(annotation)) {
+      if (!annotation['label']) {
+        return;
+      }
+      if ((typeof annotation['label']) === 'string') {
+        annotation['label'] = JSON.parse(annotation['label']);
+      }
+      for (const [field_id, value] of Object.entries(annotation['label'])) {
         if (field_id in this.annotationResult) {
           //@ts-ignore
           this.annotationResult[field_id] = value;
@@ -376,49 +417,101 @@ export default class AnnotationModal extends Vue {
     clearFormValues() {
       for (const [field_id, value] of Object.entries(this.annotationResult)) {
         this.annotationResult[field_id] = "";
-        // Vue.set(this.annotationResult, field_id, "");
       }
 
     }
 
     createOrUpdate(annotation: Annotation) {
-      Fetcher.createAnnotation(annotation.project_id, annotation.file_id, annotation.left, annotation.right, annotation.series_id, annotation.label, annotation.pattern_id, (data: any) => {
-        if (data.hasOwnProperty('success') && data.success === true) {
-          //@ts-ignore
-          $('#annotationModal').modal('toggle');
+      //@ts-ignore
+      let gsm = globalStateManager;
+
+      //@ts-ignore
+      if (globalStateManager.currentAnnotation.type === 'unsaved_annotation')
+      {
+        let self = this;
+        Fetcher.createAnnotation(annotation.project_id, annotation.file_id, annotation.left, annotation.right, annotation.series_id, annotation.label, annotation.pattern_id, (data: any) => {
+          if (data.hasOwnProperty('success') && data.success === true) {
+            //@ts-ignore
+            let gsm = globalStateManager;
+
+            let t = gsm.currentAnnotation;
+            // $('#annotationModal').modal('toggle');
+            self.hideModal();
+
+            // Update type to 'annotation'
+            t.type = 'annotation';
+            t.id = data.id;
+
+            // If this was an annotation of a pattern, report it to the
+            // assignments manager (in case the pattern is an assignment).
+            if (t.pattern_id != null) {
+              gsm.currentProject.assignmentsManager.annotationCreatedForPattern(t.related.parentSet.id, t.related.id, this);
+            }
+            //@ts-ignore
+            toastr.success('Successfully created annotation ' + data.id.toString());
+            //update currentAnnotation state so local data reflects backend data
+            gsm.currentAnnotation.begin = annotation.left;
+            gsm.currentAnnotation.end = annotation.right;
+            gsm.currentAnnotation.label = annotation.label;
+          } else {
+            //@ts-ignore
+            toastr.warning('Something went wrong, failed to create annotation');
+          }
 
           //@ts-ignore
-          toastr.success('Successfully created annotation with ID: ' + data.id.toString());
-        } else {
+          globalStateManager.currentFile.triggerRedraw();
+        });
+
+      }
+      //@ts-ignore
+      else if (globalStateManager.currentAnnotation.type === 'annotation') 
+      {
+        let self = this;
+        //@ts-ignore
+        Fetcher.updateAnnotation(this.annotationID, globalStateManager.currentFile.parentProject.id, globalStateManager.currentFile.id, annotation.left, annotation.right, annotation.series_id, annotation.label, (data: any) => {
+          if (data.hasOwnProperty('success') && data.success === true) {
+            self.hideModal()
+            // //@ts-ignore
+            // $('#annotationModal').modal('toggle');
+
+            //@ts-ignore
+            toastr.success('Successfully updated.');
+            //update currentAnnotation state so local data reflects backend data
+            gsm.currentAnnotation.begin = annotation.left;
+            gsm.currentAnnotation.end = annotation.right;
+            gsm.currentAnnotation.label = annotation.label;
+          } else {
+            //@ts-ignore
+            toastr.warning('Something went wrong, failed to update annotation.');
+          }
+
           //@ts-ignore
-          toastr.success('Something went wrong, failed to create annotation');
-        }
-      });
+          globalStateManager.currentFile.triggerRedraw();
+
+        });
+      }
+    }
+
+    hideModal() {
+      //@ts-ignore
+      let modal = $('#annotationModal');
+      //@ts-ignore
+      modal.removeData('callingAnnotation');
+      //@ts-ignore
+      modal.modal('hide');
     }
 
     get projectID(): number {
-        // const curPath : string = window.location.href;
-        // let el = $(this.$el);
         //@ts-ignore
         let project_id: number = globalStateManager.currentProject.id;
-        // let project_id : number = parseInt(curPath.split("=")[1][0]);
         return project_id
     }
-
-    // @Watch('annotationFields')
-    // onAnnotationsChanged(oldVal: any, newVal: any) {
-    //   console.log(newVal);
-    // }
 
     getAnnotationFields(): Array<AnnotationField> {
       let fields: Array<AnnotationField> = [];
       //@ts-ignore
-      console.log(templateSystem);
-      //@ts-ignore
       for (let [name, value]: Array<any> of Object.entries(templateSystem['project_templates'][this.projectID]['project_template']['annotations'])) {
-        console.log(name, value);
         if (name !== '_default') {
-          console.log(name);
           //@ts-ignore
           for (let [idx, fieldObj] of Object.entries(value.fields)) {
           //@ts-ignore
@@ -426,45 +519,8 @@ export default class AnnotationModal extends Vue {
           }
         }
       }
-      console.log(fields);
       return fields;
-      [
-        {
-            "id": "pvc_presence",
-            "label": "PVC Presence",
-            "type": "categorical" as AnnotationFieldType,
-            "classes": ["None", "One PVC", "Multiple PVCs"],
-            "selection_type": "button" as AnnotationSelectionType
-        },
-        {
-            "id": "pac_presence",
-            "label": "PAC Presence",
-            "type": "categorical" as AnnotationFieldType,
-            "classes": ["None", "One PAC", "Multiple PACs"],
-            "selection_type": "button" as AnnotationSelectionType
-        },
-        // {
-        //     "id": "worth_review",
-        //     "label": "Worth revisiting",
-        //     "type": "text" as AnnotationFieldType,
-        // },
-        {
-            "id": "rhythm_label",
-            "label": "Rhythm",
-            "type": "categorical" as AnnotationFieldType,
-            "classes": ["Atrial Fibrillation", "Sinus", "Other", "Noise"],
-            "selection_type": "button" as AnnotationSelectionType
-        },
-    ];
-
     }
-        // {
-        //     "id": "worth_review",
-        //     "label": "Worth revisiting",
-        //     "type": "categorical" as AnnotationFieldType,
-        //     "classes": ["No", "Yes"],
-        //     "selection_type": "button" as AnnotationSelectionType
-        // }
 
 }
 </script>
