@@ -41,6 +41,9 @@ class File:
         # Will hold the data series from the file
         self.series = []
 
+        # Indicates if the file processing has been completed
+        self.processed = False
+
 
     @property
     def f(self):       
@@ -528,6 +531,12 @@ class File:
 
             # Create the file for storing processed data.
             self._processed_file = audata.File.new(str(self.procFilePathObj), overwrite=False, time_reference=self.f.time_reference, return_datetimes=False)
+            
+            # Create a tmp file to indicate a file that has in the process of getting donwsampled
+            # These tmp files will be deleted either after successful downsampling or partial creation
+            # of processed file
+            with open(str(self.procFilePathObj)+'.tmp','w') as fp:
+                pass
 
             # Process & store numeric series
             for s in self.series:
@@ -539,6 +548,7 @@ class File:
             self.load()
 
             # Print user message
+            self.processed = True
             print("Done.")
 
             end = time.time()
@@ -585,6 +595,16 @@ class File:
 
             # Re-raise the exception
             raise
+
+        finally:
+            # Deletes temporary files 
+            tmp_file = self.procFilePathObj.with_suffix(self.procFilePathObj.suffix + '.tmp')
+            if self.processed:
+                tmp_file.unlink()
+            else:
+                tmp_file.unlink()
+                self.procFilePathObj.unlink(missing_ok=True)
+                logging.info(f"Partial processed file {str(self.procFilePathObj)} has been removed.")
 
     def updateAnnotation(self, user_id, id, left=None, right=None, top=None, bottom=None, seriesID='', label=''):
         """Update an annotation with new values"""

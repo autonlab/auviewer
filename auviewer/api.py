@@ -1,7 +1,6 @@
 """Python API for working with AUViewer."""
 
 import sys
-import signal
 import logging
 import traceback
 
@@ -24,9 +23,6 @@ loadedProjects = []
 # Initiate the donwsampling pool
 downsamplePool = None
 
-def signal_handler(signal, frame):
-    sys.exit(0)
-
 def downsampleFile(filepath: str, destinationpath: str) -> bool:
     """
     Downsamples an original file, placing the processed file in the destination folder.
@@ -35,8 +31,6 @@ def downsampleFile(filepath: str, destinationpath: str) -> bool:
     :param destinationpath: path to the destination folder
     :return: None
     """
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
     fp = Path(filepath)
     if not (fp.exists() and fp.is_file()):
         raise Exception(f"File '{filepath}' does not exist or is not a file.")
@@ -223,7 +217,23 @@ def loadProjects() -> Dict[int, Project]:
             # TODO(gus): We need to have project take absolute path and project name!
             loadedProjects.append(Project(project))
 
-    notProcessedFiles = [(str(projFile.origFilePathObj.resolve()), str(projFile.procFilePathObj.parent.resolve())) for project in loadedProjects for projFile in project.files if not projFile.procFilePathObj.exists()]
+    notProcessedFiles = []
+
+    # Delete all files that may have been downsampled incorrectly and adds unprocessed files to be downsampled
+    for project in loadedProjects:
+        for projFile in project.files:
+            tmp_file = Path(str(projFile.procFilePathObj)+'.tmp')
+            if tmp_file.exists():
+                tmp_file.unlink()
+                projFile.procFilePathObj.unlink(missing_ok=True)
+                logging.info(f"Partial processed file {str(projFile.procFilePathObj)} has been removed.")
+            
+            # Add all non processed files for downsampling
+            if not projFile.procFilePathObj.exists():
+                notProcessedFiles.append((str(projFile.origFilePathObj.resolve()), str(projFile.procFilePathObj.parent.resolve())))
+
+
+    #notProcessedFiles = [(str(projFile.origFilePathObj.resolve()), str(projFile.procFilePathObj.parent.resolve())) for project in loadedProjects for projFile in project.files if not projFile.procFilePathObj.exists()]
 
     for downsampParam in notProcessedFiles:
         downsamplePool.apply_async(downsampleFile, downsampParam)
