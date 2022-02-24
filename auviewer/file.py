@@ -41,10 +41,6 @@ class File:
         # Will hold the data series from the file
         self.series = []
 
-        # Processing flags
-        #self.processNewFiles = processNewFiles
-        self.processedFileExists = self.procFilePathObj.exists()
-
     @property
     def f(self):       
         if self._file is None:
@@ -62,13 +58,16 @@ class File:
     def pf(self):
         if self._processed_file is None:
             if not self.procFilePathObj.exists():
-                logging.error(f"File {self.origFilePathObj} still being downsampled")
-
                 # TODO(vedant/gus) : inform the front end instead of backend about the file being downsampled
                 raise IOError("Please wait, file being downsampled")
 
             else:
                 logging.info(f"Opening processed file {self.procFilePathObj}.")
+                tmp_file = Path(str(self.procFilePathObj)+'.tmp')
+                if tmp_file.exists():
+                    raise RuntimeError("Temp file for corresponding processed file does not exist. This indicates that the file is currently in the process of being downsampled, or the downsampled file is corrupted")
+
+                # Loads the processed file if no issues are detected
                 self._processed_file = audata.File.open(str(self.procFilePathObj), return_datetimes=False)
 
         return self._processed_file
@@ -94,7 +93,6 @@ class File:
 
     def __del__(self):
         self.close()
-
 
     def addSeriesData(self, seriesData):
         """
@@ -331,8 +329,6 @@ class File:
 
         return events
 
-    
-
     def getInitialPayload(self, user_id):
         """Produces JSON output for all series in the file at the maximum time range."""
 
@@ -341,7 +337,7 @@ class File:
 
         if self.mode() == 'file':
             try:
-                self.f
+                _ = self.pf
             except:
                 return {}
 
@@ -523,6 +519,8 @@ class File:
     def process(self):
         """Process and store all downsamples for all series for the file."""
 
+        # Create a path name for temporary file
+        tmp_file = self.procFilePathObj.with_suffix(self.procFilePathObj.suffix + '.tmp')
         try:
 
             logging.info(f"Processing & storing all series for file {self.origFilePathObj}.")
@@ -533,6 +531,15 @@ class File:
 
             # Create the file for storing processed data.
             self._processed_file = audata.File.new(str(self.procFilePathObj), overwrite=False, time_reference=self.f.time_reference, return_datetimes=False)
+            
+            # Create a tmp file to indicate a file that has in the process of getting donwsampled
+            # These tmp files will be deleted either after successful downsampling or after restarting
+            # the viewer. 
+            #
+            # Tmp files are always presereved in the event where the file could not be successfully downsampled
+            # and the processed file could not be deleted.
+            with open(str(tmp_file), 'w') as fp:
+                pass
 
             # Process & store numeric series
             for s in self.series:
@@ -561,9 +568,13 @@ class File:
                 logging.error(f"Unable to close the processed file.\n{e}\n{traceback.format_exc()}")
 
             # Delete the processed data file
-            self.procFilePathObj.unlink()
-
-            logging.info("Partial processed file has been removed.")
+            try:
+                self.procFilePathObj.unlink()
+            except Exception as e:
+                logging.error(f"Unable to delete file successfully. \n{e}\n{traceback.format_exc()}")
+            else:
+                tmp_file.unlink()
+    
 
             # Quit the program
             quit()
@@ -579,12 +590,21 @@ class File:
                 logging.error(f"Unable to close the processed file.\n{e}\n{traceback.format_exc()}")
 
             # Delete the processed data file
-            self.procFilePathObj.unlink(missing_ok=True)
+            try:
+                self.procFilePathObj.unlink(missing_ok=True)
+            except Exception as e:
+                logging.error(f"Unable to delete file successfully. \n{e}\n{traceback.format_exc()}")
+            else:
+                tmp_file.unlink()
 
             logging.info("File has been removed.")
 
             # Re-raise the exception
             raise
+
+        else:
+            # Deletes temporary files if files are downsampled successfully
+            tmp_file.unlink()
 
     def updateAnnotation(self, user_id, id, left=None, right=None, top=None, bottom=None, seriesID='', label=''):
         """Update an annotation with new values"""

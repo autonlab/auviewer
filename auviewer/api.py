@@ -1,5 +1,6 @@
 """Python API for working with AUViewer."""
 
+import sys
 import logging
 import traceback
 
@@ -30,7 +31,6 @@ def downsampleFile(filepath: str, destinationpath: str) -> bool:
     :param destinationpath: path to the destination folder
     :return: None
     """
-
     fp = Path(filepath)
     if not (fp.exists() and fp.is_file()):
         raise Exception(f"File '{filepath}' does not exist or is not a file.")
@@ -41,6 +41,7 @@ def downsampleFile(filepath: str, destinationpath: str) -> bool:
 
     ds_file = File(None, -1, fp, dp / getProcFNFromOrigFN(fp))
     ds_file.process()
+    ds_file.close()
     del ds_file
 
 # Sets a global downsample
@@ -216,7 +217,23 @@ def loadProjects() -> Dict[int, Project]:
             # TODO(gus): We need to have project take absolute path and project name!
             loadedProjects.append(Project(project))
 
-    notProcessedFiles = [(str(projFile.origFilePathObj.resolve()), str(projFile.procFilePathObj.parent.resolve())) for project in loadedProjects for projFile in project.files if not projFile.procFilePathObj.exists()]
+    # Delete all files that may have been downsampled incorrectly and adds unprocessed files to be downsampled
+    for project in loadedProjects:
+        for projFile in project.files:
+            tmp_file = Path(str(projFile.procFilePathObj)+'.tmp')
+            if tmp_file.exists():
+                try:
+                    projFile.procFilePathObj.unlink(missing_ok=True)
+                except Exception as e:
+                    raise RuntimeError(f"Downsample file {str(projFile.procFilePathObj)} exists and could not be deleted. The viewer will quit now. It is recommended that the processed file be deleted manually. \n{e}\n{traceback.format_exc()}")
+                else:
+                    tmp_file.unlink()
+
+                logging.info(f"Partial processed file {str(projFile.procFilePathObj)} has been removed.")
+            
+            # Add all non processed files for downsampling
+            if not projFile.procFilePathObj.exists():
+                notProcessedFiles.append((str(projFile.origFilePathObj.resolve()), str(projFile.procFilePathObj.parent.resolve())))
 
     for downsampParam in notProcessedFiles:
         downsamplePool.apply_async(downsampleFile, downsampParam)
