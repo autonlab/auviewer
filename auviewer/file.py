@@ -41,9 +41,6 @@ class File:
         # Will hold the data series from the file
         self.series = []
 
-        # Indicates if the file processing has been completed
-        self.processed = False
-
 
     @property
     def f(self):       
@@ -67,6 +64,11 @@ class File:
 
             else:
                 logging.info(f"Opening processed file {self.procFilePathObj}.")
+                tmp_file = Path(str(self.procFilePathObj)+'.tmp')
+                if tmp_file.exists():
+                    raise RuntimeError("Temp file for corresponding processed file does not exist. This indicates that the file is currently in the process of being downsampled, or the downsampled file is corrupted")
+
+                # Loads the processed file if no issues are detected
                 self._processed_file = audata.File.open(str(self.procFilePathObj), return_datetimes=False)
 
         return self._processed_file
@@ -521,6 +523,8 @@ class File:
     def process(self):
         """Process and store all downsamples for all series for the file."""
 
+        # Create a path name for temporary file
+        tmp_file = self.procFilePathObj.with_suffix(self.procFilePathObj.suffix + '.tmp')
         try:
 
             logging.info(f"Processing & storing all series for file {self.origFilePathObj}.")
@@ -533,9 +537,12 @@ class File:
             self._processed_file = audata.File.new(str(self.procFilePathObj), overwrite=False, time_reference=self.f.time_reference, return_datetimes=False)
             
             # Create a tmp file to indicate a file that has in the process of getting donwsampled
-            # These tmp files will be deleted either after successful downsampling or partial creation
-            # of processed file
-            with open(str(self.procFilePathObj)+'.tmp','w') as fp:
+            # These tmp files will be deleted either after successful downsampling or after restarting
+            # the viewer. 
+            #
+            # Tmp files are always presereved in the event where the file could not be successfully downsampled
+            # and the processed file could not be deleted.
+            with open(str(tmp_file),'w') as fp:
                 pass
 
             # Process & store numeric series
@@ -548,7 +555,6 @@ class File:
             self.load()
 
             # Print user message
-            self.processed = True
             print("Done.")
 
             end = time.time()
@@ -570,6 +576,8 @@ class File:
                 self.procFilePathObj.unlink()
             except Exception as e:
                 logging.error(f"Unable to delete file successfully. \n{e}\n{traceback.format_exc()}")
+            else:
+                tmp_file.unlink()
     
 
             # Quit the program
@@ -590,21 +598,17 @@ class File:
                 self.procFilePathObj.unlink(missing_ok=True)
             except Exception as e:
                 logging.error(f"Unable to delete file successfully. \n{e}\n{traceback.format_exc()}")
+            else:
+                tmp_file.unlink()
 
             logging.info("File has been removed.")
 
             # Re-raise the exception
             raise
 
-        finally:
-            # Deletes temporary files 
-            tmp_file = self.procFilePathObj.with_suffix(self.procFilePathObj.suffix + '.tmp')
-            if self.processed:
-                tmp_file.unlink()
-            else:
-                tmp_file.unlink()
-                self.procFilePathObj.unlink(missing_ok=True)
-                logging.info(f"Partial processed file {str(self.procFilePathObj)} has been removed.")
+        else:
+            # Deletes temporary files if files are downsampled successfully
+            tmp_file.unlink()
 
     def updateAnnotation(self, user_id, id, left=None, right=None, top=None, bottom=None, seriesID='', label=''):
         """Update an annotation with new values"""

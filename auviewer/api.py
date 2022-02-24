@@ -224,16 +224,18 @@ def loadProjects() -> Dict[int, Project]:
         for projFile in project.files:
             tmp_file = Path(str(projFile.procFilePathObj)+'.tmp')
             if tmp_file.exists():
-                tmp_file.unlink()
-                projFile.procFilePathObj.unlink(missing_ok=True)
+                try:
+                    projFile.procFilePathObj.unlink(missing_ok=True)
+                except Exception as e:
+                    raise RuntimeError(f"Downsample file {str(projFile.procFilePathObj)} exists and could not be deleted. The viewer will quit now. It is recommended that the processed file be deleted manually. \n{e}\n{traceback.format_exc()}")
+                else:
+                    tmp_file.unlink()
+
                 logging.info(f"Partial processed file {str(projFile.procFilePathObj)} has been removed.")
             
             # Add all non processed files for downsampling
             if not projFile.procFilePathObj.exists():
                 notProcessedFiles.append((str(projFile.origFilePathObj.resolve()), str(projFile.procFilePathObj.parent.resolve())))
-
-
-    #notProcessedFiles = [(str(projFile.origFilePathObj.resolve()), str(projFile.procFilePathObj.parent.resolve())) for project in loadedProjects for projFile in project.files if not projFile.procFilePathObj.exists()]
 
     for downsampParam in notProcessedFiles:
         downsamplePool.apply_async(downsampleFile, downsampParam)
