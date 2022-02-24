@@ -331,7 +331,7 @@ class File:
 
         return events
 
-    
+
 
     def getInitialPayload(self, user_id):
         """Produces JSON output for all series in the file at the maximum time range."""
@@ -542,7 +542,7 @@ class File:
             #
             # Tmp files are always presereved in the event where the file could not be successfully downsampled
             # and the processed file could not be deleted.
-            with open(str(tmp_file),'w') as fp:
+            with open(str(tmp_file), 'w') as fp:
                 pass
 
             # Process & store numeric series
