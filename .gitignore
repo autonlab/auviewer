@@ -15,6 +15,7 @@ auviewer.code-workspace
 ._*
 .eggs
 audata
+node_modules
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
