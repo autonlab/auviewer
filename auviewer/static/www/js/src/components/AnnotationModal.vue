@@ -169,7 +169,7 @@ export default class AnnotationModal extends Vue {
         }
         this.hideModal();
         //@ts-ignore
-        globalStateManager.currentAnnotation && globalStateManager.currentAnnotation.cancel();
+        globalStateManager && globalStateManager.currentAnnotation && globalStateManager.currentAnnotation.cancel();
     }
 
     onDelete(event: any) {
