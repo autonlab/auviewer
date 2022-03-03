@@ -9,7 +9,7 @@ from auviewer import __VERSION__
 NAME = 'auviewer'
 VERSION = __VERSION__
 
-RECOMPILE_CYTHON = True
+RECOMPILE_CYTHON = False
 
 # Handle optional cython re-compilation (should be disabled by default for
 # standard client build-installs)
