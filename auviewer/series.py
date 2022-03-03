@@ -242,12 +242,9 @@ class Series:
         rawValues = dataset[self.valcol].values.astype(np.float64)
 
         # Drop nan values
-        print("MASKING!!!")
-        print(f"Before (rawTimes, rawValues): {rawTimes.shape}, {rawValues.shape}")
         mask = ~np.isnan(rawValues)
         rawTimes = rawTimes[mask]
         rawValues = rawValues[mask]
-        print(f"After (rawTimes, rawValues): {rawTimes.shape}, {rawValues.shape}")
 
         # Return the values if requested, otherwise attach them to the class instance.
         if returnValuesOnly:
