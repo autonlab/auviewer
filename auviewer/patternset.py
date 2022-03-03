@@ -81,7 +81,7 @@ class PatternSet:
                 # Check filename
                 if checkfn and row['filename']:
                     fn = row['filename']
-                    f = self.projparent.getFileByFilename(fn)
+                    f = self.projparent.getFileByName(fn)
                     if not f:
                         # If they provided a filename but the file wasn't found in the project, raise an exception.
                         raise Exception(f"File {fn} not found in the project.")
