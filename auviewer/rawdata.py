@@ -7,13 +7,13 @@ from .cylib import getSliceParam
 class RawData:
 
     # RawData may operate in file-mode or data-mode. If seriesparent.h5path`
-    def __init__(self, seriesparent, loading=True):
+    def __init__(self, seriesparent):
 
         # Set the series parent
         self.seriesparent = seriesparent
 
         # Grab a reference to the dataset
-        dataset = self.getDatasetReference(loading)
+        dataset = self.getDatasetReference()
 
         # Holds the number of data points in the raw data series
         self.len = dataset.nrow
@@ -43,12 +43,22 @@ class RawData:
         startIndex = getSliceParam(ds, self.seriesparent.timecol, 0, starttime)
         stopIndex = getSliceParam(ds, self.seriesparent.timecol, 1, stoptime)
 
-        # Assemble the output data
-        nones = [None] * (stopIndex - startIndex)
-        # data = [list(i) for i in zip(self.rawTimeOffsets[startIndex:stopIndex], nones, nones, self.rawValues[startIndex:stopIndex])]
+        # Slice the output data the output data
         ds_slice = ds[startIndex:stopIndex]
-        return [list(i) for i in zip(ds_slice[self.seriesparent.timecol].values.astype(np.float64), nones, nones, ds_slice[self.seriesparent.valcol].values.astype(np.float64))]
 
-    def getDatasetReference(self, loading=False):
+        # Pull the raw times & values
+        rawTimes = ds_slice[self.seriesparent.timecol].values.astype(np.float64)
+        rawValues = ds_slice[self.seriesparent.valcol].values.astype(np.float64)
+
+        # Drop nan values
+        mask = ~np.isnan(rawValues)
+        rawTimes = rawTimes[mask]
+        rawValues = rawValues[mask]
+
+        nones = [None] * len(rawTimes)
+
+        return [list(i) for i in zip(rawTimes, nones, nones, rawValues)]
+
+    def getDatasetReference(self):
         
         return self.seriesparent.fileparent.f['/'.join(self.seriesparent.h5path)]

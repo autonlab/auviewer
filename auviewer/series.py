@@ -138,9 +138,9 @@ class Series:
             else:
 
                 # Get reference to the series datastream from the HDF5 file
-                dataset = self.fileparent.f['/'.join(self.h5path)][()]
-                nones = [None] * self.rd.len
-                data = [list(i) for i in zip(dataset[self.timecol].values.astype(np.float64), nones, nones, dataset[self.valcol].values.astype(np.float64))]
+                rawTimes, rawValues = self.pullRawDataIntoMemory(returnValuesOnly=True)
+                nones = [None] * len(rawTimes)
+                data = [list(i) for i in zip(rawTimes, nones, nones, rawValues)]
                 output_type = 'real'
 
         else:
@@ -240,6 +240,14 @@ class Series:
 
         rawTimes = dataset[self.timecol].values.astype(np.float64)
         rawValues = dataset[self.valcol].values.astype(np.float64)
+
+        # Drop nan values
+        print("MASKING!!!")
+        print(f"Before (rawTimes, rawValues): {rawTimes.shape}, {rawValues.shape}")
+        mask = ~np.isnan(rawValues)
+        rawTimes = rawTimes[mask]
+        rawValues = rawValues[mask]
+        print(f"After (rawTimes, rawValues): {rawTimes.shape}, {rawValues.shape}")
 
         # Return the values if requested, otherwise attach them to the class instance.
         if returnValuesOnly:
