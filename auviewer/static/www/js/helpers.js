@@ -532,8 +532,11 @@ function showGraphControlPanel(s) {
 
 	// Setup some handlers
 	const updateRange = function() {
+		// let vs = vals;
+		const g = globalStateManager.currentFile.getGraphForSeries(s);
+		const dg = g.dygraphInstance;
 		const vals = $$('graph_range_form_'+s).getValues();
-		g.dygraphInstance.updateOptions({
+		dg.updateOptions({
 			valueRange: [vals['ymin'], vals['ymax']],
 		});
 	};
