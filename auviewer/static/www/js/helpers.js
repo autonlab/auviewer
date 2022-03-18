@@ -530,10 +530,6 @@ function showGraphControlPanel(s) {
 
 	// Setup some handlers
 	const updateRange = function() {
-<<<<<<< HEAD
-=======
-		// let vs = vals;
->>>>>>> fix successive zoom bug (temp fix)
 		const g = globalStateManager.currentFile.getGraphForSeries(s);
 		const dg = g.dygraphInstance;
 		const vals = $$('graph_range_form_'+s).getValues();
