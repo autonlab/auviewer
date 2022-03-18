@@ -215,7 +215,6 @@ function handleMouseMove(event, g, context) {
 
 // Handle mouse-up for pan & zoom.
 function handleMouseUp(event, g, context) {
-
 	if (context.mvIsAnnotating) {
 		handleAnnotationHighlightEnd(event, g, context, this);
 	}

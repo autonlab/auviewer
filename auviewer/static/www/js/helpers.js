@@ -527,12 +527,9 @@ function showFeaturizationPanel(s) {
 // Show the graph control panel for a given graph series (which corresponds to file.graphs[].fullName of the
 // corresponding Graph class instance).
 function showGraphControlPanel(s) {
-	const g = globalStateManager.currentFile.getGraphForSeries(s);
-	const dg = g.dygraphInstance;
 
 	// Setup some handlers
 	const updateRange = function() {
-		// let vs = vals;
 		const g = globalStateManager.currentFile.getGraphForSeries(s);
 		const dg = g.dygraphInstance;
 		const vals = $$('graph_range_form_'+s).getValues();
@@ -541,6 +538,8 @@ function showGraphControlPanel(s) {
 		});
 	};
 	const updateHeight = function() {
+		const g = globalStateManager.currentFile.getGraphForSeries(s);
+		const dg = g.dygraphInstance;
 		const vals = $$('graph_height_form_'+s).getValues();
 		g.graphWrapperDomElement.style.height = vals['height'] + 'px';
 		if (g.isShowing()) {
@@ -553,6 +552,8 @@ function showGraphControlPanel(s) {
 	if (panel) {
 		panel.show()
 	} else {
+		const g = globalStateManager.currentFile.getGraphForSeries(s);
+		const dg = g.dygraphInstance;
 		webix.ui({
 			view: 'window',
 			id: 'graph_config_window_'+s,
