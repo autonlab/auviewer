@@ -649,8 +649,8 @@ def createApp():
             mimetype='application/json'
         )
 
-    # @app.route(config['rootWebPath']+'/initial_supervisor_payload')
-    # @login_required
+    @app.route(config['rootWebPath']+'/initial_supervisor_payload')
+    @login_required
     def initial_supervisor_payload():
         project_id = request.args.get('project_id', type=int)
 
@@ -688,8 +688,8 @@ def createApp():
             mimetype='application/json'
         )
 
-    # @app.route(config['rootWebPath']+'/get_labels')
-    # @login_required
+    @app.route(config['rootWebPath']+'/get_labels')
+    @login_required
     def get_labels():
         project_id = request.args.get('project_id', type=int)
 
@@ -700,8 +700,8 @@ def createApp():
             mimetype='application/json'
         )
 
-    # @app.route(config['rootWebPath']+'/get_labelers')
-    # @login_required
+    @app.route(config['rootWebPath']+'/get_labelers')
+    @login_required
     def get_labelers():
         project_id = request.args.get('project_id', type=int)
 
@@ -712,8 +712,8 @@ def createApp():
             mimetype='application/json'
         )
 
-    # @app.route(config['rootWebPath']+'/get_segments')
-    # @login_required
+    @app.route(config['rootWebPath']+'/get_segments')
+    @login_required
     def get_segments():
         project_id = request.args.get('project_id', type=int)
         type = request.args.get('segment_type', type=str)
@@ -725,8 +725,8 @@ def createApp():
             mimetype='application/json'
         )
 
-    # @app.route(config['rootWebPath']+'/get_labeler_statistics')
-    # @login_required
+    @app.route(config['rootWebPath']+'/get_labeler_statistics')
+    @login_required
     def get_labeler_stats():
         project_id = request.args.get('project_id', type=int)
         segment_type = request.args.get('segment_type', type=str)
@@ -740,8 +740,8 @@ def createApp():
             mimetype='application/json'
         )
 
-    # @app.route(config['rootWebPath']+'/update_threshold', methods=['PUT'])
-    # @login_required
+    @app.route(config['rootWebPath']+'/update_threshold', methods=['PUT'])
+    @login_required
     def put_threshold():
         project_id = request.args.get('project_id', type=int)
         p = getProject(project_id)
@@ -754,8 +754,8 @@ def createApp():
             mimetype='application/json'
         )
 
-    # @app.route(config['rootWebPath']+'/delete_vote_segments', methods=['POST'])
-    # @login_required
+    @app.route(config['rootWebPath']+'/delete_vote_segments', methods=['POST'])
+    @login_required
     def delete_vote_segments():
         project_id = request.args.get('project_id', type=int)
         project = getProject(project_id)
@@ -775,8 +775,8 @@ def createApp():
             mimetype='application/json'
         )
 
-    # @app.route(config['rootWebPath']+'/create_vote_segments', methods=['POST'])
-    # @login_required
+    @app.route(config['rootWebPath']+'/create_vote_segments', methods=['POST'])
+    @login_required
     def create_vote_segments():
         project_id = request.args.get('project_id', type=int)
         project = getProject(project_id)
@@ -798,8 +798,8 @@ def createApp():
             mimetype='application/json'
         )
 
-    # @app.route(config['rootWebPath']+'/preview_threshold_change', methods=['POST'])
-    # @login_required
+    @app.route(config['rootWebPath']+'/preview_threshold_change', methods=['POST'])
+    @login_required
     def preview_threshold():
         project_id = request.args.get('project_id', type=int)
         project = getProject(project_id)
@@ -820,8 +820,8 @@ def createApp():
             mimetype='application/json'
         )
 
-    # @app.route(config['rootWebPath']+'/get_votes', methods=["GET", "POST"])
-    # @login_required
+    @app.route(config['rootWebPath']+'/get_votes', methods=["GET", "POST"])
+    @login_required
     def get_votes():
         project_id = request.args.get('project_id', type=int)
         recalculate = request.args.get('recalculate', type=bool)
@@ -854,8 +854,8 @@ def createApp():
             mimetype='application/json'
         )
 
-    # @app.route(config['rootWebPath']+'/query_supervisor_series', methods=['POST'])
-    # @login_required
+    @app.route(config['rootWebPath']+'/query_supervisor_series', methods=['POST'])
+    @login_required
     def query_supervisor_series():
         project_id = request.args.get('project_id', type=int)
         request_data = request.get_json()
@@ -870,8 +870,8 @@ def createApp():
             mimetype='application/json'
         )
 
-    # @app.route(config['rootWebPath']+'/upload_custom_segments', methods=['POST'])
-    # @login_required
+    @app.route(config['rootWebPath']+'/upload_custom_segments', methods=['POST'])
+    @login_required
     def custom_segments_upload():
         project_id = request.args.get('project_id', type=int)
         p = getProject(project_id)
@@ -941,8 +941,8 @@ def createApp():
 
         return render_template('project.html', project_name=projectPayload['project_name'], payload=projectPayloadJSON, featurizersJSONPayload=featurizersJSONPayload)
 
-    # @app.route(config['rootWebPath']+'/supervisor')
-    # @login_required
+    @app.route(config['rootWebPath']+'/supervisor')
+    @login_required
     def supervisor():
         # Parse parameters
         id = request.args.get('id', type=int)

@@ -207,11 +207,10 @@ class Project:
                 series_of_interest="/data",
                 series_to_render="/data"
             )
-        print(models.SupervisorModule.query.filter_by(project_id=self.id).first().title)
         if (newsm):
             models.db.session.add(newsm)
             models.db.session.commit()
-            print('made '+newsm.title + ' for proj '+self.name)
+            print('made '+ newsm.title + ' for proj '+self.name)
 
         #of form:
             # 'randomFiles': True,
