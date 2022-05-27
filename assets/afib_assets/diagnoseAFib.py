@@ -58,7 +58,19 @@ class diagnoseAFib:
             "variation_l": ["min_coefficient_of_variation"],
             "iqr_l": ["min_interquartile_range"],
             "range_l": ["min_range"],
-            "std_l": ["min_standard_deviation"]
+            "std_l": ["min_standard_deviation"],
+            'variation_h': [],
+            'iqr_h': [],
+            'range_h': [],
+            'std_h': [],
+            'variation_m': [],
+            'iqr_m': [],
+            'range_m': [],
+            'std_m': [],
+            'variation_l': [],
+            'iqr_l': [],
+            'range_l': [],
+            'std_l': [],
         }
 
     @staticmethod

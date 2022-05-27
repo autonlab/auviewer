@@ -605,6 +605,7 @@ def createApp():
 
         project = getProject(project_id)
         res = dict()
+        print("before model")
         res = project.applyLabelModel()
         return app.response_class(
             response=simplejson.dumps(res, ignore_nan=True),
@@ -612,8 +613,8 @@ def createApp():
             mimetype='application/json'
         )
 
-    # @app.route(config['rootWebPath']+'/reprioritize_file')
-    # @login_required
+    @app.route(config['rootWebPath']+'/reprioritize_file')
+    @login_required
     def prioritize_file():
         project_id = request.args.get('project_id', type=int)
         file_idx = request.args.get('file_idx', type=int)
