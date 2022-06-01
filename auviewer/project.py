@@ -548,8 +548,8 @@ class Project:
             
                 
         #add labelmodel results
-        # preds = self.applyLabelModel(segIdxToDFIdx=segIdxToDFIdx, dfdict=dfDict, votes=result)
-        preds = None
+        preds = self.applyLabelModel(segIdxToDFIdx=segIdxToDFIdx, dfdict=dfDict, votes=result)
+        # preds = None
         # df = pd.DataFrame.from_dict(dfDict)
         # df.to_csv('segmentsOfInterest.csv')
         # print(preds)
