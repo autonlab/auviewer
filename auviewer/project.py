@@ -332,8 +332,7 @@ class Project:
         for segId in segIds:
             if (len(votes[segId]) > 0):
                 L_train.append([labels[v] for v in votes[segId]])
-        lfNumCorrect, lfNumNonAbstains = [0 for v in lfNames], [0 for v in lfNames]
-        lfNumAbstains = [0 for v in lfNames]
+        lfNumCorrect, lfNumNonAbstains, lfNumAbstains= [0 for v in lfNames], [0 for v in lfNames], [0 for v in lfNames]
         L_train = np.array(L_train)
         lm = LabelModel(cardinality=len(labels.keys()), verbose=False)
         lm.fit(L_train=L_train, n_epochs=500, log_freq=100, seed=42)
@@ -405,8 +404,10 @@ class Project:
         # for prediction in lm_predictions:
         #     predictions.append(numbersToLabels[np.argmax(prediction)])
         analysis = LFAnalysis(L=L_train).lf_summary()
-        print("almost done")
-        analysis['experimental_accuracy'] = [lfNumCorrect[i]/lfNumNonAbstains[i] for i in range(len(lfNames))]
+        analysis['experimental_accuracy'] = [0 for i in range(len(lfNames))]
+        for i in range(len(lfNames)):
+            if lfNumNonAbstains[i] > 0 : 
+                analysis['experimental_accuracy'][i] = (lfNumCorrect[i]/lfNumNonAbstains[i])
         return {
             # 'predictions': predictions,
             # 'probabilities': lm_predictions.tolist(),
