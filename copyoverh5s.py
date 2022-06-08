@@ -6,7 +6,7 @@ from glob import glob
 def copy_h5s(src: Path, dst: Path, num=1):
     #get 10 random files from dst path
     h5Files = glob(str(src / '*.h5'))
-    for i in range(5):
+    for i in range(num):
         randomh5 = random.choice(h5Files)
 
         fname = randomh5.split(os.sep)[-1]
