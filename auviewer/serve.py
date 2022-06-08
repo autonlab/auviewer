@@ -1148,6 +1148,9 @@ def main():
     else:
         print(f"\n{bannerMsgPrefix}You may access AUViewer at: {browser_url}\n{fmtEndSuffix}")
 
+    from werkzeug.middleware.profiler import ProfilerMiddleware
+    app.config['PROFILE'] = True
+    app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[30], profile_dir = './profiles')
     app.run(host=config['host'], port=config['port'], debug=config['debug'], use_reloader=False)
     return app
 
