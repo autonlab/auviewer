@@ -43,8 +43,7 @@ function Supervisor(payload) {
 	*/
 	this.globalXExtremes = [];
 	this.globalYExtremes = [0, 0];
-	this.seriesOnPage = 4;
-	this.activeGraphs = [...Array(this.seriesOnPage).keys()];
+	
 
 	this.shade_colors = ['white', 'rgba(188, 86, 208, .33)', 'rgba(222, 27, 95, .33)',  'rgba(27, 189, 222, .33)', 'rgba(27, 222, 76, .33)','orange', 'yellow', 'red', 'green', 'teal', 'cyan'];
 
@@ -162,6 +161,8 @@ Supervisor.prototype.initModel = function(data) {
 	// Prepare data received from the backend and attach to class instance
 	// new prepareData method needed
 	this.projectData = this.prepareData(data, data.baseTime || 0);
+	this.seriesOnPage = Math.min(4, this.projectData.files.length);
+	this.activeGraphs = [...Array(this.seriesOnPage).keys()];
 	this.filenamesToIdxs = {};
 	for (let i = 0; i < this.projectData.files.length; i++) {
 		this.filenamesToIdxs[this.projectData.files[i][1]] = i;
