@@ -17,6 +17,8 @@ from pathlib import Path
 from sqlalchemy import and_
 from sqlalchemy.orm import contains_eager, joinedload
 from typing import AnyStr, List, Dict, Optional, Union
+# import ray
+import multiprocessing
 
 from . import models
 from .patternset import PatternSet
@@ -66,6 +68,8 @@ class Project:
 
         # Load project files
         self.loadProjectFiles(processNewFiles)
+
+        # ray.init()
 
     def __del__(self):
         """Cleanup"""
@@ -423,7 +427,75 @@ class Project:
             models.db.session.delete(vote)
         models.db.session.commit()
 
+    def getVotesForFile(self, fileId):
+        f = self.getFile(fileId)
+        fin = int(f.name.split('.')[0].split('_')[-1])
+
+        if (windowInfo):
+            segmentsForFile = models.Segment.query.\
+                filter_by(
+                    project_id=self.id,
+                    file_id=fileId,
+                    type='WINDOW',
+                    window_size_ms=windowInfo['window_size_ms'],
+                    window_roll_ms=windowInfo['window_roll_ms']).\
+                order_by(
+                    models.Segment.left.asc() #ascending
+            ).all()
+        else:
+            segmentsForFile = models.Segment.query.filter_by(
+                project_id=self.id,
+                file_id=fileId,
+                type='CUSTOM'
+            ).all()
+        
+        for segment in segmentsForFile:
+            if(len(segment.votes)>0): continue
+            # print("no votes")
+            series = self.getSeriesOfInterest(f).getRangedOutput(segment.left / 1000.0, segment.right / 1000.0).get('data')
+            if (len(series) == 0):
+                continue
+            curSeries = np.array([x[-1] for x in series])
+
+            filledNaNs = None
+            if np.sum(np.isnan(curSeries)) > 0:
+                filledNaNs = curSeries.isna().to_numpy()
+                curSeries = curSeries.fillna(0)
+            EEG = curSeries.reshape((-1, 1))
+            curLFModule = lfModule(EEG, filledNaNs, thresholds, labels)
+            vote_vec = curLFModule.get_vote_vector()
+            segmentVotes = list()
+            for lf, vote in zip(lfs, vote_vec):
+                categoryId = categoryNumbersToIds[vote]
+                newVote = models.Vote(
+                    project_id=self.id,
+                    labeler_id=lf.id,
+                    category_id=categoryId,
+                    file_id=fileId,
+                    segment_id=segment.id
+                )
+                # newVotes.append(newVote)
+                segmentVotes.append(newVote)
+                # models.db.session.add(newVote)
+                # models.db.session.commit()
+            models.db.session.add_all(segmentVotes)
+            # models.db.session.commit()
+            # print(segmentVotes)
+            result[segment.id] = vote_vec
+        numBefore = len(models.Vote.query.filter_by(project_id=self.id).all())
+        # models.db.session.add_all(newVotes)
+        models.db.session.commit()
+        numAfter = len(models.Vote.query.filter_by(project_id=self.id).all())
+        print(f"Added {numAfter - numBefore} votes")
+        for segment in segmentsForFile:
+            votes = [v.category.label for v in segment.votes]
+            result[segment.id] = votes
+        
+        return result
+        
+
     def getVotes(self, fileIds, windowInfo=None):
+        
         result = dict()
         # searchFINs =[1215499, 1007711, 1998627]
         # searchFINs = []
@@ -452,101 +524,12 @@ class Project:
             k = lfname.split('_')[0]
             dfDict[k] = list()
         j = 0
-        for fileId in fileIds:
-            f = self.getFile(fileId)
-            fin = int(f.name.split('.')[0].split('_')[-1])
 
-            if (windowInfo):
-                segmentsForFile = models.Segment.query.\
-                    filter_by(
-                        project_id=self.id,
-                        file_id=fileId,
-                        type='WINDOW',
-                        window_size_ms=windowInfo['window_size_ms'],
-                        window_roll_ms=windowInfo['window_roll_ms']).\
-                    order_by(
-                        models.Segment.left.asc() #ascending
-                ).all()
-            else:
-                segmentsForFile = models.Segment.query.filter_by(
-                    project_id=self.id,
-                    file_id=fileId,
-                    type='CUSTOM'
-                ).all()
-            if fin in [None]:
-                for segment in segmentsForFile:
-                    series = self.getSeriesOfInterest(f).getRangedOutput(segment.left / 1000.0, segment.right / 1000.0).get('data')
-                    if (len(series) == 0):
-                        continue
-                    curSeries = np.array([x[-1] for x in series])
+        
 
-                    filledNaNs = None
-                    if np.sum(np.isnan(curSeries)) > 0:
-                        filledNaNs = curSeries.isna().to_numpy()
-                        curSeries = curSeries.fillna(0)
-                    lfModule = self.getLFModule()
-                    EEG = curSeries.reshape((-1, 1))
-                    curLFModule = lfModule(EEG, filledNaNs, thresholds, labels)
-                    vote_vec = curLFModule.get_vote_vector()
-                    votes = zip(lfnames, [m[v] for v in vote_vec])
-                    num_vec = curLFModule.get_numbers_vector()
-                    nums = zip(lfnames, num_vec)
-                    segStart = dt.datetime.fromtimestamp((segment.left) / 1000.0)
-                    segEnd = dt.datetime.fromtimestamp((segment.right) / 1000.0)
-                    segIdxToDFIdx[segment.id] = j
-                    j += 1
-                    dfDict['FIN_Study_Id'].append(fin)
-                    dfDict['segmentStart'].append(segStart)
-                    dfDict['segmentEnd'].append(segEnd)
-                    dfDict['LabelModelVote'].append(None)
-                    for name, vote in votes:
-                        dfDict[name].append(vote)
-                    for name, num in nums:
-                        k = name.split('_')[0]
-                        dfDict[k].append(num)
-            for segment in segmentsForFile:
-                for v in segment.votes: print(v)
-                if(len(segment.votes)>0): continue
-                print("no votes")
-                series = self.getSeriesOfInterest(f).getRangedOutput(segment.left / 1000.0, segment.right / 1000.0).get('data')
-                if (len(series) == 0):
-                    continue
-                curSeries = np.array([x[-1] for x in series])
+        pool = multiprocessing.Pool(8)
 
-                filledNaNs = None
-                if np.sum(np.isnan(curSeries)) > 0:
-                    filledNaNs = curSeries.isna().to_numpy()
-                    curSeries = curSeries.fillna(0)
-                EEG = curSeries.reshape((-1, 1))
-                curLFModule = lfModule(EEG, filledNaNs, thresholds, labels)
-                vote_vec = curLFModule.get_vote_vector()
-                segmentVotes = list()
-                for lf, vote in zip(lfs, vote_vec):
-                    categoryId = categoryNumbersToIds[vote]
-                    newVote = models.Vote(
-                        project_id=self.id,
-                        labeler_id=lf.id,
-                        category_id=categoryId,
-                        file_id=fileId,
-                        segment_id=segment.id
-                    )
-                    newVotes.append(newVote)
-                    segmentVotes.append(newVote)
-                    # models.db.session.add(newVote)
-                    # models.db.session.commit()
-                # models.db.session.add_all(newVotes)
-                # models.db.session.commit()
-                print(segmentVotes)
-                result[segment.id] = vote_vec
-            numBefore = len(models.Vote.query.filter_by(project_id=self.id).all())
-            models.db.session.add_all(newVotes)
-            models.db.session.commit()
-            numAfter = len(models.Vote.query.filter_by(project_id=self.id).all())
-            print(f"Added {numAfter - numBefore} votes")
-            for segment in segmentsForFile:
-                votes = [v.category.label for v in segment.votes]
-                result[segment.id] = votes
-            
+        zip(*pool.map(getVotesForFile, fileIds))
                 
         #add labelmodel results
         preds = self.applyLabelModel(segIdxToDFIdx=segIdxToDFIdx, dfdict=dfDict, votes=result)
@@ -603,9 +586,9 @@ class Project:
             # series = self.getSeriesOfInterest(f).getFullOutput().get('data')
             #iterate through user defined segments
             if (len(segmentsForFile) == 0): continue
-            print("seg len: ", len(segmentsForFile))
-            for (i, segment) in enumerate(segmentsForFile):
-                print(segment.left, segment.right)
+            # print("seg len: ", len(segmentsForFile))
+            # for (i, segment) in enumerate(segmentsForFile):
+            #     print(segment.left, segment.right)
             # correspondingIndexBounds = self.getIndicesForSegments(segmentsForFile, series)
             for i, segment in enumerate(segmentsForFile):
                 # if (correspondingIndexBounds[i]):
@@ -643,7 +626,7 @@ class Project:
         models.db.session.commit()
         numAfter = len(models.Vote.query.filter_by(project_id=self.id).all())
         print(f"Added {numAfter - numBefore} votes")
-        print(resultingVotes)
+        # print(resultingVotes)
         return resultingVotes
 
     def getSegments(self, type='CUSTOM'):

@@ -840,14 +840,14 @@ def createApp():
             fileIds = [f.id for f in project.files]
         print(fileIds, windowInfo)
         fileIds = [int(fileId) for fileId in fileIds]
-        if (len(models.Vote.query.filter_by(project_id=project_id).all()) > 0):
-            print('getting votes instead')
-            votes, preds = project.getVotes(fileIds, windowInfo)
-            d = dict()
-            d['lm_predictions'] = preds
-        else:
-            votes = project.computeVotes(fileIds, windowInfo)
-            d = dict()
+        # if (len(models.Vote.query.filter_by(project_id=project_id).all()) > 0):
+            # print('getting votes instead')
+        votes, preds = project.getVotes(fileIds, windowInfo)
+        d = dict()
+        d['lm_predictions'] = preds
+        # else:
+        #     votes = project.computeVotes(fileIds, windowInfo)
+        #     d = dict()
         d['labeling_function_votes'] = votes
         return app.response_class(
             response=simplejson.dumps(d, ignore_nan=True),

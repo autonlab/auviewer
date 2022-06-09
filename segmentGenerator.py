@@ -23,7 +23,7 @@ segLength = 10
 onlyfiles = [f for f in listdir(path) if isfile(join(path, f))]
 print(onlyfiles)
 seriesOfInterest = utils.HR_SERIES
-repeat = 10
+repeat = 100
 print(len(onlyfiles))
 for filename in onlyfiles:
     filepath = path+"/"+filename
@@ -32,7 +32,7 @@ for filename in onlyfiles:
 
 
     filename = (filename.split("."))[0]
-    newfilename = filename + "_10s_segments"
+    newfilename = filename + "_10s_segments" + "*" + str(repeat)
     fin_id = (((filename.split('_'))[2]).split("."))[0]
     print(fin_id)
 
