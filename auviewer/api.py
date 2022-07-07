@@ -276,7 +276,7 @@ def setDataPath(path, load_projects=False) -> None:
     app = Flask(__name__)
     app.config.update({
         'SQLALCHEMY_TRACK_MODIFICATIONS': False,
-        'SQLALCHEMY_DATABASE_URI': f"sqlite:///{(config['dataPathObj'] / 'database' / 'db.sqlite')}",
+        'SQLALCHEMY_DATABASE_URI': f"sqlite:///{(config['dataPathObj'] / 'database' / 'db.sqlite')}"+'?check_same_thread=False',
     })
 
     models.init_flask_app(app)

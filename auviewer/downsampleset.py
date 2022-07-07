@@ -3,7 +3,8 @@ import psutil
 import time
 
 from .config import config
-from .cylib import buildDownsampleFromRaw, buildNextDownsampleUp, getSliceParam, numDownsamplesToBuild
+from .cylib import buildDownsampleFromRaw, buildNextDownsampleUp, getSliceParam, numDownsamplesToBuild, getSliceParamNew
+import multiprocessing
 
 # Represents a set of downsamples for a series of data.
 class DownsampleSet:
@@ -79,6 +80,48 @@ class DownsampleSet:
 
         return config['M'] * (config['stepMultiplier'] ** i)
 
+    # def getRangedOutputParallel(series, starts, stops):
+    #     # If there are no downsamples available, we cannot provide one
+    #     # if self.numDownsamples < 1:
+    #     #     return None
+    #     dsis = []
+    #     timespans = [stops[i] - starts[i] for i in range(len(starts))]
+    #     for i in range(len(series)):
+    #         dsis.append(series[i].whichDownsampleIndexForTimespan(timespans[i]))
+    #     dss = list()
+    #     idx = list()
+    #     k = 0
+    #     for dsi in dsis:
+    #         if dsi==-1:
+    #             dss.append(None)
+    #         else:
+    #             idx.append(k)
+    #             dss.append(self.seriesparent.fileparent.pf['/'.join(self.seriesparent.h5pathDownsample) + '/' + str(dsi)])
+    #         k += 1
+
+    #     args = list()
+    #     args2 = list()
+    #     for i in idx:
+    #         ds = dss[i]
+    #         args.append((ds, '0', 0, starts[i]))
+    #         args2.append((ds, '0', 1, stops[i]))
+
+    #     startresults = zip(*pool.map(getSliceParam, args))
+    #     stopresults = zip(*pool.map(getSliceParam, args2))
+
+    #     startlist = list(startresults)
+    #     stoplist = list(stopresults)
+
+    #     for id in idx:
+    #         ds = dss[id]
+    #         dsis[id] = ds[startlist[id]:stoplist[id]]
+
+    #     return dsis
+
+        
+
+
+
     # Returns a slice of the appropriate downsample for the given time range, or
     # nothing if there is no appropriate downsample available (in this case, raw
     # data should be used). Expects starttime & stoptime to be time offsets
@@ -87,6 +130,7 @@ class DownsampleSet:
 
         # If there are no downsamples available, we cannot provide one
         if self.numDownsamples < 1:
+            print("no downsample")
             return None
 
         # Calculate the timespan of the view window, in seconds
@@ -95,14 +139,35 @@ class DownsampleSet:
         # Get index of the appropriate downsample to use
         dsi = self.whichDownsampleIndexForTimespan(timespan)
 
+        print("downsample: ", dsi)
+
+        # print("dsi", dsi)
+
         # If we should be using raw data, return nothing
         if dsi == -1:
             return None
 
+        dsiPre = dsi - 1
+        baseOffset = 0
+        print("raw time", len(self.seriesparent.rawTimes))
+        if(dsiPre!=-1):
+            dsp = self.seriesparent.fileparent.pf['/'.join(self.seriesparent.h5pathDownsample) + '/' + str(dsiPre)]
+            #get time of the first datapoint in previous downsample, which is used to calculate current baseOffset
+            baseOffset = dsp[0]['0'] - (self.getTimePerIntervalByIndex(dsiPre)/2)
+        else: 
+            baseOffset = self.seriesparent.rawTimes[0]
+
+
+        timePerInterval = self.getTimePerIntervalByIndex(dsi)
+
         # Get reference to the downsample dataset in the processed file
         ds = self.seriesparent.fileparent.pf['/'.join(self.seriesparent.h5pathDownsample) + '/' + str(dsi)]
 
+
         # Find the start & stop indices based on the start & stop times.
+        # startIndex = getSliceParamNew(ds, '0', 0, starttime, timePerInterval, baseOffset)
+        # stopIndex = getSliceParamNew(ds, '0', 1, stoptime, timePerInterval, baseOffset)
+
         startIndex = getSliceParam(ds, '0', 0, starttime)
         stopIndex = getSliceParam(ds, '0', 1, stoptime)
 

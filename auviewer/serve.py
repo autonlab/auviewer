@@ -94,7 +94,7 @@ def createApp():
     app.config.from_object(FlaskConfigClass)
     app.config.update({
         'SECRET_KEY': config['secret_key'],
-        'SQLALCHEMY_DATABASE_URI': f"sqlite:///{(config['dataPathObj'] / 'database' / 'db.sqlite')}",
+        'SQLALCHEMY_DATABASE_URI': f"sqlite:///{(config['dataPathObj'] / 'database' / 'db.sqlite')}"+'?check_same_thread=False',
         **config['mail'],
         'USER_CHANGE_PASSWORD_URL': config['rootWebPath'] + app.config['USER_CHANGE_PASSWORD_URL'],
         'USER_CHANGE_USERNAME_URL': config['rootWebPath'] + app.config['USER_CHANGE_USERNAME_URL'],
@@ -662,10 +662,12 @@ def createApp():
             return
 
         fileIds = [f.id for f in project.files]
+        print("hha")
         filesPayload = project.queryWeakSupervision({
             'randomFiles': False,
             # 'amount': 5
         }, fileIds = fileIds)
+        print("done querying weak sup")
         # {
         #     'randomFiles': bool,
         #     'categorical': List[Category],
@@ -1150,8 +1152,8 @@ def main():
 
     from werkzeug.middleware.profiler import ProfilerMiddleware
     app.config['PROFILE'] = True
-    app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[30], profile_dir = './profiles')
-    app.run(host=config['host'], port=config['port'], debug=config['debug'], use_reloader=False)
+    app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[0], profile_dir = './profiles')
+    app.run(host=config['host'], port=config['port'], debug=config['debug'], threaded=True, use_reloader=False)
     return app
 
 

@@ -19,7 +19,7 @@ def randomTime(start, end):
     return start + datetime.timedelta(seconds=random_second)
 
 path = "/home/cindy/Documents/github/auviewer/assets/auvdata/projects/afibsample/originals"
-segLength = 10
+segLength = 10000
 onlyfiles = [f for f in listdir(path) if isfile(join(path, f))]
 print(onlyfiles)
 seriesOfInterest = utils.HR_SERIES
@@ -32,7 +32,7 @@ for filename in onlyfiles:
 
 
     filename = (filename.split("."))[0]
-    newfilename = filename + "_10s_segments" + "*" + str(repeat)
+    newfilename = filename + "_" + str(segLength) + "s_segments" + "*" + str(repeat)
     fin_id = (((filename.split('_'))[2]).split("."))[0]
     print(fin_id)
 
@@ -56,8 +56,10 @@ for filename in onlyfiles:
     writer.writerow(['start', 'end', 'fin_id'])
     for i in range(0, repeat):
         randstart = randomTime(fileStartTime, fileEndTime)
-        randend = randstart + datetime.timedelta(0,10)
-        writer.writerow([randstart, randend, fin_id])
+        randend = randstart + datetime.timedelta(0,segLength)
+        if(randend<fileEndTime):
+            writer.writerow([randstart, randend, fin_id])
+        else: i -= 1
     
     print("shutting down")
     time.sleep(1)

@@ -53,6 +53,7 @@ class Series:
             # Holds the downsample set
             self.dss = DownsampleSet(self)
 
+
             # Grab the unit, if available
             try:
                 self.units = self.fileparent.f['/'.join(self.h5path)].meta['dwc_meta']['unitLabel']
@@ -159,9 +160,20 @@ class Series:
             "units": self.units
         }
 
+    def getRangedOutputParallel(self, starttimes, stoptimes):
+        downsampledResults = self.dss.getRangedOutputParallel(starttimes, stoptimes)
+        start2 = list()
+        stop2 = list()
+        idx = list()
+        for i in range(len(downsampledResults)):
+            if not isinstance(downsampledResults[i], pd.DataFrame):
+                idx.append(i)
+                start2.append(starttimes)
+                stop2.append(stoptimes[i])
+
     # Produces JSON output for the series over a specified time range, with
     # starttime and stoptime being time offset floats in seconds.
-    def getRangedOutput(self, starttime, stoptime):
+    def getRangedOutputParallel(self, ds, starttime, stoptime):
 
         logging.info(f"Assembling ranged output for {self.id}.")
 
@@ -178,6 +190,41 @@ class Series:
         
         # if (not isinstance(ds, pd.DataFrame) or pd.DataFrame.empty):
         else:
+            data = self.rd.getRangedOutputWithDS(ds, starttime, stoptime)
+            output_type = 'real'
+        # print(data)
+        logging.info(f"Completed assembly of ranged ({'downsampled' if output_type=='downsample' else 'raw'}) output for {self.id}.")
+
+        # Return the JSON-ready output object
+        return {
+            "id": self.id,
+            "labels": ['Date/Offset', 'Min', 'Max', simpleSeriesName(self.id)],
+            "data": data,
+            "output_type": output_type,
+            "units": self.units
+        }
+
+    # Produces JSON output for the series over a specified time range, with
+    # starttime and stoptime being time offset floats in seconds.
+    def getRangedOutput(self, starttime, stoptime):
+
+        logging.info(f"Assembling ranged output for {self.id}.")
+
+        # Getting ranged output is not supported in realtime-mode.
+        if self.fileparent.mode() == 'realtime':
+            raise Exception('series.getRangedOutput() is not available in realtime-mode.')
+
+        # Get the appropriate downsample for this time range
+        ds = self.dss.getRangedOutput(starttime, stoptime)
+        if isinstance(ds, pd.DataFrame):
+            print("using downsample")
+            data = ds.to_records(index=False).tolist()
+            output_type = 'downsample'
+
+        
+        # if (not isinstance(ds, pd.DataFrame) or pd.DataFrame.empty):
+        else:
+            print("using raw data")
             data = self.rd.getRangedOutput(starttime, stoptime)
             output_type = 'real'
         # print(data)
@@ -219,6 +266,8 @@ class Series:
 
         end = time.time()
         logging.info(f"Completed processing & storing all downsamples for the series {self.id}. Took {round((end - start) / 60, 3)} minutes.")
+
+
 
     def pullRawDataIntoMemory(self, returnValuesOnly=False):
         """

@@ -1,7 +1,12 @@
 """Class and related functionality for projects."""
 import importlib
+from textwrap import wrap
+from this import d
+from timeit import repeat
 import numpy as np
-
+from sqlalchemy.orm import sessionmaker
+import audata
+import h5py
 import datetime as dt
 from io import StringIO, BytesIO
 import logging
@@ -14,17 +19,70 @@ from snorkel.labeling.model import LabelModel
 from collections import Counter
 
 from pathlib import Path
-from sqlalchemy import and_
+from sqlalchemy import and_, false
 from sqlalchemy.orm import contains_eager, joinedload
 from typing import AnyStr, List, Dict, Optional, Union
+
+from joblib import Parallel, delayed
 # import ray
 import multiprocessing
+
+from torch import dsmm
 
 from . import models
 from .patternset import PatternSet
 from .config import config
 from .file import File
 from .shared import annotationDataFrame, annotationOrPatternOutput, getProcFNFromOrigFN, patternDataFrame
+import time
+
+def getVotesForSegment(segmentid, left, right,  thresholds, labels, categoryNumbersToIds, id, lfs):
+
+    series = seriesOfInterest.getRangedOutputParallel(
+                    ds, left / 1000.0, right / 1000.0).get('data')
+
+
+    if (len(series) == 0):
+        return
+    curSeries = np.array([x[-1] for x in series])
+
+    filledNaNs = None
+    if np.sum(np.isnan(curSeries)) > 0:
+        filledNaNs = curSeries.isna().to_numpy()
+        curSeries = curSeries.fillna(0)
+    EEG = curSeries.reshape((-1, 1))
+    curLFModule = lfModule(EEG, filledNaNs, thresholds, labels)
+    vote_vec = curLFModule.get_vote_vector()
+
+    # This is the part I want to make parallel?
+    segmentVotes = list()
+    for lf, vote in zip(lfs, vote_vec):
+        categoryId = categoryNumbersToIds[vote]
+        newVote = models.Vote(
+            project_id=id,
+            labeler_id=lf.id,
+            category_id=categoryId,
+            file_id=id,
+            segment_id=segmentid
+        )
+        segmentVotes.append(newVote)
+        # models.db.session.add(newVote)
+        # models.db.session.commit()
+    # models.db.session.add_all(segmentVotes)
+    # models.db.session.commit()
+    # print(segmentVotes)
+    # result[segment.id] = vote_vec
+    # fileobj.close()
+    # h5file.close()
+    return segmentVotes
+
+#trying flask multithreading
+from flask_executor import Executor
+from flask import current_app
+import concurrent.futures
+
+
+
 
 class Project:
     """Represents an auviewer project."""
@@ -85,7 +143,8 @@ class Project:
         """
 
         # Create pattern set in the database
-        patternSetModel = models.PatternSet(project_id=self.id, name=name, description=description, show_by_default=showByDefault)
+        patternSetModel = models.PatternSet(
+            project_id=self.id, name=name, description=description, show_by_default=showByDefault)
         models.db.session.add(patternSetModel)
         models.db.session.commit()
 
@@ -101,8 +160,10 @@ class Project:
         Run pattern detection on all files, and return a DataFrame of results.
         This DataFrame, or a subset thereof, can be passed into PatternSet.addPatterns() if desired.
         """
-        patterns = [[f.id, f.name, series, pattern[0], pattern[1], None, None] for f in self.files for pattern in f.detectPatterns(type, series, thresholdlow, thresholdhigh, duration, persistence, maxgap, expected_frequency=expected_frequency, min_density=min_density)]
-        pdf = pd.DataFrame(patterns, columns=['file_id', 'filename', 'series', 'left', 'right', 'top', 'bottom'])
+        patterns = [[f.id, f.name, series, pattern[0], pattern[1], None, None] for f in self.files for pattern in f.detectPatterns(
+            type, series, thresholdlow, thresholdhigh, duration, persistence, maxgap, expected_frequency=expected_frequency, min_density=min_density)]
+        pdf = pd.DataFrame(patterns, columns=[
+                           'file_id', 'filename', 'series', 'left', 'right', 'top', 'bottom'])
         pdf['label'] = ''
         return pdf
 
@@ -111,8 +172,8 @@ class Project:
             annotation_id: Union[int, List[int], None] = None,
             file_id: Union[int, List[int], None] = None,
             pattern_id: Union[int, List[int], None] = None,
-            pattern_set_id: Union[int, List[int], None]=None,
-            series: Union[AnyStr, List[AnyStr], None]=None,
+            pattern_set_id: Union[int, List[int], None] = None,
+            series: Union[AnyStr, List[AnyStr], None] = None,
             user_id: Union[int, List[int], None] = None) -> pd.DataFrame:
         """
         Returns a dataframe of annotations for this project, optionally filtered.
@@ -176,11 +237,11 @@ class Project:
         outputObject = {
             'files': [[f.id, f.origFilePathObj.name] for f in files],
             'series': [],
-            'events': [],#[f.getEvents() for f in self.files],
+            'events': [],  # [f.getEvents() for f in self.files],
             'metadata': [f.getMetadata() for f in files]
         }
 
-        #must populate outputObject with constituent files' series, events, and metadata
+        # must populate outputObject with constituent files' series, events, and metadata
         for f in files:
             s = self.getSeriesToRender(f)
             if (s):
@@ -196,6 +257,7 @@ class Project:
         return self.makeFilesPayload(files)
 
     def queryWeakSupervision(self, queryObj, fileIds=None):
+        print("querying weak supervision")
         newsm = None
         if (self.name.lower().startswith('afib') and len(models.SupervisorModule.query.filter_by(project_id=self.id).all()) == 0):
             newsm = models.SupervisorModule(
@@ -214,9 +276,9 @@ class Project:
         if (newsm):
             models.db.session.add(newsm)
             models.db.session.commit()
-            print('made '+ newsm.title + ' for proj '+self.name)
+            print('made ' + newsm.title + ' for proj '+self.name)
 
-        #of form:
+        # of form:
             # 'randomFiles': True,
             # 'categorical': None,
             # 'labelingFunction': None,
@@ -224,14 +286,17 @@ class Project:
         chosenFiles = []
         if fileIds:
             fileDict = dict()
-            for f in self.files:
+            def addFile(f):
                 try:
                     f.f
                 except Exception as e:
                     print(e)
                     pass
                 fileDict[f.id] = f
-
+            
+            # Parallel(n_jobs=2,require='sharedmem')(delayed(addFile)(f) for f in self.files)
+            for f in self.files:
+                addFile(f)
             for fId in fileIds:
                 chosenFiles.append(fileDict[fId])
         elif queryObj['randomFiles']:
@@ -242,21 +307,27 @@ class Project:
                     nextFile = random.choice(self.files)
                 chosenFiles.append(nextFile)
                 chosenFileIds.add(nextFile.id)
-        elif queryObj.get('labelingFunction'): #category belonging to labeling function
-        #of form:
+        # category belonging to labeling function
+        elif queryObj.get('labelingFunction'):
+            # of form:
             # 'randomFiles': false,
             # 'categorical': 'ABSTAIN',
             # 'labelingFunction': 'bimodel_aEEG',
             # 'amount': 5,
 
-            #extract labeler and category from tables
-            labeler = models.Labeler.query.filter_by(project_id=self.id, title=queryObj['labelingFunction']).first()
-            category = models.Category.query.filter_by(project_id=self.id, label=queryObj['categorical']).first()
-            categories = models.Category.query.filter_by(project_id=self.id, label=queryObj['categorical']).all()
+            # extract labeler and category from tables
+            labeler = models.Labeler.query.filter_by(
+                project_id=self.id, title=queryObj['labelingFunction']).first()
+            category = models.Category.query.filter_by(
+                project_id=self.id, label=queryObj['categorical']).first()
+            categories = models.Category.query.filter_by(
+                project_id=self.id, label=queryObj['categorical']).all()
             # get votes belonging to labeling function, then votes belonging to category
-            filteredVotes = models.Vote.query.filter_by(labeler_id=labeler.id).filter_by(category_id=category.id).all()
-            #basically doing a join w/o using a join here
-            chosenFiles = [next(f for f in self.files if f.id==vote.file_id) for vote in filteredVotes]
+            filteredVotes = models.Vote.query.filter_by(
+                labeler_id=labeler.id).filter_by(category_id=category.id).all()
+            # basically doing a join w/o using a join here
+            chosenFiles = [next(f for f in self.files if f.id == vote.file_id)
+                           for vote in filteredVotes]
 
         return self.makeFilesPayload(chosenFiles)
 
@@ -264,18 +335,21 @@ class Project:
         voteOutput = list()
         endIndicesOutput = list()
         for fileId in fileIds:
-            votes, endIndices = self.computeVotesForFile(fileId, labeler, thresholds)
+            votes, endIndices = self.computeVotesForFile(
+                fileId, labeler, thresholds)
             voteOutput.append(votes)
             endIndicesOutput.append(endIndices)
         return voteOutput, endIndicesOutput
 
-
     def computeVotesForFile(self, fileId, labelerTitle, modifiedThresholds=None):
-        #find file corresponding to fileId
+        # find file corresponding to fileId
         for f in self.files:
             if f.id == fileId:
-                series = self.getSeriesOfInterest(f).getFullOutput().get('data')
+                series = self.getSeriesOfInterest(
+                    f).getFullOutput().get('data')
 
+        
+        
         lfModule = self.getLFModule()
 
         thresholds = lfModule.getInitialThresholds()
@@ -292,7 +366,8 @@ class Project:
         # timestamps = np.array([dt.datetime.fromtimestamp(e[0]) for e in series])
         timestamps = np.array([e[0]*1000 for e in series])
         for i, t in enumerate(timestamps):
-            if i==0: continue
+            if i == 0:
+                continue
             for j, seg in enumerate(segments):
                 if correspondingIndices[j] != None:
                     # then we are looking for end index
@@ -325,9 +400,9 @@ class Project:
         if (votes):
             pass
         # elif (len(models.Vote.query.filter_by(project_id=self.id).all()) > 0):
-            #use calculated votes
+            # use calculated votes
         else:
-            print("getting votes")
+            print("getting votes from label model")
             votes, _ = self.getVotes([f.id for f in self.files])
 
             # votes = self.computeVotes([f.id for f in self.files])
@@ -336,19 +411,20 @@ class Project:
         for segId in segIds:
             if (len(votes[segId]) > 0):
                 L_train.append([labels[v] for v in votes[segId]])
-        lfNumCorrect, lfNumNonAbstains, lfNumAbstains= [0 for v in lfNames], [0 for v in lfNames], [0 for v in lfNames]
+        lfNumCorrect, lfNumNonAbstains, lfNumAbstains = [
+            0 for v in lfNames], [0 for v in lfNames], [0 for v in lfNames]
         L_train = np.array(L_train)
         lm = LabelModel(cardinality=len(labels.keys()), verbose=False)
         lm.fit(L_train=L_train, n_epochs=500, log_freq=100, seed=42)
         lm_predictions = lm.predict_proba(L=L_train)
         predsByFilename = dict()
         numbersToLabels = lfMod.number_to_label_map()
-        j= 0
+        j = 0
         for i, segId in enumerate(segIds):
             if (len(votes[segId]) > 0):
                 prediction = lm_predictions[j]
                 p = np.argmax(prediction)
-                #for experimental accuracy predictions
+                # for experimental accuracy predictions
                 for k, v in enumerate(votes[segId]):
                     if j == 0:
                         print(v, labels[v])
@@ -363,7 +439,8 @@ class Project:
                 filename = self.getFile(segment.file_id).name
                 listToAppendTo = predsByFilename.get(filename, [])
                 p = numbersToLabels[p-1]
-                fin = int(self.getFile(segment.file_id).name.split(".")[0].split("_")[-1])
+                fin = int(self.getFile(segment.file_id).name.split(
+                    ".")[0].split("_")[-1])
                 # if (fin in searchFINs):
                 #     dfdict['LabelModelVote'][segIdxToDFIdx[segId]] = p
                 listToAppendTo.append({
@@ -410,8 +487,9 @@ class Project:
         analysis = LFAnalysis(L=L_train).lf_summary()
         analysis['experimental_accuracy'] = [0 for i in range(len(lfNames))]
         for i in range(len(lfNames)):
-            if lfNumNonAbstains[i] > 0 : 
-                analysis['experimental_accuracy'][i] = (lfNumCorrect[i]/lfNumNonAbstains[i])
+            if lfNumNonAbstains[i] > 0:
+                analysis['experimental_accuracy'][i] = (
+                    lfNumCorrect[i]/lfNumNonAbstains[i])
         return {
             # 'predictions': predictions,
             # 'probabilities': lm_predictions.tolist(),
@@ -420,82 +498,22 @@ class Project:
             'predictions': predsByFilename
         }
 
-
     def deleteVotes(self):
         allVotes = models.Vote.query.filter_by(project_id=self.id).all()
         for vote in allVotes:
             models.db.session.delete(vote)
         models.db.session.commit()
 
-    def getVotesForFile(self, fileId):
-        f = self.getFile(fileId)
-        fin = int(f.name.split('.')[0].split('_')[-1])
+    # global getVotesForFile
 
-        if (windowInfo):
-            segmentsForFile = models.Segment.query.\
-                filter_by(
-                    project_id=self.id,
-                    file_id=fileId,
-                    type='WINDOW',
-                    window_size_ms=windowInfo['window_size_ms'],
-                    window_roll_ms=windowInfo['window_roll_ms']).\
-                order_by(
-                    models.Segment.left.asc() #ascending
-            ).all()
-        else:
-            segmentsForFile = models.Segment.query.filter_by(
-                project_id=self.id,
-                file_id=fileId,
-                type='CUSTOM'
-            ).all()
-        
-        for segment in segmentsForFile:
-            if(len(segment.votes)>0): continue
-            # print("no votes")
-            series = self.getSeriesOfInterest(f).getRangedOutput(segment.left / 1000.0, segment.right / 1000.0).get('data')
-            if (len(series) == 0):
-                continue
-            curSeries = np.array([x[-1] for x in series])
 
-            filledNaNs = None
-            if np.sum(np.isnan(curSeries)) > 0:
-                filledNaNs = curSeries.isna().to_numpy()
-                curSeries = curSeries.fillna(0)
-            EEG = curSeries.reshape((-1, 1))
-            curLFModule = lfModule(EEG, filledNaNs, thresholds, labels)
-            vote_vec = curLFModule.get_vote_vector()
-            segmentVotes = list()
-            for lf, vote in zip(lfs, vote_vec):
-                categoryId = categoryNumbersToIds[vote]
-                newVote = models.Vote(
-                    project_id=self.id,
-                    labeler_id=lf.id,
-                    category_id=categoryId,
-                    file_id=fileId,
-                    segment_id=segment.id
-                )
-                # newVotes.append(newVote)
-                segmentVotes.append(newVote)
-                # models.db.session.add(newVote)
-                # models.db.session.commit()
-            models.db.session.add_all(segmentVotes)
-            # models.db.session.commit()
-            # print(segmentVotes)
-            result[segment.id] = vote_vec
-        numBefore = len(models.Vote.query.filter_by(project_id=self.id).all())
-        # models.db.session.add_all(newVotes)
-        models.db.session.commit()
-        numAfter = len(models.Vote.query.filter_by(project_id=self.id).all())
-        print(f"Added {numAfter - numBefore} votes")
-        for segment in segmentsForFile:
-            votes = [v.category.label for v in segment.votes]
-            result[segment.id] = votes
-        
-        return result
-        
 
     def getVotes(self, fileIds, windowInfo=None):
-        
+
+        # pool = multiprocessing.Pool(8)
+
+        # print("huhhhhhhhhhhhh")
+
         result = dict()
         # searchFINs =[1215499, 1007711, 1998627]
         # searchFINs = []
@@ -507,59 +525,148 @@ class Project:
 
         }
         newVotes = list()
+        global lfModule
         lfModule = self.getLFModule()
         lfnames = lfModule.get_LF_names()
         thresholds = lfModule.getInitialThresholds()
         labels = lfModule.getLabels()
         m = lfModule.number_to_label_map()
         segIdxToDFIdx = dict()
-        lfs = list(map(lambda x: models.Labeler.query.filter_by(project_id=self.id, title=x).first(), lfModule.get_LF_names()))
+        lfs = list(map(lambda x: models.Labeler.query.filter_by(
+            project_id=self.id, title=x).first(), lfModule.get_LF_names()))
         categoryNumbersToIds = dict()
         m = lfModule.number_to_label_map()
         for number in labels.values():
-            label = models.Category.query.filter_by(project_id=self.id, label=m[number]).first()
+            label = models.Category.query.filter_by(
+                project_id=self.id, label=m[number]).first()
             categoryNumbersToIds[number] = label.id
         for lfname in lfnames:
             dfDict[lfname] = list()
             k = lfname.split('_')[0]
             dfDict[k] = list()
         j = 0
+        # executor = Executor(current_app)
+        # current_app.config['EXECUTOR_MAX_WORKERS'] = 32
+        # current_app.config['EXECUTOR_TYPE'] = 'process'
 
-        
 
-        pool = multiprocessing.Pool(8)
 
-        zip(*pool.map(getVotesForFile, fileIds))
+
+
+        # def getVotesForFileLocal(fileId):
+        #     # result = dict()
+        #     print("getting votes for file")
+        #     f = self.getFile(fileId)
+        #     # print("got file")
+        #     fin = int(f.name.split('.')[0].split('_')[-1])
+
+        #     if (windowInfo):
+        #         segmentsForFile = models.Segment.query.\
+        #             filter_by(
+        #                 project_id=self.id,
+        #                 file_id=fileId,
+        #                 type='WINDOW',
+        #                 window_size_ms=windowInfo['window_size_ms'],
+        #                 window_roll_ms=windowInfo['window_roll_ms']).\
+        #             order_by(
+        #                 models.Segment.left.asc()  # ascending
+        #             ).all()
+        #     else:
+        #         print("else")
+        #         print(self.id)
+        #         segmentsForFile = models.Segment.query.filter_by(
+        #             project_id=self.id,
+        #             file_id=fileId,
+        #             type='CUSTOM'
+        #         ).all()
+        #         print("got segments")
+
+        #     def getVotesForSegment(segment, series):
+        #         if(len(segment.votes) > 0):
+        #             return
+        #         # print("no votes")
+        #         if (len(series) == 0):
+        #             return
+        #         curSeries = np.array([x[-1] for x in series])
+
+        #         filledNaNs = None
+        #         if np.sum(np.isnan(curSeries)) > 0:
+        #             filledNaNs = curSeries.isna().to_numpy()
+        #             curSeries = curSeries.fillna(0)
+        #         EEG = curSeries.reshape((-1, 1))
+        #         curLFModule = lfModule(EEG, filledNaNs, thresholds, labels)
+        #         vote_vec = curLFModule.get_vote_vector()
+        #         segmentVotes = list()
+        #         for lf, vote in zip(lfs, vote_vec):
+        #             categoryId = categoryNumbersToIds[vote]
+        #             newVote = models.Vote(
+        #                 project_id=self.id,
+        #                 labeler_id=lf.id,
+        #                 category_id=categoryId,
+        #                 file_id=fileId,
+        #                 segment_id=segment.id
+        #             )
+        #             newVotes.append(newVote)
+        #             segmentVotes.append(newVote)
+        #             # models.db.session.add(newVote)
+        #             # models.db.session.commit()
+        #         models.db.session.add_all(segmentVotes)
+        #         # models.db.session.commit()
+        #         # print(segmentVotes)
+        #         result[segment.id] = vote_vec
+
+            
+
+        #     args = []
+        #     for segment in segmentsForFile:
+        #         series = self.getSeriesOfInterest(f)
+        #         args.append((series, segment.left/1000.0, segment.right/1000.0))
+
+        #     # print("omg")
+        #     # results = zip(*pool.map(wrapper, args))
+        #     # results2 = list(results)
+        #     # for i in range(len(segmentsForFile)):
+        #     #     getVotesForSegment(segmentsForFile[i], results2[i].get('data'))
+        #     # futures = []
+        #     # k = 0
+        #     # for segment in segmentsForFile:
+        #     #     print("submitting", k)
+        #     #     future = executor.submit(wrapper,k, self.getSeriesOfInterest(f), segment.left / 1000.0, segment.right / 1000.0)
+        #     #     futures.append(future)
+        #     #     k += 1
+
+        #     # import time
+
+        #     # oldtime = time.time()
+        #     # newtime = time.time()
+        #     # for future in concurrent.futures.as_completed(futures):
+        #     #     oldtime = newtime
+        #     #     newtime = time.time()
+        #     #     print(newtime - oldtime)
+        #     #     (i, output) = future.result()
+        #     #     getVotesForSegment(segmentsForFile[i], output.get('data'))
+            
                 
-        #add labelmodel results
-        preds = self.applyLabelModel(segIdxToDFIdx=segIdxToDFIdx, dfdict=dfDict, votes=result)
-        # preds = None
-        # df = pd.DataFrame.from_dict(dfDict)
-        # df.to_csv('segmentsOfInterest.csv')
-        # print(preds)
-        return result, preds
 
+        #     print("getting parallel")
+        #     # Parallel(n_jobs=1,require='sharedmem')(delayed(getVotesForSegment)(segment) for segment in segmentsForFile)
+        #     numBefore = len(models.Vote.query.filter_by(project_id=self.id).all())
+        #     # models.db.session.add_all(newVotes)
+        #     models.db.session.commit()
+        #     numAfter = len(models.Vote.query.filter_by(project_id=self.id).all())
+        #     print(f"Added {numAfter - numBefore} votes")
+        #     for segment in segmentsForFile:
+        #         votes = [v.category.label for v in segment.votes]
+        #         result[segment.id] = votes
 
-    def computeVotes(self, fileIds, windowInfo=None):
-        lfModule = self.getLFModule()
-        thresholds = self.getThresholdsPayload()
+        #     return result
 
-        labels = lfModule.getLabels()
-        resultingVotes = dict()
-        self.deleteVotes()
-
-        lfs = list(map(lambda x: models.Labeler.query.filter_by(project_id=self.id, title=x).first(), lfModule.get_LF_names()))
-        categoryNumbersToIds = dict()
-        m = lfModule.number_to_label_map()
-        for number in labels.values():
-            label = models.Category.query.filter_by(project_id=self.id, label=m[number]).first()
-            categoryNumbersToIds[number] = label.id
-        newVotes = list()
-        for fileId in fileIds:
+        def getVotesForFileLocal(fileId):
+            # result = dict()
+            print("getting votes for file")
             f = self.getFile(fileId)
-            if (self.getSeriesOfInterest(f) == None):
-                continue
-
+            # print("got file")
+            fin = int(f.name.split('.')[0].split('_')[-1])
 
             if (windowInfo):
                 segmentsForFile = models.Segment.query.\
@@ -570,8 +677,152 @@ class Project:
                         window_size_ms=windowInfo['window_size_ms'],
                         window_roll_ms=windowInfo['window_roll_ms']).\
                     order_by(
-                        models.Segment.left.asc() #ascending
+                        models.Segment.left.asc()  # ascending
+                    ).all()
+            else:
+                print("else")
+                print(self.id)
+                segmentsForFile = models.Segment.query.filter_by(
+                    project_id=self.id,
+                    file_id=fileId,
+                    type='CUSTOM'
                 ).all()
+                print("got segments")
+
+            def getVotesForSegment(segment):
+                if(len(segment.votes) > 0):
+                    return
+                # print("no votes")
+                series = self.getSeriesOfInterest(f).getRangedOutput(
+                    segment.left / 1000.0, segment.right / 1000.0).get('data')
+                if (len(series) == 0):
+                    return
+                curSeries = np.array([x[-1] for x in series])
+
+
+        def getVotesForFileLocal(fileId):
+            # result = dict()
+            print("getting votes for file")
+            f = self.getFile(fileId)
+            global seriesOfInterest
+            seriesOfInterest = self.getSeriesOfInterest(f)
+
+            # print("got file")
+            fin = int(f.name.split('.')[0].split('_')[-1])
+
+            if (windowInfo):
+                segmentsForFile = models.Segment.query.\
+                    filter_by(
+                        project_id=self.id,
+                        file_id=fileId,
+                        type='WINDOW',
+                        window_size_ms=windowInfo['window_size_ms'],
+                        window_roll_ms=windowInfo['window_roll_ms']).\
+                    order_by(
+                        models.Segment.left.asc()  # ascending
+                    ).all()
+            else:
+                print(self.id)
+                segmentsForFile = models.Segment.query.filter_by(
+                    project_id=self.id,
+                    file_id=fileId,
+                    type='CUSTOM'
+                ).all()
+            
+            segmentsForFileNew = list()
+            for segment in segmentsForFile:
+                if(len(segment.votes)==0):
+                    segmentsForFileNew.append(segment)
+
+            
+            
+                
+            # print(arg)
+            # q = ctx.Queue()
+            # ctx = multiprocessing.get_context('spawn')
+            def initializer():
+                global ds
+                ds = audata.File.open(str(seriesOfInterest.fileparent.origFilePathObj), return_datetimes=False)
+                ds = ds['/'.join(seriesOfInterest.h5path)]
+
+            p = multiprocessing.Pool(8, initializer=initializer)
+            
+                
+    
+            print("# of workers", p._processes)
+            arg = [(segmentsForFileNew[i].id, segmentsForFileNew[i].left, segmentsForFileNew[i].right, thresholds, labels, categoryNumbersToIds, fileId, lfs) for i in range(len(segmentsForFileNew))]
+            results = p.starmap(getVotesForSegment, arg)
+            results = list(results)
+            p.close()
+            p.join()
+            for votes in results:
+                if(votes):
+                    models.db.session.add_all(votes)
+            models.db.session.commit()
+
+            numBefore = len(models.Vote.query.filter_by(project_id=self.id).all())
+            # models.db.session.add_all(newVotes)
+            models.db.session.commit()
+            numAfter = len(models.Vote.query.filter_by(project_id=self.id).all())
+            print(f"Added {numAfter - numBefore} votes")
+            for segment in segmentsForFile:
+                votes = [v.category.label for v in segment.votes]
+                print(votes)
+                result[segment.id] = votes
+
+            # print(result)
+            return result
+        
+        # results = zip(*pool.map(test, args))
+        # result = list(results)
+        print("parallel!")
+        # Parallel(n_jobs=2)(delayed(sqrt)(i ** 2) for i in range(10))
+        for fileId in fileIds:  (getVotesForFileLocal)(fileId) 
+        # tmp = [(getVotesForFileLocal)(fileId) for fileId in fileIds]
+        print("applying label model")
+
+        # add labelmodel results
+        preds = self.applyLabelModel(
+            segIdxToDFIdx=segIdxToDFIdx, dfdict=dfDict, votes=result)
+        # preds = None
+        # df = pd.DataFrame.from_dict(dfDict)
+        # df.to_csv('segmentsOfInterest.csv')
+        # print(preds)    def computeVotes(self, fileIds, windowInfo=None):
+        return result, preds
+
+    def computeVotes(self, fileIds, windowInfo=None):
+        lfModule = self.getLFModule()
+        thresholds = self.getThresholdsPayload()
+
+        labels = lfModule.getLabels()
+        resultingVotes = dict()
+        self.deleteVotes()
+
+        lfs = list(map(lambda x: models.Labeler.query.filter_by(
+            project_id=self.id, title=x).first(), lfModule.get_LF_names()))
+        categoryNumbersToIds = dict()
+        m = lfModule.number_to_label_map()
+        for number in labels.values():
+            label = models.Category.query.filter_by(
+                project_id=self.id, label=m[number]).first()
+            categoryNumbersToIds[number] = label.id
+        newVotes = list()
+        for fileId in fileIds:
+            f = self.getFile(fileId)
+            if (self.getSeriesOfInterest(f) == None):
+                continue
+
+            if (windowInfo):
+                segmentsForFile = models.Segment.query.\
+                    filter_by(
+                        project_id=self.id,
+                        file_id=fileId,
+                        type='WINDOW',
+                        window_size_ms=windowInfo['window_size_ms'],
+                        window_roll_ms=windowInfo['window_roll_ms']).\
+                    order_by(
+                        models.Segment.left.asc()  # ascending
+                    ).all()
             else:
                 segmentsForFile = models.Segment.query.filter_by(
                     project_id=self.id,
@@ -584,8 +835,9 @@ class Project:
             #     mini = min(segment.left, mini)
             #     maxi = max(segment.right, maxi)
             # series = self.getSeriesOfInterest(f).getFullOutput().get('data')
-            #iterate through user defined segments
-            if (len(segmentsForFile) == 0): continue
+            # iterate through user defined segments
+            if (len(segmentsForFile) == 0):
+                continue
             # print("seg len: ", len(segmentsForFile))
             # for (i, segment) in enumerate(segmentsForFile):
             #     print(segment.left, segment.right)
@@ -595,7 +847,8 @@ class Project:
                 #     startIdx, endIdx = correspondingIndexBounds[i]
                 # else:
                 #     continue
-                series = self.getSeriesOfInterest(f).getRangedOutput(segment.left / 1000.0, segment.right / 1000.0).get('data')
+                series = self.getSeriesOfInterest(f).getRangedOutput(
+                    segment.left / 1000.0, segment.right / 1000.0).get('data')
                 if (len(series) == 0):
                     continue
                 curSeries = np.array([x[-1] for x in series])
@@ -630,20 +883,23 @@ class Project:
         return resultingVotes
 
     def getSegments(self, type='CUSTOM'):
-        allSegments = models.Segment.query.filter_by(project_id=self.id, type=type).all()
+        allSegments = models.Segment.query.filter_by(
+            project_id=self.id, type=type).all()
         res = dict()
         for segment in allSegments:
             filename = self.getFile(segment.file_id).name
             series = segment.series
-            bound = {'left': segment.left, 'right':segment.right, 'id': segment.id}
+            bound = {'left': segment.left,
+                     'right': segment.right, 'id': segment.id}
             res[filename] = res.get(filename, dict())
             res[filename][series] = res[filename].get(series, list())
             res[filename][series].append(bound)
 
-        if type=='CUSTOM':
+        if type == 'CUSTOM':
             windowInfo = None
         else:
-            sampleSeg = models.Segment.query.filter_by(project_id=self.id, type='WINDOW').first()
+            sampleSeg = models.Segment.query.filter_by(
+                project_id=self.id, type='WINDOW').first()
             windowInfo = {
                 'window_size_ms': sampleSeg.window_size_ms,
                 'window_roll_ms': sampleSeg.window_roll_ms
@@ -651,17 +907,20 @@ class Project:
         return res, windowInfo
 
     def deleteSegments(self, segmentsMap):
-        beforeNum = len(models.Segment.query.filter_by(project_id=self.id).all())
+        beforeNum = len(models.Segment.query.filter_by(
+            project_id=self.id).all())
         segmentsToDelete = list()
         for filename, seriesMap in segmentsMap.items():
             for seriesId, spans in seriesMap.items():
                 for span in spans:
                     left, right = span['left'], span['right']
-                    segment = models.Segment.query.filter_by(project_id=self.id, file_id=self.getFileByName(filename).id, series=seriesId, left=left, right=right).first()
+                    segment = models.Segment.query.filter_by(project_id=self.id, file_id=self.getFileByName(
+                        filename).id, series=seriesId, left=left, right=right).first()
                     models.db.session.delete(segment)
                     segmentsToDelete.append(segment)
         models.db.session.commit()
-        afterNum = len(models.Segment.query.filter_by(project_id=self.id).all())
+        afterNum = len(models.Segment.query.filter_by(
+            project_id=self.id).all())
         numDeleted = beforeNum - afterNum
         success = len(segmentsToDelete) == numDeleted
         return numDeleted, success
@@ -676,12 +935,13 @@ class Project:
     def parseAndCreateSegmentsFromFile(self, filename, fileObj):
         fileContents = fileObj.read()
         if (filename.endswith('.pkl')):
-            #assume its a pickled pandas dataframe
+            # assume its a pickled pandas dataframe
             df = pd.read_pickle(fileContents)
         elif (filename.endswith('.csv')):
-            df = pd.read_csv(BytesIO(fileContents), parse_dates=['start', 'end'])
+            df = pd.read_csv(BytesIO(fileContents),
+                             parse_dates=['start', 'end'])
         self._deleteCustomSegments()
-        foundFINs = dict() #dictionary mapping fins to their file indexes
+        foundFINs = dict()  # dictionary mapping fins to their file indexes
         segmentsMap = dict()
         '''
         segmentsMap expected to be of form:
@@ -698,15 +958,17 @@ class Project:
         count = 0
         for idx, row in df.iterrows():
             fin_id = row['fin_id']
-            foundFINs[fin_id] = foundFINs.get(fin_id, self.findFileByFIN(fin_id))
+            foundFINs[fin_id] = foundFINs.get(
+                fin_id, self.findFileByFIN(fin_id))
             if (not foundFINs[fin_id]):
-                #then file in csv isn't associated with file, so we should skip making segments for it
+                # then file in csv isn't associated with file, so we should skip making segments for it
                 continue
             file = foundFINs[fin_id]
             series = self.getSeriesOfInterest(file)
             if (series is None):
                 continue
-            left_ms, right_ms = dt.datetime.timestamp(row['start'])*1000, dt.datetime.timestamp(row['end'])*1000
+            left_ms, right_ms = dt.datetime.timestamp(
+                row['start'])*1000, dt.datetime.timestamp(row['end'])*1000
             newSeg = models.Segment(
                 project_id=self.id,
                 file_id=file.id,
@@ -742,14 +1004,16 @@ class Project:
             return self._createSegmentsWindows(windowInfo, files)
 
     def _deleteCustomSegments(self):
-        allWindows = models.Segment.query.filter_by(project_id=self.id, type="CUSTOM").all()
+        allWindows = models.Segment.query.filter_by(
+            project_id=self.id, type="CUSTOM").all()
         if (len(allWindows) > 0):
             for window in allWindows:
                 models.db.session.delete(window)
             models.db.session.commit()
 
     def _deleteWindowSegments(self):
-        allWindows = models.Segment.query.filter_by(project_id=self.id, type="WINDOW").all()
+        allWindows = models.Segment.query.filter_by(
+            project_id=self.id, type="WINDOW").all()
         if (len(allWindows) > 0):
             for window in allWindows:
                 models.db.session.delete(window)
@@ -757,9 +1021,10 @@ class Project:
 
     def _createSegmentsWindows(self, windowInfo, files=None):
         self._deleteWindowSegments()
-        beforeNum = len(models.Segment.query.filter_by(project_id=self.id).all())
-        newSegments=list()
-        segmentsMap = dict() #where we're going to store the segments so they can be rendered
+        beforeNum = len(models.Segment.query.filter_by(
+            project_id=self.id).all())
+        newSegments = list()
+        segmentsMap = dict()  # where we're going to store the segments so they can be rendered
 
         windowSize_ms = windowInfo['window_size_ms']
         windowSlide_ms = windowInfo['window_roll_ms']
@@ -769,7 +1034,7 @@ class Project:
             series = file.series[0]
             seriesData = series.getFullOutput().get('data')
 
-            segmentsMap[file.name] = {series.id:list()}
+            segmentsMap[file.name] = {series.id: list()}
 
             windowStart_ms = seriesData[0][0] * 1000
             windowEnd_ms = windowStart_ms + windowSize_ms
@@ -788,17 +1053,20 @@ class Project:
                 newSegments.append(newSegment)
                 models.db.session.add(newSegment)
                 models.db.session.commit()
-                segmentsMap[file.name][series.id].append({'id':newSegment.id, 'left':windowStart_ms,'right':windowEnd_ms})
+                segmentsMap[file.name][series.id].append(
+                    {'id': newSegment.id, 'left': windowStart_ms, 'right': windowEnd_ms})
 
                 windowStart_ms += windowSlide_ms
                 windowEnd_ms += windowSlide_ms
-        afterNum = len(models.Segment.query.filter_by(project_id=self.id).all())
+        afterNum = len(models.Segment.query.filter_by(
+            project_id=self.id).all())
 
-        success = (afterNum-beforeNum)==len(newSegments)
+        success = (afterNum-beforeNum) == len(newSegments)
         return segmentsMap, success, len(newSegments)
 
     def _createSegmentsCustom(self, segmentsMap):
-        beforeNum = len(models.Segment.query.filter_by(project_id=self.id).all())
+        beforeNum = len(models.Segment.query.filter_by(
+            project_id=self.id).all())
         '''
         segmentsMap expected to be of form:
             { fId1: { seriesId1: [{'left': left1, 'right': right1},
@@ -829,12 +1097,14 @@ class Project:
 
                     span['id'] = newSegment.id
         models.db.session.commit()
-        afterNum = len(models.Segment.query.filter_by(project_id=self.id).all())
-        success = (afterNum-beforeNum)==len(newSegments)
+        afterNum = len(models.Segment.query.filter_by(
+            project_id=self.id).all())
+        success = (afterNum-beforeNum) == len(newSegments)
         return segmentsMap, success, len(newSegments)
 
     def getSeriesOfInterest(self, file):
-        supervisorModule = models.SupervisorModule.query.filter_by(project_id=self.id).first()
+        supervisorModule = models.SupervisorModule.query.filter_by(
+            project_id=self.id).first()
         if (supervisorModule):
             for s in file.series:
                 if (s.id == supervisorModule.series_of_interest):
@@ -843,7 +1113,8 @@ class Project:
             return file.series[0]
 
     def getSeriesToRender(self, file):
-        supervisorModule = models.SupervisorModule.query.filter_by(project_id=self.id).first()
+        supervisorModule = models.SupervisorModule.query.filter_by(
+            project_id=self.id).first()
         if (supervisorModule):
             for s in file.series:
                 if (s.id == supervisorModule.series_to_render):
@@ -867,7 +1138,8 @@ class Project:
         series = curSeries.reshape((-1, 1))
 
         # apply lfs to series
-        currentLfModule = lfModule(series, filledNaNs, thresholds, labels=labels)
+        currentLfModule = lfModule(
+            series, filledNaNs, thresholds, labels=labels)
         namesToCode = dict()
         import inspect
         for lfName in lfNames:
@@ -880,7 +1152,8 @@ class Project:
 
     def getLFStats(self, type='CUSTOM'):
         lfModule = self.getLFModule()
-        lfs = list(map(lambda x: models.Labeler.query.filter_by(project_id=self.id, title=x).first(), lfModule.get_LF_names()))
+        lfs = list(map(lambda x: models.Labeler.query.filter_by(
+            project_id=self.id, title=x).first(), lfModule.get_LF_names()))
         res = dict()
         for labeler in lfs:
             statsDict = {
@@ -888,32 +1161,35 @@ class Project:
                 'overlaps': 0,
                 'conflicts': 0
             }
-            #coverage
-            nonAbstains = len(list(filter(lambda v: v.category.label != 'ABSTAIN', labeler.votes)))
+            # coverage
+            nonAbstains = len(
+                list(filter(lambda v: v.category.label != 'ABSTAIN', labeler.votes)))
             statsDict['coverage'] = nonAbstains / len(labeler.votes)
             res[labeler.title] = statsDict
 
-        allSegments = models.Segment.query.filter_by(project_id=self.id, type=type).all()
+        allSegments = models.Segment.query.filter_by(
+            project_id=self.id, type=type).all()
         for segment in allSegments:
-            #create presentVotes
+            # create presentVotes
             presentVotes = Counter()
             for vote in segment.votes:
                 if (vote.category.label != 'ABSTAIN'):
                     presentVotes[vote.category.label] += 1
             for labeler in lfs:
-                thisVote = models.Vote.query.filter_by(project_id=self.id, labeler_id=labeler.id, segment_id=segment.id).first()
-                if (thisVote==None):
+                thisVote = models.Vote.query.filter_by(
+                    project_id=self.id, labeler_id=labeler.id, segment_id=segment.id).first()
+                if (thisVote == None):
                     continue
                 curLabel = thisVote.category.label
                 if curLabel == 'ABSTAIN':
-                    continue #if a labeler doesn't vote then it can't conflict or overlap
-                #overlaps
+                    continue  # if a labeler doesn't vote then it can't conflict or overlap
+                # overlaps
                 if curLabel in presentVotes and presentVotes[curLabel] > 1:
                     res[labeler.title]['overlaps'] += 1
-                #conflicts
+                # conflicts
                 for label in presentVotes.keys():
                     if label != curLabel:
-                        #then some labeler votes something other than what this labeler does
+                        # then some labeler votes something other than what this labeler does
                         res[labeler.title]['conflicts'] += 1
 
         for l in res.keys():
@@ -922,11 +1198,14 @@ class Project:
         return res
 
     def getLFModule(self, module='diagnoseEEG'):
-        replacementMod = models.SupervisorModule.query.filter_by(project_id=self.id).first()
+        replacementMod = models.SupervisorModule.query.filter_by(
+            project_id=self.id).first()
         if (replacementMod):
             module = replacementMod.title
-        labelingFunctionModuleSpec = importlib.util.spec_from_file_location(module, f"./assets/afib_assets/{module}.py")
-        labelingFunctionModule = importlib.util.module_from_spec(labelingFunctionModuleSpec)
+        labelingFunctionModuleSpec = importlib.util.spec_from_file_location(
+            module, f"./assets/afib_assets/{module}.py")
+        labelingFunctionModule = importlib.util.module_from_spec(
+            labelingFunctionModuleSpec)
         labelingFunctionModuleSpec.loader.exec_module(labelingFunctionModule)
         lfModule = getattr(labelingFunctionModule, module)
         return lfModule
@@ -935,19 +1214,23 @@ class Project:
         lfModule = self.getLFModule(lfModule)
 
         labels = lfModule.getLabels()
-        #### end of copied vars
+        # end of copied vars
 
         labelerNamesToIds = dict()
         categoryNamesToIds = dict()
 
-        numLabelersInDb = len(models.Labeler.query.filter_by(project_id=self.id).all())
-        shouldConstructLabelers = numLabelersInDb != len(lfModule.get_LF_names())
+        numLabelersInDb = len(
+            models.Labeler.query.filter_by(project_id=self.id).all())
+        shouldConstructLabelers = numLabelersInDb != len(
+            lfModule.get_LF_names())
 
-        shouldConstructThresholds = len(models.Threshold.query.filter_by(project_id=self.id).all()) == 0
-        shouldConstructCategories = len(models.Category.query.filter_by(project_id=self.id).all()) != len(labels)
+        shouldConstructThresholds = len(
+            models.Threshold.query.filter_by(project_id=self.id).all()) == 0
+        shouldConstructCategories = len(models.Category.query.filter_by(
+            project_id=self.id).all()) != len(labels)
         if (shouldConstructCategories):
             print(f'Constructing the following categories: {labels.keys()}')
-            #delete old labels and votes
+            # delete old labels and votes
             self.deleteVotes()
             for c in models.Category.query.filter_by(project_id=self.id).all():
                 models.db.session.delete(c)
@@ -958,10 +1241,12 @@ class Project:
                     project_id=self.id,
                     label=label)
                 newCategories.append(newCategory)
-            print(f'Before: {models.Category.query.filter_by(project_id=self.id).all()}')
+            print(
+                f'Before: {models.Category.query.filter_by(project_id=self.id).all()}')
             models.db.session.add_all(newCategories)
             models.db.session.commit()
-            print(f'After: {models.Category.query.filter_by(project_id=self.id).all()}')
+            print(
+                f'After: {models.Category.query.filter_by(project_id=self.id).all()}')
 
         lfNames = lfModule.get_LF_names()
         newLabelers = []
@@ -976,15 +1261,19 @@ class Project:
                 newLabelers.append(newLabeler)
             models.db.session.add_all(newLabelers)
             models.db.session.commit()
-            print(f'After labeler construction: {models.Labeler.query.filter_by(project_id=self.id).all()}')
+            print(
+                f'After labeler construction: {models.Labeler.query.filter_by(project_id=self.id).all()}')
 
-        #construct labelerNamesToIds and categoryNamesToIds, for vote creation
+        # construct labelerNamesToIds and categoryNamesToIds, for vote creation
         for lfName in lfNames:
-            labeler = models.Labeler.query.filter_by(project_id=self.id, title=lfName).first()
-            labelerNamesToIds[lfName] = labeler.id #once committed, each labeler has an id
+            labeler = models.Labeler.query.filter_by(
+                project_id=self.id, title=lfName).first()
+            # once committed, each labeler has an id
+            labelerNamesToIds[lfName] = labeler.id
 
         for categoryLabel in labels.keys():
-            curCategory = models.Category.query.filter_by(project_id=self.id, label=categoryLabel).first()
+            curCategory = models.Category.query.filter_by(
+                project_id=self.id, label=categoryLabel).first()
             categoryNamesToIds[categoryLabel] = curCategory.id
 
         if (shouldConstructThresholds):
@@ -994,9 +1283,9 @@ class Project:
             newThresholds = list()
             for threshold, value in thresholdVals.items():
                 newThreshold = models.Threshold(
-                    project_id = self.id,
-                    title = threshold,
-                    value = value
+                    project_id=self.id,
+                    title=threshold,
+                    value=value
                 )
                 newThresholds.append(newThreshold)
             models.db.session.add_all(newThresholds)
@@ -1033,10 +1322,11 @@ class Project:
 
     def updateThreshold(self, threshold):
         title, value = threshold['title'], float(threshold['value'])
-        thresh = models.Threshold.query.filter_by(project_id=self.id, title=title).first()
+        thresh = models.Threshold.query.filter_by(
+            project_id=self.id, title=title).first()
         thresh.value = value
         models.db.session.commit()
-        return math.isclose(thresh.value,value)
+        return math.isclose(thresh.value, value)
 
     def getInitialPayload(self, user_id):
         """Returns initial project payload data"""
@@ -1053,10 +1343,10 @@ class Project:
                 'name': ps.name,
                 'description': ps.description,
                 'patterns': [
-                    #annotationOrPatternOutput(p) for p in ps.patterns
-                    annotationOrPatternOutput(p, p.annotations[0] if len(p.annotations)>0 else None) for p in models.db.session.query(models.Pattern).filter_by(pattern_set_id=ps.id).outerjoin(models.Annotation, and_(models.Annotation.pattern_id==models.Pattern.id, models.Annotation.user_id==user_id)).options(contains_eager('annotations')).all()
+                    # annotationOrPatternOutput(p) for p in ps.patterns
+                    annotationOrPatternOutput(p, p.annotations[0] if len(p.annotations) > 0 else None) for p in models.db.session.query(models.Pattern).filter_by(pattern_set_id=ps.id).outerjoin(models.Annotation, and_(models.Annotation.pattern_id == models.Pattern.id, models.Annotation.user_id == user_id)).options(contains_eager('annotations')).all()
                 ]
-            } for ps in models.PatternSet.query.filter(models.PatternSet.users.any(id=user_id), models.PatternSet.project_id==self.id).all()],
+            } for ps in models.PatternSet.query.filter(models.PatternSet.users.any(id=user_id), models.PatternSet.project_id == self.id).all()],
             'project_files': [[f.id, f.origFilePathObj.name] for f in self.files],
 
             # Template data
@@ -1107,7 +1397,6 @@ class Project:
 
         # Return the dataframe
         return patternDataFrame(q.filter(models.Pattern.project_id == self.id).all())
-
 
     def getPatternSet(self, id) -> Optional[PatternSet]:
         """
@@ -1180,15 +1469,17 @@ class Project:
                 # TODO(gus): Do something else with this? Like set error state in the database entry and display in GUI?
 
             # Verify the processed file exists on the file system
-            procFilePathObj = self.processedDirPathObj / getProcFNFromOrigFN(origFilePathObj)
+            procFilePathObj = self.processedDirPathObj / \
+                getProcFNFromOrigFN(origFilePathObj)
             if not procFilePathObj.exists():
                 logging.error(
                     f"File ID {fileDBModel.id} in the database is missing the processed file on the file system at {procFilePathObj}")
-                #continue
+                # continue
                 # TODO(gus): Do something else with this? Like set error state in the database entry and display in GUI?
 
             # Instantiate the file class, and attach to this project instance
-            self.files.append(File(self, fileDBModel.id, origFilePathObj, procFilePathObj))
+            self.files.append(
+                File(self, fileDBModel.id, origFilePathObj, procFilePathObj))
 
         # If processNewFiles is true, then go through and process new files
         if processNewFiles:
@@ -1207,20 +1498,24 @@ class Project:
                         continue
 
                     # Establish the path of the new processed file
-                    newProcFilePathObj = self.processedDirPathObj / getProcFNFromOrigFN(newOrigFilePathObj)
+                    newProcFilePathObj = self.processedDirPathObj / \
+                        getProcFNFromOrigFN(newOrigFilePathObj)
 
                     # Instantiate the file class with an id of -1, and attach to
                     # this project instance.
                     try:
-                        newFileClassInstance = File(self, -1, newOrigFilePathObj, newProcFilePathObj)
+                        newFileClassInstance = File(
+                            self, -1, newOrigFilePathObj, newProcFilePathObj)
                     except Exception as e:
-                        logging.error(f"New file {newOrigFilePathObj} could not be processed.\n{e}\n{traceback.format_exc()}")
+                        logging.error(
+                            f"New file {newOrigFilePathObj} could not be processed.\n{e}\n{traceback.format_exc()}")
                         continue
 
                     # Now that the processing has completed (if not, an exception
                     # would have been raised), add the file to the database and
                     # update the file class instance ID.
-                    newFileDBEntry = models.File(project_id=self.id, path=str(newOrigFilePathObj))
+                    newFileDBEntry = models.File(
+                        project_id=self.id, path=str(newOrigFilePathObj))
                     models.db.session.add(newFileDBEntry)
                     models.db.session.commit()
 
@@ -1231,7 +1526,8 @@ class Project:
 
                 except:
 
-                    logging.error(f"Error loading new file: {traceback.format_exc()}")
+                    logging.error(
+                        f"Error loading new file: {traceback.format_exc()}")
 
     def setName(self, name):
         """Rename the project."""
