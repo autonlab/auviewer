@@ -4,6 +4,7 @@ env/
 .ipynb_checkpoints/
 *.pyc
 *.so
+*.csv
 .vscode/
 build/
 *.egg-info/
@@ -16,6 +17,8 @@ auviewer.code-workspace
 .eggs
 audata
 node_modules
+assets/auvdata
+profiles
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
