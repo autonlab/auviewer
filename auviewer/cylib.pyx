@@ -14,7 +14,7 @@ from libc.math cimport floor
 # time-per-interval is 5s and the step multiplier is 3, the new downsample will
 # have a time-per-interval of 5*3=15s.
 def buildNextDownsampleUp(np.ndarray[np.float64_t, ndim=2] intervalsOrig, double timePerIntervalOrig, int stepMultiplier):
-    print("hi")
+
     # Get the number of intervals in the original downsample.
     cdef int numIntervalsOrig = intervalsOrig.shape[0]
 
@@ -27,7 +27,7 @@ def buildNextDownsampleUp(np.ndarray[np.float64_t, ndim=2] intervalsOrig, double
     # original downsample (for example, if each interval of the original
     # downsample were separated from the other by at least
     # timePerIntervalOrig * stepMultiplier.
-    cdef np.ndarray[np.float64_t, ndim=2] intervalsNew = np.zeros((numIntervalsOrig, 4))
+    cdef np.ndarray[np.float64_t, ndim=2] intervalsNew = np.zeros((numIntervalsOrig, 3))
 
     # Determine the new time-per-interval
     cdef double timePerIntervalNew = timePerIntervalOrig*stepMultiplier
@@ -50,21 +50,19 @@ def buildNextDownsampleUp(np.ndarray[np.float64_t, ndim=2] intervalsOrig, double
 
     # Temporary-use iterator to be used below
     cdef int i
-    cdef int emptyCounter = 0
 
     while cio < numIntervalsOrig:
 
         # If this original interval does not belong to the current new interval
         # boundaries, compute the subsequent new interval boundaries to which
         # it belongs.
-        leftboundaryPrev = leftboundaryNew
         if intervalsOrig[cio,0] >= rightboundaryNew:
+
             leftboundaryNew = floor( (intervalsOrig[cio,0]-baseOffset) / timePerIntervalNew) * timePerIntervalNew + baseOffset
             rightboundaryNew = leftboundaryNew + timePerIntervalNew
 
-
-            # NOTE: We do not progress cin because we have simply skipped some
-            # empty intervals, and we do not store/represent empty intervals.
+            # NOTE: We do not progress cin because we have simply skipped an
+            # empty interval, and we do not store/represent empty intervals.
 
         # The above code block (if statement) calculates precisely which
         # interval window the data point is a member of. However, in the case of
@@ -91,11 +89,6 @@ def buildNextDownsampleUp(np.ndarray[np.float64_t, ndim=2] intervalsOrig, double
             leftboundaryNew = rightboundaryNew
             rightboundaryNew = leftboundaryNew + timePerIntervalNew
 
-        intervalsSkipped = (int)((leftboundaryNew - leftboundaryPrev)/timePerIntervalNew) - 1
-        if(intervalsSkipped>0): 
-            emptyCounter += intervalsSkipped
-        
-
         # Increment the current index pointer to the next available interval.
         cin = cin + 1
 
@@ -106,8 +99,6 @@ def buildNextDownsampleUp(np.ndarray[np.float64_t, ndim=2] intervalsOrig, double
         # Prime the min & max of the new interval to the first original interval
         intervalsNew[cin,1] = intervalsOrig[cio,1]
         intervalsNew[cin,2] = intervalsOrig[cio,2]
-
-        intervalsNew[cin+emptyCounter, 3] = cin
 
         i = 0
         while cio < numIntervalsOrig and i < stepMultiplier and intervalsOrig[cio,0] < rightboundaryNew:
@@ -144,10 +135,6 @@ def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarr
 
     # Calculate the interval size in seconds
     cdef double timePerInterval = timespan / numIntervals
-    print("num intervals", numIntervals)
-    print(len(rawOffsets))
-    print("time per interval", timePerInterval)
-    print(rawOffsets[2] - rawOffsets[1])
 
     # TODO(gus): FIX THIS BS!
     origNumIntervals = numIntervals
@@ -156,7 +143,7 @@ def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarr
     # Allocate the maximum number of intervals needed (excess will be sliced off
     # at the end). The two-dimensional array will have 3 columns and numIntervals
     # rows. The columns, in order, will be: Time Offset, Min, Max, # Points.
-    cdef np.ndarray[np.float64_t, ndim=2] intervals = np.zeros((numIntervals, 4))
+    cdef np.ndarray[np.float64_t, ndim=2] intervals = np.zeros((numIntervals, 3))
 
     # This is the base offset, or the time offset of the first data point.
     cdef double baseOffset = rawOffsets[0]
@@ -176,18 +163,15 @@ def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarr
     # to point to the "first" interval.
     cdef int cii = -1
 
-    cdef emptyCounter = 0
-
     cdef double leftboundaryORIG, rightboundaryORIG, leftboundaryIF, rightboundaryIF, leftboundaryWHILE, rightboundaryWHILE
 
     # For all data points
     while cdpi < numDataPoints:
-        leftboundaryPrev = leftboundary
-
 
         # If the next data point does not belong to the current interval
         # boundaries, compute the next interval boundaries to which it belongs.
         if rawOffsets[cdpi] >= rightboundary:
+
             # Compute the left & right boundaries for the new interval.
             leftboundary = floor( (rawOffsets[cdpi]-baseOffset) / timePerInterval) * timePerInterval + baseOffset
             rightboundary = leftboundary + timePerInterval
@@ -219,16 +203,9 @@ def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarr
             # Update left & right boundaries to the next interval
             leftboundary = rightboundary
             rightboundary = leftboundary + timePerInterval
-                    
-        intervalsSkipped = (int)((leftboundary - leftboundaryPrev)/timePerInterval) - 1
-        if(intervalsSkipped>0): emptyCounter += intervalsSkipped
-
 
         # Increment the current index pointer to the next available interval.
         cii = cii + 1
-
-        # print("empty counter", emptyCounter)
-        # print("cii", cii)
 
         # Do a sanity check. We don't expect to ever need more than numIntervals
         # intervals. However, double check that we have not gone out of bounds.
@@ -241,8 +218,6 @@ def buildDownsampleFromRaw(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndarr
         # Prime this interval's min & max with the first data point
         intervals[cii,1] = rawValues[cdpi]
         intervals[cii,2] = rawValues[cdpi]
-
-        intervals[cii+emptyCounter, 3] = cii
 
         # While the next data point occurs within the current interval, add
         # it to the interval's statistics.
@@ -416,19 +391,6 @@ def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndar
     finalalerts = finalalerts[0:cfai]
 
     return finalalerts
-
-def getSliceParamNew(ds, timecol, unsigned short side, double target, double timePerInterval, double baseOffset):
-
-
-    cdef int calculatedIndex = int(floor((target-baseOffset)/timePerInterval))
-    if(calculatedIndex<0): 
-        calculatedIndex = 0
-    cdef int realIndex = ds[calculatedIndex]['3']
-
-    return realIndex
-
-
-
 
 # Returns the index where a provided target value should be inserted in a
 # downsample or raw data series. The side parameter indicates whether to

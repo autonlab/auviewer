@@ -23,7 +23,7 @@ segLength = 10000
 onlyfiles = [f for f in listdir(path) if isfile(join(path, f))]
 print(onlyfiles)
 seriesOfInterest = utils.HR_SERIES
-repeat = 100
+repeat = 20
 print(len(onlyfiles))
 for filename in onlyfiles:
     filepath = path+"/"+filename

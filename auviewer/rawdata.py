@@ -69,8 +69,6 @@ class RawData:
         # Grab a reference to the dataset
         ds = self.getDatasetReference()
 
-        timePerInterval = ds[1][self.seriesparent.timecol][0] - ds[0][self.seriesparent.timecol][0]
-        baseOffset = ds[0][self.seriesparent.timecol][0]
         # print("time per interval:", timePerInterval)
         
 
@@ -80,10 +78,9 @@ class RawData:
         # startIndex = getSliceParam(ds, self.seriesparent.timecol, 0, starttime)
         # stopIndex = getSliceParam(ds, self.seriesparent.timecol, 1, stoptime)
 
-        startIndex = getSliceParamNew(ds, self.seriesparent.timecol, 0, starttime, timePerInterval, baseOffset)
-        stopIndex = getSliceParamNew(ds, self.seriesparent.timecol, 1, stoptime, timePerInterval, baseOffset)
+        startIndex = getSliceParam(ds, self.seriesparent.timecol, 0, starttime)
+        stopIndex = getSliceParam(ds, self.seriesparent.timecol, 1, stoptime)
 
-        print("worked fine")
 
         # Assemble the output data
         nones = [None] * (stopIndex - startIndex)

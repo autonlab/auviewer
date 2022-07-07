@@ -3,7 +3,7 @@ import psutil
 import time
 
 from .config import config
-from .cylib import buildDownsampleFromRaw, buildNextDownsampleUp, getSliceParam, numDownsamplesToBuild, getSliceParamNew
+from .cylib import buildDownsampleFromRaw, buildNextDownsampleUp, getSliceParam, numDownsamplesToBuild
 import multiprocessing
 
 # Represents a set of downsamples for a series of data.
@@ -139,7 +139,6 @@ class DownsampleSet:
         # Get index of the appropriate downsample to use
         dsi = self.whichDownsampleIndexForTimespan(timespan)
 
-        print("downsample: ", dsi)
 
         # print("dsi", dsi)
 
@@ -147,18 +146,7 @@ class DownsampleSet:
         if dsi == -1:
             return None
 
-        dsiPre = dsi - 1
-        baseOffset = 0
-        print("raw time", len(self.seriesparent.rawTimes))
-        if(dsiPre!=-1):
-            dsp = self.seriesparent.fileparent.pf['/'.join(self.seriesparent.h5pathDownsample) + '/' + str(dsiPre)]
-            #get time of the first datapoint in previous downsample, which is used to calculate current baseOffset
-            baseOffset = dsp[0]['0'] - (self.getTimePerIntervalByIndex(dsiPre)/2)
-        else: 
-            baseOffset = self.seriesparent.rawTimes[0]
 
-
-        timePerInterval = self.getTimePerIntervalByIndex(dsi)
 
         # Get reference to the downsample dataset in the processed file
         ds = self.seriesparent.fileparent.pf['/'.join(self.seriesparent.h5pathDownsample) + '/' + str(dsi)]
