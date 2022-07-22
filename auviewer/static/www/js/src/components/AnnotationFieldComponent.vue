@@ -4,12 +4,18 @@
             <label style="font-weight: 500">{{fieldInfo.name}}</label>
             <br/>
             <b-form-radio-group
-              v-if="fieldInfo && fieldInfo.type === 'categorical'"
+              v-if="fieldInfo && fieldInfo.type === 'categorical' && fieldInfo.selection_type === 'button'"
               v-model="inputValue"
               :options="fieldInfo.options"
               :name="fieldInfo.id"
               button-variant="outline-primary"
               buttons
+              :required="fieldInfo.required"></b-form-radio-group>
+            <b-form-radio-group
+              v-else-if="fieldInfo && fieldInfo.type === 'categorical' && fieldInfo.selection_type === 'radio'"
+              v-model="inputValue"
+              :options="fieldInfo.options"
+              :name="fieldInfo.id"
               :required="fieldInfo.required"></b-form-radio-group>
             <b-form-textarea
               v-else-if="fieldInfo && fieldInfo.type === 'text'"

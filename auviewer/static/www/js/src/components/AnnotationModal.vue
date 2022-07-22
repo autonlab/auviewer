@@ -292,6 +292,7 @@ export default class AnnotationModal extends Vue {
                     t.type = 'annotation';
                     t.id = data.id;
 
+                    // TODO: pattern_id could be issue for bug
                     // If this was an annotation of a pattern, report it to the
                     // assignments manager (in case the pattern is an assignment).
                     if (t.pattern_id != null) {
