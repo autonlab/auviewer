@@ -553,14 +553,8 @@ class File:
     def process(self):
         """Process and store all downsamples for all series for the file."""
 
-<<<<<<< HEAD
         # Create a path name for temporary file
         tmp_file = self.procFilePathObj.with_suffix(self.procFilePathObj.suffix + '.tmp')
-=======
-        logging.critical("File.process() called unexpectedly. Quitting.")
-        quit()
-
->>>>>>> Nerfed file processing just to be safe.
         try:
 
             logging.info(f"Processing & storing all series for file {self.origFilePathObj}.")
