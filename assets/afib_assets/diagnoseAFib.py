@@ -51,43 +51,19 @@ class diagnoseAFib:
     @staticmethod
     def getThresholdsForLabelers():
         return {
-            "variation_h": ["max_coefficient_of_variation"],
-            "iqr_h": ["max_interquartile_range"],
-            "range_h": ["max_range"],
-            "std_h": ["max_standard_deviation"],
-            "variation_l": ["min_coefficient_of_variation"],
-            "iqr_l": ["min_interquartile_range"],
-            "range_l": ["min_range"],
-            "std_l": ["min_standard_deviation"],
-            'variation_h': [],
-            'iqr_h': [],
-            'range_h': [],
-            'std_h': [],
-            'variation_m': [],
-            'iqr_m': [],
-            'range_m': [],
-            'std_m': [],
-            'variation_l': [],
-            'iqr_l': [],
-            'range_l': [],
-            'std_l': [],
+            "variationLabeler": ["max_coefficient_of_variation", "min_coefficient_of_variation"],
+            "iqrLabeler": ["max_interquartile_range", "min_interquartile_range"],
+            "rangeLabeler": ["max_range", "min_range"],
+            "stdLabeler": ["max_standard_deviation", "min_standard_deviation"],
         }
 
     @staticmethod
     def get_LF_names():
         return [
-            'variation_h',
-            'iqr_h',
-            'range_h',
-            'std_h',
-            'variation_m',
-            'iqr_m',
-            'range_m',
-            'std_m',
-            'variation_l',
-            'iqr_l',
-            'range_l',
-            'std_l'
+            'variationLabeler',
+            'iqrLabeler',
+            'rangeLabeler',
+            'stdLabeler',
         ]
 
     @staticmethod
@@ -100,99 +76,58 @@ class diagnoseAFib:
         }
     def get_numbers_vector(self):
         return [
-            self.variation(compute=True),
-            self.iqr(compute=True),
-            self.range(compute=True),
-            self.std(compute=True)
+            self.variationLabeler(compute=True),
+            self.iqrLabeler(compute=True),
+            self.rangeLabeler(compute=True),
+            self.stdLabeler(compute=True)
             ]
     def get_vote_vector(self):
         return [
-            self.variation_h(),
-            self.iqr_h(),
-            self.range_h(),
-            self.std_h(),
-            self.variation_m(),
-            self.iqr_m(),
-            self.range_m(),
-            self.std_m(),
-            self.variation_l(),
-            self.iqr_l(),
-            self.range_l(),
-            self.std_l()
+            self.variationLabeler(),
+            self.iqrLabeler(),
+            self.rangeLabeler(),
+            self.stdLabeler(),
             ]
 
-    def variation_h(self, compute=False):
+    def variationLabeler(self, compute=False):
         if (self.cov > self.thresholds['max_coefficient_of_variation']):
             return self.ATRIAL_FIBRILLATION
-        else:
-            return self.ABSTAIN
-
-    def variation_m(self, compute=False):
-        if (self.cov < self.thresholds['max_coefficient_of_variation'] and
+        elif(self.cov < self.thresholds['max_coefficient_of_variation'] and
             self.cov > self.thresholds['min_coefficient_of_variation']):
             return self.OTHER
-        else:
-            return self.ABSTAIN
-
-    def variation_l(self, compute=False):
-        if (self.cov < self.thresholds['min_coefficient_of_variation']):
+        elif (self.cov < self.thresholds['min_coefficient_of_variation']):
             return self.SINUS
-        else:
-            return self.ABSTAIN
 
-    def iqr_h(self, compute=False):
+
+    def iqrLabeler(self, compute=False):
         if self.iqr > self.thresholds['max_interquartile_range']:
             return self.ATRIAL_FIBRILLATION
-        else:
-            return self.ABSTAIN
-
-    def iqr_m(self, compute=False):
         if (self.iqr < self.thresholds['max_interquartile_range'] and
             self.iqr > self.thresholds['min_interquartile_range']):
             return self.OTHER
-        else:
-            return self.ABSTAIN
-
-    def iqr_l(self, compute=False):
         if self.iqr < self.thresholds['min_interquartile_range']:
             return self.SINUS
-        else:
-            return self.ABSTAIN
+        
+        return self.ABSTAIN
 
-    def std_h(self, compute=False):
+    def stdLabeler(self, compute=False):
         if self.std > self.thresholds['max_standard_deviation']:
             return self.ATRIAL_FIBRILLATION
-        else:
-            return self.ABSTAIN
-
-    def std_m(self, compute=False):
         if (self.std < self.thresholds['max_standard_deviation'] and
             self.std > self.thresholds['min_standard_deviation']):
             return self.OTHER
-        else:
-            return self.ABSTAIN
-
-    def std_l(self, compute=False):
         if self.std < self.thresholds['min_standard_deviation']:
             return self.SINUS
-        else:
-            return self.ABSTAIN
+        
+        return self.ABSTAIN
 
-    def range_h(self, compute=False):
+    def rangeLabeler(self, compute=False):
         if self.range > self.thresholds['max_range']:
             return self.ATRIAL_FIBRILLATION
-        else:
-            return self.ABSTAIN
-
-    def range_m(self, compute=False):
         if (self.range < self.thresholds['max_range'] and
             self.range > self.thresholds['min_range']):
             return self.OTHER
-        else:
-            return self.ABSTAIN
-
-    def range_l(self, compute=False):
         if self.range < self.thresholds['min_range']:
             return self.SINUS
-        else:
-            return self.ABSTAIN
+
+        return self.ABSTAIN
