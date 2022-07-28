@@ -6,6 +6,17 @@
 <link rel='stylesheet' href='{{ rootWebPath }}/css/third-party/webix.min.css'/>
 <link rel="stylesheet" href="https://cdn.webix.com/materialdesignicons/5.8.95/css/materialdesignicons.min.css?v=8.1.5" type="text/css" charset="utf-8">
 <link rel='stylesheet' href='{{ rootWebPath }}/css/app.css'/>
+
+<script src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.3.min.js"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.bokeh.org/bokeh/release/bokeh-widgets-2.4.3.min.js"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.bokeh.org/bokeh/release/bokeh-tables-2.4.3.min.js"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.bokeh.org/bokeh/release/bokeh-gl-2.4.3.min.js"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.bokeh.org/bokeh/release/bokeh-mathjax-2.4.3.min.js"
+        crossorigin="anonymous"></script>
 {% endblock %}
 
 {% block js %}
@@ -35,15 +46,19 @@
 <script src="{{ rootWebPath }}/js/classes/annotationset.js"></script>
 <script src="{{ rootWebPath }}/js/classes/assignmentsmanager.js"></script>
 <!-- <script src="{{ rootWebPath }}/js/classes/file.js"></script> -->
-<script src="{{ rootWebPath }}/js/classes/supervisor.js"></script>
 <script src="{{ rootWebPath }}/js/classes/globalstatemanager.js"></script>
 <script src="{{ rootWebPath }}/js/classes/graph.js"></script>
 <script src="{{ rootWebPath }}/js/classes/project.js"></script>
 <script src="{{ rootWebPath }}/js/classes/requesthandler.js"></script>
 <script src="{{ rootWebPath }}/js/classes/templatesystem.js"></script>
 
+
 <!-- Function Libraries -->
+<script src="{{ rootWebPath }}/js/event_handlers.js"></script>
 <script src="{{ rootWebPath }}/js/helpers.js"></script>
+
+<script src="{{ rootWebPath }}/js/classes/supervisor.js"></script>
+
 
 <!-- App Main -->
 <script src="{{ rootWebPath }}/js/supervisorApp.js"></script>
@@ -224,6 +239,60 @@
 	</div>
 	-->
 </div>
+
+<!-- 
+<!--annotation-->
+<div class="modal fade" id="annotationModal2" tabindex="-1" role="dialog" aria-labelledby="annotationModalTitle" aria-hidden="true" data-keyboard="false">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h6 class="modal-title" id="annotationModalTitle">Annotation</h6>
+				<button type="button" class="close cancelButton" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<form>
+					<div class="form-group" id="annotationIDContainer">
+						<label for="annotationID">Annotation ID</label>
+						<div style="font-weight: bold;" id="annotationID"></div>
+					</div>
+					<div class="form-group">
+						<label for="annotationFile">File</label>
+						<input type="text" id="annotationFile" class="form-control" disabled>
+					</div>
+					<div class="form-group">
+						<label for="annotationSeries">Series</label>
+						<input type="text" id="annotationSeries" class="form-control" disabled>
+					</div>
+					<div class="form-group">
+
+						<label>Label</label><br>
+						<div class="form-check form-check-inline">
+							<input class="form-check-input" type="radio" name="expertVote" id="inlineRadio-n3" value="afib">
+							<label class="form-check-label" for="inlineRadio-n3">afib</label>
+						</div>
+						<div class="form-check form-check-inline">
+							<input class="form-check-input" type="radio" name="expertVote" id="inlineRadio-n2" value="sinus">
+							<label class="form-check-label" for="inlineRadio-n2">sinus</label>
+						</div>
+						<div class="form-check form-check-inline">
+							<input class="form-check-input" type="radio" name="expertVote" id="inlineRadio-n1" value="other">
+							<label class="form-check-label" for="inlineRadio-n1">other</label>
+						</div>
+						
+					</div>
+					
+				</form>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-danger mr-auto deleteButton">Delete</button>
+				<button type="button" class="btn btn-secondary cancelButton" data-dismiss="modal">Cancel</button>
+				<button type="button" class="btn btn-primary saveButton">Save</button>
+			</div>
+		</div>
+	</div>
+</div> -->
 
 
 

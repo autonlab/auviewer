@@ -35,6 +35,8 @@ let globalAppConfig = {
 	updateAnnotationURL: 'update_annotation',
 	getLabelersURL: 'get_labelers',
 	getLabelsURL: 'get_labels',
-	prioritizeFileURL: 'reprioritize_file'
+	prioritizeFileURL: 'reprioritize_file',
+	getBokehInlineURL: 'bokehinline',
+	expertVoteURL: 'submit_expert_vote'
 	
 };

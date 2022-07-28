@@ -8,6 +8,9 @@ import logging
 import shutil
 import tempfile
 import json
+from tornado.ioloop import IOLoop
+from threading import Thread
+
 
 # Simplejson package is required in order to "ignore" NaN values and implicitly
 # convert them into null values. RFC JSON spec left out NaN values, even though
@@ -25,6 +28,17 @@ from .config import set_data_path, config, FlaskConfigClass
 
 from .flask_user import current_user, login_required, UserManager, SQLAlchemyAdapter
 from .flask_user.signals import user_sent_invitation, user_registered
+
+from tornado.ioloop import IOLoop
+
+from bokeh.embed import server_document, components
+from bokeh.layouts import column
+from bokeh.models import ColumnDataSource, Slider
+from bokeh.plotting import figure
+from bokeh.sampledata.sea_surface_temperature import sea_surface_temperature
+from bokeh.server.server import Server
+from bokeh.themes import Theme
+
 
 
 
@@ -607,11 +621,66 @@ def createApp():
         res = dict()
         print("before model")
         res = project.applyLabelModel()
+
         return app.response_class(
             response=simplejson.dumps(res, ignore_nan=True),
             status=200,
             mimetype='application/json'
         )
+    
+    @app.route(config['rootWebPath']+'/bokehinline', methods=['GET', 'POST'])
+    @login_required
+    def bokeh_inline():
+
+        # prepare some data
+        x = [1, 2, 3, 4, 5]
+        y = [6, 7, 2, 4, 5]
+
+        plot = figure(title="Simple line example", x_axis_label='x', y_axis_label='y')
+        plot.line(x, y, legend_label="Temp.", line_width=2)
+
+        response_object = {}
+
+        script, div = components({'plot': plot}, wrap_script=False)
+        response_object['script'] = script
+        response_object['div'] = div
+
+        return response_object
+        
+        def bkapp(doc):
+            df = sea_surface_temperature.copy()
+            source = ColumnDataSource(data=df)
+
+            plot = figure(x_axis_type='datetime', y_range=(0, 25), y_axis_label='Temperature (Celsius)', title="Sea Surface Temperature at 43.18, -70.43")
+            plot.line('time', 'temperature', source=source)
+
+            def callback(attr, old, new):
+                if new == 0:
+                    data = df
+                else:
+                    data = df.rolling(f"{new}D").mean()
+                source.data = ColumnDataSource.from_df(data)
+
+            slider = Slider(start=0, end=30, value=0, step=1, title="Smoothing by N Days")
+            slider.on_change('value', callback)
+
+            doc.add_root(column(slider, plot))
+        
+        def bk_worker():
+            # Can't pass num_procs > 1 in this configuration. If you need to run multiple
+            # processes, see e.g. flask_gunicorn_embed.py
+            server = Server({'/bkapp': bkapp}, io_loop=IOLoop(), allow_websocket_origin=["localhost:8000"])
+            server.start()
+            server.io_loop.start()
+
+
+    @app.route('/getBokeh', methods=['GET'])
+    def bkapp_page():
+        script = server_document('http://localhost:5006/bkapp')
+        return script
+
+        
+
 
     @app.route(config['rootWebPath']+'/reprioritize_file')
     @login_required
@@ -662,12 +731,10 @@ def createApp():
             return
 
         fileIds = [f.id for f in project.files]
-        print("hha")
         filesPayload = project.queryWeakSupervision({
             'randomFiles': False,
             # 'amount': 5
         }, fileIds = fileIds)
-        print("done querying weak sup")
         # {
         #     'randomFiles': bool,
         #     'categorical': List[Category],
@@ -777,6 +844,28 @@ def createApp():
             status=200,
             mimetype='application/json'
         )
+    
+    @app.route(config['rootWebPath']+'/submit_expert_vote', methods=['POST'])
+    @login_required
+    def submit_expert_vote():
+        project_id = request.args.get('project_id', type=int)
+        project = getProject(project_id)
+
+        payload = request.get_json()
+        voteSegment = payload.get('vote_segment')
+        print(voteSegment)
+        newSegment = project.submitExpertVote(voteSegment)
+        returnPayload = {
+            'new_segment': voteSegment
+        }
+        return app.response_class(
+            response=simplejson.dumps(returnPayload, ignore_nan=True),
+            status=200,
+            mimetype='application/json'
+        )
+
+
+
 
     @app.route(config['rootWebPath']+'/create_vote_segments', methods=['POST'])
     @login_required
@@ -786,6 +875,7 @@ def createApp():
 
         payload = request.get_json()
         voteSegments = payload.get('vote_segments')
+        print(voteSegments)
         windowInfo = payload.get('window_info')
         createdSegments, success, numAdded = project.createSegments(voteSegments, windowInfo)
 

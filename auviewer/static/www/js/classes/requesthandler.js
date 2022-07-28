@@ -7,6 +7,13 @@ The RequestHandler is a global singleton that handles asynchronous API requests.
 // Class declaration
 function RequestHandler() {}
 
+RequestHandler.prototype.getBokehInline = function(project_id, callback){
+	console.log(project_id);
+	this._newRequest(callback, globalAppConfig.getBokehInlineURL, {
+		project_id: project_id
+	})
+}
+
 RequestHandler.prototype.createAnnotation = function(project_id, file_id, left, right, seriesID, label, pattern_id, callback) {
 
 	this._newRequest(callback, globalAppConfig.createAnnotationURL, {
@@ -138,6 +145,22 @@ RequestHandler.prototype.submitVoteSegments = function(project_id, created_segme
 		window_info: window_info
 	}, "POST", true);
 };
+
+RequestHandler.prototype.submitExpertVote = function(project_id, filename, series_id, segment,  callback){
+	this._customRequest(callback, globalAppConfig.expertVoteURL, {
+		project_id: project_id
+	},
+	{
+		vote_segment:{
+			filename: filename,
+			series_id: series_id,
+			segment: segment
+		}
+	},
+	"POST", true
+	)
+
+}
 
 RequestHandler.prototype.getVotes = function(project_id, files, window_info, recalculate, callback) {
 	console.log(files);

@@ -17,6 +17,20 @@ function Supervisor(payload) {
 	this.segmentType = 'CUSTOM';
 	this.windowInfo = null;
 
+	this.bokehGraph = null;
+	this.bokehDiv = null;
+
+	this.baseTime = null;
+
+	$('#evaluation-tab').on('click', function (e) {
+		e.preventDefault()
+		$(this).tab('show')
+		console.log("what");
+		self.initEvaluation();
+		console.log("done evaluation");
+
+	})
+
 
 	$('#modal').css('display', 'inline-block');
 
@@ -32,6 +46,7 @@ function Supervisor(payload) {
 			self.initModel(data);
 		})
 	});
+
 
 	/*
 	Holds the min [0] and max [1] x-value across all graphs currently displayed.
@@ -146,6 +161,7 @@ Supervisor.prototype.initModel = function(data) {
 		self.initEvaluation();
 
 	})
+
 	$('#labelers-tab').on('click', function (e) {
 		e.preventDefault()
 		$(this).tab('show')
@@ -290,6 +306,18 @@ Supervisor.prototype.initModel = function(data) {
 }
 
 Supervisor.prototype.initEvaluation = function() {
+	console.log("switched to evaluation pane");
+	requestHandler.getBokehInline(this.project_id, function(data){
+		// console.log(data.script)
+		let bokehScript = data.script;
+		let bokehDiv = data.div.plot;
+		console.log(bokehScript);
+		console.log(bokehDiv);
+		document.getElementById('evaluation').innerHTML = bokehDiv;
+		console.log("evaluating bokeh");
+		eval(bokehScript);
+		console.log("done evaluating bokeh");
+	})
 	// requestHandler.requestInitialEvaluatorPayload(this.project_id, function (data) {
 	// 	console.log(data);
 	// })
@@ -697,6 +725,26 @@ Supervisor.prototype.submitWindowSegments = function() {
 	});
 }
 
+Supervisor.prototype.submitExpertVote = function(filename, series_id,  created_segment){
+	let self = this;
+	requestHandler.submitExpertVote(this.project_id, filename, series_id, created_segment,  function(data){
+		let newSeg = data.new_segment.segment;
+		let filename = data.new_segment.filename;
+		let seriesId = data.new_segment.series_id;
+		console.log(newSeg);
+		console.log(self.allSegments[filename]);
+		for(let i=0;i<self.allSegments[filename][seriesId];i++){
+			let curSeg = self.allSegments[filename][seriesId][i];
+			if(curSeg.id==newSeg.id){
+				self.allSegments[filename][seriesId][i] = newSeg;
+			}
+		}
+		self.reshadeActiveGraphs();
+
+		
+	})
+}
+
 Supervisor.prototype.submitCreatedSegments = function() {
 	if (this.segmentsToDelete !== null) {
 		toastr.warning('Exit segment deletion mode to create segments!');
@@ -717,6 +765,7 @@ Supervisor.prototype.submitCreatedSegments = function() {
 		});
 	}
 }
+
 
 // following three functions copied from third example found [here](https://dygraphs.com/options.html#dateWindow)
 Supervisor.prototype.pan = function(graph, dir) {
@@ -877,11 +926,12 @@ Supervisor.prototype.shadeGraphSegments = function(graph, dataBoundsArray, withV
 		graph.updateOptions({
 			underlayCallback: function(canvas, area, g) {
 				for (let bounds of dataBoundsArray) {
+					console.log(bounds);
 					let bottomLeft = g.toDomCoords(bounds.left, -20);
 					let topRight = g.toDomCoords(bounds.right, +20);
 					left = bottomLeft[0];
 					right = topRight[0];
-					// border on both sides
+					// border on both sidessubmitexpertvote
 					canvas.fillStyle = 'black';
 					let borderWidth = 2;
 					canvas.fillRect(left-borderWidth/2, area.y, borderWidth, area.h);
@@ -897,6 +947,23 @@ Supervisor.prototype.shadeGraphSegments = function(graph, dataBoundsArray, withV
 						canvas.fillStyle = bounds.color;
 						canvas.fillRect(left, area.y, right-left, area.h);
 					}
+					if( typeof bounds.expertVote !== "undefined" && bounds.expertVote != null){
+						console.log("akjdhakdjshksakjd");
+						y = area.y;
+						x = left;
+						width = right - left;
+						if (width < 3) {
+							width = 3
+							x--;
+						}
+						height = area.h; 
+						canvas.font = "12px Arial";
+						canvas.fillStyle = "#000";
+						canvas.textAlign = "center";
+						canvas.fillText(bounds.expertVote, x + (width / 2), y + 3 + height / 2);
+
+					}
+
 				}
 				// get start and end timestamps
 				// let bottomLeft = g.toDomCoords(left, -20);
@@ -1257,6 +1324,7 @@ Supervisor.prototype.reshadeSegmentIfClicked = function(segmentObj, filename, se
 		if (segment.left <= x && x <= segment.right) {
 			//in bounds
 			let result = Object.assign(segment, {'color': color});
+			console.log("new color");
 			segmentObj[filename][seriesId][i] = result;
 			return result;
 		}
@@ -1266,10 +1334,11 @@ Supervisor.prototype.reshadeSegmentIfClicked = function(segmentObj, filename, se
 	return null;
 }
 
+
 Supervisor.prototype.handleClick = function(event, g, context) {
+	const [filename, seriesId] = g.maindiv_.id.split(';');
 
 	if (this.segmentsToDelete !== null) {
-		const [filename, seriesId] = g.maindiv_.id.split(';');
 		let segmentToBeDeleted = this.reshadeSegmentIfClicked(this.allSegments, filename, seriesId, g.toDataXCoord(event.layerX), this.toBeDeletedShade);
 		if (segmentToBeDeleted !== null) {
 			this.addSegmentTo(this.segmentsToDelete, filename, seriesId, segmentToBeDeleted);
@@ -1277,15 +1346,49 @@ Supervisor.prototype.handleClick = function(event, g, context) {
 		console.log(segmentToBeDeleted);
 		this.shadeGraphSegments(g, this.allSegments[filename][seriesId], this.votesCalculated);
 	}
+	else{
+		let seg = this.reshadeSegmentIfClicked(this.allSegments, filename, seriesId, g.toDataXCoord(event.layerX), this.toBeDeletedShade);
+		console.log(seg);
+		this.shadeGraphSegments(g, this.allSegments[filename][seriesId], this.votesCalculated);
+		if(seg!=null){
+			// Populate the annotation ID
+			// document.getElementById('annotationID').innerText = this.id;
+
+			// Populate the file & series names
+			document.getElementById('annotationFile').value = filename;
+			document.getElementById('annotationSeries').value = seriesId;
+
+			$('#annotationModal2').modal('show');
+			console.log("showing modal");
+
+			let modal = $('#annotationModal2');
+
+			// Attach the calling annotation and the type to the dialog
+			// modal.data('callingSegment', seg);
+			// modal.data('currentSupervisor', this)
+
+			// Attach event handlers to the annotation modal
+			$('#annotationModal2 button.saveButton').click(function() {
+				seg.expertVote = $("input[name='expertVote']:checked").val();
+				console.log(seg);
+				globalStateManager.currentSupervisor.submitExpertVote(filename, seriesId, seg);
+				$('#annotationModal2').modal('hide');
+			});
+
+		}
+	}
 }
 
-// Handle mouse-down for pan & zoom
-Supervisor.prototype.handleMouseDown = function(event, g, context) {
+// // Handle mouse-down for pan & zoom
+suphandleMouseDown = function(event, g, context) {
 
 	context.initializeMouseDown(event, g, context);
 
 	if (event.altKey) {
-		handleAnnotationHighlightStart(event, g, context);
+		console.log("alt down");
+		console.log(g);
+		console.log(context);
+		handleAnnotationHighlightStart(event, g, context, this);
 	}
 	else if (event.shiftKey || this.createdSegments !== null) {
 		Dygraph.startZoom(event, g, context);
@@ -1293,6 +1396,7 @@ Supervisor.prototype.handleMouseDown = function(event, g, context) {
 		context.medViewPanningMouseMoved = false;
 		Dygraph.startPan(event, g, context);
 	}
+
 
 }
 
@@ -1308,8 +1412,12 @@ Supervisor.prototype.addSegmentTo = function(segmentObj, filename, seriesId, new
 }
 
 // Handle mouse-up for pan & zoom.
-Supervisor.prototype.handleMouseUp = function(event, g, context) {
-	if (this.createdSegments !== null) {
+suphandleMouseUp = function(event, g, context) {
+	if (context.mvIsAnnotating) {
+		console.log(this);
+		handleAnnotationHighlightEnd(event, g, context, this, true);
+	}
+	else if (this.createdSegments !== null) {
 		// in segment creation mode
 
 		//add segment bounds to corresponding file > series list
@@ -1328,12 +1436,11 @@ Supervisor.prototype.handleMouseUp = function(event, g, context) {
 		Dygraph.endZoom(event, g, context);
 		this.updateRangeToMatchView(g);
 	}
+} 
 
 	// Dygraph.startZoom(event, g, context);
 	// Dygraph.endZoom(event, g, context);
-	// if (context.mvIsAnnotating) {
-	// 	handleAnnotationHighlightEnd(event, g, context, this);
-	// }
+
 	// else if (context.isZooming) {
 	// 	Dygraph.endZoom(event, g, context);
 	// 	if ('file' in this) {
@@ -1354,7 +1461,7 @@ Supervisor.prototype.handleMouseUp = function(event, g, context) {
 	// 	Dygraph.endPan(event, g, context);
 	// }
 
-}
+// }
 
 Supervisor.prototype.updateRangeToMatchView = function(g) {
 	if (!g) {return;}
@@ -1385,7 +1492,7 @@ Supervisor.prototype.updateRangeToMatchView = function(g) {
 }
 
 // Handle mouse-move for pan & zoom.
-Supervisor.prototype.handleMouseMove = function(event, g, context) {
+suphandleMouseMove = function(event, g, context) {
 
 	// Dygraph.moveZoom(event, g, context);
 	// Dygraph.moveZoom(event, g, context);
@@ -1399,9 +1506,9 @@ Supervisor.prototype.handleMouseMove = function(event, g, context) {
 	// console.log(event, context);
 	// Dygraph.startZoom(event, g, context);
 	// Dygraph.endZoom(event, g, context);
-	// if (context.mvIsAnnotating) {
-	// 	handleAnnotationHighlightMove(event, g, context);
-	// }
+	if (context.mvIsAnnotating) {
+		handleAnnotationHighlightMove(event, g, context);
+	}
 	// else if (context.isZooming) {
 	// 	Dygraph.moveZoom(event, g, context);
 	// }
@@ -1449,9 +1556,9 @@ Supervisor.prototype.createDygraph = function(graphDomElementObj, series, eventD
 		drawPoints: true,
 		// gridLineColor: this.template.gridColor,
 		interactionModel: {
-			'mousedown': this.handleMouseDown.bind(this),
-			'mouseup': this.handleMouseUp.bind(this),
-			'mousemove': this.handleMouseMove.bind(this),
+			'mousedown': suphandleMouseDown.bind(this),
+			'mouseup': suphandleMouseUp.bind(this),
+			'mousemove': suphandleMouseMove.bind(this),
 			'click': this.handleClick.bind(this)
 		},
 		// interactionModel: {
@@ -1480,6 +1587,8 @@ Supervisor.prototype.createDygraph = function(graphDomElementObj, series, eventD
 // Prepares & returns data by converting times to Date objects and calculating
 // x-axis extremes across all data.
 Supervisor.prototype.prepareData = function(data, baseTime) {
+
+	this.baseTime = baseTime;
 
 	let t0 = performance.now();
 

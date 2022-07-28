@@ -5,12 +5,14 @@ These event handlers rely on binding to either file or graph class instance.
  */
 
 // Ends an annotation highlighting action in response to a mouse-up event.
-function handleAnnotationHighlightEnd (event, g, context, fileOrGraph) {
+function handleAnnotationHighlightEnd (event, g, context, fileOrGraph, isSupervisor = false) {
+
+	console.log(fileOrGraph);
 
 	let left = Math.min(context.dragStartX, context.dragEndX);
 	let right = Math.max(context.dragStartX, context.dragEndX);
-	let from = g.toDataXCoord(left)/1000 - ('file' in fileOrGraph ? fileOrGraph.file.fileData.baseTime : fileOrGraph.fileData.baseTime);
-	let to = g.toDataXCoord(right)/1000 - ('file' in fileOrGraph ? fileOrGraph.file.fileData.baseTime : fileOrGraph.fileData.baseTime);
+	let from = g.toDataXCoord(left)/1000 - (isSupervisor ? fileOrGraph.baseTime : ('file' in fileOrGraph ? fileOrGraph.file.fileData.baseTime : fileOrGraph.fileData.baseTime));
+	let to = g.toDataXCoord(right)/1000 - (isSupervisor ? fileOrGraph.baseTime :  ('file' in fileOrGraph ? fileOrGraph.file.fileData.baseTime : fileOrGraph.fileData.baseTime));
 
 	// Get a reference to the graph instance. Dygraphs implements the click
 	// callback poorly, so we have to get it in a convoluted way.
@@ -539,7 +541,7 @@ function handleUnderlayRedraw(canvas, area, g) {
 
 }
 
-function wrapText(context, text, x, y, maxWidth, lineHeight) {
+functionwrapText(context, text, x, y, maxWidth, lineHeight) {
 	let words = text.split(' ');
 	let line = '';
 

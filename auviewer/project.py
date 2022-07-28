@@ -36,6 +36,12 @@ from .file import File
 from .shared import annotationDataFrame, annotationOrPatternOutput, getProcFNFromOrigFN, patternDataFrame
 import time
 
+from bokeh.server.server import Server
+from bokeh.embed import server_document
+from bokeh.layouts import column
+from bokeh.plotting import figure
+from bokeh.sampledata.sea_surface_temperature import sea_surface_temperature
+
 def getVotesForSegment(segmentid, left, right,  thresholds, labels, categoryNumbersToIds, id, lfs):
 
     series = seriesOfInterest.getRangedOutputParallel(
@@ -54,9 +60,9 @@ def getVotesForSegment(segmentid, left, right,  thresholds, labels, categoryNumb
     curLFModule = lfModule(EEG, filledNaNs, thresholds, labels)
     vote_vec = curLFModule.get_vote_vector()
 
-    # This is the part I want to make parallel?
     segmentVotes = list()
     for lf, vote in zip(lfs, vote_vec):
+        print(lf.id, vote)
         categoryId = categoryNumbersToIds[vote]
         newVote = models.Vote(
             project_id=id,
@@ -66,21 +72,7 @@ def getVotesForSegment(segmentid, left, right,  thresholds, labels, categoryNumb
             segment_id=segmentid
         )
         segmentVotes.append(newVote)
-        # models.db.session.add(newVote)
-        # models.db.session.commit()
-    # models.db.session.add_all(segmentVotes)
-    # models.db.session.commit()
-    # print(segmentVotes)
-    # result[segment.id] = vote_vec
-    # fileobj.close()
-    # h5file.close()
     return segmentVotes
-
-#trying flask multithreading
-from flask_executor import Executor
-from flask import current_app
-import concurrent.futures
-
 
 
 
@@ -735,8 +727,12 @@ class Project:
         for segment in allSegments:
             filename = self.getFile(segment.file_id).name
             series = segment.series
-            bound = {'left': segment.left,
-                     'right': segment.right, 'id': segment.id}
+            bound = {
+                     'left': segment.left,
+                     'right': segment.right, 
+                     'id': segment.id,
+                     'expertVote': segment.expertVote
+                     }
             res[filename] = res.get(filename, dict())
             res[filename][series] = res[filename].get(series, list())
             res[filename][series].append(bound)
@@ -751,6 +747,31 @@ class Project:
                 'window_roll_ms': sampleSeg.window_roll_ms
             }
         return res, windowInfo
+
+    def submitExpertVote(self, segment):
+        print(segment)
+        filename = segment['filename']
+        seriesId = segment['series_id']
+        left = segment['segment']['left']
+        right = segment['segment']['right']
+
+        oldsegment = models.Segment.query.filter_by(project_id=self.id, file_id=self.getFileByName(
+                        filename).id, series=seriesId, left=left, right=right).first()
+        models.db.session.delete(oldsegment)
+        segment['segment']
+        newsegment = newSegment = models.Segment(
+                    project_id=oldsegment.project_id,
+                    file_id=oldsegment.file_id,
+                    series=oldsegment.series,
+                    left=oldsegment.left,
+                    right=oldsegment.right,
+                    expertVote = segment['segment']['expertVote'],
+                    type = 'CUSTOM'
+                )
+        models.db.session.add(newsegment)
+        models.db.session.commit()
+        # return newsegment
+        return True
 
     def deleteSegments(self, segmentsMap):
         beforeNum = len(models.Segment.query.filter_by(
@@ -913,6 +934,7 @@ class Project:
     def _createSegmentsCustom(self, segmentsMap):
         beforeNum = len(models.Segment.query.filter_by(
             project_id=self.id).all())
+        print(segmentsMap)
         '''
         segmentsMap expected to be of form:
             { fId1: { seriesId1: [{'left': left1, 'right': right1},

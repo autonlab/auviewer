@@ -58,6 +58,7 @@ class Segment(db.Model):
     series = db.Column(db.String(255), nullable=False)
     left = db.Column(db.Float, nullable=True)
     right = db.Column(db.Float, nullable=True)
+    expertVote = db.Column(db.String(255), nullable=True)
 
     type = db.Column(db.String(255), nullable=False) # CUSTOM | WINDOW, used purely for querying purposes
     window_size_ms = db.Column(db.Integer, nullable=True) #only defined if type=='WINDOW'
