@@ -112,9 +112,7 @@ export default class AnnotationModal extends Vue {
     onVisible(isVisible: any, entry: any) {
         if (isVisible) {
             this.clearFormValues();
-            // if (this.annotationID < 0) {
             this.populateFormModel(this.getAnnotationFields());
-            // }
             // @ts-ignore
             let curAnnotation = globalStateManager.currentAnnotation;
 
@@ -159,6 +157,8 @@ export default class AnnotationModal extends Vue {
             right: Math.floor(this.end.getTime() / 1000),
             series_id: this.annotationSeries,
             label: formedLabel,
+            //@ts-ignore
+            pattern_id: globalStateManager.currentAnnotation.pattern_id
         };
         this.createOrUpdate(populatedAnnotation);
     }
@@ -194,6 +194,12 @@ export default class AnnotationModal extends Vue {
                 globalStateManager.currentAnnotation.parentSet.deleteMember(globalStateManager.currentAnnotation);
                 //@ts-ignore
                 globalStateManager.currentAnnotation.hideDialog();
+                // Trigger a redraw to show any changes to the annotation
+                //@ts-ignore
+                globalStateManager.currentAnnotation.related = null;
+                //@ts-ignore
+                globalStateManager.currentProject.assignmentsManager.currentTargetAssignmentSet.updatePanel()
+                // globalStateManager.currentFile.triggerRedraw();
             } else {
                 //@ts-ignore
                 toastr.warning("There was an error while trying to delete this annotation.");
@@ -295,8 +301,9 @@ export default class AnnotationModal extends Vue {
                     // TODO: pattern_id could be issue for bug
                     // If this was an annotation of a pattern, report it to the
                     // assignments manager (in case the pattern is an assignment).
-                    if (t.pattern_id != null) {
-                        gsm.currentProject.assignmentsManager.annotationCreatedForPattern(t.related.parentSet.id, t.related.id, this);
+                    if (t.pattern_id != null || t.parentSet != null) {
+                        t.related = t;
+                        gsm.currentProject.assignmentsManager.annotationCreatedForPattern(t.related.parentSet.id, t.pattern_id, this);
                     }
                     //@ts-ignore
                     toastr.success('Successfully created annotation ' + data.id.toString());

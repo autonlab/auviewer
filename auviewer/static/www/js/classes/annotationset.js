@@ -170,7 +170,6 @@ class AssignmentSet extends Set {
 
 		for (const assignment of this.members) {
 			if (assignment.id === assignment_id) {
-
 				// Attach the new annotation to the assignment.
 				assignment.related = annotation;
 
