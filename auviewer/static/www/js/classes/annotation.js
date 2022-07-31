@@ -64,11 +64,14 @@ Annotation.prototype.cancel = function () {
 };
 
 // Delete the annotation (only valid for this.type==='annotation').
-Annotation.prototype.delete = function () {
+Annotation.prototype.delete = function (callback=null) {
 
 	if (this.type === 'annotation') {
 
 		console.log('Delete called. Sending request to backend.');
+		if (callback) {
+			requestHandler.deleteAnnotation(this.id, globalStateManager.currentFile.parentProject.id, globalStateManager.currentFile.id, callback);
+		} else {
 
 		// Send deletion request to the backend.
 		requestHandler.deleteAnnotation(this.id, globalStateManager.currentFile.parentProject.id, globalStateManager.currentFile.id, function (data) {
@@ -85,6 +88,7 @@ Annotation.prototype.delete = function () {
 			}
 
 		}.bind(this));
+		}
 
 
 	} else {
@@ -153,25 +157,39 @@ Annotation.prototype.hideDialog = function () {
 Annotation.prototype.populateFormFromValues = function() {
 	
 	// Populate the annotation ID
-	document.getElementById('annotationID').innerText = this.id;
+	// document.getElementById('annotationID').innerText = this.id;
 
 	// Populate the file & series names
-	document.getElementById('annotationFile').value = this.filename;
-	document.getElementById('annotationSeries').value = this.series;
+	// document.getElementById('annotationFile').value = this.filename;
+	// document.getElementById('annotationSeries').value = this.series;
 
 	// Populate annotation start date & time fields
 	let annotationStartDate = this.getStartDate();
-	let annotationStartDateStrings = getHTML5DateTimeStringsFromDate(annotationStartDate);
-	document.getElementById('annotationStartDate').value = annotationStartDateStrings[0];
-	document.getElementById('annotationStartTime').value = annotationStartDateStrings[1];
+	// let annotationStartDateStrings = getHTML5DateTimeStringsFromDate(annotationStartDate);
+	// document.getElementById('annotationStartDate').value = annotationStartDateStrings[0];
+	// document.getElementById('annotationStartTime').value = annotationStartDateStrings[1];
 
 
 	// Populate annotation end date & time fields
 	let annotationEndDate = this.getEndDate();
-	let annotationEndDateStrings = getHTML5DateTimeStringsFromDate(annotationEndDate);
-	document.getElementById('annotationEndDate').value = annotationEndDateStrings[0];
-	document.getElementById('annotationEndTime').value = annotationEndDateStrings[1];
-
+	// let annotationEndDateStrings = getHTML5DateTimeStringsFromDate(annotationEndDate);
+	// document.getElementById('annotationEndDate').value = annotationEndDateStrings[0];
+	// document.getElementById('annotationEndTime').value = annotationEndDateStrings[1];
+	let currentAnnotation = this; 
+	// {
+	// 	annotation_id: this.id,
+	// 	annotation_file: this.filename,
+	// 	annotation_series: this.series,
+	// 	start: annotationStartDate,
+	// 	// startDate: annotationStartDateStrings[0],
+	// 	// startTime: annotationStartDateStrings[1],
+	// 	end: annotationEndDate,
+	// 	label: this.label
+	// 	// endDate: annotationEndDateStrings[0],
+	// 	// endTime: annotationEndDateStrings[1],
+	// };
+	globalStateManager.currentAnnotation = currentAnnotation;
+	return;
 	// if (this.annotation.hasOwnProperty('label')) {
 	// 	// Set the annotation label
 	// 	$('#annotationLabel').val(this.annotation.label);

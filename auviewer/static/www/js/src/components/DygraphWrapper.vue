@@ -1,4 +1,3 @@
-
 <template>
   <div ref="dygraph-mount-point">
 
@@ -9,13 +8,11 @@
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { dygraphs } from 'dygraphs';
 
-
 @Component
 export default class DygraphWrapper extends Vue {
   @Prop() data!: dygraphs.Data;
 
-
-  dg: dygraphs.Dygraph | null = null;
+  dg: any | null = null;
 
   mounted() {
     console.log(this.$refs['dygraph-mount-point'])
@@ -23,7 +20,7 @@ export default class DygraphWrapper extends Vue {
   }
 
   _instantiate() {
-    this.dg = new dygraphs.Dygraph(
+    // this.dg = new dygraphs.Dygraph(
       // this.$refs['dygraph-mount-point'],
       // this.$props.data,
       // colors: ['#5253FF'],
@@ -33,7 +30,7 @@ export default class DygraphWrapper extends Vue {
       // legend: 'follow',
       // ylabel: this.getSeriesToRenderY(),
       // valueRange: yAxisRange//[yAxisRange[0], 160]
-    )
+    // )
   }
 
 }

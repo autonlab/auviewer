@@ -273,8 +273,8 @@
 
 <!-- Annotation Modal -->
 <div class="modal fade" id="annotationModal" tabindex="-1" role="dialog" aria-labelledby="annotationModalTitle" aria-hidden="true" data-keyboard="false">
-	<div class="modal-dialog" role="document">
-		<div class="modal-content">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content" style="width: 75%;">
 			<div class="modal-header">
 				<h6 class="modal-title" id="annotationModalTitle">Annotation</h6>
 				<button type="button" class="close cancelButton" aria-label="Close">
@@ -282,14 +282,15 @@
 				</button>
 			</div>
 			<div class="modal-body">
-				<form>
-<!--					<div class="form-group">-->
-<!--						<label for="annotationLabel">Label</label>-->
-<!--						<select class="form-control" id="annotationLabel" name="annotationLabel">-->
-<!--							<option value="Real">Real</option>-->
-<!--							<option value="Artifact">Artifact</option>-->
-<!--						</select>-->
-<!--					</div>-->
+				<annotationmodalvue />
+			<!--	 <form>
+					<div class="form-group"> 
+						<label for="annotationLabel">Label</label>
+						<select class="form-control" id="annotationLabel" name="annotationLabel">
+							<option value="Real">Real</option>
+							<option value="Artifact">Artifact</option>
+						</select>
+					</div>
 					<div class="form-group" id="annotationIDContainer">
 						<label for="annotationID">Annotation ID</label>
 						<div style="font-weight: bold;" id="annotationID"></div>
@@ -352,13 +353,13 @@
 							<input type="date" class="form-control" id="annotationEndDate"><input type="time" step=".001" class="form-control" id="annotationEndTime" step="1">
 						</div>
 					</div>
-				</form>
-			</div>
-			<div class="modal-footer">
+				</form> -->
+					</div>
+			<!-- <div class="modal-footer">
 				<button type="button" class="btn btn-danger mr-auto deleteButton">Delete</button>
 				<button type="button" class="btn btn-secondary cancelButton" data-dismiss="modal">Cancel</button>
 				<button type="button" class="btn btn-primary saveButton">Save</button>
-			</div>
+			</div> -->
 		</div>
 	</div>
 </div>

@@ -39,7 +39,7 @@ function Project(payload) {
 	);
 
 	// Holds the user's annotations across all files in the project
-	this.annotations = null;
+	this.annotations = this.getAnnotations();
 
 	// Instantiate the assignment manager
 	this.assignmentsManager = new AssignmentsManager(this, payload['project_assignments']);
@@ -56,7 +56,8 @@ Project.prototype.getAnnotations = function(callback=null) {
 		// Populate the project annotations
 		if (Array.isArray(data) && data.length > 0) {
 			for (let a of data) {
-				this.annotations.push(new Annotation({valuesArrayFromBackend: a}, 'annotation'));
+				// console.log(a, typeof(a));
+				this.annotations.push(new Annotation(this.assignmentsManager.currentTargetAssignmentSet || this.assignmentsManager.assignmentsets[0], {valuesArrayFromBackend: a}, 'annotation'));
 			}
 		}
 
