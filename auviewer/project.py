@@ -27,7 +27,8 @@ from joblib import Parallel, delayed
 # import ray
 import multiprocessing
 
-from torch import dsmm
+from torch import are_deterministic_algorithms_enabled, dsmm
+from yaml import StreamStartToken
 
 from . import models
 from .patternset import PatternSet
@@ -41,6 +42,26 @@ from bokeh.embed import server_document
 from bokeh.layouts import column
 from bokeh.plotting import figure
 from bokeh.sampledata.sea_surface_temperature import sea_surface_temperature
+
+# def getFeaturesForSegment(segment,left, right,thresholds, labels, lfs):
+
+#     series = seriesOfInterest.getRangedOutputParallel(
+#                     ds, left / 1000.0, right / 1000.0).get('data')
+
+
+#     if (len(series) == 0):
+#         returnseries = segment
+#     curSeries = np.array([x[-1] for x in series])
+
+#     filledNaNs = None
+#     if np.sum(np.isnan(curSeries)) > 0:
+#         filledNaNs = curSeries.isna().to_numpy()
+#         curSeries = curSeries.fillna(0)
+#     EEG = curSeries.reshape((-1, 1))
+#     curLFModule = lfModule(EEG, filledNaNs, thresholds, labels)
+#     vote_vec = curLFModule.get_vote_vector()
+
+#     return vote_vec
 
 def getVotesForSegment(segmentid, left, right,  thresholds, labels, categoryNumbersToIds, id, lfs):
 
@@ -72,6 +93,8 @@ def getVotesForSegment(segmentid, left, right,  thresholds, labels, categoryNumb
             segment_id=segmentid
         )
         segmentVotes.append(newVote)
+
+
     return segmentVotes
 
 
@@ -570,6 +593,7 @@ class Project:
             
             segmentsForFileNew = list()
             for segment in segmentsForFile:
+                print(segment)
                 if(len(segment.votes)==0):
                     segmentsForFileNew.append(segment)
 
@@ -584,7 +608,7 @@ class Project:
                 ds = audata.File.open(str(seriesOfInterest.fileparent.origFilePathObj), return_datetimes=False)
                 ds = ds['/'.join(seriesOfInterest.h5path)]
 
-            p = multiprocessing.Pool(8, initializer=initializer)
+            p = multiprocessing.Pool(1, initializer=initializer)
             
                 
     
@@ -592,12 +616,25 @@ class Project:
             arg = [(segmentsForFileNew[i].id, segmentsForFileNew[i].left, segmentsForFileNew[i].right, thresholds, labels, categoryNumbersToIds, fileId, lfs) for i in range(len(segmentsForFileNew))]
             results = p.starmap(getVotesForSegment, arg)
             results = list(results)
+            # vote_vecs = p.starmap(getFeaturesForSegment, arg)
             p.close()
             p.join()
             for votes in results:
                 if(votes):
                     models.db.session.add_all(votes)
             models.db.session.commit()
+
+            # arg2 = [(segmentsForFile[i].id, segmentsForFile[i].left, segmentsForFile[i].right, thresholds, labels, lfs) for i in range(len(segmentsForFile))]
+            # vote_vecs = p.starmap(getFeaturesForSegment, arg2)
+            # vote_vecs = list(vote_vecs)
+            # p.close()
+            # p.join()
+
+            # segmentsForFile =  models.Segment.query.filter_by(
+            #         project_id=self.id,
+            #         file_id=fileId,
+            #         type='CUSTOM'
+            #     ).all()
 
             numBefore = len(models.Vote.query.filter_by(project_id=self.id).all())
             # models.db.session.add_all(newVotes)
@@ -609,23 +646,22 @@ class Project:
                 result[segment.id] = votes
 
             # print(result)
-            return result
+            return result, vote_vecs
         
         # results = zip(*pool.map(test, args))
         # result = list(results)
         print("parallel!")
-        # Parallel(n_jobs=2)(delayed(sqrt)(i ** 2) for i in range(10))
-        for fileId in fileIds:  (getVotesForFileLocal)(fileId) 
-        # tmp = [(getVotesForFileLocal)(fileId) for fileId in fileIds]
+        # vote_vecs = list()
+        # for fileId in fileIds: 
+        #      _, votevec = (getVotesForFileLocal)(fileId) 
+        #      vote_vecs.extend(votevec)
+        # print()
         print("applying label model")
 
         # add labelmodel results
         preds = self.applyLabelModel(
             segIdxToDFIdx=segIdxToDFIdx, dfdict=dfDict, votes=result)
-        # preds = None
-        # df = pd.DataFrame.from_dict(dfDict)
-        # df.to_csv('segmentsOfInterest.csv')
-        # print(preds)    def computeVotes(self, fileIds, windowInfo=None):
+        # self.getLMComparisonStats(preds)
         return result, preds
 
     def computeVotes(self, fileIds, windowInfo=None):
@@ -719,6 +755,34 @@ class Project:
         print(f"Added {numAfter - numBefore} votes")
         # print(resultingVotes)
         return resultingVotes
+    
+    def getLMComparisonStats(self, LMPreds):
+        print("hii")
+        preds = LMPreds['predictions']
+        lfs = LMPreds['lfs']
+
+        lfModule = self.getLFModule()
+        lfnames = lfModule.get_LF_names()
+        thresholds = lfModule.getInitialThresholds()
+        labels = lfModule.getLabels()
+
+        LMRes = dict()
+        handRes = dict()
+        segFeats = dict()
+        allSegments = models.Segment.query.filter_by(
+            project_id=self.id, type='CUSTOM').all()
+        for i in range(0, len(allSegments)):
+            segment = allSegments[i]
+            print(segment.votes)
+            # lmprediction = preds[i]['prediction']
+            # LMRes[lmprediction].append(segment)
+            segFeats[segment] = getFeaturesForSegment(segment, segment.left, segment.right, thresholds, labels, lfnames)
+            print(segFeats[segment])
+            
+        return LMRes, handRes
+
+            
+
 
     def getSegments(self, type='CUSTOM'):
         allSegments = models.Segment.query.filter_by(

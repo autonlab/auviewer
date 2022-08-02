@@ -3,6 +3,7 @@ import SupervisorEvaluation from './views/SupervisorEvaluation.vue'
 import router from './router'
 import store from './store'
 import { BootstrapVue, BootstrapVueIcons } from 'bootstrap-vue'
+import LMComparisonTable from './components/LMComparisonTable.vue'
 
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
@@ -10,8 +11,9 @@ import 'bootstrap-vue/dist/bootstrap-vue.css'
 Vue.use(BootstrapVue)
 Vue.use(BootstrapVueIcons)
 
-Vue.config.productionTip = false
+Vue.config.productionTip = false;
 Vue.component('vuea', SupervisorEvaluation);
+Vue.component('LMTable', LMComparisonTable);
 const vueApp = new Vue({
   router,
   store

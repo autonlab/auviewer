@@ -22,14 +22,14 @@ function Supervisor(payload) {
 
 	this.baseTime = null;
 
-	$('#evaluation-tab').on('click', function (e) {
-		e.preventDefault()
-		$(this).tab('show')
-		console.log("what");
-		self.initEvaluation();
-		console.log("done evaluation");
+	// $('#evaluation-tab').on('click', function (e) {
+	// 	e.preventDefault()
+	// 	$(this).tab('show')
+	// 	console.log("what");
+	// 	self.initEvaluation();
+	// 	console.log("done evaluation");
 
-	})
+	// })
 
 
 	$('#modal').css('display', 'inline-block');
@@ -155,12 +155,12 @@ function Supervisor(payload) {
 
 Supervisor.prototype.initModel = function(data) {
 	let self = this;
-	$('#evaluation-tab').on('click', function (e) {
-		e.preventDefault()
-		$(this).tab('show')
-		self.initEvaluation();
+	// $('#evaluation-tab').on('click', function (e) {
+	// 	e.preventDefault()
+	// 	$(this).tab('show')
+	// 	self.initEvaluation();
 
-	})
+	// })
 
 	$('#labelers-tab').on('click', function (e) {
 		e.preventDefault()
@@ -948,7 +948,6 @@ Supervisor.prototype.shadeGraphSegments = function(graph, dataBoundsArray, withV
 						canvas.fillRect(left, area.y, right-left, area.h);
 					}
 					if( typeof bounds.expertVote !== "undefined" && bounds.expertVote != null){
-						console.log("akjdhakdjshksakjd");
 						y = area.y;
 						x = left;
 						width = right - left;
@@ -1346,7 +1345,7 @@ Supervisor.prototype.handleClick = function(event, g, context) {
 		console.log(segmentToBeDeleted);
 		this.shadeGraphSegments(g, this.allSegments[filename][seriesId], this.votesCalculated);
 	}
-	else{
+	else if(this.createdSegments==null){
 		let seg = this.reshadeSegmentIfClicked(this.allSegments, filename, seriesId, g.toDataXCoord(event.layerX), this.toBeDeletedShade);
 		console.log(seg);
 		this.shadeGraphSegments(g, this.allSegments[filename][seriesId], this.votesCalculated);
@@ -1413,11 +1412,8 @@ Supervisor.prototype.addSegmentTo = function(segmentObj, filename, seriesId, new
 
 // Handle mouse-up for pan & zoom.
 suphandleMouseUp = function(event, g, context) {
-	if (context.mvIsAnnotating) {
-		console.log(this);
-		handleAnnotationHighlightEnd(event, g, context, this, true);
-	}
-	else if (this.createdSegments !== null) {
+
+	if (this.createdSegments !== null) {
 		// in segment creation mode
 
 		//add segment bounds to corresponding file > series list
@@ -1431,7 +1427,12 @@ suphandleMouseUp = function(event, g, context) {
 	else if (context.isPanning) {
 		Dygraph.endPan(event, g, context);
 		this.updateRangeToMatchView(g);
-	} else {
+	}
+	else if (context.mvIsAnnotating) {
+		console.log(this);
+		handleAnnotationHighlightEnd(event, g, context, this, true);
+	} 
+	else {
 		// perform normal zooming behavior
 		Dygraph.endZoom(event, g, context);
 		this.updateRangeToMatchView(g);

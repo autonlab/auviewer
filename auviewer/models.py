@@ -7,7 +7,9 @@ from sqlalchemy.sql import func
 import logging
 from sqlalchemy.ext.orderinglist import ordering_list
 
-db = SQLAlchemy()
+db = SQLAlchemy(session_options = {
+    'expire_on_commit': False
+})
 
 class Annotation(db.Model):
     __tablename__ = 'annotations'

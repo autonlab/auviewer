@@ -4,12 +4,11 @@
         <b-col cols="5">
             <b-card>
             <b-card-body>
-                <div v-if="labelerInformation">
-                    <labeler-evaluation-table
-                        v-bind:labelerInformation="labelerInformation"
+                <div>
+                    <LMComparisonTable :averageFeatureStats="processedCompStats"
                         />
                 </div>
-                <div v-else>
+                <!-- <div>
                     <div style="margin: 0 auto" class="sk-chase">
                         <div class="sk-chase-dot"></div>
                         <div class="sk-chase-dot"></div>
@@ -22,7 +21,7 @@
                         Loading labeler aggregate stats...
                     </div>
 
-                </div>
+                </div> -->
             </b-card-body>
             </b-card>
         </b-col>
@@ -65,6 +64,7 @@
 <script lang="ts">
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import  LabelerEvaluationTable  from '@/components/LabelerEvaluationTable.vue';
+import LMComparisonTable from './../components/LMComparisonTable.vue';
 import  Fetcher from '@/utils/fetcher';
 import $ from 'jquery';
 // import * as GlobalAppConfig from '@/../config.js';
@@ -74,6 +74,7 @@ import { LabelerEvaluativeStats } from '@/types';
 @Component({
   components: {
     LabelerEvaluationTable,
+    LMComparisonTable
   }
 })
 export default class SupervisorEvaluation extends Vue {
@@ -85,6 +86,11 @@ export default class SupervisorEvaluation extends Vue {
         'labelerSelection': null,
         'labelSelection': null
     };
+
+    get processedCompStats(){
+        //get data from 
+        return null;
+    }
 
     /* COMPUTED */
     get computedPossibleLabelers() {
