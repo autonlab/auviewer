@@ -25,6 +25,14 @@ class diagnoseAFib:
 
         self.thresholds = thresholds
 
+    def getFeatureValues(self):
+        res = dict()
+        res['cov'] = self.cov
+        res['range'] = self.range
+        res['std'] = self.std
+        res['iqr'] = self.iqr
+        return res
+
 
     @staticmethod
     def getInitialThresholds():

@@ -80,6 +80,7 @@ def getVotesForSegment(segmentid, left, right,  thresholds, labels, categoryNumb
     EEG = curSeries.reshape((-1, 1))
     curLFModule = lfModule(EEG, filledNaNs, thresholds, labels)
     vote_vec = curLFModule.get_vote_vector()
+    featureValues = curLFModule.getFeatureValues()
 
     segmentVotes = list()
     for lf, vote in zip(lfs, vote_vec):
@@ -94,8 +95,8 @@ def getVotesForSegment(segmentid, left, right,  thresholds, labels, categoryNumb
         )
         segmentVotes.append(newVote)
 
-
-    return segmentVotes
+    print(vote_vec)
+    return segmentVotes, featureValues
 
 
 
@@ -111,6 +112,7 @@ class Project:
         self.projDirPathObj = Path(projectModel.path)
         self.originalsDirPathObj = self.projDirPathObj / 'originals'
         self.processedDirPathObj = self.projDirPathObj / 'processed'
+        self.featuresDirPathObj = self.projDirPathObj / 'features'
 
         # Hold a reference to the db model for future use
         self.model = projectModel
@@ -519,19 +521,12 @@ class Project:
             models.db.session.delete(vote)
         models.db.session.commit()
 
-    # global getVotesForFile
-
 
 
     def getVotes(self, fileIds, windowInfo=None):
 
-        # pool = multiprocessing.Pool(8)
-
-        # print("huhhhhhhhhhhhh")
 
         result = dict()
-        # searchFINs =[1215499, 1007711, 1998627]
-        # searchFINs = []
         dfDict = {
             'FIN_Study_Id': list(),
             'segmentStart': list(),
@@ -560,6 +555,12 @@ class Project:
             k = lfname.split('_')[0]
             dfDict[k] = list()
         j = 0
+
+        #read features dataframe from csv
+        # try:
+        #     df = pd.read_csv(self.featuresDirPathObj / 'temp.csv')
+        # except: 
+        #     df = pd.DataFrame()
     
 
         def getVotesForFileLocal(fileId):
@@ -597,46 +598,37 @@ class Project:
                 if(len(segment.votes)==0):
                     segmentsForFileNew.append(segment)
 
-            
-            
-                
-            # print(arg)
-            # q = ctx.Queue()
-            # ctx = multiprocessing.get_context('spawn')
             def initializer():
                 global ds
                 ds = audata.File.open(str(seriesOfInterest.fileparent.origFilePathObj), return_datetimes=False)
                 ds = ds['/'.join(seriesOfInterest.h5path)]
 
-            p = multiprocessing.Pool(1, initializer=initializer)
-            
-                
-    
+            p = multiprocessing.Pool(multiprocessing.cpu_count(), initializer=initializer)
+        
             print("# of workers", p._processes)
             arg = [(segmentsForFileNew[i].id, segmentsForFileNew[i].left, segmentsForFileNew[i].right, thresholds, labels, categoryNumbersToIds, fileId, lfs) for i in range(len(segmentsForFileNew))]
             results = p.starmap(getVotesForSegment, arg)
             results = list(results)
-            # vote_vecs = p.starmap(getFeaturesForSegment, arg)
+            print(results)
+            votess = list()
+            features = list()
+
+            for segment, (votes, stats) in zip(segmentsForFileNew, results):
+                votess.append(votes)
+                stats['segment_id'] = segment.id
+                stats['file_id'] = fileId
+                features.append(stats)
+
             p.close()
             p.join()
-            for votes in results:
+            print(votess)
+            numBefore = len(models.Vote.query.filter_by(project_id=self.id).all())
+
+            for votes in votess:
                 if(votes):
                     models.db.session.add_all(votes)
             models.db.session.commit()
 
-            # arg2 = [(segmentsForFile[i].id, segmentsForFile[i].left, segmentsForFile[i].right, thresholds, labels, lfs) for i in range(len(segmentsForFile))]
-            # vote_vecs = p.starmap(getFeaturesForSegment, arg2)
-            # vote_vecs = list(vote_vecs)
-            # p.close()
-            # p.join()
-
-            # segmentsForFile =  models.Segment.query.filter_by(
-            #         project_id=self.id,
-            #         file_id=fileId,
-            #         type='CUSTOM'
-            #     ).all()
-
-            numBefore = len(models.Vote.query.filter_by(project_id=self.id).all())
             # models.db.session.add_all(newVotes)
             numAfter = len(models.Vote.query.filter_by(project_id=self.id).all())
             print(f"Added {numAfter - numBefore} votes")
@@ -645,23 +637,28 @@ class Project:
                 print(votes)
                 result[segment.id] = votes
 
-            # print(result)
-            return result, vote_vecs
-        
-        # results = zip(*pool.map(test, args))
-        # result = list(results)
-        print("parallel!")
-        # vote_vecs = list()
-        # for fileId in fileIds: 
-        #      _, votevec = (getVotesForFileLocal)(fileId) 
-        #      vote_vecs.extend(votevec)
-        # print()
+            print(features)
+            return result, features
+
+        allFeatures = list()
+        for fileId in fileIds: 
+              res, features = (getVotesForFileLocal)(fileId) 
+              allFeatures.extend(features)
+
         print("applying label model")
+
+        #At this point we have all the feature stats from all files, we can add them to the pd dataframe
+        # for featureRow in allFeatures:
+        #     print(featureRow)
+        #     df_dictionary = pd.DataFrame([featureRow])
+        #     df = pd.concat([df, df_dictionary], ignore_index=True)
+        # df.to_csv(self.featuresDirPathObj / 'temp.csv')
 
         # add labelmodel results
         preds = self.applyLabelModel(
             segIdxToDFIdx=segIdxToDFIdx, dfdict=dfDict, votes=result)
         # self.getLMComparisonStats(preds)
+        # print(preds)
         return result, preds
 
     def computeVotes(self, fileIds, windowInfo=None):
@@ -712,10 +709,6 @@ class Project:
             # iterate through user defined segments
             if (len(segmentsForFile) == 0):
                 continue
-            # print("seg len: ", len(segmentsForFile))
-            # for (i, segment) in enumerate(segmentsForFile):
-            #     print(segment.left, segment.right)
-            # correspondingIndexBounds = self.getIndicesForSegments(segmentsForFile, series)
             for i, segment in enumerate(segmentsForFile):
                 # if (correspondingIndexBounds[i]):
                 #     startIdx, endIdx = correspondingIndexBounds[i]

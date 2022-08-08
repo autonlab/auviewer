@@ -254,6 +254,9 @@ def scaffoldProjectFolder(projDirPathObj):
     # Create the processed folder if needed
     (projDirPathObj / 'processed').mkdir(exist_ok=True)
 
+    # Create the processed folder if needed
+    (projDirPathObj / 'features').mkdir(exist_ok=True)
+
     # Create the templates folder if needed
     projTemplatesFolderPathObj = projDirPathObj / 'templates'
     projTemplatesFolderPathObj.mkdir(exist_ok=True)
@@ -298,7 +301,7 @@ def validateProjectFolder(projDirPathObj):
             raise Exception(f'Project folder contains invalid file: {p}')
 
         # Validate expected top-level folder names
-        if p.name not in ['originals', 'processed', 'templates']:
+        if p.name not in ['originals', 'processed', 'templates', 'features']:
             raise Exception(f'Project folder contains invalid folder: {p}')
 
     # Validate expected template files if they exist.
