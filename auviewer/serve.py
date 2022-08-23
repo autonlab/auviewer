@@ -1152,7 +1152,7 @@ def main():
 
     from werkzeug.middleware.profiler import ProfilerMiddleware
     app.config['PROFILE'] = True
-    app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[0], profile_dir = './profiles')
+    # app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[0], profile_dir = './profiles')
     app.run(host=config['host'], port=config['port'], debug=config['debug'], threaded=True, use_reloader=False)
     return app
 

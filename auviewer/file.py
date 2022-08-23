@@ -503,6 +503,7 @@ class File:
             logging.info(f'Using time column {ds.name}:{timecol}')
 
         # Iterate through all remaining columns and instantiate series for each
+        print('AAAAH_________________0')
         for valcol in (c for c in cols if c != timecol):
             coltype = cols[valcol]['type']
             if coltype in ('real', 'integer'):
@@ -510,6 +511,7 @@ class File:
                 self.series.append(Series(ds, timecol, valcol, self))
             else:
                 logging.warning(f'  - Skipping unsupported {coltype} series: {valcol}')
+        print('AAAAH_________________1')
 
     # TODO(gus): When reviving realtime functionality, revise this
     def mode(self):

@@ -249,17 +249,17 @@ Supervisor.prototype.initModel = function(data) {
 			document.getElementById('breakout_'+filename).onclick = function() { self.breakout(fileid); };
 		}
 
-		this.datatable = $('.supervisor_table').DataTable({
-			"lengthChange": false,
-			"ordering": false,
-			"searching": false,
-			"pageLength": this.seriesOnPage
-		});
+		// this.datatable = $('.supervisor_table').DataTable({
+		// 	"lengthChange": false,
+		// 	"ordering": false,
+		// 	"searching": false,
+		// 	"pageLength": this.seriesOnPage
+		// });
 		this.activePage = 0;
 		let self=this;
-		this.datatable.on( 'draw', function() {
-			self.regenerateGraphs(self.datatable.page());
-		})
+		// this.datatable.on( 'draw', function() {
+		// 	self.regenerateGraphs(self.datatable.page());
+		// })
 		// for (let s of Object.keys(this.projectData.series)) {
 		// 	this.graphs[s] = new Graph(s, this);
 		// }
@@ -520,6 +520,7 @@ Supervisor.prototype.regenerateGraphs = function(pageNum) {
 	this.globalYExtremes[1] = 0;
 	// this.activeGraphs = new Array(this.seriesOnPage);
 	for (let idx = startIdx; idx < endIdx; idx++) {
+		console.log(idx)
 		if (!this.dygraphs[idx]) { continue; }
 		let series = Object.values(this.projectData.series[idx])[0].data;
 		for (let i = 0; i < series.length; i++) {

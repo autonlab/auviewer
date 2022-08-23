@@ -952,10 +952,17 @@ class Project:
         supervisorModule = models.SupervisorModule.query.filter_by(
             project_id=self.id).first()
         if (supervisorModule):
+            print(supervisorModule)
+            print(file.series)
             for s in file.series:
+                print(s.id)
+                print(supervisorModule.series_of_interest)
                 if (s.id == supervisorModule.series_of_interest):
+                    print(s)
+                    print('yes')
                     return s
         else:
+            print('no')
             return file.series[0]
 
     def getSeriesToRender(self, file):
@@ -971,8 +978,11 @@ class Project:
     def getLFCode(self, lfNames, lfModule, thresholds, labels):
         i = 0
         s = None
+        print(self.files)
         while (not s):
+            print(i)
             s = self.getSeriesOfInterest(self.files[i])
+            print(s)
             i += 1
         curSeries = s.getFullOutput().get('data')
         curSeries = np.array([x[-1] for x in curSeries])
