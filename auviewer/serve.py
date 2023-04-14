@@ -32,7 +32,7 @@ from .flask_user.signals import user_sent_invitation, user_registered
 
 
 ##### IMPORTS FOR FEATURIZERS
-from sklearn.linear_model import LinearRegression
+# from sklearn.linear_model import LinearRegression
 
 from datetime import datetime
 import pandas as pd

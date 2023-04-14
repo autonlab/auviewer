@@ -23,7 +23,7 @@ class RawData:
             self.timespan = 0
         else:
             # self.timespan = np.abs(np.diff(dataset[[-1, 0]][self.seriesparent.timecol].values.astype(np.float64))[0])
-            self.timespan = dataset[[-1, 0]]
+            self.timespan = dataset[[0, -1]]
             self.timespan = self.timespan[self.seriesparent.timecol]
             self.timespan = self.timespan.values.astype(np.float64)
             self.timespan = np.abs(np.diff(self.timespan)[0])

@@ -1131,18 +1131,17 @@ class Project:
 
             # Verify the original file exists on the file system
             origFilePathObj = Path(fileDBModel.path)
-            existingFilePathObjs.append(origFilePathObj)
-            if not origFilePathObj.exists():
-                logging.error(
-                    f"File ID {fileDBModel.id} in the database is missing the original file on the file system at {fileDBModel.path}")
+            if origFilePathObj.exists():
+                existingFilePathObjs.append(origFilePathObj)
+            else:
+                logging.error(f"File ID {fileDBModel.id} in the database is missing the original file on the file system at {fileDBModel.path}")
                 continue
                 # TODO(gus): Do something else with this? Like set error state in the database entry and display in GUI?
 
             # Verify the processed file exists on the file system
             procFilePathObj = self.processedDirPathObj / getProcFNFromOrigFN(origFilePathObj)
             if not procFilePathObj.exists():
-                logging.error(
-                    f"File ID {fileDBModel.id} in the database is missing the processed file on the file system at {procFilePathObj}")
+                logging.error(f"File ID {fileDBModel.id} in the database is missing the processed file on the file system at {procFilePathObj}")
                 #continue
                 # TODO(gus): Do something else with this? Like set error state in the database entry and display in GUI?
 
@@ -1156,6 +1155,10 @@ class Project:
             for newOrigFilePathObj in self.originalsDirPathObj.iterdir():
 
                 try:
+
+                    # Check that the file exists (can happen in the case of a dead symlink)
+                    if not newOrigFilePathObj.exists():
+                        continue
 
                     # Skip if not file or not .h5
                     if not newOrigFilePathObj.is_file() or newOrigFilePathObj.suffix != '.h5':

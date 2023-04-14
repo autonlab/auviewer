@@ -14,7 +14,10 @@ function handleAnnotationHighlightEnd (event, g, context, fileOrGraph) {
 
 	// Get a reference to the graph instance. Dygraphs implements the click
 	// callback poorly, so we have to get it in a convoluted way.
-	let graph = $(event.path[2]).data('graphClassInstance');
+	//
+        // thx to [this](https://stackoverflow.com/questions/39245488/event-path-is-undefined-running-in-firefox)
+        let path = event.composedPath ? event.composedPath() : event.path;
+	let graph = $(path[2]).data('graphClassInstance');
 
 	// Warning if annotating a group
 	if (graph.isGroup) {
