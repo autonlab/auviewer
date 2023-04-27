@@ -262,7 +262,7 @@ class AssignmentSet extends Set {
 
 			// '<div class="form-group">' +
 				// '<label for="formControlRange">Example Range input</label>' +
-				'<input type="range" class="form-control-range" id="formControlRange'+this.id+'" min="1" max="' + this.members.length + '" step="1" value="0" style="background: none;">' +
+				'<input type="range" class="form-control-range" id="formControlRange'+this.id+'" min="1" max="' + this.members.length + '" step="1" value="0" style="background: none; margin-top: 10px;">' +
 				
 				
 
@@ -273,7 +273,7 @@ class AssignmentSet extends Set {
 				// '</div>' +
 
 				// have a counter and range next to the range (e.g. "1/2")
-				'<table style="width: 100%; margin-top: 6px; margin-bottom: 10px;"><tbody><tr>' +
+				'<table style="width: 100%; margin-top: 5px; margin-bottom: 10px;"><tbody><tr>' +
 					'<td style="width: 60%; font-size: 0.7em; color: #303030;">' +
 						'Position<br><span class="positionNumber"></span> out of ' + this.members.length +
 					'</td>' +
