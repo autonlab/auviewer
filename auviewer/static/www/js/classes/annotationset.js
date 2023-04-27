@@ -177,7 +177,7 @@ class AssignmentSet extends Set {
 				// // If it's the current target assignment that was annotated,
 				// // proceed to the next assignment.
 				// if (Object.is(assignment, this.members[this.currentTargetAssignmentIndex])) {
-				// 	this.next();
+				// 	this.nextPosition();
 				// }
 
 				break;
@@ -200,7 +200,14 @@ class AssignmentSet extends Set {
 		return count;
 	};
 
-	next() {
+	// Returns boolean indicating whether the assignment has begun.
+	hasBegun() {
+		return this.currentTargetAssignmentIndex != null;
+	};
+
+	// Go to the next assignment.
+	nextPosition() {
+
 		if (this.currentTargetAssignmentIndex === null) {
 			this.resume();
 		}
@@ -215,19 +222,27 @@ class AssignmentSet extends Set {
 		} else {
 			this.members[this.currentTargetAssignmentIndex].goTo();
 		}
+
+		this.updatePanel();
+
 	};
 
-	prev() {
+	// Go to the previous assignment.
+	prevPosition() {
+
 		if (this.currentTargetAssignmentIndex === null) {
 			this.currentTargetAssignmentIndex = this.members.length - 1;
 			this.members[this.currentTargetAssignmentIndex].goTo();
 		}
 		if (--this.currentTargetAssignmentIndex < 0) {
 			// TODO: the entire assignment is complete
-			this.currentTargetAssignmentIndex = null;
+			this.stop();
 		} else {
 			this.members[this.currentTargetAssignmentIndex].goTo();
 		}
+
+		this.updatePanel();
+
 	};
 	
 	render() {
@@ -243,7 +258,31 @@ class AssignmentSet extends Set {
 		this.assignmentPanelDOMElement.className = 'assignment-panel';
 		this.assignmentPanelDOMElement.innerHTML =
 
-			'<h6>' + this.name + '</h6>' +
+			'<h5>' + this.name + '</h5>' +
+
+			// '<div class="form-group">' +
+				// '<label for="formControlRange">Example Range input</label>' +
+				'<input type="range" class="form-control-range" id="formControlRange'+this.id+'" min="1" max="' + this.members.length + '" step="1" value="0" style="background: none;">' +
+				
+				
+
+
+				// '<div class="btn-group" style="float: right" role="group" aria-label="Next & previous buttons">' +
+				// 	'<button type="button" class="btn btn-secondary btn-sm" id="prevAssignmentButton">Prev</button>' +
+				// 	'<button type="button" class="btn btn-secondary btn-sm" id="nextAssignmentButton">Next</button>' +
+				// '</div>' +
+
+				// have a counter and range next to the range (e.g. "1/2")
+				'<table style="width: 100%; margin-top: 6px; margin-bottom: 10px;"><tbody><tr>' +
+					'<td style="width: 60%; font-size: 0.7em; color: #303030;">' +
+						'Position<br><span class="positionNumber"></span> out of ' + this.members.length +
+					'</td>' +
+					'<td align="right">' +
+						'<input type="number" name="positionInput" min="1" max="' + this.members.length + '" style="width: 60px;">' +
+					'</td>' +
+				'</tr></tbody></table>' +
+
+			// '</div>' +
 
 			'<div class="progress">' +
 				'<div class="progress-bar" role="progressbar" aria-valuenow="" aria-valuemin="0" aria-valuemax="' + this.members.length + '"></div>' +
@@ -278,13 +317,13 @@ class AssignmentSet extends Set {
 		this.prevButtonDOMElement.setAttribute('type', 'button');
 		this.prevButtonDOMElement.className = 'btn btn-sm btn-secondary';
 		this.prevButtonDOMElement.innerText = 'Prev';
-		this.prevButtonDOMElement.onclick = function() { assignmentset.prev(); };
+		this.prevButtonDOMElement.onclick = function() { assignmentset.prevPosition(); };
 
 		this.nextButtonDOMElement = document.createElement('button');
 		this.nextButtonDOMElement.setAttribute('type', 'button');
 		this.nextButtonDOMElement.className = 'btn btn-sm btn-secondary';
 		this.nextButtonDOMElement.innerText = 'Next';
-		this.nextButtonDOMElement.onclick = function() { assignmentset.next(); };
+		this.nextButtonDOMElement.onclick = function() { assignmentset.nextPosition(); };
 
 		this.stopButtonDOMElement = document.createElement('button');
 		this.stopButtonDOMElement.setAttribute('type', 'button');
@@ -306,15 +345,37 @@ class AssignmentSet extends Set {
 		postText.innerText = 'Assignment'
 		assignmentPanelArea.appendChild(postText);
 
+		// Attach event handler to the range input
+		this.assignmentPanelDOMElement.querySelector('input[type="range"]').onmouseup = function() {
+			console.log("RANGE HANDLER");
+			assignmentset.setPosition(parseInt(this.value) - 1);
+		};
+
+		// Attach event handler to the position input
+		this.assignmentPanelDOMElement.querySelector('input[name="positionInput"]').onchange = function() {
+			console.log("POSITION INPUT HANDLER");
+
+			// Output a dialog error if the position is out of range
+			if (parseInt(this.value) < 1 || parseInt(this.value) > assignmentset.members.length) {
+				alert('Position must be between 1 and ' + assignmentset.members.length);
+				return;
+			}
+
+			assignmentset.setPosition(parseInt(this.value) - 1);
+		};
+
 		// Make the assignment panel area visible since we have at least one
 		// assignment panel showing.
 		assignmentPanelArea.style.display = 'block';
 		
 	};
 
-	resume() {
+	// Begin or resume the assignment set, optionally starting at a specific position.
+	resume(pos) {
 
-		if (this.currentTargetAssignmentIndex != null) {
+		console.log("RESUME", pos)
+
+		if (this.hasBegun()) {
 			console.log('Error! Assignment set resume() called when it was already started!');
 			return;
 		}
@@ -323,7 +384,9 @@ class AssignmentSet extends Set {
 		// TODO: put other assignment sets to the stopped state
 		this.parentAssignmentManager.currentTargetAssignmentSet = this;
 
-		if (this.getCompletedCount() >= this.members.length) {
+		if (pos != null) {
+			this.currentTargetAssignmentIndex = pos;
+		} else if (this.getCompletedCount() >= this.members.length) {
 			this.currentTargetAssignmentIndex = 0;
 		} else {
 			for (this.currentTargetAssignmentIndex = 0; this.currentTargetAssignmentIndex < this.members.length && this.members[this.currentTargetAssignmentIndex].related != null; this.currentTargetAssignmentIndex++){}
@@ -341,9 +404,24 @@ class AssignmentSet extends Set {
 			alert('Your assignment is complete!');
 		}
 
+		this.updatePanel();
+
+	};
+
+	// Go to position
+	setPosition(pos) {
+		console.log("SET POSITION", pos);
+		if (!this.hasBegun()) {
+			this.resume(pos);
+		} else {
+			this.currentTargetAssignmentIndex = pos;
+			this.members[this.currentTargetAssignmentIndex].goTo();
+			this.updatePanel();
+		}
 	};
 
 	stop() {
+		console.log("STOP")
 		this.parentAssignmentManager.currentTargetAssignmentSet = null;
 		this.currentTargetAssignmentIndex = null;
 		const btngrp = this.assignmentPanelDOMElement.querySelector('.btn-group');
@@ -360,9 +438,12 @@ class AssignmentSet extends Set {
 		if (globalStateManager.currentFile) {
 			globalStateManager.currentFile.resetZoomToOutermost();
 		}
+
+		this.updatePanel();
 	};
 
 	updatePanel() {
+		console.log("UPDATE PANEL")
 		const completedCount = this.getCompletedCount();
 		const pct = Math.round(100*completedCount/this.members.length);
 
@@ -370,7 +451,14 @@ class AssignmentSet extends Set {
 		pbardom.style.width = pct+'%';
 		pbardom.setAttribute('aria-valuenow', completedCount);
 
+		console.log('here', this.currentTargetAssignmentIndex)
+		this.assignmentPanelDOMElement.querySelector('.positionNumber').innerText = this.currentTargetAssignmentIndex || this.currentTargetAssignmentIndex === 0 ? this.currentTargetAssignmentIndex+1 : '-';
+		this.assignmentPanelDOMElement.querySelector('input[name=positionInput]').value = this.currentTargetAssignmentIndex || this.currentTargetAssignmentIndex === 0 ? this.currentTargetAssignmentIndex+1 : '';
+
 		this.assignmentPanelDOMElement.querySelector('.completedCount').innerText = completedCount;
+
+		// Update the range position
+		this.assignmentPanelDOMElement.querySelector('input[type="range"]').value = this.currentTargetAssignmentIndex || this.currentTargetAssignmentIndex === 0 ? this.currentTargetAssignmentIndex+1 : 1;
 
 	};
 

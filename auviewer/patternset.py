@@ -131,7 +131,7 @@ class PatternSet:
 
     def assignToUsers(self, user_ids: Union[int, List[int]]) -> None:
         """
-        Assign the pattern set to user(s).
+        Assign the pattern set to user(s). Idempotent.
         :param user_ids: May be single user ID or list of user IDs.
         :return: None
         """

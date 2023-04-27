@@ -123,7 +123,8 @@ function handleClick(e, x) {
 
 	// Get a reference to the graph instance. Dygraphs implements the click
 	// callback poorly, so we have to get it in a convoluted way.
-	let graph = $(e.path[2]).data('graphClassInstance');
+	let path = e.composedPath ? e.composedPath() : e.path;
+	let graph = $(path[2]).data('graphClassInstance');
 
 	// console.log("Handling canvas click. # Annotations:", e.offsetX, file.annotationsAndPatternsToRender);
 
