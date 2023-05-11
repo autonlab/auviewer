@@ -10,6 +10,7 @@ export interface Annotation {
   pattern_id?: number
 }
 
+// Can be ignored... probably a vestige from weak supervisor work
 export interface LabelerEvaluativeStats {
   labeler: string,
   coverage: number,

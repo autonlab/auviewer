@@ -1,4 +1,3 @@
-from resource import prlimit
 from flask import Flask, Blueprint, send_from_directory, request, render_template, render_template_string, abort, Markup
 from flask_mail import Mail
 from htmlmin.main import minify

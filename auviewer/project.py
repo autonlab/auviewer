@@ -3,7 +3,7 @@ import importlib
 import numpy as np
 
 import datetime as dt
-from tqdm import tqdm
+#from tqdm import tqd
 from io import StringIO, BytesIO
 import logging
 import math
@@ -552,7 +552,7 @@ class Project:
         # df = pd.DataFrame.from_dict(dfDict)
         # df.to_csv('segmentsOfInterest.csv')
         return result, preds
-    from tqdm import tqdm
+    
     def computeVotes(self, fileIds, windowInfo=None):
         lfModule = self.getLFModule()
         thresholds = self.getThresholdsPayload()
