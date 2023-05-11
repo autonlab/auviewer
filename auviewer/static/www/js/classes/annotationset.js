@@ -205,6 +205,69 @@ class AssignmentSet extends Set {
 		return this.currentTargetAssignmentIndex != null;
 	};
 
+	// Go to the next incomplete assignment.
+	nextIncompletePosition(pos) {
+
+		console.log("NEXT INCOMPLETE POSITION FUNCTION")
+
+		// Preserve the position in case needed at the end
+		const originalPos = this.currentTargetAssignmentIndex;
+
+		// If a position is not specified, start at the next position
+		if (pos == null) {
+			pos = this.currentTargetAssignmentIndex+1;
+		}
+
+		// Find the next incomplete assignment
+		for (this.currentTargetAssignmentIndex = pos; this.currentTargetAssignmentIndex < this.members.length && this.members[this.currentTargetAssignmentIndex].related != null; this.currentTargetAssignmentIndex++){}
+
+		// If we got to the end, start from the beginning
+		if (this.currentTargetAssignmentIndex >= this.members.length) {
+			for (this.currentTargetAssignmentIndex = 0; this.currentTargetAssignmentIndex < this.members.length && this.members[this.currentTargetAssignmentIndex].related != null; this.currentTargetAssignmentIndex++){}
+		}
+
+		if (this.currentTargetAssignmentIndex < this.members.length) {
+			this.members[this.currentTargetAssignmentIndex].goTo();
+		} else {
+			// There are no subsequent incomplete assignments, so simply go to next position.
+			console.log("GOING TO NEXT STARTING FROM", originalPos);
+			this.currentTargetAssignmentIndex = originalPos;
+			this.nextPosition();
+		}
+
+		this.updatePanel();
+	};
+
+	// Go to the previous incomplete assignment.
+	prevIncompletePosition(pos) {
+
+		// Preserve the position in case needed at the end
+		const originalPos = this.currentTargetAssignmentIndex;
+
+		// If a position is not specified, start just before the current position
+		if (pos == null) {
+			pos = this.currentTargetAssignmentIndex-1;
+		}
+
+		// Find the previous incomplete assignment
+		for (this.currentTargetAssignmentIndex = pos; this.currentTargetAssignmentIndex >= 0 && this.members[this.currentTargetAssignmentIndex].related != null; this.currentTargetAssignmentIndex--){}
+		// If we got to -1, start from the end
+		if (this.currentTargetAssignmentIndex < 0) {
+			for (this.currentTargetAssignmentIndex = this.members.length-1; this.currentTargetAssignmentIndex >= 0 && this.members[this.currentTargetAssignmentIndex].related != null; this.currentTargetAssignmentIndex--){}
+		}
+
+		if (this.currentTargetAssignmentIndex > -1) {
+			console.log("GOING TO...")
+			this.members[this.currentTargetAssignmentIndex].goTo();
+		} else {
+			// There are no previous incomplete assignments, so simply go to previous position.
+			this.currentTargetAssignmentIndex = originalPos;
+			this.prevPosition();
+		}
+
+		this.updatePanel();
+	};
+
 	// Go to the next assignment.
 	nextPosition() {
 
@@ -317,13 +380,13 @@ class AssignmentSet extends Set {
 		this.prevButtonDOMElement.setAttribute('type', 'button');
 		this.prevButtonDOMElement.className = 'btn btn-sm btn-secondary';
 		this.prevButtonDOMElement.innerText = 'Prev';
-		this.prevButtonDOMElement.onclick = function() { assignmentset.prevPosition(); };
+		this.prevButtonDOMElement.onclick = function() { assignmentset.prevIncompletePosition(); };
 
 		this.nextButtonDOMElement = document.createElement('button');
 		this.nextButtonDOMElement.setAttribute('type', 'button');
 		this.nextButtonDOMElement.className = 'btn btn-sm btn-secondary';
 		this.nextButtonDOMElement.innerText = 'Next';
-		this.nextButtonDOMElement.onclick = function() { assignmentset.nextPosition(); };
+		this.nextButtonDOMElement.onclick = function() { assignmentset.nextIncompletePosition(); };
 
 		this.stopButtonDOMElement = document.createElement('button');
 		this.stopButtonDOMElement.setAttribute('type', 'button');
@@ -347,13 +410,11 @@ class AssignmentSet extends Set {
 
 		// Attach event handler to the range input
 		this.assignmentPanelDOMElement.querySelector('input[type="range"]').onmouseup = function() {
-			console.log("RANGE HANDLER");
 			assignmentset.setPosition(parseInt(this.value) - 1);
 		};
 
 		// Attach event handler to the position input
 		this.assignmentPanelDOMElement.querySelector('input[name="positionInput"]').onchange = function() {
-			console.log("POSITION INPUT HANDLER");
 
 			// Output a dialog error if the position is out of range
 			if (parseInt(this.value) < 1 || parseInt(this.value) > assignmentset.members.length) {
@@ -373,8 +434,6 @@ class AssignmentSet extends Set {
 	// Begin or resume the assignment set, optionally starting at a specific position.
 	resume(pos) {
 
-		console.log("RESUME", pos)
-
 		if (this.hasBegun()) {
 			console.log('Error! Assignment set resume() called when it was already started!');
 			return;
@@ -385,10 +444,13 @@ class AssignmentSet extends Set {
 		this.parentAssignmentManager.currentTargetAssignmentSet = this;
 
 		if (pos != null) {
+			// If a specific starting position was provided, use it
 			this.currentTargetAssignmentIndex = pos;
 		} else if (this.getCompletedCount() >= this.members.length) {
+			// If the assignment is already complete, start at the beginning
 			this.currentTargetAssignmentIndex = 0;
 		} else {
+			// Otherwise, start at the first incomplete assignment
 			for (this.currentTargetAssignmentIndex = 0; this.currentTargetAssignmentIndex < this.members.length && this.members[this.currentTargetAssignmentIndex].related != null; this.currentTargetAssignmentIndex++){}
 		}
 		if (this.currentTargetAssignmentIndex < this.members.length) {

@@ -1195,6 +1195,9 @@ class Project:
 
                     logging.error(f"Error loading new file: {traceback.format_exc()}")
 
+        # Sort files by filename
+        self.files.sort(key=lambda f: f.origFilePathObj.name)
+
     def setName(self, name):
         """Rename the project."""
         self.model.name = name
