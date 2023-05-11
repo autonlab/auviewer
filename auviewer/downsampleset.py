@@ -130,7 +130,10 @@ class DownsampleSet:
         #   - Datagroup has two non-empty datasets, "datetime" and "value";
         #   - The two datasets are of equal length;
         #   - There exists a file for storing processed data.
-        if (len(self.seriesparent.rawTimes) < 1 or len(self.seriesparent.rawValues) < 1) or len(self.seriesparent.rawTimes) != len(self.seriesparent.rawValues) or not hasattr(self.seriesparent.fileparent, 'pf'):
+        if \
+                (len(self.seriesparent.rawTimes) < 1 or len(self.seriesparent.rawValues) < 1) or \
+                len(self.seriesparent.rawTimes) != len(self.seriesparent.rawValues) or \
+                not hasattr(self.seriesparent.fileparent, 'pf'):
             return
 
         # Get an array of the downsamples to build (each element of the array
