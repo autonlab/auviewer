@@ -8,7 +8,6 @@ import logging
 import shutil
 import tempfile
 import json
-from werkzeug.middleware.profiler import ProfilerMiddleware
 
 # Simplejson package is required in order to "ignore" NaN values and implicitly
 # convert them into null values. RFC JSON spec left out NaN values, even though
@@ -75,11 +74,6 @@ def createApp():
 
     # Auto-reload templates
     app.jinja_env.auto_reload = True
-
-    # app = ProfilerMiddleware(app, profile_dir='profiler')
-
-    # app.config['PROFILE'] = True
-    # app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[30])
 
     # Make the root web path available for templates
     @app.context_processor
@@ -1159,7 +1153,6 @@ def main():
     else:
         print(f"\n{bannerMsgPrefix}You may access AUViewer at: {browser_url}\n{fmtEndSuffix}")
 
-    # app.wsgi_app = ProfilerMiddleware(app.wsgi_app, profile_dir='profiler')
     app.run(host=config['host'], port=config['port'], debug=True, use_reloader=False)
     return app
 

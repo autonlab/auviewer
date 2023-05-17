@@ -1099,7 +1099,9 @@ class Project:
                 'description': ps.description,
                 'patterns': [
                     #annotationOrPatternOutput(p) for p in ps.patterns
-                    annotationOrPatternOutput(p, p.annotations[0] if len(p.annotations)>0 else None) for p in models.db.session.query(models.Pattern).filter_by(pattern_set_id=ps.id).outerjoin(models.Annotation, and_(models.Annotation.pattern_id==models.Pattern.id, models.Annotation.user_id==user_id)).options(contains_eager('annotations')).all()
+                    # annotationOrPatternOutput(p, p.annotations[0] if len(p.annotations) > 0 else None) for p in models.db.session.query(models.Pattern).filter_by(pattern_set_id=ps.id).outerjoin(models.Annotation, and_(models.Annotation.pattern_id == models.Pattern.id, models.Annotation.user_id == user_id)).options(contains_eager('annotations')).all()
+                    annotationOrPatternOutput(p, p.annotations[0] if len(p.annotations) > 0 else None) for p in models.db.session.query(models.Pattern).filter_by(pattern_set_id=ps.id).outerjoin(models.Annotation, and_(models.Annotation.pattern_id == models.Pattern.id, models.Annotation.user_id == user_id)).options(contains_eager(models.Pattern.annotations)).all()
+
                 ]
             } for ps in models.PatternSet.query.filter(models.PatternSet.users.any(id=user_id), models.PatternSet.project_id==self.id).all()],
             'project_files': [[f.id, f.origFilePathObj.name] for f in self.files],
