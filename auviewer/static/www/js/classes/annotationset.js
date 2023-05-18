@@ -208,8 +208,6 @@ class AssignmentSet extends Set {
 	// Go to the next incomplete assignment.
 	nextIncompletePosition(pos) {
 
-		console.log("NEXT INCOMPLETE POSITION FUNCTION")
-
 		// Preserve the position in case needed at the end
 		const originalPos = this.currentTargetAssignmentIndex;
 
@@ -220,22 +218,25 @@ class AssignmentSet extends Set {
 
 		// Find the next incomplete assignment
 		for (this.currentTargetAssignmentIndex = pos; this.currentTargetAssignmentIndex < this.members.length && this.members[this.currentTargetAssignmentIndex].related != null; this.currentTargetAssignmentIndex++){}
-
 		// If we got to the end, start from the beginning
 		if (this.currentTargetAssignmentIndex >= this.members.length) {
 			for (this.currentTargetAssignmentIndex = 0; this.currentTargetAssignmentIndex < this.members.length && this.members[this.currentTargetAssignmentIndex].related != null; this.currentTargetAssignmentIndex++){}
 		}
 
-		if (this.currentTargetAssignmentIndex < this.members.length) {
-			this.members[this.currentTargetAssignmentIndex].goTo();
-		} else {
-			// There are no subsequent incomplete assignments, so simply go to next position.
-			console.log("GOING TO NEXT STARTING FROM", originalPos);
+		if (this.currentTargetAssignmentIndex === originalPos) {
+			// We ended up at our own position, so this is the last remaining unannotated pattern
 			this.currentTargetAssignmentIndex = originalPos;
-			this.nextPosition();
+			alert("You are at the last remaining unannotated pattern.")
 		}
-
-		this.updatePanel();
+		else if (this.currentTargetAssignmentIndex < this.members.length) {
+			// Found next unannotated pattern, so go to it
+			this.members[this.currentTargetAssignmentIndex].goTo();
+			this.updatePanel();
+		} else {
+			// There are no remaining unannotated patterns (including current position)
+			this.currentTargetAssignmentIndex = originalPos;
+			alert("There are no remaining unannotated patterns.")
+		}
 	};
 
 	// Go to the previous incomplete assignment.
@@ -256,16 +257,20 @@ class AssignmentSet extends Set {
 			for (this.currentTargetAssignmentIndex = this.members.length-1; this.currentTargetAssignmentIndex >= 0 && this.members[this.currentTargetAssignmentIndex].related != null; this.currentTargetAssignmentIndex--){}
 		}
 
-		if (this.currentTargetAssignmentIndex > -1) {
-			console.log("GOING TO...")
-			this.members[this.currentTargetAssignmentIndex].goTo();
-		} else {
-			// There are no previous incomplete assignments, so simply go to previous position.
+		if (this.currentTargetAssignmentIndex === originalPos) {
+			// We ended up at our own position, so this is the last remaining unannotated pattern
 			this.currentTargetAssignmentIndex = originalPos;
-			this.prevPosition();
+			alert("You are at the last remaining unannotated pattern.")
 		}
-
-		this.updatePanel();
+		else if (this.currentTargetAssignmentIndex > -1) {
+			// Found prev unannotated pattern, so go to it
+			this.members[this.currentTargetAssignmentIndex].goTo();
+			this.updatePanel();
+		} else {
+			// There are no remaining unannotated patterns (including current position)
+			this.currentTargetAssignmentIndex = originalPos;
+			alert("There are no remaining unannotated patterns.")
+		}
 	};
 
 	// Go to the next assignment.
@@ -378,12 +383,14 @@ class AssignmentSet extends Set {
 
 		this.prevButtonDOMElement = document.createElement('button');
 		this.prevButtonDOMElement.setAttribute('type', 'button');
+		this.prevButtonDOMElement.setAttribute('title', 'Go to previous unannotated pattern');
 		this.prevButtonDOMElement.className = 'btn btn-sm btn-secondary';
 		this.prevButtonDOMElement.innerText = 'Prev';
 		this.prevButtonDOMElement.onclick = function() { assignmentset.prevIncompletePosition(); };
 
 		this.nextButtonDOMElement = document.createElement('button');
 		this.nextButtonDOMElement.setAttribute('type', 'button');
+		this.nextButtonDOMElement.setAttribute('title', 'Go to next unannotated pattern');
 		this.nextButtonDOMElement.className = 'btn btn-sm btn-secondary';
 		this.nextButtonDOMElement.innerText = 'Next';
 		this.nextButtonDOMElement.onclick = function() { assignmentset.nextIncompletePosition(); };
