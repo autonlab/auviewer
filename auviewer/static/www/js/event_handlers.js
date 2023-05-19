@@ -20,9 +20,9 @@ function handleAnnotationHighlightEnd (event, g, context, fileOrGraph) {
 	let graph = $(path[2]).data('graphClassInstance');
 
 	// Warning if annotating a group
-	if (graph.isGroup) {
-		alert("You are annotating a group of series. Please select the individual series you wish to annotate from the Show/Hide Graphs interface.");
-	}
+	// if (graph.isGroup) {
+	// 	alert("You are annotating a group of series. Please select the individual series you wish to annotate from the Show/Hide Graphs interface.");
+	// }
 
 	// Create a new annotation
 	const destinationSet = globalStateManager.currentFile.getAnnotationSetByID('general');

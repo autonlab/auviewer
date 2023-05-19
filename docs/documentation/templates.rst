@@ -20,7 +20,6 @@ A virtual series comprised of a group of real series can be specified as in "Non
                             "lineColor": "#171717",
                             "dotColor": "#171717",
                             "gridColor": "rgb(232,122,128)",
-                            "exceedanceThresholdDemarcation": "rgb(220,0,0)",
                             "ownPatternColor": "rgba(247, 164, 56, 0.77)",
                             "otherPatternColor": "rgba(245, 212, 171, 0.53)",
                             "ownCurrentWorkflowPatternColor": "rgba(0, 189, 29, 0.77)",
