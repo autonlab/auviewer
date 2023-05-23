@@ -129,7 +129,7 @@ class Project:
             user_id = [user_id]
 
         # Query
-        q = models.Annotation.query.options(joinedload('user'))
+        q = models.Annotation.query.options(joinedload(models.Annotation.user))
 
         # Filter query as necessary
         if annotation_id is not None:
