@@ -9,7 +9,7 @@ from auviewer import __VERSION__
 NAME = 'auviewer'
 VERSION = __VERSION__
 
-RECOMPILE_CYTHON = False
+RECOMPILE_CYTHON = True
 
 # Handle optional cython re-compilation (should be disabled by default for
 # standard client build-installs)
@@ -70,8 +70,7 @@ setup(
         'psutil',
         'pycrypto',
         'simplejson',
-        'sqlalchemy',
-        'sklearn'
+        'sqlalchemy'
     ],
     packages=find_packages(),
     setup_requires=['numpy'],
