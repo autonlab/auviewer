@@ -10,16 +10,6 @@ export interface Annotation {
   pattern_id?: number
 }
 
-// Can be ignored... probably a vestige from weak supervisor work
-export interface LabelerEvaluativeStats {
-  labeler: string,
-  coverage: number,
-  conflicts: number,
-  polarity: Array<number>,
-  experimental_accuracy?: number,
-  empirical_accuracy?: number
-}
-
 export enum AnnotationFieldType {
   Categorical="categorical",
   Text="text",

@@ -26,7 +26,7 @@
 			"graphHeight": "120px",
 			"drawLine": false,
 			"drawDots": true,
-			"flineColor": "#171717",
+			"lineColor": "#171717",
 			"dotColor": "#171717",
 			"gridColor": "rgb(232,122,128)",
 			"ownPatternColor": "#f7a438",
