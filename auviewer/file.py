@@ -1,5 +1,5 @@
 from pathlib import Path
-from sqlalchemy import distinct, or_
+from sqlalchemy import distinct, or_, select
 import logging
 import time
 import traceback
@@ -359,10 +359,10 @@ class File:
                     'show': patternset.show_by_default,
                 } for patternset in models.PatternSet.query.filter(models.PatternSet.project_id==self.projparent.id, or_(
                     models.PatternSet.id.notin_(
-                        models.db.session.query(distinct(models.patternSetAssignments.c.pattern_set_id)).subquery()
+                        select(distinct(models.patternSetAssignments.c.pattern_set_id)).subquery()
                     ),
                     models.PatternSet.id.in_(
-                        models.db.session.query(models.patternSetAssignments.c.pattern_set_id).filter(models.patternSetAssignments.c.user_id==user_id).subquery()
+                        select(models.patternSetAssignments.c.pattern_set_id).filter(models.patternSetAssignments.c.user_id==user_id).subquery()
                     )
                 )).all()
             ],
@@ -375,10 +375,10 @@ class File:
                     'show': patternset.show_by_default,
                 } for patternset in models.PatternSet.query.filter(models.PatternSet.project_id==self.projparent.id, or_(
                     models.PatternSet.id.notin_(
-                        models.db.session.query(distinct(models.patternSetAssignments.c.pattern_set_id)).subquery()
+                        select(distinct(models.patternSetAssignments.c.pattern_set_id)).subquery()
                     ),
                     models.PatternSet.id.in_(
-                        models.db.session.query(models.patternSetAssignments.c.pattern_set_id).filter(models.patternSetAssignments.c.user_id==user_id).subquery()
+                        select(models.patternSetAssignments.c.pattern_set_id).filter(models.patternSetAssignments.c.user_id==user_id).subquery()
                     )
                 )).all()
             ],
