@@ -21,6 +21,5 @@ sphinx
 sphinx_gallery
 sphinx_rtd_theme
 simplejson
-sklearn
 sqlalchemy
 twine

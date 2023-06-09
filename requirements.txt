@@ -14,5 +14,4 @@ passlib
 psutil
 pycrypto
 simplejson
-sklearn
 sqlalchemy

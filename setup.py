@@ -70,8 +70,7 @@ setup(
         'psutil',
         'pycrypto',
         'simplejson',
-        'sqlalchemy',
-        'sklearn'
+        'sqlalchemy'
     ],
     packages=find_packages(),
     setup_requires=['numpy'],
