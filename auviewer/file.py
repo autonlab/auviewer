@@ -208,12 +208,15 @@ class File:
             persistence=None,
             maxgap=None,
             expected_frequency=0,
-            min_density=0
+            min_density=0,
             drop_values_below=None,
             drop_values_above=None,
             drop_values_between=None,
         ):
 
+        # Ensure that the file is open
+        _ = self.f
+        
         assert type == 'patterndetection', "detectPatterns() currently only supports type='patterndetection'"
 
         assert thresholdlow is not None or thresholdhigh is not None, "We need at least one of thresholdlow or thresholdhigh in order to perform pattern detection."
@@ -233,7 +236,7 @@ class File:
             thresholdlow = 0
         else:
             mode = 2
-
+            
         if type == 'patterndetection':
 
             # Find the series & run pattern detection
