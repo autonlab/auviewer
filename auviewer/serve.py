@@ -885,6 +885,23 @@ def createApp():
         )
         #receives function that takes in patient series' and returns necessary inputs for LF votes
 
+    @app.route(config['rootWebPath']+'/labeling_models')
+    @login_required
+    def labeling_models():
+
+        # # Parse parameters
+        # id = request.args.get('id', type=int)
+
+        # p = getProject(id)
+        # if p is None:
+        #     logging.error(f"Project ID {id} not found.")
+        #     abort(404, description="Project not found.")
+        #     return
+
+        
+        return render_template('labeling_models.html')# , project_name=projectPayload['project_name'], payload=projectPayloadJSON, featurizersJSONPayload=featurizersJSONPayload)
+
+
     @app.route(config['rootWebPath']+'/project')
     @login_required
     def project():
