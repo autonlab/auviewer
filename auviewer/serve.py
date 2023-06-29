@@ -901,7 +901,24 @@ def createApp():
         
         return render_template('labeling_models.html')# , project_name=projectPayload['project_name'], payload=projectPayloadJSON, featurizersJSONPayload=featurizersJSONPayload)
 
+    @app.route(config['rootWebPath']+'/labeling_models_accept_prompt')
+    @login_required
+    def labeling_models_accept_prompt():
 
+        # # Parse parameters
+        lf_prompt = request.args.get('lf_prompt', type=str)
+
+        print("lf_prompt: ", lf_prompt, "\n")
+
+        # p = getProject(id)
+        # if p is None:
+        #     logging.error(f"Project ID {id} not found.")
+        #     abort(404, description="Project not found.")
+        #     return
+
+        
+        return render_template('labeling_models_accept_prompt.html', lf_prompt=lf_prompt)
+    
     @app.route(config['rootWebPath']+'/project')
     @login_required
     def project():

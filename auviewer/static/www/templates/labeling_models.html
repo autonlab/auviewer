@@ -1,1 +1,8 @@
-Hello
+<form action="/labeling_models_accept_prompt">
+    <label for="lf_prompt">Prompt for a labeling function:</label><br>
+    <textarea id="lf_prompt" name="lf_prompt" rows="6" cols="50">
+SvO2 mean in the past two minutes is greater than or equal to target, where target is the lower one between SvO2 baseline and 65, but not lower than 60 . Function name: SvO2_mean_condition
+    </textarea>
+    <br>
+    <input type="submit" value="Submit">
+  </form>
