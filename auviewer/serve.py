@@ -26,6 +26,9 @@ from .config import set_data_path, config, FlaskConfigClass
 from .flask_user import current_user, login_required, UserManager, SQLAlchemyAdapter
 from .flask_user.signals import user_sent_invitation, user_registered
 
+from . import gptapi
+
+
 
 
 
@@ -889,17 +892,17 @@ def createApp():
     @login_required
     def labeling_models():
 
-        # # Parse parameters
-        # id = request.args.get('id', type=int)
-
-        # p = getProject(id)
-        # if p is None:
-        #     logging.error(f"Project ID {id} not found.")
-        #     abort(404, description="Project not found.")
-        #     return
-
+        prefill_lf_prompt = '''SvO2 mean in the past two minutes is greater than or equal to target, where target is the lower one between SvO2 baseline and 65, but not lower than 60 . Function name: SvO2_mean_condition'''
         
-        return render_template('labeling_models.html')# , project_name=projectPayload['project_name'], payload=projectPayloadJSON, featurizersJSONPayload=featurizersJSONPayload)
+        prefill_gpt_answer = '''def SvO2_mean_condition(pig):
+    target = min(pig['baseline_SvO2'], 65)
+    target = max(target, 60)
+    
+    if pig['SvO2_mean [2 min]'] >= target:
+        return 1
+    else:
+        return 0'''
+        return render_template('labeling_models.html', lf_prompt=prefill_lf_prompt, lf_string=prefill_gpt_answer)
 
     @app.route(config['rootWebPath']+'/labeling_models_accept_prompt')
     @login_required
@@ -908,7 +911,22 @@ def createApp():
         # # Parse parameters
         lf_prompt = request.args.get('lf_prompt', type=str)
 
-        print("lf_prompt: ", lf_prompt, "\n")
+        gpt_answer = gptapi.run_conversation(lf_prompt)
+
+        return render_template('labeling_models.html', lf_prompt=lf_prompt, lf_string=gpt_answer)
+    
+    @app.route(config['rootWebPath']+'/labeling_models_add_function')
+    @login_required
+    def labeling_models_add_function():
+
+        # # Parse parameters
+        lf_prompt = request.args.get('approved_fun', type=str)
+
+        gpt_answer = gptapi.run_conversation(lf_prompt)
+
+        
+
+        print("lf_prompt: ", gpt_answer, "\n")
 
         # p = getProject(id)
         # if p is None:
@@ -917,7 +935,7 @@ def createApp():
         #     return
 
         
-        return render_template('labeling_models_accept_prompt.html', lf_prompt=lf_prompt)
+        return render_template('labeling_models_add_function.html', lf_string=gpt_answer)
     
     @app.route(config['rootWebPath']+'/project')
     @login_required
@@ -1168,6 +1186,8 @@ def main():
     else:
         # Set the data path provided
         set_data_path(args.datapath)
+
+    # empty the lfs.py when started
 
     app = createApp()
 
