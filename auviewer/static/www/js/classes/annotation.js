@@ -109,8 +109,6 @@ Annotation.prototype.goTo = function() {
 
 	let callback = (function() {
 
-		console.log('callback running');
-
 		/* Calculate the zoom window */
 
 		// Total zoom window time to display
@@ -128,8 +126,6 @@ Annotation.prototype.goTo = function() {
 
 		// Zoom to the designated window
 		globalStateManager.currentFile.zoomTo([zwBegin, zwEnd]);
-
-		console.log('callback finished');
 
 	}).bind(this);
 
