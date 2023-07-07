@@ -73,13 +73,6 @@ class Project:
 
         print(f"Complete")
 
-    def __del__(self):
-        """Cleanup"""
-        try:
-            self.observer.join()
-        except:
-            pass
-
     def createPatternSet(self, name: str, description=None, showByDefault: bool = True) -> PatternSet:
         """
         Create and return a new pattern set.
