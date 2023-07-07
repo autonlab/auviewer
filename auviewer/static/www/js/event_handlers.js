@@ -490,7 +490,6 @@ function handleUnderlayRedraw(canvas, area, g) {
 					default:
 						console.log("Error! Unexpected annotation category during graph in handleUnderlayRedraw():", file.annotationsAndPatternsToRender[i])
 				}
-				console.log('cat:', category)
 
 				// Draw the section highlight.
 				canvas.fillRect(x, y, width, height);
