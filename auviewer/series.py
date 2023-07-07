@@ -92,13 +92,40 @@ class Series:
 
         return
 
-    def generateThresholdAlerts(self, thresholdlow, thresholdhigh, mode, duration, persistence, maxgap, expected_frequency=0, min_density=0):
+    def generateThresholdAlerts(
+            self, 
+            thresholdlow, 
+            thresholdhigh, 
+            mode, duration, 
+            persistence, 
+            maxgap, 
+            expected_frequency=0, 
+            min_density=0, 
+            drop_values_below=None, 
+            drop_values_above=None,
+            drop_values_between=None,
+        ):
 
         # Pull raw data for the series into memory
         self.pullRawDataIntoMemory()
 
+        # assemble a data numpy array with two columns: self.rawTimes and self.rawValues
+        data = np.array([self.rawTimes, self.rawValues]).T
+
+        # Drop values below the drop_values_below threshold
+        if drop_values_below is not None:
+            data = data[data[:,1] >= drop_values_below]
+
+        # Drop values above the drop_values_above threshold
+        if drop_values_above is not None:
+            data = data[data[:,1] <= drop_values_above]
+
+        # Drop values between the drop_values_between thresholds
+        if drop_values_between is not None:
+            data = data[(data[:,1] <= drop_values_between[0]) | (data[:,1] >= drop_values_between[1])]
+
         # Run through the data and generate alerts
-        alerts = generateThresholdAlerts(self.rawTimes, self.rawValues, thresholdlow, thresholdhigh, mode, duration, persistence, maxgap, ceil(expected_frequency*duration*min_density))
+        alerts = generateThresholdAlerts(data[:,0], data[:,1], thresholdlow, thresholdhigh, mode, duration, persistence, maxgap, ceil(expected_frequency*duration*min_density))
 
         # Remove raw data for the series fromm memory
         self.initializeRawDataInMemory()
