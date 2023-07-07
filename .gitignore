@@ -9,7 +9,6 @@ build/
 *.egg-info/
 cylib.c
 dist/
-data/
 auviewer.code-workspace
 ._.DS_Store
 .DS_Store
