@@ -10,6 +10,27 @@ lfs_list = [] # the list of LFs to be global?
 lfs_dict = {}
 fname = 'auviewer/lfs.py' # global?
 
+
+def check_answer(answer):
+    # Check if the answer string returned by GPT starts with 'def '
+    if (answer.find("def ") != 0): return None #raise Exception("Answer not Python function: def")
+    # Possible handle: add some to the prompt to the gpt message and ask again
+
+    # Check if the answer string returned by GPT has one input pig and valid syntax for input
+    para_index = answer.find("(pig):")
+    if (para_index == -1): return None # raise Exception("Answer not Python function: one parameter pig")
+
+    # Manual check if answer string returned by GPT ends with a 'return 0/1'
+    if (not answer.endswith("return 0") and not answer.endswith("return 1")):
+        return None # raise Exception("Answer not Python function: not end with return 0/1")
+    
+    lf_name = answer[len("def "):para_index] # Get LF function name as a string [after "def ", before "(pig):"]
+    
+    if (lf_name in lfs_dict): return None # raise Exception("Function name already exist") !!!! Fix this, give user message about function name!
+
+    return (lf_name, answer)
+
+
 # Source: https://platform.openai.com/docs/guides/gpt
 
 def run_conversation(request):
@@ -47,41 +68,46 @@ Return a labeling function in python that is ready to be used and nothing else. 
 
     answer = response["choices"][0]["message"]["content"]
     
+    finish_reason = response["choices"][0]["finish_reason"]
+
+    # Regenerate if finish reason is not stop
+    while finish_reason != "stop":
+        response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=messages,
+        temperature=0.5, 
+        )
+        answer = response["choices"][0]["message"]["content"]
+        finish_reason = response["choices"][0]["finish_reason"]    
+
     return answer
 
 
-def process_lf(answer):
-    # Check if the answer string returned by GPT starts with 'def '
-    if (answer.find("def ") != 0): raise Exception("Answer not Python function: def")
-    # Possible handle: add some to the prompt to the gpt message and ask again
-
-    # Check if the answer string returned by GPT has one input pig and valid syntax for input
-    para_index = answer.find("(pig):")
-    if (para_index == -1): raise Exception("Answer not Python function: one parameter pig")
-
-    # Manual check if answer string returned by GPT ends with a 'return 0/1'
-    if (not answer.endswith("return 0") and not answer.endswith("return 1")):
-        raise Exception("Answer not Python function: not end with return 0/1")
-    
-    lf_name = answer[len("def "):para_index] # Get LF function name as a string [after "def ", before "(pig):"]
-    
-    if (lf_name in lfs_dict): raise Exception("Function name already exist")
-
-    lfs_dict[lf_name] = answer
+def process_lf(lf_name, lf_str):
+    lfs_dict[lf_name] = lf_str
 
     with open(fname, 'a') as f: # append the LF to the lfs.py
         f.write("\n\n")
-        f.write(answer)
-        f.close()
+        f.write(lf_str)
     
     importlib.reload(lfs)
 
     lf_function = getattr(lfs, lf_name, None)
 
     lfs_list.append(lf_function)
+
+    return list(lfs_dict.keys())
     
 
-    
+def general_GPT(request):
+    gpt_answer = run_conversation(request)
+    check_result = check_answer(gpt_answer)
+    if check_result != None:
+        lf_name, lf_str = check_result
+        return lf_name, lf_str
+    else:
+        return None
+
 
 
 

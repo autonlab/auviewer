@@ -1,6 +1,7 @@
-from flask import Flask, Blueprint, send_from_directory, request, render_template, render_template_string, abort, Markup
+from flask import Flask, Blueprint, send_from_directory, request, render_template, render_template_string, abort, Markup, session
 from flask_mail import Mail
 from htmlmin.main import minify
+from flask_session import Session
 from pathlib import Path
 from pprint import pprint
 import argparse
@@ -27,6 +28,7 @@ from .flask_user import current_user, login_required, UserManager, SQLAlchemyAda
 from .flask_user.signals import user_sent_invitation, user_registered
 
 from . import gptapi
+from . import lfs
 
 
 
@@ -75,9 +77,14 @@ def createApp():
 
     # Instantiate the Flask web application class
     app = Flask(__name__, template_folder=str(config['codeRootPathObj'] / 'static' / 'www' / 'templates'))
-
+    
     # Auto-reload templates
     app.jinja_env.auto_reload = True
+
+    # app.secret_key = 'super secret key'
+    # SESSION_TYPE = 'filesystem'
+    # app.config.from_object(__name__)
+    # Session(app)
 
     # Make the root web path available for templates
     @app.context_processor
@@ -911,31 +918,37 @@ def createApp():
         # # Parse parameters
         lf_prompt = request.args.get('lf_prompt', type=str)
 
-        gpt_answer = gptapi.run_conversation(lf_prompt)
+        lf_name, lf_string = gptapi.general_GPT(lf_prompt)
 
-        return render_template('labeling_models.html', lf_prompt=lf_prompt, lf_string=gpt_answer)
+        # https://stackoverflow.com/questions/32815451/are-global-variables-thread-safe-in-flask-how-do-i-share-data-between-requests
+        # session["lf_name"] = lf_name
+        # session["lf_str"] = lf_str
+
+        
+        
+
+        return render_template('labeling_models.html', lf_prompt=lf_prompt, lf_string=lf_string, lf_name = lf_name)
     
     @app.route(config['rootWebPath']+'/labeling_models_add_function')
     @login_required
     def labeling_models_add_function():
 
-        # # Parse parameters
-        lf_prompt = request.args.get('approved_fun', type=str)
+        lf_prompt = request.args.get('lf_prompt', type=str)
+        lf_string = request.args.get('lf_string', type=str)
+        lf_name = request.args.get('lf_name', type=str)
 
-        gpt_answer = gptapi.run_conversation(lf_prompt)
+        
+
+        print("########", lf_prompt, "######\n")
 
         
 
-        print("lf_prompt: ", gpt_answer, "\n")
-
-        # p = getProject(id)
-        # if p is None:
-        #     logging.error(f"Project ID {id} not found.")
-        #     abort(404, description="Project not found.")
-        #     return
+       
+       
+        lfs_list = gptapi.process_lf(lf_name, lf_string)
 
         
-        return render_template('labeling_models_add_function.html', lf_string=gpt_answer)
+        return render_template('labeling_models.html', lf_prompt=lf_prompt, lf_string=lf_string, lf_name = lf_name, lfs_list = lfs_list)
     
     @app.route(config['rootWebPath']+'/project')
     @login_required
@@ -1188,6 +1201,11 @@ def main():
         set_data_path(args.datapath)
 
     # empty the lfs.py when started
+    
+    with open(gptapi.fname, 'w') as f: # append the LF to the lfs.py
+        f.write("# File storing Labeling Function Pool")
+        f.write("\n\n")
+        
 
     app = createApp()
 

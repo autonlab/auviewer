@@ -1,20 +1,37 @@
-<form action="/labeling_models_accept_prompt">
-    <label for="lf_prompt">Prompt for a labeling function:</label><br>
-    <textarea id="lf_prompt" name="lf_prompt" rows="6" cols="50">{{ lf_prompt }}
-    </textarea>
-    <br>
-    <input type="submit" value="Resubmit">
-  </form>
+<html>
+    <head>
+        <link rel="stylesheet"
+              href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/styles/default.min.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script>
+    </head>
+
+    <body>
+        <form action="/labeling_models_accept_prompt">
+            <label for="lf_prompt">Prompt for a labeling function:</label><br>
+            <textarea id="lf_prompt" name="lf_prompt" rows="6" cols="50">{{ lf_prompt }}
+            </textarea>
+            <br>
+            <input type="submit" value="Resubmit">
+        </form>
+
+        <!-- display highlighted python code -->
+        <!-- reference: https://stackoverflow.com/questions/62029757/nicely-formatted-python-code-in-html-files -->
+        <form action="/labeling_models_add_function">
+            <pre><code id="lf_string" class="python">{{ lf_string }}</code></pre>
+            <input type="hidden" name = "lf_prompt" value="{{ lf_prompt }}">
+            <input type="hidden" name = "lf_string" value="{{ lf_string }}">
+            <input type="hidden" name = "lf_name" value="{{ lf_name }}">
+            <input type="submit" value="Add this function to Labeling Function Pool">
+        </form>
+
+        <form>
+            {% for lf in lfs_list %}
+                <input type="checkbox" id="vehicle1" name="vehicle1" value="Bike">
+                <label for="vehicle1"> {{lf}}</label><br>
+            {% endfor %}
+        </form> 
+    </body>
   
 
-<!-- display highlighted python code -->
-<!-- reference: https://stackoverflow.com/questions/62029757/nicely-formatted-python-code-in-html-files -->
-<head>
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/styles/default.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js"></script>
-    <script>hljs.initHighlightingOnLoad();</script>
-  </head>
-  <body>
-    <pre><code class="python">{{ lf_string }}</code></pre>
-  </body>
+</html>
