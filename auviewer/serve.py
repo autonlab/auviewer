@@ -1,7 +1,6 @@
-from flask import Flask, Blueprint, send_from_directory, request, render_template, render_template_string, abort, Markup, session
+from flask import Flask, Blueprint, send_from_directory, request, render_template, render_template_string, abort, Markup
 from flask_mail import Mail
 from htmlmin.main import minify
-from flask_session import Session
 from pathlib import Path
 from pprint import pprint
 import argparse
@@ -81,10 +80,6 @@ def createApp():
     # Auto-reload templates
     app.jinja_env.auto_reload = True
 
-    # app.secret_key = 'super secret key'
-    # SESSION_TYPE = 'filesystem'
-    # app.config.from_object(__name__)
-    # Session(app)
 
     # Make the root web path available for templates
     @app.context_processor
@@ -920,10 +915,7 @@ def createApp():
 
         lf_name, lf_string = gptapi.general_GPT(lf_prompt)
 
-        # https://stackoverflow.com/questions/32815451/are-global-variables-thread-safe-in-flask-how-do-i-share-data-between-requests
-        # session["lf_name"] = lf_name
-        # session["lf_str"] = lf_str
-
+    
         
         
 
