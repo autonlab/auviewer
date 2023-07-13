@@ -1,4 +1,4 @@
-audata
+audata>=1.0.3
 bcrypt
 cython
 email_validator
@@ -11,7 +11,7 @@ htmlmin
 jsbeautifier
 jupyterlab
 nbsphinx
-numpy
+numpy>=1.19.5
 pandas
 pandoc
 passlib
@@ -21,5 +21,5 @@ sphinx
 sphinx_gallery
 sphinx_rtd_theme
 simplejson
-sqlalchemy
+sqlalchemy>=2.0
 twine

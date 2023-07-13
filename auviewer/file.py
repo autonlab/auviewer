@@ -439,10 +439,10 @@ class File:
                     'show': patternset.show_by_default,
                 } for patternset in models.PatternSet.query.filter(models.PatternSet.project_id==self.projparent.id, or_(
                     models.PatternSet.id.notin_(
-                        select([distinct(models.patternSetAssignments.c.pattern_set_id)])
+                        select(distinct(models.patternSetAssignments.c.pattern_set_id))
                     ),
                     models.PatternSet.id.in_(
-                        select([models.patternSetAssignments.c.pattern_set_id]).where(models.patternSetAssignments.c.user_id==user_id)
+                        select(models.patternSetAssignments.c.pattern_set_id).where(models.patternSetAssignments.c.user_id==user_id)
                     )
                 )).all()
             ],
@@ -455,10 +455,10 @@ class File:
                     'show': patternset.show_by_default,
                 } for patternset in models.PatternSet.query.filter(models.PatternSet.project_id==self.projparent.id, or_(
                     models.PatternSet.id.notin_(
-                        select([distinct(models.patternSetAssignments.c.pattern_set_id)])
+                        select(distinct(models.patternSetAssignments.c.pattern_set_id))
                     ),
                     models.PatternSet.id.in_(
-                        select([models.patternSetAssignments.c.pattern_set_id]).where(models.patternSetAssignments.c.user_id==user_id)
+                        select(models.patternSetAssignments.c.pattern_set_id).where(models.patternSetAssignments.c.user_id==user_id)
                     )
                 )).all()
             ],
