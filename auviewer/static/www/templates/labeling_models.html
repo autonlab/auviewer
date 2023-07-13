@@ -24,12 +24,20 @@
             <input type="hidden" name = "lf_name" value="{{ lf_name }}">
             <input type="submit" value="Add this function to Labeling Function Pool">
         </form>
-
-        <form>
+        <h3>Labeling Function Pool</h3>
+        <form action="/labeling_models_run_model">
+            
             {% for lf in lfs_list %}
-                <input type="checkbox" id="vehicle1" name="vehicle1" value="Bike">
-                <label for="vehicle1"> {{lf}}</label><br>
+                <input type="checkbox" name="selected_lf" value="{{ lf }}">
+                <label for="selected_lf"> {{ lf }}</label><br>
             {% endfor %}
+            
+            
+            <input type="hidden" name = "lf_prompt" value="{{ lf_prompt }}">
+            <input type="hidden" name = "lf_string" value="{{ lf_string }}">
+            <input type="hidden" name = "lf_name" value="{{ lf_name }}">
+            <input type="hidden" name = "lfs_list" value="{{ lfs_list }}">
+            <input type="submit" value="Run Labeling Model with Selected Labeling Functions">
         </form> 
     </body>
   

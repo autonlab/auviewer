@@ -1,7 +1,7 @@
 import os
 import openai
 import importlib
-from . import lfs
+from auviewer import lfs
 
 openai.api_key_path="/Users/qingyang/desktop/AutonLab/resuscitation-project/openai_api_key.txt"
 
@@ -21,7 +21,7 @@ def check_answer(answer):
     if (para_index == -1): return None # raise Exception("Answer not Python function: one parameter pig")
 
     # Manual check if answer string returned by GPT ends with a 'return 0/1'
-    if (not answer.endswith("return 0") and not answer.endswith("return 1")):
+    if (not answer.endswith("return SUFFICIENT") and not answer.endswith("return ABSTAIN") and not answer.endswith("return NOT_SUFFICIENT")):
         return None # raise Exception("Answer not Python function: not end with return 0/1")
     
     lf_name = answer[len("def "):para_index] # Get LF function name as a string [after "def ", before "(pig):"]
@@ -37,10 +37,10 @@ def run_conversation(request):
     system_message = '''We are trying to convert a definition of medical sufficiency condition for pigs into a labeling function that will later be used in a Snorkel labeling model. 
 Here is the context: each pig data have some statistics available, including 
 pig['baseline_ART'], pig['ART_5_Min'] which is the persistence of ART in the past five minutes, 
-pig['ART_mean [1 min]'], pig['ART_mean [2 min]'], pig['ART_mean [5min]'], pig['ART_mean [10 min]'], pig['ART_mean [15 min]'], pig['baseline_SvO2'], pig['SvO2_mean [1 min]'], 
-pig['SvO2_mean [2 min]'], pig['SvO2_mean [5min]'], pig['SvO2_mean [10 min]'], pig['SvO2_mean [15 min]'],
-pig['baseline_HR'], pig['HR_mean [1 min]'], pig['HR_mean [2 min]'], pig['HR_mean [5min]'], pig['HR_mean [10 min]'], pig['HR_mean [15 min]']. (HR means Heart rate)
-Return a labeling function in python that is ready to be used and nothing else. It needs to take in an argument called pig, and return 1 in the condition specified by user, return 0 otherwise. 
+pig['ART_mean [1 min]'], pig['ART_mean [2 min]'], pig['ART_mean [5 min]'], pig['ART_mean [10 min]'], pig['ART_mean [15 min]'], pig['baseline_SvO2'], pig['SvO2_mean [1 min]'], 
+pig['SvO2_mean [2 min]'], pig['SvO2_mean [5 min]'], pig['SvO2_mean [10 min]'], pig['SvO2_mean [15 min]'],
+pig['baseline_HR'], pig['HR_mean [1 min]'], pig['HR_mean [2 min]'], pig['HR_mean [5 min]'], pig['HR_mean [10 min]'], pig['HR_mean [15 min]']. (HR means Heart rate)
+Return a labeling function in python that is ready to be used and nothing else. It needs to take in an argument called pig, and return SUFFICIENT in the condition specified by user, return ABSTAIN otherwise. 
 '''
     user_message1 = '''SvO2 mean in the past two minutes is greater than or equal to target, where target is the lower one between SvO2 baseline and 65, but not lower than 60 . Function name: SvO2_mean_condition'''
     assistant_message1 = '''def SvO2_mean_condition(pig):
@@ -48,9 +48,9 @@ Return a labeling function in python that is ready to be used and nothing else. 
     target = max(target, 60)
     
     if pig['SvO2_mean [2 min]'] >= target:
-        return 1
+        return SUFFICIENT
     else:
-        return 0
+        return ABSTAIN
 '''
 
     messages=[
@@ -88,6 +88,8 @@ def process_lf(lf_name, lf_str):
 
     with open(fname, 'a') as f: # append the LF to the lfs.py
         f.write("\n\n")
+        f.write("@labeling_function()")
+        f.write("\n")
         f.write(lf_str)
     
     importlib.reload(lfs)

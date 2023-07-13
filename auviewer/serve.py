@@ -901,9 +901,9 @@ def createApp():
     target = max(target, 60)
     
     if pig['SvO2_mean [2 min]'] >= target:
-        return 1
+        return SUFFICIENT
     else:
-        return 0'''
+        return ABSTAIN'''
         return render_template('labeling_models.html', lf_prompt=prefill_lf_prompt, lf_string=prefill_gpt_answer)
 
     @app.route(config['rootWebPath']+'/labeling_models_accept_prompt')
@@ -930,18 +930,27 @@ def createApp():
         lf_name = request.args.get('lf_name', type=str)
 
         
-
-        print("########", lf_prompt, "######\n")
-
-        
-
-       
-       
         lfs_list = gptapi.process_lf(lf_name, lf_string)
 
         
         return render_template('labeling_models.html', lf_prompt=lf_prompt, lf_string=lf_string, lf_name = lf_name, lfs_list = lfs_list)
     
+    @app.route(config['rootWebPath']+'/labeling_models_run_model')
+    @login_required
+    def labeling_models_run_model():
+
+        lf_prompt = request.args.get('lf_prompt', type=str)
+        lf_string = request.args.get('lf_string', type=str)
+        lf_name = request.args.get('lf_name', type=str)
+
+        
+        lfs_list = gptapi.process_lf(lf_name, lf_string)
+        selected_lf = request.args.getlist('selected_lf')
+        print("!!!!!!!!!", selected_lf, "!!!!!!!\n")
+        
+        return render_template('labeling_models.html', lf_prompt=lf_prompt, lf_string=lf_string, lf_name = lf_name, lfs_list = lfs_list)
+
+
     @app.route(config['rootWebPath']+'/project')
     @login_required
     def project():
@@ -1196,6 +1205,8 @@ def main():
     
     with open(gptapi.fname, 'w') as f: # append the LF to the lfs.py
         f.write("# File storing Labeling Function Pool")
+        f.write("\n\n")
+        f.write("from snorkel.labeling import labeling_function")
         f.write("\n\n")
         
 
