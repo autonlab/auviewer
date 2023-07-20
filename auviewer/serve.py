@@ -28,6 +28,7 @@ from .flask_user.signals import user_sent_invitation, user_registered
 
 from . import gptapi
 from . import lfs
+from . import snorkelModel
 
 
 
@@ -947,8 +948,17 @@ def createApp():
         lfs_list = gptapi.process_lf(lf_name, lf_string)
         selected_lf = request.args.getlist('selected_lf')
         print("!!!!!!!!!", selected_lf, "!!!!!!!\n")
-        
-        return render_template('labeling_models.html', lf_prompt=lf_prompt, lf_string=lf_string, lf_name = lf_name, lfs_list = lfs_list)
+
+        accu_dict = snorkelModel.runSnorkelModel(selected_lf)
+        print("------------\n")
+        print(accu_dict)
+        print("\n--------------\n")
+        headings = ("pigID", "Accuracy")
+        data = [(key, trueSum / (trueSum + falseSum)) if falseSum != 0 else (key, 0) for (key, (trueSum, falseSum)) in accu_dict.items()]
+        print("------------\n")
+        print(data)
+        print("\n--------------\n")
+        return render_template('labeling_models.html', lf_prompt=lf_prompt, lf_string=lf_string, lf_name = lf_name, lfs_list = lfs_list, headings=headings, data=data)
 
 
     @app.route(config['rootWebPath']+'/project')
@@ -1206,7 +1216,13 @@ def main():
     with open(gptapi.fname, 'w') as f: # append the LF to the lfs.py
         f.write("# File storing Labeling Function Pool")
         f.write("\n\n")
-        f.write("from snorkel.labeling import labeling_function")
+        f.write("from snorkel.labeling import labeling_function\n")
+        f.write("\n\n")
+        f.write("# Define the label mappings for convenience\n")
+        
+        f.write("ABSTAIN = -1\n")
+        f.write("INSUFFICIENT = 0\n")
+        f.write("SUFFICIENT = 1\n")
         f.write("\n\n")
         
 

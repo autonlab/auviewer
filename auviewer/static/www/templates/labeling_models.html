@@ -39,6 +39,22 @@
             <input type="hidden" name = "lfs_list" value="{{ lfs_list }}">
             <input type="submit" value="Run Labeling Model with Selected Labeling Functions">
         </form> 
+
+        <h3>Result Table</h3>
+        <table class="table">
+            <tr>
+                {% for header in headings %}
+                <th>{{ header }}</th>
+                {% endfor %}
+            </tr>
+            {% for row in data %}
+            <tr>
+                {% for cell in row %}
+                <td>{{ cell }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </table>
     </body>
   
 
