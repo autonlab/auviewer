@@ -220,6 +220,8 @@ class File:
 
         # Ensure that the file is open
         _ = self.f
+
+        assert isinstance(series, str) or isinstance(series, list), "series must be a string or list"
         
         assert type == 'patterndetection', "detectPatterns() currently only supports type='patterndetection'"
 
@@ -230,6 +232,10 @@ class File:
         assert persistence is not None, "We need a persistence in order to perform pattern detection."
 
         assert maxgap is not None, "We need a maxgap in order to perform pattern detection."
+
+        # If series is a string, make it a list
+        if isinstance(series, str):
+            series = [series]
 
         # Determine the mode (see generateThresholdAlerts function description for details on this parameter).
         if thresholdhigh is None:
@@ -244,20 +250,25 @@ class File:
         if type == 'patterndetection':
 
             # Find the series & run pattern detection
-            for s in self.series:
-                if s.id == series:
-                    return s.generateThresholdAlerts(
-                        thresholdlow, 
-                        thresholdhigh, 
-                        mode, duration, 
-                        persistence, 
-                        maxgap, 
-                        expected_frequency=expected_frequency, 
-                        min_density=min_density,
-                        drop_values_below=drop_values_below,
-                        drop_values_above=drop_values_above,
-                        drop_values_between=drop_values_between,
-                    ).tolist()
+            patterns = []
+            for ts in series:
+                for s in self.series:
+                    if s.id == ts:
+                        patterns += s.generateThresholdAlerts(
+                            thresholdlow, 
+                            thresholdhigh, 
+                            mode, duration, 
+                            persistence, 
+                            maxgap, 
+                            expected_frequency=expected_frequency, 
+                            min_density=min_density,
+                            drop_values_below=drop_values_below,
+                            drop_values_above=drop_values_above,
+                            drop_values_between=drop_values_between,
+                        ).tolist()
+                        continue
+
+            return patterns
 
         # elif type == 'correlation':
 
@@ -428,10 +439,10 @@ class File:
                     'show': patternset.show_by_default,
                 } for patternset in models.PatternSet.query.filter(models.PatternSet.project_id==self.projparent.id, or_(
                     models.PatternSet.id.notin_(
-                        select([distinct(models.patternSetAssignments.c.pattern_set_id)])
+                        select(distinct(models.patternSetAssignments.c.pattern_set_id))
                     ),
                     models.PatternSet.id.in_(
-                        select([models.patternSetAssignments.c.pattern_set_id]).where(models.patternSetAssignments.c.user_id==user_id)
+                        select(models.patternSetAssignments.c.pattern_set_id).where(models.patternSetAssignments.c.user_id==user_id)
                     )
                 )).all()
             ],
@@ -444,10 +455,10 @@ class File:
                     'show': patternset.show_by_default,
                 } for patternset in models.PatternSet.query.filter(models.PatternSet.project_id==self.projparent.id, or_(
                     models.PatternSet.id.notin_(
-                        select([distinct(models.patternSetAssignments.c.pattern_set_id)])
+                        select(distinct(models.patternSetAssignments.c.pattern_set_id))
                     ),
                     models.PatternSet.id.in_(
-                        select([models.patternSetAssignments.c.pattern_set_id]).where(models.patternSetAssignments.c.user_id==user_id)
+                        select(models.patternSetAssignments.c.pattern_set_id).where(models.patternSetAssignments.c.user_id==user_id)
                     )
                 )).all()
             ],
