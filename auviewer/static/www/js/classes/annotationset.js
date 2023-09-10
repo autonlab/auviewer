@@ -170,7 +170,6 @@ class AssignmentSet extends Set {
 
 		for (const assignment of this.members) {
 			if (assignment.id === assignment_id) {
-
 				// Attach the new annotation to the assignment.
 				assignment.related = annotation;
 
@@ -479,7 +478,7 @@ class AssignmentSet extends Set {
 
 	// Go to position
 	setPosition(pos) {
-		console.log("SET POSITION", pos);
+		
 		if (!this.hasBegun()) {
 			this.resume(pos);
 		} else {
@@ -490,7 +489,7 @@ class AssignmentSet extends Set {
 	};
 
 	stop() {
-		console.log("STOP")
+		
 		this.parentAssignmentManager.currentTargetAssignmentSet = null;
 		this.currentTargetAssignmentIndex = null;
 		const btngrp = this.assignmentPanelDOMElement.querySelector('.btn-group');
@@ -509,10 +508,11 @@ class AssignmentSet extends Set {
 		}
 
 		this.updatePanel();
+
 	};
 
 	updatePanel() {
-		console.log("UPDATE PANEL")
+		
 		const completedCount = this.getCompletedCount();
 		const pct = Math.round(100*completedCount/this.members.length);
 
@@ -520,7 +520,6 @@ class AssignmentSet extends Set {
 		pbardom.style.width = pct+'%';
 		pbardom.setAttribute('aria-valuenow', completedCount);
 
-		console.log('here', this.currentTargetAssignmentIndex)
 		this.assignmentPanelDOMElement.querySelector('.positionNumber').innerText = this.currentTargetAssignmentIndex || this.currentTargetAssignmentIndex === 0 ? this.currentTargetAssignmentIndex+1 : '-';
 		this.assignmentPanelDOMElement.querySelector('input[name=positionInput]').value = this.currentTargetAssignmentIndex || this.currentTargetAssignmentIndex === 0 ? this.currentTargetAssignmentIndex+1 : '';
 

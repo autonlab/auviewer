@@ -37,66 +37,6 @@ class AnnotationTemplate(db.Model):
     name = db.Column(db.String(255), nullable=False)
     form = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, server_default=func.now())
-class SupervisorModule(db.Model):
-    __tablename__ = 'supervisor_modules'
-    id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
-    title = db.Column(db.String(255), nullable=False)
-    series_of_interest = db.Column(db.String(255), nullable=False)
-    series_to_render = db.Column(db.String(255), nullable=True)
-
-#many to many table joining labelers and thresholds
-labelerThresholds = db.Table('labeler_thresholds',
-    db.Column('labeler_id', db.Integer, db.ForeignKey('labelers.id'), primary_key=True),
-    db.Column('threshold_id', db.Integer, db.ForeignKey('thresholds.id'), primary_key=True))
-
-class Segment(db.Model):
-    __tablename__ = 'segments'
-    id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='RESTRICT'), nullable=False)
-    file_id = db.Column(db.Integer, db.ForeignKey('files.id', ondelete='RESTRICT'), nullable=False)
-    series = db.Column(db.String(255), nullable=False)
-    left = db.Column(db.Float, nullable=True)
-    right = db.Column(db.Float, nullable=True)
-
-    type = db.Column(db.String(255), nullable=False) # CUSTOM | WINDOW, used purely for querying purposes
-    window_size_ms = db.Column(db.Integer, nullable=True) #only defined if type=='WINDOW'
-    window_roll_ms = db.Column(db.Integer, nullable=True) #only defined if type=='WINDOW'
-
-    votes = db.relationship("Vote", cascade="all, delete-orphan")
-
-class Labeler(db.Model):
-    __tablename__ = 'labelers'
-    id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
-    title = db.Column(db.String(255), nullable=False)
-
-    thresholds = db.relationship("Threshold", secondary=labelerThresholds)
-    votes = db.relationship("Vote")
-
-class Threshold(db.Model):
-    __tablename__ = 'thresholds'
-    id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
-    title = db.Column(db.String(255), nullable=False)
-    value = db.Column(db.Float, nullable=True)
-
-class Vote(db.Model):
-    __tablename__ = 'votes'
-    id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
-    labeler_id = db.Column(db.Integer, db.ForeignKey('labelers.id', ondelete='CASCADE'), nullable=False)
-    file_id = db.Column(db.Integer, db.ForeignKey('files.id', ondelete='CASCADE'), nullable=False)
-    category_id = db.Column(db.Integer, db.ForeignKey('categories.id', ondelete='CASCADE'), nullable=False)
-    segment_id = db.Column(db.Integer, db.ForeignKey('segments.id', ondelete='CASCADE'), nullable=False)
-
-    category = db.relationship("Category")
-
-class Category(db.Model):
-    __tablename__ = 'categories'
-    id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
-    label = db.Column(db.String(255), nullable=False)
 
 class Pattern(db.Model):
     __tablename__ = 'patterns'

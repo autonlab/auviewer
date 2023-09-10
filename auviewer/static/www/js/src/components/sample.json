@@ -1,0 +1,74 @@
+{
+"annotations": {
+    "_default": {
+        "fields": [
+            {
+                "id": "confidence",
+                "label": "Confidence",
+                "type": "categorical",
+                "classes": ["-3", "-2", "-1", "0", "1", "2", "3"],
+                "selection_type": "radio"
+            },
+            {
+                "id": "notes",
+                "label": "Notes",
+                "type": "text"
+            }
+        ]
+    },
+    "custom2": {
+        "fields": [
+        {
+            "id": "pvc_presence",
+            "label": "PVC Presence",
+            "type": "categorical",
+            "classes": ["None", "One PVC", "Multiple PVCs"],
+            "selection_type": "button"
+        },
+        {
+            "id": "pac_presence",
+            "label": "PAC Presence",
+            "type": "categorical",
+            "classes": ["None", "One PAC", "Multiple PACs"],
+            "selection_type": "button"
+        },
+        {
+            "id": "worth_review",
+            "label": "Worth revisiting",
+            "type": "text"
+        },
+        {
+            "id": "rhythm_label",
+            "label": "Rhythm",
+            "type": "categorical",
+            "classes": ["Atrial Fibrillation", "Sinus", "Other", "Noise"],
+            "selection_type": "button"
+        }
+        ]
+    },
+    "custom1": {
+        "fields": [
+            {
+                "id": "confidence",
+                "label": "Confidence",
+                "type": "categorical",
+                "classes": ["-3", "-2", "-1", "0", "1", "2", "3"],
+                "selection_type": "radio"
+            },
+            {
+                "id": "signal_quality",
+                "label": "Signal Quality",
+                "type": "categorical",
+                "classes": ["0", "1", "2", "3", "4"],
+                "selection_type": "radio"
+            },
+            {
+                "id": "notes",
+                "label": "Notes",
+                "type": "text"
+            }
+        ]
+    }
+
+}
+}

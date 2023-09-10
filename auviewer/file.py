@@ -23,6 +23,10 @@ class File:
 
         logging.info(f"\n------------------------------------------------\nACCESSING FILE: (ID {id}) {origFilePathObj}\n------------------------------------------------\n")
 
+        # TODO: TEMP
+        processNewFiles = False
+        processOnly = False
+
         # Holds reference to the project parent
         self.projparent = projparent
 
@@ -216,6 +220,8 @@ class File:
 
         # Ensure that the file is open
         _ = self.f
+
+        assert isinstance(series, str) or isinstance(series, list), "series must be a string or list"
         
         assert type == 'patterndetection', "detectPatterns() currently only supports type='patterndetection'"
 
@@ -226,6 +232,10 @@ class File:
         assert persistence is not None, "We need a persistence in order to perform pattern detection."
 
         assert maxgap is not None, "We need a maxgap in order to perform pattern detection."
+
+        # If series is a string, make it a list
+        if isinstance(series, str):
+            series = [series]
 
         # Determine the mode (see generateThresholdAlerts function description for details on this parameter).
         if thresholdhigh is None:
@@ -240,20 +250,25 @@ class File:
         if type == 'patterndetection':
 
             # Find the series & run pattern detection
-            for s in self.series:
-                if s.id == series:
-                    return s.generateThresholdAlerts(
-                        thresholdlow, 
-                        thresholdhigh, 
-                        mode, duration, 
-                        persistence, 
-                        maxgap, 
-                        expected_frequency=expected_frequency, 
-                        min_density=min_density,
-                        drop_values_below=drop_values_below,
-                        drop_values_above=drop_values_above,
-                        drop_values_between=drop_values_between,
-                    ).tolist()
+            patterns = []
+            for ts in series:
+                for s in self.series:
+                    if s.id == ts:
+                        patterns += s.generateThresholdAlerts(
+                            thresholdlow, 
+                            thresholdhigh, 
+                            mode, duration, 
+                            persistence, 
+                            maxgap, 
+                            expected_frequency=expected_frequency, 
+                            min_density=min_density,
+                            drop_values_below=drop_values_below,
+                            drop_values_above=drop_values_above,
+                            drop_values_between=drop_values_between,
+                        ).tolist()
+                        continue
+
+            return patterns
 
         # elif type == 'correlation':
 
@@ -361,6 +376,39 @@ class File:
 
         return events
 
+    def _loadonstart(self):
+        while True:
+            # Open the original file
+            self.file = audata.File.open(str(self.origFilePathObj), return_datetimes=False)
+
+            # Load the processed file if it exists
+            if self.procFilePathObj.exists():
+                logging.info(f"Opening processed file {self.procFilePathObj}.")
+                self.processed_file = audata.File.open(str(self.procFilePathObj), return_datetimes=False)
+                self.pf_open = True
+
+                # If we've been asked only to generate the processed file and it already exists, return now.
+                if self.processOnly:
+                    break
+
+            # Load series data into memory
+            self.load()
+            self.f_open = True
+
+            # If the processed file does not exist and we're supposed to process
+            # new file data, process it.
+            if not self.procFilePathObj.exists() and self.processNewFiles:
+                logging.info(f"Generating processed file for {self.origFilePathObj}")
+                self.process()
+                self.pf_open = True
+
+            # If the processed file still does not exist, raise an exception
+            if not self.procFilePathObj.exists():
+                raise Exception(f"File {self.origFilePathObj} has not been processed and therefore cannot be loaded.")
+            
+            break
+    
+
     def getInitialPayload(self, user_id):
         """Produces JSON output for all series in the file at the maximum time range."""
 
@@ -391,10 +439,10 @@ class File:
                     'show': patternset.show_by_default,
                 } for patternset in models.PatternSet.query.filter(models.PatternSet.project_id==self.projparent.id, or_(
                     models.PatternSet.id.notin_(
-                        select([distinct(models.patternSetAssignments.c.pattern_set_id)])
+                        select(distinct(models.patternSetAssignments.c.pattern_set_id))
                     ),
                     models.PatternSet.id.in_(
-                        select([models.patternSetAssignments.c.pattern_set_id]).where(models.patternSetAssignments.c.user_id==user_id)
+                        select(models.patternSetAssignments.c.pattern_set_id).where(models.patternSetAssignments.c.user_id==user_id)
                     )
                 )).all()
             ],
@@ -407,10 +455,10 @@ class File:
                     'show': patternset.show_by_default,
                 } for patternset in models.PatternSet.query.filter(models.PatternSet.project_id==self.projparent.id, or_(
                     models.PatternSet.id.notin_(
-                        select([distinct(models.patternSetAssignments.c.pattern_set_id)])
+                        select(distinct(models.patternSetAssignments.c.pattern_set_id))
                     ),
                     models.PatternSet.id.in_(
-                        select([models.patternSetAssignments.c.pattern_set_id]).where(models.patternSetAssignments.c.user_id==user_id)
+                        select(models.patternSetAssignments.c.pattern_set_id).where(models.patternSetAssignments.c.user_id==user_id)
                     )
                 )).all()
             ],
@@ -452,9 +500,6 @@ class File:
         """Returns a list of series names available in the file."""
 
         seriesNames = []
-        for s in self.series:
-            seriesNames.append(s.id)
-        return seriesNames
 
     def getSeriesOrCreate(self, seriesid):
         """Retreves or creates & returns the series corresponding to the provided series ID."""

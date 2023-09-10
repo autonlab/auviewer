@@ -215,7 +215,6 @@ function handleMouseMove(event, g, context) {
 
 // Handle mouse-up for pan & zoom.
 function handleMouseUp(event, g, context) {
-
 	if (context.mvIsAnnotating) {
 		handleAnnotationHighlightEnd(event, g, context, this);
 	}
@@ -312,7 +311,6 @@ function handlePlotting(e) {
 	cnv.lineWidth = 1;
 
 	// Plot each series, whether it be an individual series or a group of them.
-	//console.log(e.allSeriesPoints);
 	for (let i = 0; i + 2 < e.allSeriesPoints.length; i += 3) {
 
 		// SERIES LINE - Plot line for the raw data column for the series, which
@@ -466,7 +464,6 @@ function handleUnderlayRedraw(canvas, area, g) {
 					x--;
 				}
 				height = area.h; //shortHighlights ? area.h/5*.85 : area.h;
-
 				// Prepare styling for the section highlight.
 				switch (category) {
 					case 'own_annotation':
@@ -490,7 +487,6 @@ function handleUnderlayRedraw(canvas, area, g) {
 					default:
 						console.log("Error! Unexpected annotation category during graph in handleUnderlayRedraw():", file.annotationsAndPatternsToRender[i])
 				}
-				console.log('cat:', category)
 
 				// Draw the section highlight.
 				canvas.fillRect(x, y, width, height);
@@ -501,7 +497,7 @@ function handleUnderlayRedraw(canvas, area, g) {
 
 				// Draw annotation label text
 				try {
-					if (file.annotationsAndPatternsToRender[i].label.confidence) {
+					if (file.annotationsAndPatternsToRender[i].label && file.annotationsAndPatternsToRender[i].label.confidence) {
 						canvas.font = "12px Arial";
 						canvas.fillStyle = this.template.ownAnnotationLabelColor;
 						canvas.textAlign = "center";
