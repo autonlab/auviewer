@@ -230,7 +230,11 @@ class Series:
         logging.info(f"MEM PRE-PULLD: {p.memory_full_info().uss / 1024 / 1024} MB")
 
         # Pull raw data for the series into memory
-        self.pullRawDataIntoMemory()
+        try:
+            self.pullRawDataIntoMemory()
+        except Exception as e:
+            logging.error(f"Error pulling raw data for series {self.id}. Raising exception.")
+            raise e
 
         logging.info(f"MEM AFT-PULLD: {p.memory_full_info().uss/1024/1024} MB")
 
@@ -244,7 +248,11 @@ class Series:
         logging.info(f"MEM AFT-DSPRC: {p.memory_full_info().uss / 1024 / 1024} MB")
 
         # Remove raw data for the series fromm memory
-        self.initializeRawDataInMemory()
+        try:
+            self.initializeRawDataInMemory()
+        except Exception as e:
+            logging.error(f"Error removing raw data for series {self.id}. Raising exception.")
+            raise e
 
         logging.info(f"MEM AFT-REMVD: {p.memory_full_info().uss / 1024 / 1024} MB")
 
