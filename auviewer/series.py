@@ -235,7 +235,11 @@ class Series:
         logging.info(f"MEM AFT-PULLD: {p.memory_full_info().uss/1024/1024} MB")
 
         # Build & store to file all downsamples for the series
-        self.dss.processAndStore()
+        try:
+            self.dss.processAndStore()
+        except Exception as e:
+            logging.error(f"Error processing & storing downsamples for series {self.id}. Raising exception.")
+            raise e
 
         logging.info(f"MEM AFT-DSPRC: {p.memory_full_info().uss / 1024 / 1024} MB")
 
