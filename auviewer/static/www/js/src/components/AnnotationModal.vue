@@ -49,9 +49,9 @@
             </b-form-row>
             <b-form-row>
                 <b-button class="mr-auto" @click="onDelete" type="button" variant="danger">Delete</b-button>
-    
-                <b-button type="submit" variant="primary">Submit</b-button>
+                
                 <b-button @click="onCancel" type="button" data-dismiss="modal" variant="secondary">Cancel</b-button>
+                <b-button type="submit" variant="primary">Submit</b-button>
             </b-form-row>
         </b-form>
     </div>
