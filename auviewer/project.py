@@ -28,10 +28,14 @@ class Project:
 
     def __init__(self, projectModel, processNewFiles=True):
         """The project name should also be the directory name in the projects directory."""
-
-        # Set id, name, and relevant paths
+        
+        # Set id & name
         self.id = projectModel.id
         self.name = projectModel.name
+
+        print(f"Loading project ID {self.id} ({self.name})... ", end='')
+        
+        # Set relevant paths
         self.projDirPathObj = Path(projectModel.path)
         self.originalsDirPathObj = self.projDirPathObj / 'originals'
         self.processedDirPathObj = self.projDirPathObj / 'processed'
@@ -66,12 +70,7 @@ class Project:
         # Load project files
         self.loadProjectFiles(processNewFiles)
 
-    def __del__(self):
-        """Cleanup"""
-        try:
-            self.observer.join()
-        except:
-            pass
+        print(f"Complete")
 
     def createPatternSet(self, name: str, description=None, showByDefault: bool = True) -> PatternSet:
         """
@@ -91,12 +90,39 @@ class Project:
         # Return the pattern set
         return ps
 
-    def detectPatterns(self, type, series, thresholdlow, thresholdhigh, duration, persistence, maxgap, expected_frequency=0, min_density=0):
+    def detectPatterns(
+            self, 
+            type, 
+            series, 
+            thresholdlow, 
+            thresholdhigh, 
+            duration, 
+            persistence, 
+            maxgap, 
+            expected_frequency=0, 
+            min_density=0,
+            drop_values_below=None,
+            drop_values_above=None,
+            drop_values_between=None,
+        ):
         """
         Run pattern detection on all files, and return a DataFrame of results.
         This DataFrame, or a subset thereof, can be passed into PatternSet.addPatterns() if desired.
         """
-        patterns = [[f.id, f.name, series, pattern[0], pattern[1], None, None] for f in self.files for pattern in f.detectPatterns(type, series, thresholdlow, thresholdhigh, duration, persistence, maxgap, expected_frequency=expected_frequency, min_density=min_density)]
+        patterns = [[f.id, f.name, series, pattern[0], pattern[1], None, None] for f in self.files for pattern in f.detectPatterns(
+            type, 
+            series, 
+            thresholdlow, 
+            thresholdhigh, 
+            duration, 
+            persistence, 
+            maxgap, 
+            expected_frequency=expected_frequency, 
+            min_density=min_density, 
+            drop_values_below=drop_values_below, 
+            drop_values_above=drop_values_above, 
+            drop_values_between=drop_values_between
+        )]
         pdf = pd.DataFrame(patterns, columns=['file_id', 'filename', 'series', 'left', 'right', 'top', 'bottom'])
         pdf['label'] = ''
         return pdf
@@ -205,8 +231,7 @@ class Project:
                 'name': ps.name,
                 'description': ps.description,
                 'patterns': [
-                    #annotationOrPatternOutput(p) for p in ps.patterns
-                    annotationOrPatternOutput(p, p.annotations[0] if len(p.annotations)>0 else None) for p in models.db.session.query(models.Pattern).filter_by(pattern_set_id=ps.id).outerjoin(models.Annotation, and_(models.Annotation.pattern_id==models.Pattern.id, models.Annotation.user_id==user_id)).options(contains_eager(models.Pattern.annotations)).all()
+                    annotationOrPatternOutput(p, p.annotations[0] if len(p.annotations) > 0 else None) for p in models.db.session.query(models.Pattern).filter_by(pattern_set_id=ps.id).outerjoin(models.Annotation, and_(models.Annotation.pattern_id == models.Pattern.id, models.Annotation.user_id == user_id)).options(contains_eager(models.Pattern.annotations)).all()
                 ]
             } for ps in models.PatternSet.query.filter(models.PatternSet.users.any(id=user_id), models.PatternSet.project_id==self.id).all()],
             'project_files': [[f.id, f.origFilePathObj.name] for f in self.files],
@@ -344,8 +369,14 @@ class Project:
         # If processNewFiles is true, then go through and process new files
         if processNewFiles:
 
+            # Get all existing absolute file paths as strings
+            existingFilePathStrings = {str(p.resolve()): True for p in existingFilePathObjs}
+                
             # For each new project file which does not exist in the database...
             for newOrigFilePathObj in self.originalsDirPathObj.iterdir():
+
+                # Ensure that the path is absolute
+                newOrigFilePathObj = newOrigFilePathObj.resolve()
 
                 try:
 
@@ -358,19 +389,11 @@ class Project:
                         continue
 
                     # Skip if matches any already-loaded files
-                    if any(map(lambda existingFilePathObj: newOrigFilePathObj.samefile(existingFilePathObj), existingFilePathObjs)):
+                    if str(newOrigFilePathObj) in existingFilePathStrings:
                         continue
 
                     # Establish the path of the new processed file
                     newProcFilePathObj = self.processedDirPathObj / getProcFNFromOrigFN(newOrigFilePathObj)
-
-                    # Instantiate the file class with an id of -1, and attach to
-                    # this project instance.
-                    try:
-                        newFileClassInstance = File(self, -1, newOrigFilePathObj, newProcFilePathObj)
-                    except Exception as e:
-                        logging.error(f"New file {newOrigFilePathObj} could not be processed.\n{e}\n{traceback.format_exc()}")
-                        continue
 
                     # Now that the processing has completed (if not, an exception
                     # would have been raised), add the file to the database and
@@ -379,15 +402,17 @@ class Project:
                     models.db.session.add(newFileDBEntry)
                     models.db.session.commit()
 
-                    # Update the file class instance ID, and add it to the files
-                    # list for this project.
-                    newFileClassInstance.id = newFileDBEntry.id
-                    self.files.append(newFileClassInstance)
+                    # Add a File class instance for this new file to the files list for this project
+                    self.files.append(File(self, newFileDBEntry.id, newOrigFilePathObj, newProcFilePathObj))
 
+                # Handle Ctrl-C
+                except KeyboardInterrupt:
+                    raise
+
+                # Handle all other exceptions by logging and continuing
                 except:
-
                     logging.error(f"Error loading new file: {traceback.format_exc()}")
-
+        
         # Sort files by filename
         self.files.sort(key=lambda f: f.origFilePathObj.name)
 

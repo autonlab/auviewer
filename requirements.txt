@@ -1,4 +1,4 @@
-audata
+audata>=1.0.3
 bcrypt
 email_validator
 flask
@@ -8,10 +8,10 @@ flask_sqlalchemy
 flask-wtf
 htmlmin
 jsbeautifier
-numpy
+numpy>=1.19.5
 pandas
 passlib
 psutil
 pycrypto
 simplejson
-sqlalchemy
+sqlalchemy>=2.0

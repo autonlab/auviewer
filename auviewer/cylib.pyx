@@ -327,7 +327,7 @@ def generateThresholdAlerts(np.ndarray[np.float64_t, ndim=1] rawOffsets, np.ndar
         if sampleduty >= persistence and (cdpi-alertSampleBeginIndex) >= min_sample_count:
 
             alerts[nuai,0] = leftboundary
-            alerts[nuai,1] = rawOffsets[cdpi-1]
+            alerts[nuai,1] = rightboundary
 
             # Increment to the next available unwritten alert
             nuai = nuai + 1

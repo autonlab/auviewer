@@ -7,7 +7,7 @@ __VERSION_BUILD__ = '0'
 __DEBUG = False
 if __DEBUG:
     import datetime as dt
-    __VERSION_TAGS__ = f"d{dt.datetime.now().strftime('%Y%m%d_%H%M')}"
+    __VERSION_TAGS__ = ''#f"d{dt.datetime.now().strftime('%Y%m%d_%H%M')}"
 else:
     __VERSION_TAGS__ = ''
 

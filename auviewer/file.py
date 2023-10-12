@@ -1,5 +1,5 @@
 from pathlib import Path
-from sqlalchemy import distinct, or_
+from sqlalchemy import distinct, or_, select
 import logging
 import time
 import traceback
@@ -202,15 +202,42 @@ class File:
         return True
 
     # TODO(gus): Turn this into DataFrame output in line with Project.detectPatterns.
-    def detectPatterns(self, type, series, thresholdlow=None, thresholdhigh=None, duration=300, persistence=.7, maxgap=300, series2=None, expected_frequency=0, min_density=0):
+    def detectPatterns(
+            self,
+            type,
+            series,
+            thresholdlow=None,
+            thresholdhigh=None,
+            duration=None,
+            persistence=None,
+            maxgap=None,
+            expected_frequency=0,
+            min_density=0,
+            drop_values_below=None,
+            drop_values_above=None,
+            drop_values_between=None,
+        ):
 
-        # Determine the mode (see generateThresholdAlerts function description
-        # for details on this parameter).
-        if thresholdlow is None and thresholdhigh is None:
-            # We must have at least one of thresholdlow or thresholdhigh.
-            print("Error: We need at least one of threshold low or threshold high in order to perform pattern detection.")
-            return []
+        # Ensure that the file is open
+        _ = self.f
 
+        assert isinstance(series, str) or isinstance(series, list), "series must be a string or list"
+        
+        assert type == 'patterndetection', "detectPatterns() currently only supports type='patterndetection'"
+
+        assert thresholdlow is not None or thresholdhigh is not None, "We need at least one of thresholdlow or thresholdhigh in order to perform pattern detection."
+
+        assert duration is not None, "We need a duration in order to perform pattern detection."
+
+        assert persistence is not None, "We need a persistence in order to perform pattern detection."
+
+        assert maxgap is not None, "We need a maxgap in order to perform pattern detection."
+
+        # If series is a string, make it a list
+        if isinstance(series, str):
+            series = [series]
+
+        # Determine the mode (see generateThresholdAlerts function description for details on this parameter).
         if thresholdhigh is None:
             mode = 0
             thresholdhigh = 0
@@ -219,73 +246,89 @@ class File:
             thresholdlow = 0
         else:
             mode = 2
-
+            
         if type == 'patterndetection':
 
             # Find the series & run pattern detection
-            for s in self.series:
-                if s.id == series:
-                    return s.generateThresholdAlerts(thresholdlow, thresholdhigh, mode, duration, persistence, maxgap, expected_frequency=expected_frequency, min_density=min_density).tolist()
+            patterns = []
+            for ts in series:
+                for s in self.series:
+                    if s.id == ts:
+                        patterns += s.generateThresholdAlerts(
+                            thresholdlow, 
+                            thresholdhigh, 
+                            mode, duration, 
+                            persistence, 
+                            maxgap, 
+                            expected_frequency=expected_frequency, 
+                            min_density=min_density,
+                            drop_values_below=drop_values_below,
+                            drop_values_above=drop_values_above,
+                            drop_values_between=drop_values_between,
+                        ).tolist()
+                        continue
 
-        elif type == 'correlation':
+            return patterns
 
-            # TODO(Gus): TEMP!
-            series2 = '/data/numerics/HR.HR:value'
-            timewindow='10min'
+        # elif type == 'correlation':
 
-            # The series2 parameter is required for correlation detection.
-            if series2 is None:
-                print("Error: Correlation detection requires series2 parameter.")
-                return []
+        #     # TODO(Gus): TEMP!
+        #     series2 = '/data/numerics/HR.HR:value'
+        #     timewindow='10min'
 
-            # Find the series
-            for s in self.series:
-                if s.id == series:
-                    s1 = s
-                if s.id == series2:
-                    s2 = s
+        #     # The series2 parameter is required for correlation detection.
+        #     if series2 is None:
+        #         print("Error: Correlation detection requires series2 parameter.")
+        #         return []
 
-            t1, v1 = s1.pullRawDataIntoMemory(returnValuesOnly=True)
-            t2, v2 = s2.pullRawDataIntoMemory(returnValuesOnly=True)
+        #     # Find the series
+        #     for s in self.series:
+        #         if s.id == series:
+        #             s1 = s
+        #         if s.id == series2:
+        #             s2 = s
 
-            s1Data = pd.DataFrame({
-                'time': t1,
-                'val1': v1
-            })
-            s2Data = pd.DataFrame({
-                'time': t2,
-                'val2': v2
-            })
+        #     t1, v1 = s1.pullRawDataIntoMemory(returnValuesOnly=True)
+        #     t2, v2 = s2.pullRawDataIntoMemory(returnValuesOnly=True)
 
-            # Assemble into series 1 & series 2 dataframes
-            # s1Data = pd.concat((t1, v1), axis=1)
-            # s2Data = pd.concat((t2, v2), axis=1)
-            #
-            # # Assert column names
-            # s1Data.columns = ['time', 'val1']
-            # s2Data.columns = ['time', 'val2']
+        #     s1Data = pd.DataFrame({
+        #         'time': t1,
+        #         'val1': v1
+        #     })
+        #     s2Data = pd.DataFrame({
+        #         'time': t2,
+        #         'val2': v2
+        #     })
 
-            # Create an inner joined dataset with common time column
-            df = s1Data.merge(s2Data, on='time')
+        #     # Assemble into series 1 & series 2 dataframes
+        #     # s1Data = pd.concat((t1, v1), axis=1)
+        #     # s2Data = pd.concat((t2, v2), axis=1)
+        #     #
+        #     # # Assert column names
+        #     # s1Data.columns = ['time', 'val1']
+        #     # s2Data.columns = ['time', 'val2']
 
-            # Filter out null values
-            df = df[df.notnull()]
+        #     # Create an inner joined dataset with common time column
+        #     df = s1Data.merge(s2Data, on='time')
 
-            # Create a datetime column
-            df['time_conv'] = pd.to_datetime(df.time, unit='s')
+        #     # Filter out null values
+        #     df = df[df.notnull()]
 
-            # Set the index to the datetime column
-            df.set_index('time_conv', inplace=True)
+        #     # Create a datetime column
+        #     df['time_conv'] = pd.to_datetime(df.time, unit='s')
 
-            logging.debug(df)
+        #     # Set the index to the datetime column
+        #     df.set_index('time_conv', inplace=True)
 
-            # Generate the rolling-window correlation
-            corr = df['val1'].rolling(timewindow).corr(other=df['val2'])
+        #     logging.debug(df)
 
-            # Now run pattern detection on the rolling-window correlation
-            alerts = generateThresholdAlerts(df['time'].to_numpy(), corr.to_numpy(), thresholdlow, thresholdhigh, mode, duration, persistence, maxgap).tolist()
+        #     # Generate the rolling-window correlation
+        #     corr = df['val1'].rolling(timewindow).corr(other=df['val2'])
 
-            return alerts
+        #     # Now run pattern detection on the rolling-window correlation
+        #     alerts = generateThresholdAlerts(df['time'].to_numpy(), corr.to_numpy(), thresholdlow, thresholdhigh, mode, duration, persistence, maxgap).tolist()
+
+        #     return alerts
 
         # Having reached this point, we were unable to generate the alerts.
         return []
@@ -396,10 +439,10 @@ class File:
                     'show': patternset.show_by_default,
                 } for patternset in models.PatternSet.query.filter(models.PatternSet.project_id==self.projparent.id, or_(
                     models.PatternSet.id.notin_(
-                        models.db.session.query(distinct(models.patternSetAssignments.c.pattern_set_id)).subquery()
+                        select(distinct(models.patternSetAssignments.c.pattern_set_id))
                     ),
                     models.PatternSet.id.in_(
-                        models.db.session.query(models.patternSetAssignments.c.pattern_set_id).filter(models.patternSetAssignments.c.user_id==user_id).subquery()
+                        select(models.patternSetAssignments.c.pattern_set_id).where(models.patternSetAssignments.c.user_id==user_id)
                     )
                 )).all()
             ],
@@ -412,10 +455,10 @@ class File:
                     'show': patternset.show_by_default,
                 } for patternset in models.PatternSet.query.filter(models.PatternSet.project_id==self.projparent.id, or_(
                     models.PatternSet.id.notin_(
-                        models.db.session.query(distinct(models.patternSetAssignments.c.pattern_set_id)).subquery()
+                        select(distinct(models.patternSetAssignments.c.pattern_set_id))
                     ),
                     models.PatternSet.id.in_(
-                        models.db.session.query(models.patternSetAssignments.c.pattern_set_id).filter(models.patternSetAssignments.c.user_id==user_id).subquery()
+                        select(models.patternSetAssignments.c.pattern_set_id).where(models.patternSetAssignments.c.user_id==user_id)
                     )
                 )).all()
             ],
