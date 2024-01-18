@@ -1,7 +1,8 @@
 audata>=1.0.3
 bcrypt
+Cython
 email_validator
-flask
+flask==2.3.3
 flask_login
 flask_mail
 flask_sqlalchemy
@@ -12,6 +13,6 @@ numpy>=1.19.5
 pandas
 passlib
 psutil
-pycrypto
+pycryptodome
 simplejson
 sqlalchemy>=2.0

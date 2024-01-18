@@ -1,8 +1,8 @@
 audata>=1.0.3
 bcrypt
-cython
+Cython
 email_validator
-flask
+flask==2.3.3
 flask_login
 flask_mail
 flask_sqlalchemy
@@ -16,7 +16,7 @@ pandas
 pandoc
 passlib
 psutil
-pycrypto
+pycryptodome
 sphinx
 sphinx_gallery
 sphinx_rtd_theme

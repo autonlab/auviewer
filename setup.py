@@ -57,7 +57,7 @@ setup(
         'audata>=1.0.3',
         'bcrypt',
         'email_validator',
-        'flask',
+        'flask==2.3.3',
         'flask-login',
         'flask-mail',
         'flask-sqlalchemy',
@@ -68,7 +68,7 @@ setup(
         'pandas',
         'passlib',
         'psutil',
-        'pycrypto',
+        'pycryptodome',
         'simplejson',
         'sqlalchemy>=2.0'
     ],
