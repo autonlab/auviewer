@@ -41,6 +41,7 @@ facilitate expert annotation.
 
    documentation/datadir
    documentation/templates
+   documentation/dynamic_annotation
    Python API <api/auviewer>
 
 .. toctree::
