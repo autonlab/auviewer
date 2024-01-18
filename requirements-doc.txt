@@ -7,7 +7,6 @@ flask_login
 flask_mail
 flask_sqlalchemy
 flask_wtf
-h5py>=3.7.0
 htmlmin
 jsbeautifier
 jupyterlab
