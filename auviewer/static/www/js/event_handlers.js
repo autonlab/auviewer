@@ -418,20 +418,6 @@ function handleUnderlayRedraw(canvas, area, g) {
 	// Graph class instance
 	const gci = $(g.graphDiv).parent().data('graphClassInstance');
 
-	// console.log(canvas, area, g, Object.getOwnPropertyNames(g.setIndexByName_));
-
-	// console.log("HI THERE", area, canvas)
-	// canvas.strokeStyle = '#bb0000';
-	// //canvas.fillRect(area.x, area.y+Math.floor(area.h/2), area.w, 1);
-	// canvas.setLineDash([5,3]);
-	// canvas.beginPath()
-	// console.log("from", area.x, area.y+Math.floor(area.h/2))
-	// console.log("to", area.x+area.w, Math.floor(area.h/2))
-	// canvas.moveTo(area.x, area.y+Math.floor(area.h/2));
-	// canvas.lineTo(area.x+area.w, Math.floor(area.h/2));
-	// canvas.stroke();
-	// canvas.setLineDash([]);
-
 	// We need to make multiple passes to render in layers.
 	for (let currentPassLayer = 0; currentPassLayer < 5; currentPassLayer++) {
 
@@ -445,11 +431,6 @@ function handleUnderlayRedraw(canvas, area, g) {
 			// This if statement controls which annotations/patterns are
 			// included in each pass-through of the layering.
 			if (currentPassLayer === getAnnotationCategoryLayerNumber(category)) {
-
-				// // If this annotation does not belong to this series, move on.
-				// if (file.annotations[i].series != null && !Object.getOwnPropertyNames(g.setIndexByName_).includes(file.annotations[i].series)) {
-				// 	continue;
-				// }
 
 				left = g.toDomXCoord(new Date((file.annotationsAndPatternsToRender[i].begin + file.fileData.baseTime) * 1000));
 				right = g.toDomXCoord(new Date((file.annotationsAndPatternsToRender[i].end + file.fileData.baseTime) * 1000));
