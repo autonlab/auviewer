@@ -7,6 +7,6 @@ build:
 
 python:
   install:
-    - requirements: requirements-dev.txt
+    - requirements: requirements-doc.txt
     - method: setuptools
       path: .
