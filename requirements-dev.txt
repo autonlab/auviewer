@@ -1,4 +1,4 @@
-git+https://github.com/autonlab/audata.git#egg=audata
+audata
 bcrypt
 Cython
 email_validator

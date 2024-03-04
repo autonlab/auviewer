@@ -54,7 +54,7 @@ setup(
 	ext_modules=extensions,
     package_data={NAME: pkg_files},
     install_requires=[
-        'audata @ git+https://github.com/autonlab/audata.git#egg=audata',
+        'audata',
         'bcrypt',
         'email_validator',
         'flask==2.3.3',
