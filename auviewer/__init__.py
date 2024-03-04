@@ -2,7 +2,7 @@
 
 __VERSION_MAJOR__ = '1'
 __VERSION_MINOR__ = '0'
-__VERSION_BUILD__ = '0'
+__VERSION_BUILD__ = '1'
 
 __DEBUG = False
 if __DEBUG:
