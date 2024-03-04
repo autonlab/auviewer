@@ -23,10 +23,6 @@ class File:
 
         logging.info(f"\n------------------------------------------------\nACCESSING FILE: (ID {id}) {origFilePathObj}\n------------------------------------------------\n")
 
-        # TODO: TEMP
-        processNewFiles = False
-        processOnly = False
-
         # Holds reference to the project parent
         self.projparent = projparent
 
