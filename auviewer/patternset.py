@@ -198,7 +198,7 @@ class PatternSet:
 
     def getAnnotations(self) -> pd.DataFrame:
         """Returns a DataFrame of the annotations in this set."""
-        return annotationDataFrame(models.Annotation.query.options(joinedload('user')).filter_by(pattern_set_id=self.id).all())
+        return annotationDataFrame(models.Annotation.query.options(joinedload(models.Annotation.user)).filter_by(pattern_set_id=self.id).all())
 
     def getPatternCount(self) -> int:
         """Returns a count of the patterns in this set."""
@@ -244,3 +244,4 @@ def getAssignmentsPayload(user_id):
         'remaining': len(ps.patterns) - models.Annotation.query.filter_by(user_id=user_id, pattern_set_id=ps.id).count(),
         'total': len(ps.patterns),
     } for ps in models.PatternSet.query.filter(models.PatternSet.users.any(id=user_id)).all()]
+
