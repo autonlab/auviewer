@@ -237,21 +237,36 @@ def plan_changes(connection, project_ids, old_prefix=None, new_prefix=None):
                 match_method = "filename fallback (stored path is inaccessible)"
 
         if not candidates:
-            warnings.append(
-                f"file_id={row.file_id} project_id={row.project_id}: no "
-                f"top-level project file matches {row.stored_path}"
+            prefix_rewritten_path = replace_path_prefix(
+                row.stored_path, old_prefix, new_prefix
             )
-            continue
+            if str(prefix_rewritten_path) == row.stored_path:
+                warnings.append(
+                    f"file_id={row.file_id} project_id={row.project_id}: no "
+                    f"top-level project file matches {row.stored_path}"
+                )
+                continue
 
-        if len(candidates) != 1:
+            # The row cannot be normalized to a currently present project
+            # entry, but an explicit mount-prefix migration should still
+            # eliminate the retired prefix. This preserves the remainder of
+            # the stored path and is checked against the UNIQUE constraint
+            # below before being included in the plan.
+            normalized_path = str(prefix_rewritten_path)
+            match_method = (
+                "mount-prefix fallback "
+                "(no top-level project file currently matches)"
+            )
+        elif len(candidates) != 1:
             warnings.append(
                 f"file_id={row.file_id} project_id={row.project_id}: "
                 f"ambiguous match for {row.stored_path}: "
                 f"{[str(path) for path in candidates]}"
             )
             continue
+        else:
+            normalized_path = str(candidates[0])
 
-        normalized_path = str(candidates[0])
         if row.stored_path == normalized_path:
             unchanged += 1
             continue
