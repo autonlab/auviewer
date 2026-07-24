@@ -68,6 +68,15 @@ def replace_path_prefix(path, old_prefix, new_prefix):
     return new_prefix / relative_path
 
 
+def path_is_within(path, directory):
+    """Return whether path is equal to or below directory."""
+    try:
+        absolute_path(path).relative_to(absolute_path(directory))
+    except ValueError:
+        return False
+    return True
+
+
 def database_path(path_argument):
     path = absolute_path(Path(path_argument).expanduser())
     if path.is_dir():
@@ -247,16 +256,41 @@ def plan_changes(connection, project_ids, old_prefix=None, new_prefix=None):
                 )
                 continue
 
-            # The row cannot be normalized to a currently present project
-            # entry, but an explicit mount-prefix migration should still
-            # eliminate the retired prefix. This preserves the remainder of
-            # the stored path and is checked against the UNIQUE constraint
-            # below before being included in the plan.
-            normalized_path = str(prefix_rewritten_path)
-            match_method = (
-                "mount-prefix fallback "
-                "(no top-level project file currently matches)"
+            same_name_candidates = names.get(stored_path.name, [])
+            if same_name_candidates:
+                warnings.append(
+                    f"file_id={row.file_id} project_id={row.project_id}: "
+                    f"top-level project path has the same filename but points "
+                    f"to a different physical file: "
+                    f"{[str(path) for path in same_name_candidates]}"
+                )
+                continue
+
+            project_originals_path = (
+                effective_project_paths[row.project_id] / "originals"
             )
+
+            if path_is_within(prefix_rewritten_path, project_originals_path):
+                # The old row was already project-local; only its retired
+                # mount prefix needs to change.
+                normalized_path = str(prefix_rewritten_path)
+                match_method = (
+                    "mount-prefix fallback "
+                    "(project file is currently missing)"
+                )
+            else:
+                # A resolved target path outside the owning project may
+                # collide with another project's legacy row. Preserve this
+                # row's ID and foreign-key references by restoring its
+                # project-local identity using the guaranteed-identical
+                # filename, even if the symlink is currently absent.
+                normalized_path = str(
+                    project_originals_path / stored_path.name
+                )
+                match_method = (
+                    "owning-project path fallback "
+                    "(project file is currently missing)"
+                )
         elif len(candidates) != 1:
             warnings.append(
                 f"file_id={row.file_id} project_id={row.project_id}: "
