@@ -87,7 +87,7 @@ class File(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
     #project = db.relationship('Project', backref=db.backref('files', lazy=True))
-    path = db.Column(db.String(255), nullable=False)
+    path = db.Column(db.String(255), nullable=False, unique=True)
 
 
 class Project(db.Model):

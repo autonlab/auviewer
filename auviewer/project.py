@@ -6,6 +6,7 @@ import datetime as dt
 from io import BytesIO
 import logging
 import math
+import os
 import pandas as pd
 import pickle
 import traceback
@@ -22,6 +23,18 @@ from .patternset import PatternSet
 from .config import config
 from .file import File
 from .shared import annotationDataFrame, annotationOrPatternOutput, getProcFNFromOrigFN, patternDataFrame
+
+
+def _absolute_path(path):
+    """Return an absolute path without dereferencing symlinks."""
+    return Path(os.path.abspath(os.fspath(path)))
+
+
+def _file_identity(path):
+    """Return the physical filesystem identity used by os.path.samefile()."""
+    stat_result = path.stat()
+    return stat_result.st_dev, stat_result.st_ino
+
 
 class Project:
     """Represents an auviewer project."""
@@ -337,9 +350,11 @@ class Project:
         # Reset files list
         self.files = []
 
-        # Will hold all project files that exist in the database (in order to
-        # detect new files to process).
-        existingFilePathObjs = []
+        # Track both stored paths and physical file identities. Paths remain
+        # project-local, while identities allow old resolved-path rows and
+        # symlinks to be recognized without an O(files^2) samefile() scan.
+        existingFilePathStrings = set()
+        existingFileIdentities = set()
 
         # Get all of the project's files listed in the database
         fileDBModels = models.File.query.filter_by(project_id=self.id).all()
@@ -348,9 +363,10 @@ class Project:
         for fileDBModel in fileDBModels:
 
             # Verify the original file exists on the file system
-            origFilePathObj = Path(fileDBModel.path)
+            origFilePathObj = _absolute_path(fileDBModel.path)
             if origFilePathObj.exists():
-                existingFilePathObjs.append(origFilePathObj)
+                existingFilePathStrings.add(str(origFilePathObj))
+                existingFileIdentities.add(_file_identity(origFilePathObj))
             else:
                 logging.error(f"File ID {fileDBModel.id} in the database is missing the original file on the file system at {fileDBModel.path}")
                 continue
@@ -368,15 +384,14 @@ class Project:
 
         # If processNewFiles is true, then go through and process new files
         if processNewFiles:
-
-            # Get all existing absolute file paths as strings
-            existingFilePathStrings = {str(p.resolve()): True for p in existingFilePathObjs}
                 
             # For each new project file which does not exist in the database...
-            for newOrigFilePathObj in self.originalsDirPathObj.iterdir():
+            for discoveredFilePathObj in self.originalsDirPathObj.iterdir():
 
-                # Ensure that the path is absolute
-                newOrigFilePathObj = newOrigFilePathObj.resolve()
+                # Keep the absolute project-local path as the database identity.
+                # resolve() must not be used here: it dereferences symlinks and
+                # makes links in different projects collide on one target path.
+                newOrigFilePathObj = _absolute_path(discoveredFilePathObj)
 
                 try:
 
@@ -388,8 +403,14 @@ class Project:
                     if not newOrigFilePathObj.is_file() or newOrigFilePathObj.suffix != '.h5':
                         continue
 
-                    # Skip if matches any already-loaded files
-                    if str(newOrigFilePathObj) in existingFilePathStrings:
+                    # Skip an already-loaded path or physical file. The latter
+                    # recognizes legacy rows that stored a resolved symlink
+                    # target and duplicate links within the same project.
+                    newFileIdentity = _file_identity(newOrigFilePathObj)
+                    if (
+                        str(newOrigFilePathObj) in existingFilePathStrings
+                        or newFileIdentity in existingFileIdentities
+                    ):
                         continue
 
                     # Establish the path of the new processed file
@@ -402,16 +423,62 @@ class Project:
                     models.db.session.add(newFileDBEntry)
                     models.db.session.commit()
 
+                    # Keep discovery idempotent within this scan.
+                    existingFilePathStrings.add(str(newOrigFilePathObj))
+                    existingFileIdentities.add(newFileIdentity)
+
                     # Add a File class instance for this new file to the files list for this project
                     self.files.append(File(self, newFileDBEntry.id, newOrigFilePathObj, newProcFilePathObj))
 
                 # Handle Ctrl-C
                 except KeyboardInterrupt:
+                    models.db.session.rollback()
                     raise
 
-                # Handle all other exceptions by logging and continuing
-                except:
-                    logging.error(f"Error loading new file: {traceback.format_exc()}")
+                # Roll back failed transactions, but make this unexpected
+                # condition extremely visible and retain the full stack trace.
+                except Exception:
+                    errorTraceback = traceback.format_exc()
+                    models.db.session.rollback()
+
+                    try:
+                        conflictingRows = models.File.query.filter_by(
+                            path=str(newOrigFilePathObj)
+                        ).all()
+                        conflictingRowsDescription = [
+                            {
+                                'file_id': row.id,
+                                'project_id': row.project_id,
+                                'path': row.path,
+                            }
+                            for row in conflictingRows
+                        ]
+                    except Exception:
+                        conflictingRowsDescription = (
+                            "Unable to query conflicting rows:\n"
+                            f"{traceback.format_exc()}"
+                        )
+
+                    logging.critical(
+                        "\n%s\n"
+                        "UNEXPECTED ERROR WHILE REGISTERING A PROJECT FILE\n"
+                        "project_id=%s project_name=%r\n"
+                        "project-local path=%s\n"
+                        "resolved target=%s\n"
+                        "database rows with the project-local path=%r\n"
+                        "The database transaction was rolled back. The file was "
+                        "not loaded during this scan.\n\n"
+                        "Stack trace:\n%s"
+                        "%s",
+                        "!" * 80,
+                        self.id,
+                        self.name,
+                        newOrigFilePathObj,
+                        newOrigFilePathObj.resolve(),
+                        conflictingRowsDescription,
+                        errorTraceback,
+                        "!" * 80,
+                    )
         
         # Sort files by filename
         self.files.sort(key=lambda f: f.origFilePathObj.name)
